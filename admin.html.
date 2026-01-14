@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Elite Admin - Control Total</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
+        body { font-family: 'Montserrat', sans-serif; background: #000; color: white; padding-bottom: 80px; }
+        .glass { background: rgba(25, 25, 25, 0.95); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; }
+        .input-elite { background: #111; border: 1px solid #333; color: white; border-radius: 12px; padding: 12px; width: 100%; outline: none; }
+        .btn-blue { background: linear-gradient(to right, #007AFF, #0056b3); font-weight: 900; border-radius: 14px; transition: 0.3s; }
+        .btn-blue:active { transform: scale(0.98); opacity: 0.8; }
+        .search-bar { background: #1a1a1a; border-radius: 15px; padding: 10px 20px; border: 1px solid #333; margin-bottom: 20px; }
+    </style>
+</head>
+<body class="p-4">
+    <header class="py-6 text-center">
+        <h1 class="text-xl font-black italic uppercase">ELITE <span class="text-blue-500">ADMIN</span></h1>
+    </header>
+
+    <main class="max-w-md mx-auto space-y-6">
+        <div class="glass p-6 border-blue-500/20 border">
+            <h2 id="formTitle" class="text-blue-500 text-[10px] font-black uppercase mb-4 tracking-widest">Nueva Tarea</h2>
+            <div class="space-y-3">
+                <input type="hidden" id="editId">
+                <input type="text" id="cli" placeholder="Nombre del Cliente" class="input-elite">
+                <input type="text" id="addr" placeholder="Dirección de la propiedad" class="input-elite">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="date" id="date" class="input-elite text-xs">
+                    <input type="time" id="time" class="input-elite text-xs">
+                </div>
+                <input type="email" id="empEmail" placeholder="Email del Empleado (para login)" class="input-elite">
+                <textarea id="not" placeholder="Notas adicionales..." class="input-elite h-20"></textarea>
+                <button id="mainBtn" onclick="saveJob()" class="w-full btn-blue p-4 text-xs uppercase shadow-lg shadow-blue-500/20">Guardar Tarea</button>
+                <button id="cancelEdit" onclick="resetForm()" class="hidden w-full bg-red-900/20 text-red-500 p-2 rounded-xl text-[9px] font-bold uppercase mt-2">Cancelar Edición</button>
+            </div>
+        </div>
+
+        <hr class="border-gray-900">
+
+        <div class="search-bar flex items-center gap-3">
+            <span class="text-gray-500">🔍</span>
+            <input type="text" id="searchInput" onkeyup="filterJobs()" placeholder="Buscar cliente por nombre..." class="bg-transparent border-none outline-none text-sm w-full">
+        </div>
+
+        <div id="liveFeed" class="space-y-3">
+            </div>
+    </main>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCwWg4qKg2OozxA0ngQOoukb8U7XwJS6vU",
+            authDomain: "elite-cleaners-company.firebaseapp.com",
+            databaseURL: "https://elite-cleaners-company-default-rtdb.firebaseio.com",
+            projectId: "elite-cleaners-company",
+            storageBucket: "elite-cleaners-company.firebasestorage.app",
+            messagingSenderId: "720146701474",
+            appId: "1:720146701474:web:729a9dc1fe01cf976b8bfb"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        let allJobs = {}; // Variable para guardar los datos localmente y poder filtrar
+
+        function saveJob() {
+            const id = document.getElementById('editId').value;
+            const job = {
+                cli: document.getElementById('cli').value,
+                addr: document.getElementById('addr').value,
+                date: document.getElementById('date').value,
+                time: document.getElementById('time').value,
+                empEmail: document.getElementById('empEmail').value.toLowerCase(),
+                notes: document.getElementById('not').value,
+                status: 'Pendiente'
+            };
+
+            if(!job.cli || !job.empEmail) return alert("Cliente y Empleado son obligatorios");
+
+            if(id) {
+                db.ref('jobs/' + id).update(job);
+            } else {
+                db.ref('jobs').push(job);
+            }
+            resetForm();
+        }
+
+        function editJob(id) {
+            const data = allJobs[id];
+            document.getElementById('editId').value = id;
+            document.getElementById('cli').value = data.cli;
+            document.getElementById('addr').value = data.addr;
+            document.getElementById('date').value = data.date;
+            document.getElementById('time').value = data.time;
+            document.getElementById('empEmail').value = data.empEmail;
+            document.getElementById('not').value = data.notes;
+            
+            document.getElementById('formTitle').innerText = "Editando Cliente";
+            document.getElementById('mainBtn').innerText = "Actualizar Cambios";
+            document.getElementById('cancelEdit').classList.remove('hidden');
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        function deleteJob(id) {
+            if(confirm("¿Eliminar este servicio permanentemente?")) {
+                db.ref('jobs/' + id).remove();
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('editId').value = '';
+            document.querySelectorAll('input, textarea').forEach(i => i.value = '');
+            document.getElementById('formTitle').innerText = "Nueva Tarea";
+            document.getElementById('mainBtn').innerText = "Guardar Tarea";
+            document.getElementById('cancelEdit').classList.add('hidden');
+        }
+
+        function filterJobs() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            renderJobs(query);
+        }
+
+        function renderJobs(filter = "") {
+            const feed = document.getElementById('liveFeed');
+            feed.innerHTML = '';
+            
+            for(let id in allJobs) {
+                const j = allJobs[id];
+                if(j.cli.toLowerCase().includes(filter)) {
+                    feed.innerHTML += `
+                        <div class="glass p-5 border-l-4 ${j.status==='Completado'?'border-green-500':'border-blue-500'}">
+                            <div class="flex justify-between items-start">
+                                <b class="text-sm italic uppercase tracking-tight">${j.cli}</b>
+                                <div class="flex gap-3">
+                                    <button onclick='editJob("${id}")' class="text-blue-400 text-[10px] font-black uppercase">Editar</button>
+                                    <button onclick='deleteJob("${id}")' class="text-red-500 text-[10px] font-black uppercase">Borrar</button>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-gray-500 mt-1">${j.addr}</p>
+                            <div class="mt-4 flex justify-between items-center">
+                                <span class="text-[9px] text-gray-400 uppercase font-bold">Encargado: ${j.empEmail}</span>
+                                <span class="text-[9px] font-black ${j.status==='Completado'?'text-green-500':'text-blue-500'} uppercase bg-white/5 px-2 py-1 rounded-md">${j.status}</span>
+                            </div>
+                        </div>`;
+                }
+            }
+        }
+
+        db.ref('jobs').on('value', snap => {
+            allJobs = snap.val() || {};
+            renderJobs();
+        });
+    </script>
+</body>
+</html>
