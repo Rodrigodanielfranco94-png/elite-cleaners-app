@@ -10,16 +10,17 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
         body { font-family: 'Montserrat', sans-serif; background: #000; color: white; }
-        .glass { background: rgba(25, 25, 25, 0.95); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; }
-        .btn-action { font-weight: 900; border-radius: 16px; transition: all 0.3s; text-transform: uppercase; font-size: 12px; }
+        .glass { background: rgba(25, 25, 25, 0.95); border: 1px solid rgba(255,255,255,0.05); border-radius: 28px; }
+        .btn-main { font-weight: 900; border-radius: 18px; transition: all 0.3s; text-transform: uppercase; font-size: 13px; padding: 18px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-main:active { transform: scale(0.96); opacity: 0.8; }
     </style>
 </head>
-<body class="p-4">
+<body class="p-5">
     <header class="py-8 text-center">
-        <h1 class="text-xl font-black italic uppercase leading-tight">
-            ELITE <span class="text-blue-500">CLEANERS</span><br>COMPANY
+        <h1 class="text-2xl font-black italic uppercase leading-none tracking-tighter">
+            ELITE <span class="text-blue-500">CLEANERS</span><br>
+            <span class="text-[14px] text-gray-400">COMPANY SYSTEM</span>
         </h1>
-        <p class="text-[9px] text-gray-500 font-bold tracking-[0.3em] mt-2">STAFF PORTAL</p>
     </header>
     
     <div id="jobList" class="space-y-6 max-w-md mx-auto">
@@ -38,31 +39,54 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        function updateStatus(id, field) {
+            const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const update = {};
+            update[field] = now;
+            if(field === 'finishTime') update['status'] = 'Completado';
+            
+            db.ref('jobs/' + id).update(update);
+            alert("Registro guardado: " + now);
+        }
+
         db.ref('jobs').on('value', snap => {
             const data = snap.val();
             const list = document.getElementById('jobList');
             list.innerHTML = '';
             if(!data) {
-                list.innerHTML = '<p class="text-center text-gray-500 text-xs mt-10">No hay servicios asignados hoy.</p>';
+                list.innerHTML = '<p class="text-center text-gray-600 text-xs mt-10 uppercase tracking-widest">No hay servicios para hoy</p>';
                 return;
             }
             for(let id in data) {
                 const j = data[id];
                 list.innerHTML += `
-                    <div class="glass p-6 border-t border-white/5">
-                        <div class="flex justify-between items-start mb-4">
-                            <div>
-                                <h3 class="text-2xl font-black italic uppercase text-white">${j.cli}</h3>
-                                <p class="text-xs text-gray-500 font-bold">${j.addr}</p>
-                            </div>
+                    <div class="glass p-7 mb-6 border border-white/5 shadow-2xl">
+                        <div class="mb-6">
+                            <h3 class="text-3xl font-black italic uppercase text-white leading-none mb-1">${j.cli}</h3>
+                            <p class="text-[11px] text-gray-500 font-bold uppercase tracking-tight">${j.addr}</p>
                         </div>
-                        <button onclick="window.location.href='https://maps.apple.com/?q=${encodeURIComponent(j.addr)}'" 
-                            class="w-full bg-blue-600 p-4 btn-action mb-4 flex justify-center items-center gap-2 text-white shadow-lg shadow-blue-500/20">
-                            🗺️ ABRIR GPS
-                        </button>
-                        <div class="bg-black/50 p-4 rounded-xl border border-white/5 italic text-sm text-gray-400 text-center">
-                            "${j.notes || 'Sin instrucciones adicionales.'}"
+
+                        <div class="space-y-3">
+                            <button onclick="window.location.href='https://maps.apple.com/?q=${encodeURIComponent(j.addr)}'" 
+                                class="btn-main bg-[#1a1a1a] border border-white/10 text-white">
+                                🗺️ GPS Navegación
+                            </button>
+
+                            <button onclick="updateStatus('${id}', 'arrivalTime')" 
+                                class="btn-main ${j.arrivalTime ? 'bg-green-600' : 'bg-blue-600'} text-white shadow-lg">
+                                ⏱️ ${j.arrivalTime ? 'Llegada: ' + j.arrivalTime : 'Registrar Llegada'}
+                            </button>
+
+                            <button onclick="updateStatus('${id}', 'finishTime')" 
+                                class="btn-main ${j.finishTime ? 'bg-gray-800' : 'bg-red-600'} text-white shadow-lg">
+                                🏁 ${j.finishTime ? 'Finalizado: ' + j.finishTime : 'Finalizar Servicio'}
+                            </button>
                         </div>
+
+                        ${j.notes ? `
+                        <div class="mt-6 p-4 bg-black/40 rounded-2xl border border-white/5 italic text-sm text-gray-400 text-center">
+                            "${j.notes}"
+                        </div>` : ''}
                     </div>`;
             }
         });
