@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Elite Staff - Mis Servicios</title>
+    <title>Elite Cleaners Company - Staff</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -15,8 +15,11 @@
     </style>
 </head>
 <body class="p-4">
-    <header class="py-6 text-center">
-        <h1 class="text-xl font-black italic uppercase">MIS <span class="text-blue-500">SERVICIOS</span></h1>
+    <header class="py-8 text-center">
+        <h1 class="text-xl font-black italic uppercase leading-tight">
+            ELITE <span class="text-blue-500">CLEANERS</span><br>COMPANY
+        </h1>
+        <p class="text-[9px] text-gray-500 font-bold tracking-[0.3em] mt-2">STAFF PORTAL</p>
     </header>
     
     <div id="jobList" class="space-y-6 max-w-md mx-auto">
@@ -35,13 +38,12 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Escuchar cambios en la base de datos
         db.ref('jobs').on('value', snap => {
             const data = snap.val();
             const list = document.getElementById('jobList');
             list.innerHTML = '';
             if(!data) {
-                list.innerHTML = '<p class="text-center text-gray-500 text-xs">No hay servicios asignados.</p>';
+                list.innerHTML = '<p class="text-center text-gray-500 text-xs mt-10">No hay servicios asignados hoy.</p>';
                 return;
             }
             for(let id in data) {
@@ -50,16 +52,16 @@
                     <div class="glass p-6 border-t border-white/5">
                         <div class="flex justify-between items-start mb-4">
                             <div>
-                                <h3 class="text-2xl font-black italic uppercase">${j.cli}</h3>
+                                <h3 class="text-2xl font-black italic uppercase text-white">${j.cli}</h3>
                                 <p class="text-xs text-gray-500 font-bold">${j.addr}</p>
                             </div>
                         </div>
                         <button onclick="window.location.href='https://maps.apple.com/?q=${encodeURIComponent(j.addr)}'" 
-                            class="w-full bg-[#1a1a1a] p-4 btn-action mb-4 border border-white/10 flex justify-center items-center gap-2 text-white">
-                            🗺️ GPS NAVEGACIÓN
+                            class="w-full bg-blue-600 p-4 btn-action mb-4 flex justify-center items-center gap-2 text-white shadow-lg shadow-blue-500/20">
+                            🗺️ ABRIR GPS
                         </button>
                         <div class="bg-black/50 p-4 rounded-xl border border-white/5 italic text-sm text-gray-400 text-center">
-                            "${j.notes || 'Sin notas.'}"
+                            "${j.notes || 'Sin instrucciones adicionales.'}"
                         </div>
                     </div>`;
             }
