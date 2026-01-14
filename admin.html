@@ -15,64 +15,41 @@
         .btn-type { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 12px; font-size: 11px; font-weight: 800; text-transform: uppercase; transition: 0.3s; }
         .btn-type.active { background: #007AFF; border-color: #007AFF; color: white; }
         .btn-save { background: #0056b3; font-weight: 900; border-radius: 16px; width: 100%; padding: 18px; text-transform: uppercase; font-size: 13px; letter-spacing: 1px; }
+        .time-badge { background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 8px; font-size: 10px; color: #aaa; border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
 <body class="p-4">
     <header class="py-6 text-center">
         <h1 class="text-xl font-black italic uppercase italic">ELITE <span class="text-blue-500">ADMIN</span></h1>
-        <p class="text-[9px] text-gray-500 font-bold tracking-[0.3em]">COMPANY SYSTEM</p>
+        <p class="text-[9px] text-gray-500 font-bold tracking-[0.3em]">REPORTE DE ASISTENCIA</p>
     </header>
 
     <main class="max-w-md mx-auto space-y-6">
         <div class="glass p-6 space-y-4">
-            <h2 class="text-blue-500 text-[10px] font-black uppercase tracking-widest">Nueva Tarea</h2>
-            
-            <input type="hidden" id="editId">
+            <h2 class="text-blue-500 text-[10px] font-black uppercase tracking-widest">Asignar Servicio</h2>
             <input type="text" id="cli" placeholder="Nombre del Cliente" class="input-elite">
-            <input type="text" id="addr" placeholder="Dirección de la propiedad" class="input-elite">
+            <input type="text" id="addr" placeholder="Dirección" class="input-elite">
+            <input type="email" id="empEmail" placeholder="Email del Empleado" class="input-elite">
             
-            <div class="grid grid-cols-2 gap-2">
-                <input type="date" id="date" class="input-elite text-xs">
-                <input type="time" id="time" class="input-elite text-xs">
-            </div>
-
-            <input type="email" id="empEmail" placeholder="Email del Empleado (para login)" class="input-elite">
-
             <div class="grid grid-cols-2 gap-2">
                 <button type="button" onclick="setType('Estándar', this)" class="btn-type active">Estándar</button>
                 <button type="button" onclick="setType('Profunda', this)" class="btn-type">Profunda</button>
                 <button type="button" onclick="setType('Move-in', this)" class="btn-type">Move-in</button>
                 <button type="button" onclick="setType('Move-up', this)" class="btn-type">Move-up</button>
             </div>
-
-            <textarea id="not" placeholder="Notas adicionales..." class="input-elite h-24"></textarea>
             
-            <button onclick="saveJob()" class="btn-save">Guardar Tarea</button>
+            <button onclick="saveJob()" class="btn-save">Guardar y Notificar</button>
         </div>
 
-        <div class="relative">
-            <input type="text" id="searchInput" onkeyup="renderJobs(this.value)" placeholder="Buscar cliente por nombre..." class="input-elite pl-12">
-            <span class="absolute left-4 top-4 text-gray-500">🔍</span>
-        </div>
-
-        <div id="liveFeed" class="space-y-4"></div>
+        <div id="liveFeed" class="space-y-4">
+            </div>
     </main>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyCwWg4qKg2OozxA0ngQOoukb8U7XwJS6vU",
-            authDomain: "elite-cleaners-company.firebaseapp.com",
-            databaseURL: "https://elite-cleaners-company-default-rtdb.firebaseio.com",
-            projectId: "elite-cleaners-company",
-            storageBucket: "elite-cleaners-company.firebasestorage.app",
-            messagingSenderId: "720146701474",
-            appId: "1:720146701474:web:729a9dc1fe01cf976b8bfb"
-        };
+        // ... (Tu firebaseConfig aquí) ...
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        
         let selectedType = 'Estándar';
-        let allJobs = {};
 
         function setType(type, btn) {
             selectedType = type;
@@ -81,56 +58,46 @@
         }
 
         function saveJob() {
-            const id = document.getElementById('editId').value;
             const job = {
                 cli: document.getElementById('cli').value,
                 addr: document.getElementById('addr').value,
-                date: document.getElementById('date').value,
-                time: document.getElementById('time').value,
                 empEmail: document.getElementById('empEmail').value.toLowerCase(),
                 type: selectedType,
-                notes: document.getElementById('not').value,
-                status: 'Pendiente'
+                status: 'Pendiente',
+                arrivalTime: '',
+                finishTime: ''
             };
-
-            if(!job.cli || !job.empEmail) return alert("Faltan datos");
-
-            if(id) db.ref('jobs/' + id).update(job);
-            else db.ref('jobs').push(job);
-            
-            location.reload(); // Recargar para limpiar
-        }
-
-        function renderJobs(filter = "") {
-            const feed = document.getElementById('liveFeed');
-            feed.innerHTML = '';
-            for(let id in allJobs) {
-                const j = allJobs[id];
-                if(j.cli.toLowerCase().includes(filter.toLowerCase())) {
-                    feed.innerHTML += `
-                        <div class="glass p-5 border-l-4 ${j.status==='Completado'?'border-green-500':'border-blue-500'}">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <b class="text-sm uppercase italic">${j.cli}</b>
-                                    <p class="text-[10px] text-gray-500">${j.addr}</p>
-                                    <span class="text-[9px] bg-blue-900/30 text-blue-400 px-2 py-1 rounded mt-2 inline-block font-bold uppercase">${j.type}</span>
-                                </div>
-                                <div class="flex gap-3 text-[10px] font-bold">
-                                    <button onclick="db.ref('jobs/${id}').remove()" class="text-red-500">BORRAR</button>
-                                </div>
-                            </div>
-                            <div class="flex justify-between items-center mt-4 pt-4 border-t border-white/5">
-                                <span class="text-[9px] text-gray-500 font-bold uppercase">${j.empEmail}</span>
-                                <span class="text-[9px] font-black ${j.status==='Completado'?'text-green-500':'text-blue-500'} uppercase">${j.status}</span>
-                            </div>
-                        </div>`;
-                }
-            }
+            db.ref('jobs').push(job);
+            location.reload();
         }
 
         db.ref('jobs').on('value', snap => {
-            allJobs = snap.val() || {};
-            renderJobs();
+            const data = snap.val();
+            const feed = document.getElementById('liveFeed');
+            feed.innerHTML = '<h2 class="text-[10px] font-black uppercase text-gray-500">Historial de Tareas</h2>';
+            for(let id in data) {
+                const j = data[id];
+                feed.innerHTML += `
+                    <div class="glass p-5 border-l-4 ${j.status==='Completado'?'border-green-500':'border-blue-500'}">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <b class="text-sm uppercase italic">${j.cli}</b>
+                                <p class="text-[9px] text-blue-400 font-bold uppercase">${j.type}</p>
+                            </div>
+                            <button onclick="db.ref('jobs/${id}').remove()" class="text-[10px] text-red-500 font-bold">BORRAR</button>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            <div class="time-badge">🕒 LLEGADA: <span class="text-white font-bold">${j.arrivalTime || '--:--'}</span></div>
+                            <div class="time-badge">🏁 SALIDA: <span class="text-white font-bold">${j.finishTime || '--:--'}</span></div>
+                        </div>
+
+                        <div class="flex justify-between items-center pt-3 border-t border-white/5">
+                            <span class="text-[9px] text-gray-500 font-bold uppercase">${j.empEmail}</span>
+                            <span class="text-[9px] font-black ${j.status==='Completado'?'text-green-500':'text-blue-500'} uppercase">${j.status}</span>
+                        </div>
+                    </div>`;
+            }
         });
     </script>
 </body>
