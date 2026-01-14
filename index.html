@@ -2,232 +2,24 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Elite Cleaners Company</title>
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Elite Cleaners">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/180/diamond--v1.png">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite Cleaners System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
-        :root { --brand-blue: #007AFF; }
-        body { 
-            font-family: 'Montserrat', sans-serif; 
-            background-color: #000; 
-            color: white; 
-            padding-top: env(safe-area-inset-top);
-            -webkit-tap-highlight-color: transparent;
-        }
-        .glass { background: rgba(25, 25, 25, 0.95); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; }
-        .input-elite { background: #111; border: 1px solid #333; color: white; border-radius: 12px; padding: 14px; width: 100%; font-size: 16px; outline: none; }
-        .btn-blue { background: linear-gradient(to right, #007AFF, #0056b3); font-weight: 900; text-transform: uppercase; border-radius: 14px; }
-        .type-pill { padding: 10px; border-radius: 10px; font-size: 10px; font-weight: 800; border: 1px solid #333; text-align: center; }
-        .type-pill.active { background: #007AFF; border-color: #007AFF; }
-        .search-results { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; position: absolute; width: 100%; z-index: 50; max-height: 150px; overflow-y: auto; }
+        body { background-color: #000; font-family: 'Montserrat', sans-serif; }
     </style>
 </head>
-<body class="pb-20">
-
-    <header class="p-6 text-center border-b border-white/5 bg-black/80 backdrop-blur-md sticky top-0 z-40">
-        <h1 class="text-xl font-black italic uppercase tracking-tighter">ELITE <span class="text-blue-500">CLEANERS</span></h1>
-        <p class="text-[8px] font-bold text-gray-500 tracking-[0.4em] uppercase">Company System</p>
-    </header>
-
-    <main class="p-4 max-w-md mx-auto">
-        <div class="flex bg-[#111] p-1 rounded-xl mb-6 border border-white/5">
-            <button id="tabStaff" onclick="showView('staff')" class="flex-1 py-3 text-[10px] font-black uppercase rounded-lg">Mis Servicios</button>
-            <button id="tabAdmin" onclick="showView('admin')" class="flex-1 py-3 text-[10px] font-black uppercase rounded-lg">Admin</button>
-        </div>
-
-        <div id="staffView"><div id="staffList" class="space-y-4"></div></div>
-
-        <div id="adminView" class="hidden">
-            <div class="glass p-6 mb-6">
-                <h3 class="text-[10px] font-black text-blue-500 uppercase mb-4 tracking-widest">Nueva Tarea</h3>
-                <div class="space-y-3">
-                    <input type="text" id="cli" placeholder="Cliente" class="input-elite">
-                    <input type="text" id="addr" placeholder="Dirección" class="input-elite">
-                    <div class="grid grid-cols-2 gap-2">
-                        <input type="date" id="date" class="input-elite">
-                        <input type="time" id="time" class="input-elite">
-                    </div>
-                    <div class="relative">
-                        <input type="text" id="emp" oninput="searchE(this.value)" placeholder="Buscar empleado..." class="input-elite">
-                        <input type="hidden" id="mail">
-                        <div id="results" class="search-results hidden mt-1"></div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div class="type-pill active" onclick="setT(this, 'Estándar')">Estándar</div>
-                        <div class="type-pill" onclick="setT(this, 'Profunda')">Profunda</div>
-                        <div class="type-pill" onclick="setT(this, 'Move-in')">Move-in</div>
-                        <div class="type-pill" onclick="setT(this, 'Move-up')">Move-up</div>
-                    </div>
-                    <textarea id="not" placeholder="Notas..." class="input-elite h-20"></textarea>
-                    <button onclick="save()" class="w-full btn-blue p-4 text-xs shadow-lg mt-2">Guardar y Notificar</button>
-                </div>
-            </div>
-
-            <div class="glass p-4 mb-6">
-                <p class="text-[9px] font-black text-gray-500 uppercase mb-3">Registrar Empleado</p>
-                <div class="flex gap-2">
-                    <input type="text" id="sn" placeholder="Nombre" class="input-elite py-2 text-xs">
-                    <input type="email" id="se" placeholder="Email" class="input-elite py-2 text-xs">
-                    <button onclick="addS()" class="bg-blue-600 px-4 rounded-xl font-bold">+</button>
-                </div>
-            </div>
-            <div id="adminHistory" class="space-y-2"></div>
-        </div>
-
-        <div id="det" class="hidden fixed inset-0 z-50 bg-black p-6 overflow-y-auto">
-            <button onclick="showView('staff')" class="text-gray-500 text-[10px] font-black mb-8">← VOLVER</button>
-            <div id="detContent"></div>
-        </div>
-    </main>
-
-    <script>
-        // Versión de almacenamiento para evitar conflictos
-        const DB_KEY = 'ec_v12_j'; 
-        const STAFF_KEY = 'ec_v12_s';
-
-        let jobs = JSON.parse(localStorage.getItem(DB_KEY)) || [];
-        let staff = JSON.parse(localStorage.getItem(STAFF_KEY)) || [{name:"Dayana", email:"dayana@elite.com"}];
-        let type = 'Estándar';
-
-        function showView(v){
-            document.getElementById('staffView').classList.toggle('hidden', v!=='staff');
-            document.getElementById('adminView').classList.toggle('hidden', v!=='admin');
-            document.getElementById('det').classList.add('hidden');
-            
-            const btnStaff = document.getElementById('tabStaff');
-            const btnAdmin = document.getElementById('tabAdmin');
-            
-            btnStaff.className = `flex-1 py-3 text-[10px] font-black rounded-lg ${v==='staff'?'bg-blue-600 text-white':'text-gray-500'}`;
-            btnAdmin.className = `flex-1 py-3 text-[10px] font-black rounded-lg ${v==='admin'?'bg-blue-600 text-white':'text-gray-500'}`;
-            
-            if(v==='staff') renderS(); else renderA();
-        }
-
-        function setT(el, t){
-            document.querySelectorAll('.type-pill').forEach(p=>p.classList.remove('active'));
-            el.classList.add('active'); type = t;
-        }
-
-        function addS(){
-            const n=document.getElementById('sn').value, e=document.getElementById('se').value;
-            if(!n||!e) return; staff.push({name:n, email:e});
-            localStorage.setItem(STAFF_KEY, JSON.stringify(staff));
-            document.getElementById('sn').value=''; document.getElementById('se').value=''; renderA();
-        }
-
-        function searchE(v){
-            const r=document.getElementById('results');
-            if(!v){ r.classList.add('hidden'); return; }
-            const f=staff.filter(s=>s.name.toLowerCase().includes(v.toLowerCase()));
-            if(f.length){ r.classList.remove('hidden'); r.innerHTML=f.map(s=>`<div onclick="pickE('${s.name}','${s.email}')" class="p-3 text-sm border-b border-white/5">${s.name}</div>`).join(''); }
-            else r.classList.add('hidden');
-        }
-
-        function pickE(n,e){ document.getElementById('emp').value=n; document.getElementById('mail').value=e; document.getElementById('results').classList.add('hidden'); }
-
-        function save(){
-            const j = {
-                id:Date.now(), cli:document.getElementById('cli').value, addr:document.getElementById('addr').value,
-                date:document.getElementById('date').value, time:document.getElementById('time').value,
-                emp:document.getElementById('emp').value, mail:document.getElementById('mail').value,
-                type:type, notes:document.getElementById('not').value, status:'Pendiente',
-                arrivalTimestamp: null, finishTimestamp: null
-            };
-            if(!j.cli||!j.addr||!j.emp) return alert("Faltan datos");
-            jobs.push(j); localStorage.setItem(DB_KEY, JSON.stringify(jobs));
-            if(confirm("¿Notificar por email?")){
-                window.location.href=`mailto:${j.mail}?subject=Nuevo Trabajo&body=Cliente: ${j.cli}\nDirección: ${j.addr}\nFecha: ${j.date} ${j.time}`;
-            }
-            showView('admin');
-        }
-
-        function renderA(){
-            document.getElementById('adminHistory').innerHTML = jobs.map(j=>`
-                <div class="glass p-4 flex justify-between items-center mb-2">
-                    <div class="text-xs">
-                        <b>${j.cli}</b><br>
-                        <span class="text-[9px] text-gray-500 uppercase">${j.date} - ${j.emp}</span>
-                        ${j.arrivalTimestamp ? `<br><span class="text-[8px] text-green-500">LLEGADA: ${j.arrivalTimestamp}</span>` : ''}
-                    </div>
-                    <button onclick="del(${j.id})" class="text-red-900 font-black px-2">✕</button>
-                </div>`).join('');
-        }
-
-        function del(id){ jobs=jobs.filter(j=>j.id!==id); localStorage.setItem(DB_KEY, JSON.stringify(jobs)); renderA(); }
-
-        function renderS(){
-            const l=document.getElementById('staffList');
-            l.innerHTML = jobs.length ? '' : '<p class="text-center py-10 text-gray-600 text-[10px] font-black uppercase">Sin servicios</p>';
-            jobs.forEach(j=>{
-                l.innerHTML += `
-                    <div onclick="openD(${j.id})" class="glass p-6 active:scale-95 transition-all border-l-4 ${j.status==='Completado'?'border-green-600':'border-blue-600'}">
-                        <div class="flex justify-between mb-2">
-                            <span class="text-[9px] font-black text-blue-500 uppercase">${j.date} | ${j.time}</span>
-                            <span class="text-[8px] ${j.status==='Completado'?'text-green-500':'text-gray-500'} font-bold uppercase">${j.status}</span>
-                        </div>
-                        <h3 class="text-lg font-black italic">${j.cli}</h3>
-                        <p class="text-[10px] text-gray-500 truncate mb-4 uppercase">📍 ${j.addr}</p>
-                        <div class="flex justify-between pt-3 border-t border-white/5 text-[9px] font-black uppercase">
-                            <span class="text-blue-400">${j.type}</span>
-                            <span>Ver →</span>
-                        </div>
-                    </div>`;
-            });
-        }
-
-        function openD(id){
-            const j=jobs.find(x=>x.id===id);
-            document.getElementById('det').classList.remove('hidden');
-            
-            // Lógica para mostrar los tiempos registrados
-            const arrivalText = j.arrivalTimestamp ? `✅ Llegada: ${j.arrivalTimestamp}` : '⏱️ Registrar Llegada';
-            const finishText = j.finishTimestamp ? `✅ Finalizado: ${j.finishTimestamp}` : '🏁 Finalizar';
-
-            document.getElementById('detContent').innerHTML = `
-                <div class="text-center mb-10">
-                    <h2 class="text-3xl font-black italic uppercase mb-2">${j.cli}</h2>
-                    <p class="text-gray-500 text-xs font-bold uppercase mb-6">${j.addr}</p>
-                    <button onclick="window.location.href='maps://maps.apple.com/?q=${encodeURIComponent(j.addr)}'" class="w-full bg-[#111] p-5 rounded-2xl text-[10px] font-black uppercase border border-white/5">🗺️ GPS Navegación</button>
-                </div>
-                <div class="space-y-4 mb-8">
-                    <button onclick="recordTime(${j.id}, 'arrival')" 
-                            class="w-full ${j.arrivalTimestamp ? 'bg-green-900/30 text-green-500 border border-green-500/50' : 'btn-blue'} p-6 text-sm flex justify-center items-center gap-2">
-                            ${arrivalText}
-                    </button>
-                    
-                    <button onclick="recordTime(${j.id}, 'finish')" 
-                            class="w-full ${j.finishTimestamp ? 'bg-green-900/30 text-green-500 border border-green-500/50' : 'bg-red-600'} p-6 rounded-2xl font-black text-sm uppercase">
-                            ${finishText}
-                    </button>
-                </div>
-                <div class="glass p-6 text-sm italic text-gray-400">"${j.notes||'Sin notas.'}"</div>`;
-        }
-
-        function recordTime(id, type) {
-            const i = jobs.findIndex(x => x.id === id);
-            const now = new Date();
-            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-            if (type === 'arrival' && !jobs[i].arrivalTimestamp) {
-                jobs[i].arrivalTimestamp = timeString;
-                jobs[i].status = 'Trabajando';
-            } else if (type === 'finish' && !jobs[i].finishTimestamp) {
-                jobs[i].finishTimestamp = timeString;
-                jobs[i].status = 'Completado';
-            }
-
-            localStorage.setItem(DB_KEY, JSON.stringify(jobs));
-            openD(id);
-        }
-
-        showView('staff');
-    </script>
+<body class="flex flex-col items-center justify-center min-h-screen p-6 text-white text-center">
+    <h1 class="text-3xl font-black italic mb-2">ELITE <span class="text-blue-500">CLEANERS</span></h1>
+    <p class="text-gray-500 text-xs tracking-widest uppercase mb-12">Company System</p>
+    
+    <div class="w-full max-w-xs space-y-4">
+        <a href="admin.html" class="block w-full bg-blue-600 p-5 rounded-2xl font-black uppercase shadow-lg shadow-blue-500/20">
+            Panel Administrador
+        </a>
+        <a href="empleado.html" class="block w-full bg-zinc-900 border border-white/10 p-5 rounded-2xl font-black uppercase text-gray-400">
+            Acceso Empleados
+        </a>
+    </div>
 </body>
 </html>
