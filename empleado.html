@@ -3,55 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Staff</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <title>Elite Staff - Mis Trabajos</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
-        body { font-family: 'Montserrat', sans-serif; background: #000; color: white; padding-bottom: 40px; }
-        .glass { background: #111; border: 1px solid #222; border-radius: 28px; }
-        .btn-action { font-weight: 900; text-transform: uppercase; font-size: 11px; padding: 15px; border-radius: 16px; width: 100%; border: none; cursor: pointer; color: white; }
+        :root { --accent: #3b82f6; --bg-card: #1c1c1e; }
+        body { background: #000; color: white; font-family: -apple-system, sans-serif; padding: 20px; margin: 0; }
+        .header { margin-bottom: 20px; }
+        .header h2 { font-style: italic; font-weight: 900; margin: 0; }
+        .header span { color: var(--accent); }
+        
+        .job-card { 
+            background: var(--bg-card); 
+            border-radius: 20px; 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            border-left: 6px solid var(--accent);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.3);
+        }
+        .type-tag { background: #2c2c2e; color: var(--accent); padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .info { margin-top: 15px; font-size: 14px; }
+        .info p { margin: 5px 0; color: #aeaeae; }
+        .info b { color: white; }
+        
+        .notes-box { 
+            background: #2c2c2e; 
+            padding: 12px; 
+            border-radius: 10px; 
+            margin-top: 15px; 
+            border: 1px dashed #444;
+        }
+        .notes-box label { display: block; font-size: 10px; color: var(--accent); font-weight: bold; margin-bottom: 5px; }
+        .notes-box p { margin: 0; font-size: 13px; color: #fff; line-height: 1.4; }
+
+        .btn-complete { 
+            width: 100%; 
+            background: #34c759; 
+            color: white; 
+            border: none; 
+            padding: 15px; 
+            border-radius: 12px; 
+            font-weight: bold; 
+            margin-top: 20px; 
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .logout-btn { background: none; border: none; color: #ff4d4d; font-size: 12px; float: right; cursor: pointer; }
     </style>
 </head>
-<body class="p-4">
-    <script>
-        if (localStorage.getItem("userRole") !== "staff") window.location.href = "index.html";
-    </script>
+<body>
+    <div class="header">
+        <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+        <h2>MIS <span>TRABAJOS</span></h2>
+        <p id="staff-email" style="font-size: 11px; color: #666; margin: 5px 0;"></p>
+    </div>
 
-    <header class="py-8 text-center">
-        <h1 class="text-xl font-black italic uppercase">ELITE <span class="text-blue-500">STAFF</span></h1>
-        <p id="userDisplay" class="text-[9px] text-gray-500 font-bold mt-2 uppercase"></p>
-        <button onclick="localStorage.clear(); window.location.href='index.html'" class="text-[8px] text-gray-600 font-bold underline mt-2">SALIR</button>
-    </header>
-
-    <div id="jobList" class="max-w-md mx-auto space-y-6"></div>
+    <div id="jobs-list">Cargando servicios...</div>
 
     <script>
-        // --- PEGA AQUÍ TUS CREDENCIALES DE FIREBASE ---
-        const firebaseConfig = { };
+        const firebaseConfig = {
+            apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
+            authDomain: "elite-cleaners-app.firebaseapp.com",
+            projectId: "elite-cleaners-app",
+            storageBucket: "elite-cleaners-app.appspot.com",
+            messagingSenderId: "826642317319",
+            appId: "1:826642317319:web:cddce7904b590ae"
+        };
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const currentEmail = localStorage.getItem("userEmail");
-        document.getElementById('userDisplay').innerText = "Conectado: " + currentEmail;
 
-        db.ref('jobs').on('value', snap => {
-            const data = snap.val();
-            const container = document.getElementById('jobList');
-            container.innerHTML = '';
-            for(let id in data) {
-                const j = data[id];
-                if(j.empEmail === currentEmail && j.status !== 'Completado') {
-                    container.innerHTML += `<div class="glass p-6">
-                        <h2 class="text-lg font-black uppercase italic">${j.cli}</h2>
-                        <p class="text-blue-500 text-[10px] font-bold mb-4">${j.type} | 🕒 ${j.time}</p>
-                        <p class="text-gray-400 text-xs mb-4">📍 ${j.addr}</p>
-                        ${j.notes ? `<div class="bg-blue-500/10 p-3 rounded-lg mb-4 text-[11px] text-blue-200 italic">Nota: ${j.notes}</div>`:''}
-                        <button onclick="db.ref('jobs/${id}').update({status:'Completado'})" class="btn-action bg-green-600">Finalizar Servicio</button>
-                    </div>`;
-                }
+        firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('staff-email').innerText = user.email;
+                loadJobs(user.email.toLowerCase());
+            } else {
+                window.location.href = "index.html";
             }
         });
+
+        function loadJobs(email) {
+            const listDiv = document.getElementById('jobs-list');
+            firebase.database().ref('jobs').on('value', snap => {
+                listDiv.innerHTML = "";
+                let count = 0;
+                snap.forEach(child => {
+                    const j = child.val();
+                    // Solo mostrar si es su email y está pendiente
+                    if(j.email === email && j.status !== 'completado') {
+                        count++;
+                        listDiv.innerHTML += `
+                            <div class="job-card">
+                                <span class="type-tag">${j.tipo}</span>
+                                <h3 style="margin: 10px 0 0 0; font-size: 20px;">${j.cliente}</h3>
+                                <div class="info">
+                                    <p>📍 <b>${j.direccion}</b></p>
+                                    <p>📅 ${j.fecha} | ⏰ ${j.hora}</p>
+                                </div>
+                                ${j.notas ? `
+                                    <div class="notes-box">
+                                        <label>NOTAS DEL ADMIN:</label>
+                                        <p>${j.notas}</p>
+                                    </div>
+                                ` : ''}
+                                <button class="btn-complete" onclick="markComplete('${child.key}')">Marcar como Completado</button>
+                            </div>
+                        `;
+                    }
+                });
+                if(count === 0) listDiv.innerHTML = "<p style='text-align:center; color:#666; margin-top:50px;'>No tienes trabajos pendientes por ahora.</p>";
+            });
+        }
+
+        function markComplete(jobId) {
+            if(confirm("¿Confirmas que terminaste este servicio?")) {
+                firebase.database().ref('jobs/' + jobId).update({
+                    status: 'completado'
+                }).then(() => {
+                    alert("¡Buen trabajo! Servicio actualizado.");
+                });
+            }
+        }
+
+        function logout() {
+            firebase.auth().signOut().then(() => { window.location.href = "index.html"; });
+        }
     </script>
 </body>
 </html>
