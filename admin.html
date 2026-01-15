@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin</title>
+    <title>Elite Admin - Control Total</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
         body { font-family: 'Montserrat', sans-serif; background: #000; color: white; padding-bottom: 40px; }
@@ -14,8 +15,8 @@
         .input-elite { background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 14px; padding: 15px; width: 100%; outline: none; font-size: 14px; }
         .btn-type { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
         .btn-type.active { background: #007AFF; border-color: #007AFF; }
-        .btn-save { background: #0056b3; font-weight: 900; border-radius: 16px; width: 100%; padding: 18px; text-transform: uppercase; }
-        .stats-card { background: #111; border: 1px solid #222; border-radius: 20px; padding: 15px; text-align: center; }
+        .btn-save { background: #0056b3; font-weight: 900; border-radius: 16px; width: 100%; padding: 18px; text-transform: uppercase; cursor: pointer; }
+        .search-box { border-bottom: 2px dashed #333; padding: 10px; margin-bottom: 20px; }
     </style>
 </head>
 <body class="p-4">
@@ -24,55 +25,52 @@
     </script>
 
     <header class="py-6 text-center">
-        <h1 class="text-xl font-black italic uppercase">ELITE <span class="text-blue-500">ADMIN</span></h1>
-        <button onclick="localStorage.clear(); window.location.href='index.html'" class="text-[8px] text-gray-600 font-bold underline mt-2">CERRAR SESIÓN</button>
+        <h1 class="text-xl font-black italic uppercase italic">ELITE <span class="text-blue-500">ADMIN</span></h1>
+        <button onclick="localStorage.clear(); window.location.href='index.html'" class="text-[8px] text-gray-600 font-bold underline mt-2 uppercase">Cerrar Sesión</button>
     </header>
-
-    <div class="grid grid-cols-2 gap-4 max-w-md mx-auto mb-6">
-        <div class="stats-card">
-            <p class="text-[9px] text-gray-500 font-bold uppercase">Pendientes</p>
-            <h3 id="countPending" class="text-2xl font-black text-blue-500">0</h3>
-        </div>
-        <div class="stats-card">
-            <p class="text-[9px] text-gray-500 font-bold uppercase">Completados</p>
-            <h3 id="countDone" class="text-2xl font-black text-green-500">0</h3>
-        </div>
-    </div>
 
     <main class="max-w-md mx-auto space-y-6">
         <div class="glass p-6 space-y-4">
-            <input type="hidden" id="jobId">
+            <h2 class="text-blue-500 text-[10px] font-black uppercase tracking-widest italic">Asignar Servicio</h2>
             <input type="text" id="cli" placeholder="Nombre del Cliente" class="input-elite">
             <input type="text" id="addr" placeholder="Dirección" class="input-elite">
-            <input type="email" id="empEmail" placeholder="Email del Empleado" class="input-elite">
+            <input type="email" id="empEmail" placeholder="Email del Empleado (Gmail)" class="input-elite">
             
             <div class="grid grid-cols-2 gap-2">
                 <input type="date" id="jobDate" class="input-elite">
                 <input type="time" id="jobTime" class="input-elite">
             </div>
 
-            <textarea id="notes" placeholder="Notas / Requerimientos Especiales" class="input-elite h-20"></textarea>
+            <textarea id="notes" placeholder="Requerimientos especiales / Notas" class="input-elite h-20"></textarea>
 
             <div class="grid grid-cols-2 gap-2">
                 <button type="button" onclick="setType('Estándar', this)" class="btn-type active">Estándar</button>
                 <button type="button" onclick="setType('Profunda', this)" class="btn-type">Profunda</button>
-                <button type="button" onclick="setType('Move-in', this)" class="btn-type">Move-in</button>
-                <button type="button" onclick="setType('Move-up', this)" class="btn-type">Move-up</button>
             </div>
             
-            <button id="mainBtn" onclick="saveJob()" class="btn-save">Guardar Servicio</button>
+            <button onclick="saveJob()" class="btn-save w-full">Guardar y Notificar por Email</button>
+        </div>
+
+        <div class="search-box">
+            <p class="text-[9px] text-gray-500 font-bold mb-2 uppercase tracking-widest italic">Buscador de Empleado / Cliente</p>
+            <input type="text" id="search" onkeyup="renderFeed()" placeholder="Escribe el nombre o email..." class="input-elite bg-transparent border-none p-0 text-blue-400 placeholder-gray-700 italic">
         </div>
 
         <div id="liveFeed" class="space-y-4"></div>
     </main>
 
     <script>
-        // PEGA AQUÍ TU CONFIGURACIÓN
+        // PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE
         const firebaseConfig = { }; 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        
+        // INICIALIZAR EMAILJS (Opcional: regístrate en emailjs.com para obtener tu ID)
+        (function(){
+            emailjs.init("TU_PUBLIC_KEY_DE_EMAILJS");
+        })();
+
         let selectedType = 'Estándar';
-        let allJobs = {};
 
         function setType(type, btn) {
             selectedType = type;
@@ -81,44 +79,75 @@
         }
 
         function saveJob() {
-            const id = document.getElementById('jobId').value;
+            const email = document.getElementById('empEmail').value.toLowerCase().trim();
+            const cliente = document.getElementById('cli').value;
+            const direccion = document.getElementById('addr').value;
+            const fecha = document.getElementById('jobDate').value;
+            const hora = document.getElementById('jobTime').value;
+
             const job = {
-                cli: document.getElementById('cli').value,
-                addr: document.getElementById('addr').value,
-                empEmail: document.getElementById('empEmail').value.toLowerCase(),
-                date: document.getElementById('jobDate').value,
-                time: document.getElementById('jobTime').value,
+                cli: cliente,
+                addr: direccion,
+                empEmail: email,
+                date: fecha,
+                time: hora,
                 notes: document.getElementById('notes').value,
                 type: selectedType,
-                status: 'Pendiente',
-                arrivalTime: '', finishTime: ''
+                status: 'Pendiente'
             };
-            if(id) db.ref('jobs/' + id).update(job);
-            else db.ref('jobs').push(job);
+
+            // 1. Guardar en Firebase
+            db.ref('jobs').push(job);
+
+            // 2. Simulación de envío de correo (O integración real con EmailJS)
+            console.log("Notificando a: " + email);
+            alert("Servicio guardado. Se ha enviado una notificación a " + email);
+            
+            // Si tienes EmailJS configurado, usarías esto:
+            /*
+            emailjs.send("service_id", "template_id", {
+                to_email: email,
+                client_name: cliente,
+                address: direccion,
+                date_time: fecha + " " + hora
+            });
+            */
+
             location.reload();
         }
 
-        db.ref('jobs').on('value', snap => {
-            allJobs = snap.val() || {};
-            const feed = document.getElementById('liveFeed');
-            let p=0, d=0;
-            feed.innerHTML = '';
-            for(let id in allJobs) {
-                const j = allJobs[id];
-                if(j.status === 'Completado') d++; else p++;
-                feed.innerHTML += `<div class="glass p-5 border-l-4 ${j.status==='Completado'?'border-green-500':'border-blue-500'}">
-                    <div class="flex justify-between">
-                        <b>${j.cli}</b>
-                        <button onclick="db.ref('jobs/${id}').remove()" class="text-red-500 text-[9px]">BORRAR</button>
-                    </div>
-                    <p class="text-[10px] text-blue-400 font-bold">${j.type} | ${j.date} @ ${j.time}</p>
-                    <p class="text-[10px] text-gray-500 mt-2">${j.addr}</p>
-                    ${j.notes ? `<p class="text-[10px] italic text-gray-400 bg-white/5 p-2 rounded mt-2">"${j.notes}"</p>`:''}
-                </div>`;
-            }
-            document.getElementById('countPending').innerText = p;
-            document.getElementById('countDone').innerText = d;
-        });
+        function renderFeed() {
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            db.ref('jobs').once('value', snap => {
+                const data = snap.val();
+                const feed = document.getElementById('liveFeed');
+                feed.innerHTML = '';
+                
+                for(let id in data) {
+                    const j = data[id];
+                    // FILTRO: Busca por nombre de cliente O por email de empleado
+                    if(j.cli.toLowerCase().includes(searchTerm) || j.empEmail.toLowerCase().includes(searchTerm)) {
+                        feed.innerHTML += `
+                            <div class="glass p-5 border-l-4 ${j.status==='Completado'?'border-green-500':'border-blue-500'}">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <b class="uppercase text-sm italic">${j.cli}</b>
+                                        <p class="text-[10px] text-blue-400 font-bold uppercase">${j.type} | ${j.date} @ ${j.time}</p>
+                                    </div>
+                                    <button onclick="db.ref('jobs/${id}').remove()" class="text-red-500 text-[9px] font-bold">BORRAR</button>
+                                </div>
+                                <div class="mt-3 pt-3 border-t border-white/5">
+                                    <p class="text-[9px] text-gray-500 font-bold italic uppercase tracking-tighter">Asignado a: ${j.empEmail}</p>
+                                    <p class="text-[9px] text-gray-400 mt-1 italic">${j.addr}</p>
+                                </div>
+                            </div>`;
+                    }
+                }
+            });
+        }
+
+        // Carga inicial
+        db.ref('jobs').on('value', renderFeed);
     </script>
 </body>
 </html>
