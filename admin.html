@@ -8,165 +8,67 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body class="admin-body">
-    <div class="admin-container">
-        <h1 class="logo-text">ELITE <span>ADMIN</span></h1>
-        <button onclick="logout()" class="logout-link">CERRAR SESIÓN</button>
+    <div class="admin-container" style="padding: 20px; max-width: 500px; margin: auto;">
+        <h1 style="color: white; text-align: center;">ELITE <span style="color: #007bff;">ADMIN</span></h1>
+        <button onclick="logout()" style="float: right; background: none; border: none; color: #ff4d4d; cursor: pointer;">Cerrar Sesión</button>
 
-        <div class="card">
-            <h2 class="section-title">ASIGNAR SERVICIO</h2>
+        <div class="card" style="background: #1a1a1a; padding: 20px; border-radius: 12px; margin-top: 40px;">
+            <input type="text" id="cliente" placeholder="Nombre del Cliente" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #333; background: #222; color: white;">
+            <input type="text" id="direccion" placeholder="Dirección" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #333; background: #222; color: white;">
+            <input type="text" id="empleado-nombre" placeholder="Nombre del Empleado" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #333; background: #222; color: white;">
+            <input type="email" id="staff-email" placeholder="Gmail del Empleado" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #333; background: #222; color: white;">
             
-            <input type="text" id="cliente" placeholder="Nombre del Cliente" class="input-field">
-            <input type="text" id="direccion" placeholder="Dirección del Servicio" class="input-field">
-            
-            <input type="text" id="empleado-nombre" placeholder="Nombre del Empleado" class="input-field">
-            <input type="email" id="staff-email" placeholder="Gmail del Empleado" class="input-field">
-            
-            <div class="row" style="display: flex; gap: 10px;">
-                <input type="date" id="fecha" class="input-field" style="flex: 1;">
-                <input type="time" id="hora" class="input-field" style="flex: 1;">
+            <div style="display: flex; gap: 10px;">
+                <input type="date" id="fecha" style="flex: 1; padding: 10px; background: #222; color: white; border: 1px solid #333;">
+                <input type="time" id="hora" style="flex: 1; padding: 10px; background: #222; color: white; border: 1px solid #333;">
             </div>
 
-            <textarea id="notas" placeholder="Descripción del trabajo..." class="input-field textarea" style="height: 80px;"></textarea>
+            <p style="color: white; font-size: 12px; margin: 15px 0 5px;">TIPO DE SERVICIO:</p>
+            <select id="tipo-limpieza" style="width: 100%; padding: 10px; background: #222; color: white; margin-bottom: 15px;">
+                <option value="Estándar">Estándar</option>
+                <option value="Profunda">Profunda</option>
+                <option value="Move-in">Move-in</option>
+                <option value="Move-out">Move-out</option>
+            </select>
 
-            <p style="color: white; font-size: 12px; margin-bottom: 10px; text-align: left;">TIPO DE LIMPIEZA:</p>
-            <div class="type-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-                <button id="btn-estandar" class="type-btn active" onclick="setType('Estándar')" style="padding: 10px; cursor: pointer;">ESTÁNDAR</button>
-                <button id="btn-profunda" class="type-btn" onclick="setType('Profunda')" style="padding: 10px; cursor: pointer;">PROFUNDA</button>
-                <button id="btn-movein" class="type-btn" onclick="setType('Move-in')" style="padding: 10px; cursor: pointer;">MOVE-IN</button>
-                <button id="btn-moveout" class="type-btn" onclick="setType('Move-out')" style="padding: 10px; cursor: pointer;">MOVE-OUT</button>
-            </div>
-
-            <button id="main-send-btn" onclick="saveJob()" class="send-btn" style="width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">GUARDAR Y NOTIFICAR POR EMAIL</button>
-        </div>
-
-        <div class="search-section" style="margin-top: 30px;">
-            <p style="color: #666; font-size: 11px;">BUSCADOR DE EMPLEADO / CLIENTE</p>
-            <input type="text" id="search-input" placeholder="Escribe el nombre o email..." onkeyup="searchJobs()" class="search-input" style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #333; color: white; padding: 10px 0;">
-            <div id="jobs-container" style="margin-top: 20px;"></div>
+            <button onclick="saveJob()" style="width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 8px; font-weight: bold;">GUARDAR SERVICIO</button>
         </div>
     </div>
 
     <script>
-        // CONFIGURACIÓN FIREBASE
         const firebaseConfig = {
-            apiKey: "AIzaSyC2...", // Asegúrate de que aquí esté tu clave completa
-            authDomain: "elite-cleaners-company.firebaseapp.com",
-            databaseURL: "https://elite-cleaners-company-default-rtdb.firebaseio.com",
-            projectId: "elite-cleaners-company",
-            storageBucket: "elite-cleaners-company.appspot.com",
-            messagingSenderId: "331885542036",
-            appId: "1:331885542036:web:46244dfb841793666d66e7"
+            apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc lrH",
+            authDomain: "elite-cleaners-app.firebaseapp.com",
+            projectId: "elite-cleaners-app",
+            storageBucket: "elite-cleaners-app.appspot.com",
+            messagingSenderId: "826642317319",
+            appId: "1:826642317319:web:cddce7904b590ae"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const auth = firebase.auth();
 
-        // CONFIGURACIÓN EMAILJS
-        emailjs.init("HND0NNg6H-dBCZtNq"); 
-
-        let selectedType = "Estándar";
-
-        // Función para cambiar tipo de limpieza
-        function setType(type) {
-            selectedType = type;
-            document.querySelectorAll('.type-btn').forEach(btn => {
-                btn.style.background = "#222";
-                btn.style.color = "white";
-            });
-            const idMap = {'Estándar': 'btn-estandar', 'Profunda': 'btn-profunda', 'Move-in': 'btn-movein', 'Move-out': 'btn-moveout'};
-            const activeBtn = document.getElementById(idMap[type]);
-            activeBtn.style.background = "#007bff";
-        }
-
-        // SEGURIDAD: VERIFICAR USUARIO (CORREGIDO)
-        auth.onAuthStateChanged(user => {
-            if (!user) {
-                // Si no hay sesión, regresa al login
-                window.location.href = "index.html";
-            } else {
-                console.log("Sesión activa:", user.email);
-            }
-        });
-
-        // GUARDAR Y ENVIAR
         function saveJob() {
-            const btn = document.getElementById('main-send-btn');
-            const cliente = document.getElementById('cliente').value;
-            const direccion = document.getElementById('direccion').value;
-            const empleado = document.getElementById('empleado-nombre').value;
-            const email = document.getElementById('staff-email').value;
-            const fecha = document.getElementById('fecha').value;
-            const hora = document.getElementById('hora').value;
-            const notas = document.getElementById('notas').value;
-
-            if(!cliente || !email || !fecha) {
-                alert("Completa al menos: Cliente, Gmail y Fecha.");
-                return;
-            }
-
-            btn.innerText = "ENVIANDO...";
-            btn.disabled = true;
-
-            const jobData = {
-                cliente, direccion, empleado, email, fecha, hora, notas,
-                tipo: selectedType,
-                timestamp: Date.now()
+            const data = {
+                cliente: document.getElementById('cliente').value,
+                direccion: document.getElementById('direccion').value,
+                empleado: document.getElementById('empleado-nombre').value,
+                email: document.getElementById('staff-email').value,
+                fecha: document.getElementById('fecha').value,
+                hora: document.getElementById('hora').value,
+                tipo: document.getElementById('tipo-limpieza').value
             };
 
-            // 1. Guardar en Firebase
-            db.ref('jobs').push(jobData).then(() => {
-                // 2. Enviar por EmailJS
-                emailjs.send("service_8kakktm", "template_r1nt4zb", {
-                    to_email: email,
-                    client_name: cliente,
-                    staff_name: empleado,
-                    address: direccion,
-                    date_time: fecha + " @ " + hora,
-                    type: selectedType,
-                    notes: notas
-                }).then(() => {
-                    alert("¡Éxito! Servicio guardado y notificado.");
-                    location.reload();
-                });
-            }).catch(err => {
-                alert("Error: " + err.message);
-                btn.innerText = "GUARDAR Y NOTIFICAR POR EMAIL";
-                btn.disabled = false;
-            });
-        }
-
-        // BUSCADOR
-        function searchJobs() {
-            const term = document.getElementById('search-input').value.toLowerCase();
-            const container = document.getElementById('jobs-container');
-            db.ref('jobs').limitToLast(10).once('value', snap => {
-                container.innerHTML = "";
-                snap.forEach(child => {
-                    const j = child.val();
-                    if(j.cliente.toLowerCase().includes(term) || j.empleado?.toLowerCase().includes(term)) {
-                        container.innerHTML += `
-                            <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #007bff;">
-                                <p style="color: white; margin: 0;"><strong>${j.cliente}</strong> (${j.tipo})</p>
-                                <p style="color: #888; font-size: 13px; margin: 5px 0;">Empleado: ${j.empleado || '---'}</p>
-                                <p style="color: #888; font-size: 12px; margin: 0;">${j.fecha} | ${j.hora}</p>
-                            </div>`;
-                    }
-                });
+            db.ref('jobs').push(data).then(() => {
+                alert("Servicio asignado correctamente");
+                location.reload();
             });
         }
 
         function logout() {
-            auth.signOut().then(() => {
-                window.location.href = "index.html";
-            });
+            firebase.auth().signOut().then(() => { window.location.href = "index.html"; });
         }
-
-        // Carga inicial
-        searchJobs();
-        setType('Estándar');
     </script>
 </body>
 </html>
