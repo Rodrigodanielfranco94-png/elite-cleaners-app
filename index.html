@@ -3,46 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite - Acceso</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
-        body { font-family: 'Montserrat', sans-serif; background: #000; color: white; height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; }
-        .glass { background: #111; border: 1px solid #222; border-radius: 28px; width: 100%; max-width: 350px; padding: 40px 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .input-elite { background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 14px; padding: 15px; width: 100%; outline: none; margin-bottom: 20px; font-size: 14px; }
-        .btn-login { background: #007AFF; font-weight: 900; border-radius: 16px; width: 100%; padding: 18px; text-transform: uppercase; cursor: pointer; transition: 0.3s; border: none; color: white; }
-    </style>
+    <title>Elite Cleaners - Login</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 </head>
-<body>
-    <div class="glass text-center">
-        <h1 class="text-2xl font-black italic uppercase mb-2">ELITE <span class="text-blue-500">SYSTEM</span></h1>
-        <p class="text-[9px] text-gray-500 font-bold tracking-[0.3em] mb-8">CONTROL DE ASISTENCIA</p>
-        
-        <input type="email" id="email" placeholder="Email de usuario" class="input-elite">
-        <input type="password" id="pass" placeholder="Contraseña" class="input-elite">
-        
-        <button onclick="handleLogin()" class="btn-login">Ingresar</button>
-        <p id="error" class="text-red-500 text-[10px] mt-4 font-bold hidden uppercase">Credenciales incorrectas</p>
+<body class="login-body">
+    <div class="login-container">
+        <h1 class="logo-text">ELITE <span>CLEANERS</span></h1>
+        <div class="card">
+            <input type="email" id="email" placeholder="Correo (admin@elite.com)" class="input-field">
+            <input type="password" id="password" placeholder="Contraseña (admin123)" class="input-field">
+            <button onclick="handleLogin()" class="send-btn">INGRESAR</button>
+            <p id="error-msg" style="color: #ff4d4d; font-size: 12px; margin-top: 10px; text-align: center;"></p>
+        </div>
     </div>
 
     <script>
-        function handleLogin() {
-            const email = document.getElementById('email').value.toLowerCase().trim();
-            const pass = document.getElementById('pass').value;
+        // Configuración WEB corregida basada en tus capturas
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2...", // Asegúrate de copiar tu API Key completa de la consola Web
+            authDomain: "elite-cleaners-app.firebaseapp.com",
+            projectId: "elite-cleaners-app",
+            storageBucket: "elite-cleaners-app.appspot.com",
+            messagingSenderId: "826642317319", // Tomado de tu captura
+            appId: "1:826642317319:web:tu_id_web_aqui" // Necesitas crear la app WEB en Firebase
+        };
+        firebase.initializeApp(firebaseConfig);
 
-            // CREDENCIALES DE ADMIN
-            if (email === "admin@elite.com" && pass === "admin123") {
-                localStorage.setItem("userRole", "admin");
-                window.location.href = "admin.html";
-            } 
-            // CREDENCIALES DE EMPLEADOS (Contraseña genérica: 1234)
-            else if (email !== "" && pass === "1234") {
-                localStorage.setItem("userRole", "staff");
-                localStorage.setItem("userEmail", email);
-                window.location.href = "empleado.html";
-            } else {
-                document.getElementById('error').classList.remove('hidden');
+        function handleLogin() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            const errorMsg = document.getElementById('error-msg');
+
+            if (!email || !pass) {
+                errorMsg.innerText = "Por favor, completa todos los campos.";
+                return;
             }
+
+            firebase.auth().signInWithEmailAndPassword(email, pass)
+                .then(() => {
+                    // Si el login es exitoso, redirige a admin.html
+                    window.location.href = "admin.html";
+                })
+                .catch((error) => {
+                    errorMsg.innerText = "Error: " + error.message;
+                    console.error("Login Error:", error.code);
+                });
         }
     </script>
 </body>
