@@ -3,76 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin - Dashboard</title>
+    <title>Elite Cleaners - Admin</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <style>
-        :root { --bg-panel: #121212; --bg-card: #1c1c1e; --accent: #3b82f6; --text-gray: #8e8e93; }
-        body { background: #000; color: white; font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 20px; margin: 0; }
-        .container { max-width: 450px; margin: auto; }
-        
-        /* Cabecera y Contadores */
-        .header { text-align: center; margin-bottom: 25px; }
-        .header h1 { font-style: italic; font-weight: 900; margin: 0; font-size: 22px; }
-        .header span { color: var(--accent); }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
-        .stat-box { background: var(--bg-card); padding: 15px; border-radius: 15px; text-align: center; border: 1px solid #2c2c2e; }
-        .stat-box span { display: block; font-size: 10px; color: var(--text-gray); font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
-        .stat-box b { font-size: 24px; }
-        .stat-box.pending b { color: var(--accent); }
-        .stat-box.completed b { color: #34c759; }
-
-        /* Formulario */
-        .form-card { background: var(--bg-card); padding: 20px; border-radius: 25px; border: 1px solid #2c2c2e; }
-        input, textarea, select { width: 100%; background: #2c2c2e; border: 1px solid #3a3a3c; border-radius: 12px; padding: 15px; margin-bottom: 12px; color: white; box-sizing: border-box; font-size: 14px; }
-        textarea { height: 80px; resize: none; }
-        
-        /* Botones de Tipo de Limpieza */
-        .service-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .type-btn { background: #2c2c2e; border: none; padding: 12px; border-radius: 10px; color: white; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        .type-btn.active { background: var(--accent); }
-
-        .btn-save { width: 100%; background: #1d4ed8; color: white; border: none; padding: 18px; border-radius: 15px; font-weight: bold; font-size: 16px; text-transform: uppercase; cursor: pointer; }
-        .logout-link { color: var(--text-gray); font-size: 10px; text-decoration: none; display: block; margin-top: 10px; cursor: pointer; }
+        body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        h1 { font-style: italic; font-weight: 900; margin: 0; font-size: 24px; }
+        span { color: #3b82f6; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
+        .stat-card { background: #1c1c1e; padding: 20px; border-radius: 16px; text-align: center; border: 1px solid #2c2c2e; }
+        .stat-card h2 { margin: 0; font-size: 32px; }
+        .stat-card p { margin: 5px 0 0; color: #8e8e93; font-size: 12px; font-weight: bold; }
+        .stat-blue h2 { color: #3b82f6; }
+        .stat-green h2 { color: #34c759; }
+        .form-group { background: #1c1c1e; padding: 20px; border-radius: 16px; border: 1px solid #2c2c2e; }
+        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid #2c2c2e; background: #2c2c2e; color: white; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 15px; background: #3b82f6; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
+        label { color: #8e8e93; font-size: 12px; font-weight: bold; margin-left: 5px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>ELITE <span>ADMIN</span></h1>
-            <a onclick="logout()" class="logout-link">CERRAR SESIÓN</a>
-        </div>
 
-        <div class="stats-grid">
-            <div class="stat-box pending"><span>Pendientes</span><b id="count-pending">0</b></div>
-            <div class="stat-box completed"><span>Completados</span><b id="count-completed">0</b></div>
-        </div>
-
-        <div class="form-card">
-            <input type="text" id="cliente" placeholder="Nombre del Cliente">
-            <input type="text" id="direccion" placeholder="Dirección">
-            <input type="email" id="staff-email" placeholder="Email del Empleado">
-            
-            <div style="display: flex; gap: 10px;">
-                <input type="date" id="fecha">
-                <input type="time" id="hora">
-            </div>
-
-            <textarea id="notas" placeholder="Notas / Requerimientos Especiales"></textarea>
-
-            <div class="service-grid">
-                <button class="type-btn active" onclick="setType('Estándar', this)">Estándar</button>
-                <button class="type-btn" onclick="setType('Profunda', this)">Profunda</button>
-                <button class="type-btn" onclick="setType('Move-in', this)">Move-in</button>
-                <button class="type-btn" onclick="setType('Move-out', this)">Move-out</button>
-            </div>
-
-            <button class="btn-save" onclick="saveJob()">GUARDAR SERVICIO</button>
+    <div class="header">
+        <h1>ELITE <span>ADMIN</span></h1>
+        <div style="background: #1c1c1e; padding: 8px 15px; border-radius: 20px; font-size: 12px; border: 1px solid #2c2c2e;">
+            Ene 15, 2026
         </div>
     </div>
 
+    <div class="stats-grid">
+        <div class="stat-card stat-blue">
+            <h2 id="count-pendientes">0</h2>
+            <p>PENDIENTES</p>
+        </div>
+        <div class="stat-card stat-green">
+            <h2 id="count-completados">0</h2>
+            <p>COMPLETADOS</p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>CLIENTE</label>
+        <input type="text" id="cliente" placeholder="Nombre del cliente">
+        
+        <label>EMPLEADO ASIGNADO</label>
+        <input type="email" id="empleado" value="geraldinepimiento17@gmail.com">
+        
+        <button onclick="guardarServicio()">GUARDAR SERVICIO</button>
+    </div>
+
     <script>
+        // CONFIGURACIÓN DE TU FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
             authDomain: "elite-cleaners-app.firebaseapp.com",
@@ -81,51 +63,52 @@
             messagingSenderId: "826642317319",
             appId: "1:826642317319:web:cddce7904b590ae"
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
 
-        let selectedType = "Estándar";
+        // Inicializar Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
 
-        function setType(type, btn) {
-            selectedType = type;
-            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+        // Función para Guardar
+        function guardarServicio() {
+            const cliente = document.getElementById('cliente').value;
+            const empleado = document.getElementById('empleado').value;
+
+            if (!cliente || !empleado) {
+                alert("Por favor, llena todos los campos");
+                return;
+            }
+
+            db.collection("servicios").add({
+                cliente: cliente,
+                empleado: empleado,
+                estado: "pendiente",
+                fecha: new Date().toISOString()
+            })
+            .then(() => {
+                alert("✅ ¡Servicio Guardado con éxito!");
+                document.getElementById('cliente').value = ""; // Limpiar campo
+            })
+            .catch((error) => {
+                console.error("Error al guardar: ", error);
+                alert("❌ Error: " + error.message);
+            });
         }
 
-        // Actualizar contadores en tiempo real
-        db.ref('jobs').on('value', snap => {
-            let p = 0; let c = 0;
-            snap.forEach(child => {
-                if(child.val().status === 'completado') c++;
-                else p++;
+        // Función para contar servicios en tiempo real
+        db.collection("servicios").onSnapshot((snapshot) => {
+            let pendientes = 0;
+            let completados = 0;
+            
+            snapshot.forEach((doc) => {
+                if (doc.data().estado === "pendiente") pendientes++;
+                if (doc.data().estado === "completado") completados++;
             });
-            document.getElementById('count-pending').innerText = p;
-            document.getElementById('count-completed').innerText = c;
+
+            document.getElementById('count-pendientes').innerText = pendientes;
+            document.getElementById('count-completados').innerText = completados;
         });
-
-        function saveJob() {
-            const data = {
-                cliente: document.getElementById('cliente').value,
-                direccion: document.getElementById('direccion').value,
-                email: document.getElementById('staff-email').value.toLowerCase().trim(),
-                fecha: document.getElementById('fecha').value,
-                hora: document.getElementById('hora').value,
-                notas: document.getElementById('notas').value,
-                tipo: selectedType,
-                status: 'pendiente',
-                timestamp: Date.now()
-            };
-
-            if(!data.cliente || !data.email) return alert("Faltan datos");
-
-            db.ref('jobs').push(data).then(() => {
-                alert("Servicio guardado");
-                document.getElementById('cliente').value = "";
-                document.getElementById('notas').value = "";
-            });
-        }
-
-        function logout() { firebase.auth().signOut().then(() => location.href = "index.html"); }
     </script>
 </body>
 </html>
