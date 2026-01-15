@@ -19,7 +19,7 @@
         .stat-card p { margin: 5px 0 0; color: #8e8e93; font-size: 10px; font-weight: bold; }
 
         .form-container { background: #1c1c1e; padding: 20px; border-radius: 20px; border: 1px solid #2c2c2e; margin-bottom: 30px; }
-        input, textarea { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #2c2c2e; background: #2c2c2e; color: white; box-sizing: border-box; font-size: 16px; }
+        input, textarea, select { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #2c2c2e; background: #2c2c2e; color: white; box-sizing: border-box; font-size: 16px; }
         input[type="date"], input[type="time"] { color-scheme: dark; }
         
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -29,18 +29,15 @@
         
         .save-btn { width: 100%; padding: 20px; background: #1d4ed8; color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 18px; margin-top: 20px; text-transform: uppercase; }
 
-        /* BUSCADOR E HISTORIAL */
-        .section-title { font-size: 14px; font-weight: bold; color: #8e8e93; margin: 20px 0 10px 5px; text-transform: uppercase; display: flex; justify-content: space-between; }
-        #buscador { background: #1c1c1e; border: 1px solid #3b82f6; margin-bottom: 15px; }
-        .historial-lista { display: grid; gap: 10px; }
-        .card-servicio { background: #1c1c1e; padding: 15px; border-radius: 15px; border: 1px solid #2c2c2e; position: relative; }
+        .section-title { font-size: 14px; font-weight: bold; color: #8e8e93; margin: 20px 0 10px 5px; text-transform: uppercase; }
+        #buscador { background: #1c1c1e; border: 1px solid #3b82f6; }
+        .card-servicio { background: #1c1c1e; padding: 15px; border-radius: 15px; border: 1px solid #2c2c2e; position: relative; margin-bottom: 10px; }
         .card-servicio h3 { margin: 0; font-size: 16px; color: #3b82f6; }
         .card-servicio p { margin: 5px 0; font-size: 13px; color: #8e8e93; }
-        .badge { display: inline-block; padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
-        .badge-pendiente { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
-        .badge-completado { background: rgba(52, 199, 89, 0.2); color: #34c759; }
         
-        .ws-btn { position: absolute; right: 15px; top: 15px; background: #25d366; color: white; border: none; padding: 8px; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 18px; }
+        .ws-btn { position: absolute; right: 15px; top: 15px; background: #25d366; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 20px; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: bold; }
+        .badge-pendiente { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
     </style>
 </head>
 <body>
@@ -58,7 +55,12 @@
     <div class="form-container">
         <input type="text" id="cliente" placeholder="Nombre del cliente">
         <input type="text" id="direccion" placeholder="Dirección completa">
-        <input type="tel" id="telefono" placeholder="Teléfono del cliente (Ej: 1234567890)">
+        <input type="tel" id="telefono" placeholder="Teléfono (Ej: 19456667788)">
+        
+        <label style="font-size: 10px; color: #8e8e93; margin-left: 5px;">ASIGNAR EMPLEADO</label>
+        <select id="empleado">
+            <option value="geraldinepimiento17@gmail.com">Geraldine Pimiento</option>
+            </select>
         
         <div class="row">
             <input type="date" id="fecha-servicio">
@@ -74,14 +76,12 @@
             <button class="type-btn" onclick="selectType(this)">MOVE-OUT</button>
         </div>
 
-        <button class="save-btn" onclick="guardarServicio()">GUARDAR SERVICIO</button>
+        <button class="save-btn" onclick="guardarServicio()">GUARDAR Y ENVIAR</button>
     </div>
 
-    <div class="section-title">HISTORIAL DE SERVICIOS</div>
+    <div class="section-title">HISTORIAL</div>
     <input type="text" id="buscador" placeholder="🔍 Buscar cliente..." onkeyup="buscarCliente()">
-
-    <div id="historial" class="historial-lista">
-        </div>
+    <div id="historial" style="margin-top: 15px;"></div>
 
     <script>
         const firebaseConfig = {
@@ -104,42 +104,46 @@
         }
 
         function guardarServicio() {
-            const data = {
-                cliente: document.getElementById('cliente').value,
-                direccion: document.getElementById('direccion').value,
-                telefono: document.getElementById('telefono').value,
-                fecha_servicio: document.getElementById('fecha-servicio').value,
-                hora_servicio: document.getElementById('hora-servicio').value,
-                notas: document.getElementById('notas').value,
-                tipo: tipoSeleccionado,
-                estado: "pendiente",
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
+            const cliente = document.getElementById('cliente').value;
+            const direccion = document.getElementById('direccion').value;
+            const tel = document.getElementById('telefono').value;
+            const emp = document.getElementById('empleado').value;
+            const fecha = document.getElementById('fecha-servicio').value;
+            const hora = document.getElementById('hora-servicio').value;
+            const notas = document.getElementById('notas').value;
 
-            if(!data.cliente || !data.direccion) {
-                alert("Rellena Cliente y Dirección");
+            if(!cliente || !direccion || !fecha) {
+                alert("Rellena Cliente, Dirección y Fecha");
                 return;
             }
 
+            const data = {
+                cliente, direccion, telefono: tel, empleado: emp,
+                fecha_servicio: fecha, hora_servicio: hora, notas,
+                tipo: tipoSeleccionado, estado: "pendiente",
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
             db.collection("servicios").add(data).then(() => {
-                alert("✅ ¡SERVICIO GUARDADO!");
+                alert("✅ ¡Servicio Guardado!");
+                
+                // Opción de enviar correo automáticamente
+                const body = `Hola, se te ha asignado un servicio:\n\nCliente: ${cliente}\nDirección: ${direccion}\nFecha: ${fecha}\nHora: ${hora}\nTipo: ${tipoSeleccionado}\nNotas: ${notas}`;
+                window.location.href = `mailto:${emp}?subject=Nuevo Servicio Elite Cleaners&body=${encodeURIComponent(body)}`;
+                
                 document.getElementById('cliente').value = "";
                 document.getElementById('direccion').value = "";
                 document.getElementById('telefono').value = "";
             }).catch(err => alert("Error: " + err.message));
         }
 
-        // BUSCADOR EN TIEMPO REAL
         function buscarCliente() {
             const filtro = document.getElementById('buscador').value.toLowerCase();
-            const cards = document.querySelectorAll('.card-servicio');
-            cards.forEach(card => {
-                const nombre = card.getAttribute('data-nombre').toLowerCase();
-                card.style.display = nombre.includes(filtro) ? 'block' : 'none';
+            document.querySelectorAll('.card-servicio').forEach(card => {
+                card.style.display = card.dataset.nombre.toLowerCase().includes(filtro) ? 'block' : 'none';
             });
         }
 
-        // CARGAR HISTORIAL Y CONTADORES
         db.collection("servicios").orderBy("timestamp", "desc").onSnapshot(snap => {
             let p = 0, c = 0;
             const historialDiv = document.getElementById('historial');
@@ -149,15 +153,18 @@
                 const s = doc.data();
                 if(s.estado === "pendiente") p++; else c++;
 
-                const wsLink = s.telefono ? `https://wa.me/${s.telefono}` : '#';
-                
+                // Limpiar número para WhatsApp (solo números)
+                const telLimpio = s.telefono ? s.telefono.replace(/\D/g,'') : '';
+                const wsUrl = `https://api.whatsapp.com/send?phone=${telLimpio}`;
+
                 historialDiv.innerHTML += `
                     <div class="card-servicio" data-nombre="${s.cliente}">
-                        ${s.telefono ? `<a href="${wsLink}" class="ws-btn" target="_blank">🟢</a>` : ''}
+                        ${telLimpio ? `<a href="${wsUrl}" class="ws-btn">🟢</a>` : ''}
                         <h3>${s.cliente}</h3>
                         <p>📍 ${s.direccion}</p>
                         <p>📅 ${s.fecha_servicio} | ⏰ ${s.hora_servicio}</p>
-                        <span class="badge ${s.estado === 'pendiente' ? 'badge-pendiente' : 'badge-completado'}">${s.estado}</span>
+                        <p style="font-size: 11px; color: #3b82f6;">👤 ${s.empleado.split('@')[0]}</p>
+                        <span class="badge badge-pendiente">${s.estado}</span>
                     </div>
                 `;
             });
