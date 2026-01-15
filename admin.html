@@ -14,7 +14,6 @@
         h1 { font-style: italic; font-weight: 900; margin: 0; font-size: 22px; text-transform: uppercase; }
         h1 span { color: #3b82f6; }
 
-        /* Cuadros de Estadísticas Filtrables */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .stat-card { background: #1c1c1e; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #2c2c2e; cursor: pointer; transition: 0.3s; }
         .stat-card.active { border-color: #3b82f6; background: #1a2638; }
@@ -27,7 +26,6 @@
         input, textarea { width: 100%; padding: 14px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: white; box-sizing: border-box; font-size: 15px; }
         input[type="date"], input[type="time"] { color-scheme: dark; }
 
-        /* Mejora estética de Fecha y Hora separados */
         .datetime-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         
         .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
@@ -40,7 +38,7 @@
         .card-servicio h3 { margin: 0 0 5px 0; font-size: 18px; color: #3b82f6; }
         .card-servicio p { margin: 4px 0; font-size: 13px; color: #aeaeb2; }
         
-        .btn-whatsapp-circular { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; background: #25d366; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 18px; }
+        .btn-whatsapp-circular { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; background: #25d366; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 18px; border: none; cursor: pointer; }
 
         .card-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 15px; }
         .btn-secondary { padding: 10px; border-radius: 8px; border: none; font-size: 10px; font-weight: bold; color: white; cursor: pointer; text-align: center; }
@@ -74,7 +72,7 @@
         <input type="text" id="cliente" placeholder="Nombre del cliente">
         <input type="text" id="direccion" placeholder="Dirección del servicio">
         <input type="tel" id="telefono" placeholder="WhatsApp (Ej: 13478659468)">
-        <input type="email" id="empleado" placeholder="correo@empleado.com" value="geraldinepimiento17@gmail.com">
+        <input type="email" id="empleado" placeholder="Escribir correo del empleado">
         
         <div class="datetime-container">
             <div>
@@ -91,10 +89,10 @@
         <textarea id="notas" placeholder="Instrucciones especiales..." rows="2"></textarea>
 
         <div class="type-grid">
-            <button class="type-btn active" onclick="selectType(this)">ESTÁNDAR</button>
-            <button class="type-btn" onclick="selectType(this)">PROFUNDA</button>
-            <button class="type-btn" onclick="selectType(this)">MOVE-IN</button>
-            <button class="type-btn" onclick="selectType(this)">MOVE-OUT</button>
+            <button class="type-btn active" id="btn-ESTÁNDAR" onclick="selectType('ESTÁNDAR')">ESTÁNDAR</button>
+            <button class="type-btn" id="btn-PROFUNDA" onclick="selectType('PROFUNDA')">PROFUNDA</button>
+            <button class="type-btn" id="btn-MOVE-IN" onclick="selectType('MOVE-IN')">MOVE-IN</button>
+            <button class="type-btn" id="btn-MOVE-OUT" onclick="selectType('MOVE-OUT')">MOVE-OUT</button>
         </div>
 
         <button class="save-btn" id="btn-principal" onclick="guardarServicio()">GUARDAR Y NOTIFICAR</button>
@@ -128,13 +126,14 @@
             cargarDatos();
         }
 
-        function selectType(btn) {
+        function selectType(tipo) {
+            tipoSeleccionado = tipo;
             document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            tipoSeleccionado = btn.innerText;
+            document.getElementById('btn-' + tipo).classList.add('active');
         }
 
         function guardarServicio() {
+            const id = document.getElementById('edit-id').value;
             const data = {
                 cliente: document.getElementById('cliente').value,
                 direccion: document.getElementById('direccion').value,
@@ -144,21 +143,49 @@
                 hora_servicio: document.getElementById('hora-servicio').value,
                 notas: document.getElementById('notas').value,
                 tipo: tipoSeleccionado,
-                estado: "pendiente",
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                estado: "pendiente"
             };
 
-            if(!data.cliente || !data.fecha_servicio) return alert("Faltan datos");
+            if(!data.cliente) return alert("Por favor ingresa el nombre del cliente");
 
-            db.collection("servicios").add(data).then(() => {
-                emailjs.send("service_8kakktm", "template_r1nt4zb", {
-                    to_email: data.empleado,
-                    client_name: data.cliente,
-                    address: data.direccion,
-                    date_time: data.fecha_servicio + " a las " + data.hora_servicio,
-                    notes: data.notas
-                }).then(() => alert("✅ Guardado y Correo Enviado"));
-                resetForm();
+            if(id) {
+                db.collection("servicios").doc(id).update(data).then(() => {
+                    alert("✅ Cambios actualizados correctamente");
+                    resetForm();
+                });
+            } else {
+                data.timestamp = firebase.firestore.FieldValue.serverTimestamp();
+                db.collection("servicios").add(data).then(() => {
+                    emailjs.send("service_8kakktm", "template_r1nt4zb", {
+                        to_email: data.empleado,
+                        client_name: data.cliente,
+                        address: data.direccion,
+                        date_time: data.fecha_servicio + " a las " + data.hora_servicio,
+                        notes: data.notas
+                    }).then(() => alert("✅ Guardado y Correo Enviado"));
+                    resetForm();
+                });
+            }
+        }
+
+        function cargarEdicion(id) {
+            db.collection("servicios").doc(id).get().then((doc) => {
+                const s = doc.data();
+                document.getElementById('edit-id').value = id;
+                document.getElementById('cliente').value = s.cliente;
+                document.getElementById('direccion').value = s.direccion;
+                document.getElementById('telefono').value = s.telefono;
+                document.getElementById('empleado').value = s.empleado;
+                document.getElementById('fecha-servicio').value = s.fecha_servicio;
+                document.getElementById('hora-servicio').value = s.hora_servicio;
+                document.getElementById('notas').value = s.notas;
+                
+                selectType(s.tipo || "ESTÁNDAR");
+                
+                const btn = document.getElementById('btn-principal');
+                btn.innerText = "ACTUALIZAR CAMBIOS";
+                btn.style.background = "#5856d6";
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         }
 
@@ -167,10 +194,15 @@
         }
 
         function resetForm() {
+            document.getElementById('edit-id').value = "";
             document.getElementById('cliente').value = "";
             document.getElementById('direccion').value = "";
             document.getElementById('telefono').value = "";
+            document.getElementById('empleado').value = "";
             document.getElementById('notas').value = "";
+            document.getElementById('btn-principal').innerText = "GUARDAR Y NOTIFICAR";
+            document.getElementById('btn-principal').style.background = "#1d4ed8";
+            selectType("ESTÁNDAR");
         }
 
         function cargarDatos() {
@@ -184,19 +216,21 @@
                     if(s.estado === "pendiente") p++; else c++;
 
                     if(s.estado === vistaActual) {
-                        const msgWS = encodeURIComponent(`*NUEVA LIMPIEZA*\nCliente: ${s.cliente}\nDir: ${s.direccion}`);
+                        const limpioTelefono = s.telefono ? s.telefono.replace(/\D/g,'') : '';
+                        const msgWS = encodeURIComponent(`Hola ${s.cliente}, somos Elite Cleaners. Confirmamos tu servicio para el día ${s.fecha_servicio}.`);
+                        
                         const card = document.createElement('div');
                         card.className = 'card-servicio';
                         card.innerHTML = `
-                            <a href="https://wa.me/${s.telefono}?text=${msgWS}" class="btn-whatsapp-circular" target="_blank">📲</a>
+                            <a href="https://wa.me/${limpioTelefono}?text=${msgWS}" class="btn-whatsapp-circular" target="_blank">📲</a>
                             <h3>${s.cliente}</h3>
                             <p>📍 ${s.direccion}</p>
                             <p>📅 ${s.fecha_servicio} | ⏰ ${s.hora_servicio}</p>
-                            <p>✨ Tipo: ${s.tipo}</p>
+                            <p>✨ Tipo: ${s.tipo || 'No asignado'}</p>
                             <div class="card-actions">
                                 ${s.estado === 'pendiente' ? `<button class="btn-secondary btn-complete" onclick="completarTrabajo('${doc.id}')">Terminado ✓</button>` : ''}
-                                <button class="btn-secondary btn-edit">Editar</button>
-                                <button class="btn-secondary btn-delete" onclick="db.collection('servicios').doc('${doc.id}').delete()">Borrar</button>
+                                <button class="btn-secondary btn-edit" onclick="cargarEdicion('${doc.id}')">Editar</button>
+                                <button class="btn-secondary btn-delete" onclick="if(confirm('¿Borrar servicio?')) db.collection('servicios').doc('${doc.id}').delete()">Borrar</button>
                             </div>
                         `;
                         historial.appendChild(card);
