@@ -9,11 +9,11 @@
     <style>
         body { background: #000; color: white; font-family: -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .login-card { width: 90%; max-width: 350px; text-align: center; }
-        h1 { font-style: italic; font-weight: 900; letter-spacing: -1px; margin-bottom: 30px; }
+        h1 { font-style: italic; font-weight: 900; letter-spacing: -1px; margin-bottom: 30px; font-size: 28px; }
         span { color: #3b82f6; }
-        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid #2c2c2e; background: #1c1c1e; color: white; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: #3b82f6; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        #error-msg { color: #ff4d4d; font-size: 12px; margin-top: 10px; }
+        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid #2c2c2e; background: #1c1c1e; color: white; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 15px; background: #3b82f6; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
+        #error-msg { color: #ff4d4d; font-size: 13px; margin-top: 15px; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -26,7 +26,7 @@
     </div>
 
     <script>
-        // Tu configuración Web exacta de la captura
+        // CONFIGURACIÓN EXACTA DE TU FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
             authDomain: "elite-cleaners-app.firebaseapp.com",
@@ -35,26 +35,35 @@
             messagingSenderId: "826642317319",
             appId: "1:826642317319:web:cddce7904b590ae"
         };
-        firebase.initializeApp(firebaseConfig);
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
 
         function login() {
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.toLowerCase().trim();
             const pass = document.getElementById('pass').value;
             const errorP = document.getElementById('error-msg');
+
+            errorP.innerText = "Verificando...";
 
             firebase.auth().signInWithEmailAndPassword(email, pass)
                 .then((userCredential) => {
                     const user = userCredential.user;
-                    // Si eres tú, vas al panel de control
+                    // Redirección lógica
                     if(user.email === "admin@elite.com") {
                         window.location.href = "admin.html";
                     } else {
-                        // Si es cualquier otro empleado, va a su lista
                         window.location.href = "empleado.html";
                     }
                 })
                 .catch((error) => {
-                    errorP.innerText = "Usuario o clave incorrectos";
+                    console.error(error);
+                    if (error.code === 'auth/unauthorized-domain') {
+                        errorP.innerText = "Error: Dominio no autorizado en Firebase.";
+                    } else {
+                        errorP.innerText = "Correo o contraseña incorrectos.";
+                    }
                 });
         }
     </script>
