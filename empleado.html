@@ -9,11 +9,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
-        body { font-family: 'Montserrat', sans-serif; background: #000; color: white; padding-bottom: 50px; }
-        .glass { background: #111; border: 1px solid #222; border-radius: 24px; }
-        .btn-action { font-weight: 900; text-transform: uppercase; font-size: 12px; padding: 18px; border-radius: 15px; width: 100%; border: none; cursor: pointer; color: white; }
-        .btn-in { background: #007AFF; }
-        .btn-out { background: #34C759; }
+        body { font-family: 'Montserrat', sans-serif; background: #000; color: white; padding-bottom: 40px; }
+        .glass { background: #111; border: 1px solid #222; border-radius: 28px; }
+        .btn-action { font-weight: 900; text-transform: uppercase; font-size: 11px; padding: 15px; border-radius: 16px; width: 100%; border: none; cursor: pointer; color: white; }
     </style>
 </head>
 <body class="p-4">
@@ -30,12 +28,12 @@
     <div id="jobList" class="max-w-md mx-auto space-y-6"></div>
 
     <script>
-        // PEGA AQUÍ TU CONFIGURACIÓN
+        // --- PEGA AQUÍ TUS CREDENCIALES DE FIREBASE ---
         const firebaseConfig = { };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const currentEmail = localStorage.getItem("userEmail");
-        document.getElementById('userDisplay').innerText = "Hola: " + currentEmail;
+        document.getElementById('userDisplay').innerText = "Conectado: " + currentEmail;
 
         db.ref('jobs').on('value', snap => {
             const data = snap.val();
@@ -44,34 +42,16 @@
             for(let id in data) {
                 const j = data[id];
                 if(j.empEmail === currentEmail && j.status !== 'Completado') {
-                    container.innerHTML += `
-                        <div class="glass p-6">
-                            <div class="flex justify-between mb-4">
-                                <div>
-                                    <h2 class="text-lg font-black uppercase">${j.cli}</h2>
-                                    <p class="text-blue-500 text-[10px] font-bold">${j.type}</p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-xs font-black">🕒 ${j.time}</p>
-                                </div>
-                            </div>
-                            <p class="text-gray-400 text-xs mb-4 italic">📍 ${j.addr}</p>
-                            ${j.notes ? `<div class="bg-blue-500/10 p-3 rounded-lg mb-4"><p class="text-[11px] text-blue-200">Nota: ${j.notes}</p></div>`:''}
-                            ${!j.arrivalTime ? 
-                                `<button onclick="updateJob('${id}', 'arrivalTime', 'En Proceso')" class="btn-action btn-in">Marcar Entrada</button>` : 
-                                `<button onclick="updateJob('${id}', 'finishTime', 'Completado')" class="btn-action btn-out">Finalizar Servicio</button>`
-                            }
-                        </div>`;
+                    container.innerHTML += `<div class="glass p-6">
+                        <h2 class="text-lg font-black uppercase italic">${j.cli}</h2>
+                        <p class="text-blue-500 text-[10px] font-bold mb-4">${j.type} | 🕒 ${j.time}</p>
+                        <p class="text-gray-400 text-xs mb-4">📍 ${j.addr}</p>
+                        ${j.notes ? `<div class="bg-blue-500/10 p-3 rounded-lg mb-4 text-[11px] text-blue-200 italic">Nota: ${j.notes}</div>`:''}
+                        <button onclick="db.ref('jobs/${id}').update({status:'Completado'})" class="btn-action bg-green-600">Finalizar Servicio</button>
+                    </div>`;
                 }
             }
         });
-
-        function updateJob(id, field, status) {
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            let updates = { status: status };
-            updates[field] = time;
-            db.ref('jobs/' + id).update(updates);
-        }
     </script>
 </body>
 </html>
