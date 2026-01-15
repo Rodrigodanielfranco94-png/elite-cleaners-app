@@ -112,25 +112,23 @@
             if(!data.cliente || !data.direccion || !data.empleado) return alert("Faltan datos obligatorios");
 
             if(id) {
-                // ACTUALIZAR REGISTRO EXISTENTE
                 db.collection("servicios").doc(id).update(data).then(() => {
                     alert("✅ ¡Servicio Actualizado!");
                     resetFormulario();
                 });
             } else {
-                // GUARDAR NUEVO Y ABRIR GMAIL DE EMPRESA
                 db.collection("servicios").add(data).then(() => {
                     alert("✅ ¡Servicio Guardado!");
                     
                     const asunto = encodeURIComponent(`Nuevo Servicio Elite Cleaners - ${data.cliente}`);
                     const cuerpo = encodeURIComponent(`Hola,\n\nSe te ha asignado un nuevo servicio:\n\nCliente: ${data.cliente}\nDirección: ${data.direccion}\nFecha: ${data.fecha_servicio}\nHora: ${data.hora_servicio}\nTipo: ${data.tipo}\nNotas: ${data.notas}`);
                     
-                    // URL para Gmail Web con la cuenta de la empresa
+                    // Abrir Gmail forzando la cuenta de empresa
                     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${data.empleado}&su=${asunto}&body=${cuerpo}&authuser=elitecleanerscompany@gmail.com`;
                     
-                    window.open(gmailUrl, '_blank');
+                    window.location.href = gmailUrl;
                     resetFormulario();
-                });
+                }).catch(() => alert("Error al guardar"));
             }
         }
 
@@ -156,10 +154,8 @@
         }
 
         function eliminarRegistro(id) {
-            if(confirm("¿Seguro que quieres eliminar este registro permanentemente?")) {
-                db.collection("servicios").doc(id).delete().then(() => {
-                    alert("Registro eliminado");
-                });
+            if(confirm("¿Seguro que quieres eliminar este registro?")) {
+                db.collection("servicios").doc(id).delete();
             }
         }
 
@@ -194,8 +190,6 @@
                     </div>
                 `;
                 historialDiv.appendChild(card);
-                
-                // Asignar evento de editar
                 document.getElementById(`btn-edit-${doc.id}`).onclick = () => editarRegistro(doc.id, s);
             });
         });
