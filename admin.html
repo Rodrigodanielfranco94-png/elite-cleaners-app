@@ -19,7 +19,7 @@
         .stat-card p { margin: 5px 0 0; color: #8e8e93; font-size: 10px; font-weight: bold; }
 
         .form-container { background: #1c1c1e; padding: 20px; border-radius: 20px; border: 1px solid #2c2c2e; margin-bottom: 30px; }
-        input, textarea, select { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #2c2c2e; background: #2c2c2e; color: white; box-sizing: border-box; font-size: 16px; }
+        input, textarea { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #2c2c2e; background: #2c2c2e; color: white; box-sizing: border-box; font-size: 16px; }
         input[type="date"], input[type="time"] { color-scheme: dark; }
         
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -55,13 +55,13 @@
     <div class="form-container">
         <input type="text" id="cliente" placeholder="Nombre del cliente">
         <input type="text" id="direccion" placeholder="Dirección completa">
-        
         <input type="tel" id="telefono" placeholder="Teléfono (Ej: 19251234567)">
         
-        <label style="font-size: 10px; color: #8e8e93; margin-left: 5px;">ASIGNAR EMPLEADO</label>
-        <select id="empleado">
-            <option value="geraldinepimiento17@gmail.com">Geraldine Pimiento</option>
-        </select>
+        <label style="font-size: 10px; color: #8e8e93; margin-left: 5px;">CORREO DEL EMPLEADO</label>
+        <input type="email" id="empleado" list="empleados-lista" placeholder="correo@ejemplo.com">
+        <datalist id="empleados-lista">
+            <option value="geraldinepimiento17@gmail.com">
+        </datalist>
         
         <div class="row">
             <input type="date" id="fecha-servicio">
@@ -98,6 +98,9 @@
         const db = firebase.firestore();
         let tipoSeleccionado = "ESTÁNDAR";
 
+        // Cargar correo de Geraldine por defecto
+        document.getElementById('empleado').value = "geraldinepimiento17@gmail.com";
+
         function selectType(btn) {
             document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -113,8 +116,8 @@
             const hora = document.getElementById('hora-servicio').value;
             const notas = document.getElementById('notas').value;
 
-            if(!cliente || !direccion || !fecha) {
-                alert("Completa Cliente, Dirección y Fecha");
+            if(!cliente || !direccion || !fecha || !emp) {
+                alert("Completa Cliente, Dirección, Fecha y Correo");
                 return;
             }
 
@@ -127,8 +130,13 @@
 
             db.collection("servicios").add(data).then(() => {
                 alert("✅ ¡Servicio Guardado!");
-                const body = `Hola, nuevo servicio:\n\nCliente: ${cliente}\nDirección: ${direccion}\nFecha: ${fecha}\nHora: ${hora}\nTipo: ${tipoSeleccionado}\nNotas: ${notas}`;
-                window.location.href = `mailto:${emp}?subject=Nuevo Servicio&body=${encodeURIComponent(body)}`;
+                // Abre el correo automáticamente
+                const body = `Hola, se te ha asignado un nuevo servicio de Elite Cleaners:\n\nCliente: ${cliente}\nDirección: ${direccion}\nFecha: ${fecha}\nHora: ${hora}\nTipo: ${tipoSeleccionado}\nNotas: ${notas}`;
+                window.location.href = `mailto:${emp}?subject=Nuevo Servicio Elite Cleaners&body=${encodeURIComponent(body)}`;
+                
+                document.getElementById('cliente').value = "";
+                document.getElementById('direccion').value = "";
+                document.getElementById('telefono').value = "";
             }).catch(err => alert("Error: " + err.message));
         }
 
@@ -148,7 +156,6 @@
                 const s = doc.data();
                 if(s.estado === "pendiente") p++; else c++;
 
-                // WHATSAPP: Limpiar número y usar enlace universal
                 const telLimpio = s.telefono ? s.telefono.replace(/\D/g,'') : '';
                 const wsUrl = `https://wa.me/${telLimpio}`;
 
@@ -158,6 +165,7 @@
                         <h3>${s.cliente}</h3>
                         <p>📍 ${s.direccion}</p>
                         <p>📅 ${s.fecha_servicio} | ⏰ ${s.hora_servicio}</p>
+                        <p style="font-size: 11px; color: #3b82f6;">👤 ${s.empleado}</p>
                         <span class="badge badge-pendiente">${s.estado}</span>
                     </div>
                 `;
