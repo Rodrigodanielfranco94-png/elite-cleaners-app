@@ -55,19 +55,20 @@
     <div class="form-container">
         <input type="text" id="cliente" placeholder="Nombre del cliente">
         <input type="text" id="direccion" placeholder="Dirección completa">
-        <input type="tel" id="telefono" placeholder="Teléfono (Ej: 19456667788)">
+        
+        <input type="tel" id="telefono" placeholder="Teléfono (Ej: 19251234567)">
         
         <label style="font-size: 10px; color: #8e8e93; margin-left: 5px;">ASIGNAR EMPLEADO</label>
         <select id="empleado">
             <option value="geraldinepimiento17@gmail.com">Geraldine Pimiento</option>
-            </select>
+        </select>
         
         <div class="row">
             <input type="date" id="fecha-servicio">
             <input type="time" id="hora-servicio">
         </div>
 
-        <textarea id="notas" placeholder="Notas adicionales..." rows="2"></textarea>
+        <textarea id="notas" placeholder="Notas (Ej: Tiene perro)" rows="2"></textarea>
 
         <div class="type-grid">
             <button class="type-btn active" onclick="selectType(this)">ESTÁNDAR</button>
@@ -113,7 +114,7 @@
             const notas = document.getElementById('notas').value;
 
             if(!cliente || !direccion || !fecha) {
-                alert("Rellena Cliente, Dirección y Fecha");
+                alert("Completa Cliente, Dirección y Fecha");
                 return;
             }
 
@@ -126,14 +127,8 @@
 
             db.collection("servicios").add(data).then(() => {
                 alert("✅ ¡Servicio Guardado!");
-                
-                // Opción de enviar correo automáticamente
-                const body = `Hola, se te ha asignado un servicio:\n\nCliente: ${cliente}\nDirección: ${direccion}\nFecha: ${fecha}\nHora: ${hora}\nTipo: ${tipoSeleccionado}\nNotas: ${notas}`;
-                window.location.href = `mailto:${emp}?subject=Nuevo Servicio Elite Cleaners&body=${encodeURIComponent(body)}`;
-                
-                document.getElementById('cliente').value = "";
-                document.getElementById('direccion').value = "";
-                document.getElementById('telefono').value = "";
+                const body = `Hola, nuevo servicio:\n\nCliente: ${cliente}\nDirección: ${direccion}\nFecha: ${fecha}\nHora: ${hora}\nTipo: ${tipoSeleccionado}\nNotas: ${notas}`;
+                window.location.href = `mailto:${emp}?subject=Nuevo Servicio&body=${encodeURIComponent(body)}`;
             }).catch(err => alert("Error: " + err.message));
         }
 
@@ -153,17 +148,16 @@
                 const s = doc.data();
                 if(s.estado === "pendiente") p++; else c++;
 
-                // Limpiar número para WhatsApp (solo números)
+                // WHATSAPP: Limpiar número y usar enlace universal
                 const telLimpio = s.telefono ? s.telefono.replace(/\D/g,'') : '';
-                const wsUrl = `https://api.whatsapp.com/send?phone=${telLimpio}`;
+                const wsUrl = `https://wa.me/${telLimpio}`;
 
                 historialDiv.innerHTML += `
                     <div class="card-servicio" data-nombre="${s.cliente}">
-                        ${telLimpio ? `<a href="${wsUrl}" class="ws-btn">🟢</a>` : ''}
+                        ${telLimpio ? `<a href="${wsUrl}" class="ws-btn" target="_blank">🟢</a>` : ''}
                         <h3>${s.cliente}</h3>
                         <p>📍 ${s.direccion}</p>
                         <p>📅 ${s.fecha_servicio} | ⏰ ${s.hora_servicio}</p>
-                        <p style="font-size: 11px; color: #3b82f6;">👤 ${s.empleado.split('@')[0]}</p>
                         <span class="badge badge-pendiente">${s.estado}</span>
                     </div>
                 `;
