@@ -29,12 +29,13 @@
         .card-servicio h3 { margin: 0 0 5px 0; font-size: 17px; color: #3b82f6; padding-right: 40px; }
         .card-servicio p { margin: 4px 0; font-size: 13px; color: #aeaeb2; }
         
-        .actions { display: flex; gap: 10px; margin-top: 12px; border-top: 1px solid #2c2c2e; padding-top: 12px; }
-        .btn-action { flex: 1; padding: 10px; border-radius: 8px; border: none; font-size: 12px; font-weight: bold; color: white; text-align: center; }
+        .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; border-top: 1px solid #2c2c2e; padding-top: 12px; }
+        .btn-action { flex: 1; min-width: 80px; padding: 10px; border-radius: 8px; border: none; font-size: 11px; font-weight: bold; color: white; text-align: center; }
         .btn-edit { background: #5856d6; }
         .btn-delete { background: #ff3b30; }
+        .btn-ws-emp { background: #25d366; color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; }
         
-        .ws-btn { position: absolute; right: 15px; top: 15px; background: #25d366; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 20px; }
+        .ws-btn-cliente { position: absolute; right: 15px; top: 15px; background: #25d366; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 20px; }
     </style>
 </head>
 <body>
@@ -48,7 +49,7 @@
         <span class="label-text">Cliente y Contacto</span>
         <input type="text" id="cliente" placeholder="Nombre del cliente">
         <input type="text" id="direccion" placeholder="Dirección del servicio">
-        <input type="tel" id="telefono" placeholder="Teléfono (Ej: 19456667788)">
+        <input type="tel" id="telefono" placeholder="WhatsApp Cliente (Ej: 19456667788)">
         
         <span class="label-text">Asignar a (Escribir Correo)</span>
         <input type="email" id="empleado" placeholder="correo@empleado.com" value="geraldinepimiento17@gmail.com">
@@ -59,7 +60,7 @@
             <input type="time" id="hora-servicio">
         </div>
 
-        <textarea id="notas" placeholder="Instrucciones adicionales..." rows="2"></textarea>
+        <textarea id="notas" placeholder="Notas..." rows="2"></textarea>
 
         <div class="type-grid">
             <button class="type-btn active" onclick="selectType(this)">ESTÁNDAR</button>
@@ -71,7 +72,7 @@
         <button class="save-btn" id="btn-principal" onclick="guardarServicio()">GUARDAR Y ENVIAR</button>
     </div>
 
-    <h2 style="font-size: 14px; color: #8e8e93; margin: 20px 0 10px 5px;">HISTORIAL DE TRABAJOS</h2>
+    <h2 style="font-size: 14px; color: #8e8e93; margin: 20px 0 10px 5px;">HISTORIAL</h2>
     <div id="historial"></div>
 
     <script>
@@ -105,57 +106,28 @@
                 hora_servicio: document.getElementById('hora-servicio').value,
                 notas: document.getElementById('notas').value,
                 tipo: tipoSeleccionado,
-                estado: "pendiente",
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            if(!data.cliente || !data.direccion || !data.empleado) return alert("Faltan datos obligatorios");
+            if(!data.cliente || !data.direccion) return alert("Faltan datos");
 
             if(id) {
                 db.collection("servicios").doc(id).update(data).then(() => {
-                    alert("✅ ¡Servicio Actualizado!");
+                    alert("✅ Actualizado");
                     resetFormulario();
                 });
             } else {
                 db.collection("servicios").add(data).then(() => {
-                    alert("✅ ¡Servicio Guardado!");
+                    alert("✅ Guardado en base de datos");
                     
-                    const asunto = encodeURIComponent(`Nuevo Servicio Elite Cleaners - ${data.cliente}`);
-                    const cuerpo = encodeURIComponent(`Hola,\n\nSe te ha asignado un nuevo servicio:\n\nCliente: ${data.cliente}\nDirección: ${data.direccion}\nFecha: ${data.fecha_servicio}\nHora: ${data.hora_servicio}\nTipo: ${data.tipo}\nNotas: ${data.notas}`);
-                    
-                    // Abrir Gmail forzando la cuenta de empresa
+                    // ABRIR GMAIL (RECUERDA DARLE A ENVIAR)
+                    const asunto = encodeURIComponent(`Nuevo Trabajo: ${data.cliente}`);
+                    const cuerpo = encodeURIComponent(`NUEVO SERVICIO\nCliente: ${data.cliente}\nDir: ${data.direccion}\nFecha: ${data.fecha_servicio}\nTipo: ${data.tipo}\nNotas: ${data.notas}`);
                     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${data.empleado}&su=${asunto}&body=${cuerpo}&authuser=elitecleanerscompany@gmail.com`;
                     
                     window.location.href = gmailUrl;
                     resetFormulario();
-                }).catch(() => alert("Error al guardar"));
-            }
-        }
-
-        function editarRegistro(id, info) {
-            document.getElementById('edit-id').value = id;
-            document.getElementById('cliente').value = info.cliente;
-            document.getElementById('direccion').value = info.direccion;
-            document.getElementById('telefono').value = info.telefono || '';
-            document.getElementById('empleado').value = info.empleado;
-            document.getElementById('fecha-servicio').value = info.fecha_servicio;
-            document.getElementById('hora-servicio').value = info.hora_servicio;
-            document.getElementById('notas').value = info.notas;
-            
-            document.querySelectorAll('.type-btn').forEach(b => {
-                b.classList.remove('active');
-                if(b.innerText === info.tipo) b.classList.add('active');
-            });
-            tipoSeleccionado = info.tipo;
-
-            document.getElementById('btn-principal').innerText = "ACTUALIZAR CAMBIOS";
-            document.getElementById('btn-principal').style.background = "#5856d6";
-            window.scrollTo({top: 0, behavior: 'smooth'});
-        }
-
-        function eliminarRegistro(id) {
-            if(confirm("¿Seguro que quieres eliminar este registro?")) {
-                db.collection("servicios").doc(id).delete();
+                });
             }
         }
 
@@ -164,7 +136,6 @@
             document.getElementById('cliente').value = "";
             document.getElementById('direccion').value = "";
             document.getElementById('telefono').value = "";
-            document.getElementById('notas').value = "";
             document.getElementById('btn-principal').innerText = "GUARDAR Y ENVIAR";
             document.getElementById('btn-principal').style.background = "#1d4ed8";
         }
@@ -174,23 +145,37 @@
             historialDiv.innerHTML = "";
             snap.forEach(doc => {
                 const s = doc.data();
-                const telLimpio = s.telefono ? s.telefono.replace(/\D/g,'') : '';
+                const telCliente = s.telefono ? s.telefono.replace(/\D/g,'') : '';
                 
+                // Texto para enviar por WhatsApp al empleado
+                const textoWS = encodeURIComponent(`*NUEVO SERVICIO ELITE CLEANERS*\n\n*Cliente:* ${s.cliente}\n*Dir:* ${s.direccion}\n*Fecha:* ${s.fecha_servicio}\n*Hora:* ${s.hora_servicio}\n*Tipo:* ${s.tipo}\n*Notas:* ${s.notas}`);
+
                 const card = document.createElement('div');
                 card.className = 'card-servicio';
                 card.innerHTML = `
-                    <a href="https://wa.me/${telLimpio}" class="ws-btn" target="_blank">🟢</a>
+                    <a href="https://wa.me/${telCliente}" class="ws-btn-cliente" target="_blank">🟢</a>
                     <h3>${s.cliente}</h3>
                     <p>📍 ${s.direccion}</p>
                     <p>📅 ${s.fecha_servicio} | ⏰ ${s.hora_servicio}</p>
-                    <p style="color: #3b82f6; font-size: 11px;">📩 ${s.empleado}</p>
                     <div class="actions">
-                        <button class="btn-action btn-edit" id="btn-edit-${doc.id}">✏️ Editar</button>
-                        <button class="btn-action btn-delete" onclick='eliminarRegistro("${doc.id}")'>🗑️ Eliminar</button>
+                        <a href="https://wa.me/?text=${textoWS}" class="btn-action btn-ws-emp" target="_blank">📲 Enviar por WS</a>
+                        <button class="btn-action btn-edit" id="ed-${doc.id}">✏️ Editar</button>
+                        <button class="btn-action btn-delete" onclick="db.collection('servicios').doc('${doc.id}').delete()">🗑️ Borrar</button>
                     </div>
                 `;
                 historialDiv.appendChild(card);
-                document.getElementById(`btn-edit-${doc.id}`).onclick = () => editarRegistro(doc.id, s);
+                document.getElementById(`ed-${doc.id}`).onclick = () => {
+                    document.getElementById('edit-id').value = doc.id;
+                    document.getElementById('cliente').value = s.cliente;
+                    document.getElementById('direccion').value = s.direccion;
+                    document.getElementById('telefono').value = s.telefono;
+                    document.getElementById('empleado').value = s.empleado;
+                    document.getElementById('fecha-servicio').value = s.fecha_servicio;
+                    document.getElementById('hora-servicio').value = s.hora_servicio;
+                    document.getElementById('notas').value = s.notas;
+                    document.getElementById('btn-principal').innerText = "ACTUALIZAR";
+                    window.scrollTo(0,0);
+                };
             });
         });
     </script>
