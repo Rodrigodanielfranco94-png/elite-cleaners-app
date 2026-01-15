@@ -29,6 +29,8 @@
         
         .save-btn { width: 100%; padding: 20px; background: #1d4ed8; color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 18px; margin-top: 20px; text-transform: uppercase; }
 
+        .label-text { font-size: 11px; color: #3b82f6; font-weight: bold; margin-bottom: 5px; display: block; text-transform: uppercase; margin-left: 5px; }
+
         .section-title { font-size: 14px; font-weight: bold; color: #8e8e93; margin: 20px 0 10px 5px; text-transform: uppercase; }
         #buscador { background: #1c1c1e; border: 1px solid #3b82f6; }
         .card-servicio { background: #1c1c1e; padding: 15px; border-radius: 15px; border: 1px solid #2c2c2e; position: relative; margin-bottom: 10px; }
@@ -53,16 +55,15 @@
     </div>
 
     <div class="form-container">
+        <span class="label-text">Datos del Cliente</span>
         <input type="text" id="cliente" placeholder="Nombre del cliente">
         <input type="text" id="direccion" placeholder="Dirección completa">
         <input type="tel" id="telefono" placeholder="Teléfono (Ej: 19251234567)">
         
-        <label style="font-size: 10px; color: #8e8e93; margin-left: 5px;">CORREO DEL EMPLEADO</label>
-        <input type="email" id="empleado" list="empleados-lista" placeholder="correo@ejemplo.com">
-        <datalist id="empleados-lista">
-            <option value="geraldinepimiento17@gmail.com">
-        </datalist>
+        <span class="label-text">Asignar a (Escribir Correo)</span>
+        <input type="email" id="empleado" placeholder="ejemplo@correo.com" value="geraldinepimiento17@gmail.com">
         
+        <span class="label-text">Fecha y Hora</span>
         <div class="row">
             <input type="date" id="fecha-servicio">
             <input type="time" id="hora-servicio">
@@ -98,9 +99,6 @@
         const db = firebase.firestore();
         let tipoSeleccionado = "ESTÁNDAR";
 
-        // Cargar correo de Geraldine por defecto
-        document.getElementById('empleado').value = "geraldinepimiento17@gmail.com";
-
         function selectType(btn) {
             document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -130,8 +128,7 @@
 
             db.collection("servicios").add(data).then(() => {
                 alert("✅ ¡Servicio Guardado!");
-                // Abre el correo automáticamente
-                const body = `Hola, se te ha asignado un nuevo servicio de Elite Cleaners:\n\nCliente: ${cliente}\nDirección: ${direccion}\nFecha: ${fecha}\nHora: ${hora}\nTipo: ${tipoSeleccionado}\nNotas: ${notas}`;
+                const body = `Hola, nuevo servicio:\n\nCliente: ${cliente}\nDirección: ${direccion}\nFecha: ${fecha}\nHora: ${hora}\nTipo: ${tipoSeleccionado}\nNotas: ${notas}`;
                 window.location.href = `mailto:${emp}?subject=Nuevo Servicio Elite Cleaners&body=${encodeURIComponent(body)}`;
                 
                 document.getElementById('cliente').value = "";
