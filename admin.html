@@ -13,17 +13,29 @@
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         h1 { font-style: italic; font-weight: 900; margin: 0; font-size: 22px; text-transform: uppercase; }
         h1 span { color: #3b82f6; }
+        
+        /* Restauración de los cuadros de estadísticas */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: #1c1c1e; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #2c2c2e; }
+        .stat-card h2 { margin: 0; font-size: 28px; color: #3b82f6; }
+        .stat-card p { margin: 5px 0 0 0; font-size: 10px; color: #8e8e93; text-transform: uppercase; font-weight: bold; }
+
         .form-container { background: #1c1c1e; padding: 18px; border-radius: 18px; border: 1px solid #2c2c2e; margin-bottom: 20px; }
         .label-text { font-size: 10px; color: #3b82f6; font-weight: bold; margin: 8px 0 4px 5px; display: block; text-transform: uppercase; }
+        
         input, textarea { width: 100%; padding: 14px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: white; box-sizing: border-box; font-size: 15px; }
         input[type="date"], input[type="time"] { color-scheme: dark; }
+        
         .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
         .type-btn { padding: 12px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: #8e8e93; font-weight: bold; font-size: 11px; }
         .type-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+        
         .save-btn { width: 100%; padding: 18px; background: #1d4ed8; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; margin-top: 20px; text-transform: uppercase; }
+
         .card-servicio { background: #1c1c1e; padding: 15px; border-radius: 15px; border: 1px solid #2c2c2e; position: relative; margin-bottom: 15px; border-left: 5px solid #3b82f6; }
         .card-servicio h3 { margin: 0 0 5px 0; font-size: 17px; color: #3b82f6; }
         .card-servicio p { margin: 4px 0; font-size: 13px; color: #aeaeb2; }
+        
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; border-top: 1px solid #2c2c2e; padding-top: 12px; }
         .btn-action { padding: 10px; border-radius: 8px; border: none; font-size: 11px; font-weight: bold; color: white; text-align: center; text-decoration: none; }
         .btn-edit { background: #5856d6; }
@@ -35,6 +47,17 @@
 
     <div class="header">
         <h1>ELITE <span>ADMIN</span></h1>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h2 id="count-pendientes">0</h2>
+            <p>Pendientes</p>
+        </div>
+        <div class="stat-card">
+            <h2 id="count-completados">0</h2>
+            <p>Completados</p>
+        </div>
     </div>
 
     <div class="form-container">
@@ -65,12 +88,12 @@
         <button class="save-btn" id="btn-principal" onclick="guardarServicio()">GUARDAR Y NOTIFICAR</button>
     </div>
 
-    <h2 style="font-size: 14px; color: #8e8e93; margin-left: 5px;">HISTORIAL</h2>
+    <h2 style="font-size: 14px; color: #8e8e93; margin-left: 5px; text-transform: uppercase;">Historial de Trabajos</h2>
     <div id="historial"></div>
 
     <script>
-        // PUBLIC KEY ACTUALIZADA SEGÚN TU CAPTURA
-        emailjs.init("HND0NNg6H-dBCZtNq");
+        // DATOS DE EMAILJS EXTRAÍDOS DE TUS CAPTURAS
+        emailjs.init("HND0NNg6H-dBCZtNq"); //
 
         const firebaseConfig = {
             apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
@@ -102,32 +125,37 @@
                 hora_servicio: document.getElementById('hora-servicio').value,
                 notas: document.getElementById('notas').value,
                 tipo: tipoSeleccionado,
+                estado: "pendiente",
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            if(!data.cliente || !data.direccion) return alert("Faltan datos");
+            if(!data.cliente || !data.direccion) return alert("Por favor, completa los campos del cliente.");
 
             if(id) {
                 db.collection("servicios").doc(id).update(data).then(() => {
-                    alert("✅ Actualizado en Firebase");
+                    alert("✅ Registro actualizado");
                     resetForm();
                 });
             } else {
                 db.collection("servicios").add(data).then(() => {
-                    // PARÁMETROS COINCIDIENDO CON TU DISEÑO {{client_name}}, {{address}}, etc.
-                    const params = {
+                    // CONFIGURACIÓN DE ENVÍO CORREGIDA SEGÚN TU TEMPLATE
+                    const emailParams = {
                         to_email: data.empleado,
-                        client_name: data.cliente,
-                        address: data.direccion,
-                        date_time: `${data.fecha_servicio} a las ${data.hora_servicio}`,
-                        notes: data.notas
+                        client_name: data.cliente, //
+                        address: data.direccion, //
+                        date_time: `${data.fecha_servicio} | ${data.hora_servicio}`, //
+                        notes: data.notas //
                     };
 
-                    // SERVICE ID Y TEMPLATE ID ACTUALIZADOS
-                    emailjs.send("service_8kakktm", "template_r1nt4zb", params)
-                        .then(() => alert("✅ Guardado y Correo Enviado"))
-                        .catch((err) => alert("Error correo: " + JSON.stringify(err)));
-                    
+                    emailjs.send("service_8kakktm", "template_r1nt4zb", emailParams) //
+                        .then(() => {
+                            alert("✅ Guardado y Correo enviado automáticamente");
+                        })
+                        .catch((error) => {
+                            console.error("Error EmailJS:", error);
+                            alert("⚠️ Guardado en base de datos, pero el correo falló.");
+                        });
+
                     resetForm();
                 });
             }
@@ -138,15 +166,24 @@
             document.getElementById('cliente').value = "";
             document.getElementById('direccion').value = "";
             document.getElementById('telefono').value = "";
+            document.getElementById('notas').value = "";
             document.getElementById('btn-principal').innerText = "GUARDAR Y NOTIFICAR";
+            document.getElementById('btn-principal').style.background = "#1d4ed8";
         }
 
+        // Sincronización en tiempo real del Historial y Contadores
         db.collection("servicios").orderBy("timestamp", "desc").onSnapshot(snap => {
             const historial = document.getElementById('historial');
             historial.innerHTML = "";
+            
+            let pendientes = 0;
+            let completados = 0;
+
             snap.forEach(doc => {
                 const s = doc.data();
-                const msgWS = encodeURIComponent(`*NUEVO TRABAJO*\n*Cliente:* ${s.cliente}\n*Dir:* ${s.direccion}\n*Fecha:* ${s.fecha_servicio}`);
+                if(s.estado === "pendiente") pendientes++; else completados++;
+
+                const msgWS = encodeURIComponent(`*ELITE CLEANERS - NUEVO TRABAJO*\n\n*Cliente:* ${s.cliente}\n*Dirección:* ${s.direccion}\n*Fecha:* ${s.fecha_servicio}\n*Hora:* ${s.hora_servicio}\n*Notas:* ${s.notas}`);
 
                 const card = document.createElement('div');
                 card.className = 'card-servicio';
@@ -154,6 +191,7 @@
                     <h3>${s.cliente}</h3>
                     <p>📍 ${s.direccion}</p>
                     <p>📅 ${s.fecha_servicio} | ⏰ ${s.hora_servicio}</p>
+                    <p style="color:#3b82f6; font-size:11px; font-weight:bold;">👤 ASIGNADO A: ${s.empleado}</p>
                     <div class="actions">
                         <a href="https://wa.me/?text=${msgWS}" class="btn-action btn-notificar" target="_blank">📲 NOTIFICAR POR WHATSAPP</a>
                         <button class="btn-action btn-edit" onclick='cargarEdicion("${doc.id}", ${JSON.stringify(s)})'>✏️ Editar</button>
@@ -162,6 +200,9 @@
                 `;
                 historial.appendChild(card);
             });
+
+            document.getElementById('count-pendientes').innerText = pendientes;
+            document.getElementById('count-completados').innerText = completados;
         });
 
         function cargarEdicion(id, s) {
@@ -173,8 +214,9 @@
             document.getElementById('fecha-servicio').value = s.fecha_servicio;
             document.getElementById('hora-servicio').value = s.hora_servicio;
             document.getElementById('notas').value = s.notas;
-            document.getElementById('btn-principal').innerText = "ACTUALIZAR";
-            window.scrollTo(0,0);
+            document.getElementById('btn-principal').innerText = "ACTUALIZAR CAMBIOS";
+            document.getElementById('btn-principal').style.background = "#5856d6";
+            window.scrollTo({top: 0, behavior: 'smooth'});
         }
     </script>
 </body>
