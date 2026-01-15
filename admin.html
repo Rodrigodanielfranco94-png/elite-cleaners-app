@@ -7,69 +7,57 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <style>
-        body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px; padding-bottom: 100px; }
+        body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; padding-bottom: 100px; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        h1 { font-style: italic; font-weight: 900; margin: 0; font-size: 24px; text-transform: uppercase; }
+        h1 { font-style: italic; font-weight: 900; margin: 0; font-size: 22px; text-transform: uppercase; }
         h1 span { color: #3b82f6; }
-        .logout-btn { background: #ff3b30; color: white; border: none; padding: 5px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; }
         
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: #1c1c1e; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #2c2c2e; }
-        .stat-card h2 { margin: 0; font-size: 28px; }
-        .stat-card p { margin: 5px 0 0; color: #8e8e93; font-size: 10px; font-weight: bold; }
-
-        .form-container { background: #1c1c1e; padding: 20px; border-radius: 20px; border: 1px solid #2c2c2e; margin-bottom: 30px; }
-        input, textarea { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #2c2c2e; background: #2c2c2e; color: white; box-sizing: border-box; font-size: 16px; }
-        input[type="date"], input[type="time"] { color-scheme: dark; }
+        .form-container { background: #1c1c1e; padding: 18px; border-radius: 18px; border: 1px solid #2c2c2e; margin-bottom: 20px; }
+        .label-text { font-size: 10px; color: #3b82f6; font-weight: bold; margin: 8px 0 4px 5px; display: block; text-transform: uppercase; }
         
+        input, textarea { width: 100%; padding: 14px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: white; box-sizing: border-box; font-size: 15px; }
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .type-btn { padding: 15px; border-radius: 12px; border: 1px solid #2c2c2e; background: #2c2c2e; color: #8e8e93; font-weight: bold; font-size: 12px; }
+        
+        .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .type-btn { padding: 12px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: #8e8e93; font-weight: bold; font-size: 11px; }
         .type-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
         
-        .save-btn { width: 100%; padding: 20px; background: #1d4ed8; color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 18px; margin-top: 20px; text-transform: uppercase; }
+        .save-btn { width: 100%; padding: 18px; background: #1d4ed8; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; margin-top: 20px; text-transform: uppercase; }
 
-        .label-text { font-size: 11px; color: #3b82f6; font-weight: bold; margin-bottom: 5px; display: block; text-transform: uppercase; margin-left: 5px; }
-
-        .section-title { font-size: 14px; font-weight: bold; color: #8e8e93; margin: 20px 0 10px 5px; text-transform: uppercase; }
-        #buscador { background: #1c1c1e; border: 1px solid #3b82f6; }
-        .card-servicio { background: #1c1c1e; padding: 15px; border-radius: 15px; border: 1px solid #2c2c2e; position: relative; margin-bottom: 10px; }
-        .card-servicio h3 { margin: 0; font-size: 16px; color: #3b82f6; }
-        .card-servicio p { margin: 5px 0; font-size: 13px; color: #8e8e93; }
+        .card-servicio { background: #1c1c1e; padding: 15px; border-radius: 15px; border: 1px solid #2c2c2e; position: relative; margin-bottom: 12px; }
+        .card-servicio h3 { margin: 0 0 5px 0; font-size: 16px; color: #3b82f6; width: 80%; }
+        .card-servicio p { margin: 3px 0; font-size: 12px; color: #aeaeb2; }
         
+        /* BOTONES DE ACCIÓN */
+        .actions { display: flex; gap: 10px; margin-top: 10px; border-top: 1px solid #2c2c2e; padding-top: 10px; }
+        .btn-action { flex: 1; padding: 8px; border-radius: 8px; border: none; font-size: 12px; font-weight: bold; color: white; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-edit { background: #5856d6; }
+        .btn-delete { background: #ff3b30; }
         .ws-btn { position: absolute; right: 15px; top: 15px; background: #25d366; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 20px; }
-        .badge { display: inline-block; padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: bold; }
-        .badge-pendiente { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <h1>ELITE <span>ADMIN</span></h1>
-        <button class="logout-btn" onclick="location.href='index.html'">CERRAR SESIÓN</button>
-    </div>
-
-    <div class="stats-grid">
-        <div class="stat-card"><h2 id="count-pendientes" style="color: #3b82f6;">0</h2><p>PENDIENTES</p></div>
-        <div class="stat-card"><h2 id="count-completados" style="color: #34c759;">0</h2><p>COMPLETADOS</p></div>
     </div>
 
     <div class="form-container">
-        <span class="label-text">Datos del Cliente</span>
+        <input type="hidden" id="edit-id"> <span class="label-text">Cliente y Contacto</span>
         <input type="text" id="cliente" placeholder="Nombre del cliente">
-        <input type="text" id="direccion" placeholder="Dirección completa">
-        <input type="tel" id="telefono" placeholder="Teléfono (Ej: 19251234567)">
+        <input type="text" id="direccion" placeholder="Dirección del servicio">
+        <input type="tel" id="telefono" placeholder="Teléfono (Ej: 19456667788)">
         
         <span class="label-text">Asignar a (Escribir Correo)</span>
-        <input type="email" id="empleado" placeholder="ejemplo@correo.com" value="geraldinepimiento17@gmail.com">
+        <input type="email" id="empleado" placeholder="correo@empleado.com" value="geraldinepimiento17@gmail.com">
         
-        <span class="label-text">Fecha y Hora</span>
+        <span class="label-text">Programación</span>
         <div class="row">
             <input type="date" id="fecha-servicio">
             <input type="time" id="hora-servicio">
         </div>
 
-        <textarea id="notas" placeholder="Notas (Ej: Tiene perro)" rows="2"></textarea>
+        <textarea id="notas" placeholder="Instrucciones adicionales..." rows="2"></textarea>
 
         <div class="type-grid">
             <button class="type-btn active" onclick="selectType(this)">ESTÁNDAR</button>
@@ -78,12 +66,11 @@
             <button class="type-btn" onclick="selectType(this)">MOVE-OUT</button>
         </div>
 
-        <button class="save-btn" onclick="guardarServicio()">GUARDAR Y ENVIAR</button>
+        <button class="save-btn" id="btn-principal" onclick="guardarServicio()">GUARDAR Y ENVIAR</button>
     </div>
 
-    <div class="section-title">HISTORIAL</div>
-    <input type="text" id="buscador" placeholder="🔍 Buscar cliente..." onkeyup="buscarCliente()">
-    <div id="historial" style="margin-top: 15px;"></div>
+    <h2 style="font-size: 14px; color: #8e8e93; margin-left: 5px;">HISTORIAL</h2>
+    <div id="historial"></div>
 
     <script>
         const firebaseConfig = {
@@ -106,69 +93,98 @@
         }
 
         function guardarServicio() {
-            const cliente = document.getElementById('cliente').value;
-            const direccion = document.getElementById('direccion').value;
-            const tel = document.getElementById('telefono').value;
-            const emp = document.getElementById('empleado').value;
-            const fecha = document.getElementById('fecha-servicio').value;
-            const hora = document.getElementById('hora-servicio').value;
-            const notas = document.getElementById('notas').value;
-
-            if(!cliente || !direccion || !fecha || !emp) {
-                alert("Completa Cliente, Dirección, Fecha y Correo");
-                return;
-            }
-
+            const id = document.getElementById('edit-id').value;
             const data = {
-                cliente, direccion, telefono: tel, empleado: emp,
-                fecha_servicio: fecha, hora_servicio: hora, notas,
-                tipo: tipoSeleccionado, estado: "pendiente",
+                cliente: document.getElementById('cliente').value,
+                direccion: document.getElementById('direccion').value,
+                telefono: document.getElementById('telefono').value,
+                empleado: document.getElementById('empleado').value,
+                fecha_servicio: document.getElementById('fecha-servicio').value,
+                hora_servicio: document.getElementById('hora-servicio').value,
+                notas: document.getElementById('notas').value,
+                tipo: tipoSeleccionado,
+                estado: "pendiente",
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            db.collection("servicios").add(data).then(() => {
-                alert("✅ ¡Servicio Guardado!");
-                const body = `Hola, nuevo servicio:\n\nCliente: ${cliente}\nDirección: ${direccion}\nFecha: ${fecha}\nHora: ${hora}\nTipo: ${tipoSeleccionado}\nNotas: ${notas}`;
-                window.location.href = `mailto:${emp}?subject=Nuevo Servicio Elite Cleaners&body=${encodeURIComponent(body)}`;
-                
-                document.getElementById('cliente').value = "";
-                document.getElementById('direccion').value = "";
-                document.getElementById('telefono').value = "";
-            }).catch(err => alert("Error: " + err.message));
+            if(id) {
+                // MODO EDICIÓN
+                db.collection("servicios").doc(id).update(data).then(() => {
+                    alert("✅ ¡Servicio Actualizado!");
+                    resetFormulario();
+                });
+            } else {
+                // MODO NUEVO
+                db.collection("servicios").add(data).then(() => {
+                    alert("✅ ¡Servicio Guardado!");
+                    const body = `ELITE CLEANERS\n\nCliente: ${data.cliente}\nDirección: ${data.direccion}\nFecha: ${data.fecha_servicio}\nHora: ${data.hora_servicio}\nTipo: ${data.tipo}\nNotas: ${data.notas}`;
+                    window.location.href = `mailto:${data.empleado}?subject=Nuevo Servicio&body=${encodeURIComponent(body)}`;
+                    resetFormulario();
+                });
+            }
         }
 
-        function buscarCliente() {
-            const filtro = document.getElementById('buscador').value.toLowerCase();
-            document.querySelectorAll('.card-servicio').forEach(card => {
-                card.style.display = card.dataset.nombre.toLowerCase().includes(filtro) ? 'block' : 'none';
+        function editarRegistro(id, info) {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('cliente').value = info.cliente;
+            document.getElementById('direccion').value = info.direccion;
+            document.getElementById('telefono').value = info.telefono || '';
+            document.getElementById('empleado').value = info.empleado;
+            document.getElementById('fecha-servicio').value = info.fecha_servicio;
+            document.getElementById('hora-servicio').value = info.hora_servicio;
+            document.getElementById('notas').value = info.notas;
+            
+            // Activar botón de tipo
+            document.querySelectorAll('.type-btn').forEach(b => {
+                if(b.innerText === info.tipo) selectType(b);
             });
+
+            document.getElementById('btn-principal').innerText = "ACTUALIZAR CAMBIOS";
+            document.getElementById('btn-principal').style.background = "#5856d6";
+            window.scrollTo(0,0);
+        }
+
+        function eliminarRegistro(id) {
+            if(confirm("¿Estás seguro de eliminar este servicio del historial?")) {
+                db.collection("servicios").doc(id).delete().then(() => {
+                    alert("🗑️ Eliminado correctamente");
+                });
+            }
+        }
+
+        function resetFormulario() {
+            document.getElementById('edit-id').value = "";
+            document.getElementById('cliente').value = "";
+            document.getElementById('direccion').value = "";
+            document.getElementById('telefono').value = "";
+            document.getElementById('btn-principal').innerText = "GUARDAR Y ENVIAR";
+            document.getElementById('btn-principal').style.background = "#1d4ed8";
         }
 
         db.collection("servicios").orderBy("timestamp", "desc").onSnapshot(snap => {
-            let p = 0, c = 0;
             const historialDiv = document.getElementById('historial');
             historialDiv.innerHTML = "";
-
             snap.forEach(doc => {
                 const s = doc.data();
-                if(s.estado === "pendiente") p++; else c++;
-
                 const telLimpio = s.telefono ? s.telefono.replace(/\D/g,'') : '';
                 const wsUrl = `https://wa.me/${telLimpio}`;
-
-                historialDiv.innerHTML += `
-                    <div class="card-servicio" data-nombre="${s.cliente}">
-                        ${telLimpio ? `<a href="${wsUrl}" class="ws-btn" target="_blank">🟢</a>` : ''}
-                        <h3>${s.cliente}</h3>
-                        <p>📍 ${s.direccion}</p>
-                        <p>📅 ${s.fecha_servicio} | ⏰ ${s.hora_servicio}</p>
-                        <p style="font-size: 11px; color: #3b82f6;">👤 ${s.empleado}</p>
-                        <span class="badge badge-pendiente">${s.estado}</span>
+                
+                const card = document.createElement('div');
+                card.className = 'card-servicio';
+                card.innerHTML = `
+                    <a href="${wsUrl}" class="ws-btn" target="_blank">🟢</a>
+                    <h3>${s.cliente}</h3>
+                    <p>📍 ${s.direccion}</p>
+                    <p>📅 ${s.fecha_servicio} | ⏰ ${s.hora_servicio}</p>
+                    <p style="color: #3b82f6; font-size: 11px;">📩 ${s.empleado}</p>
+                    <div class="actions">
+                        <button class="btn-action btn-edit" id="edit-${doc.id}">✏️ Editar</button>
+                        <button class="btn-action btn-delete" onclick="eliminarRegistro('${doc.id}')">🗑️ Eliminar</button>
                     </div>
                 `;
+                historialDiv.appendChild(card);
+                document.getElementById(`edit-${doc.id}`).onclick = () => editarRegistro(doc.id, s);
             });
-            document.getElementById('count-pendientes').innerText = p;
-            document.getElementById('count-completados').innerText = c;
         });
     </script>
 </body>
