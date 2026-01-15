@@ -14,9 +14,11 @@
         h1 { font-style: italic; font-weight: 900; margin: 0; font-size: 22px; text-transform: uppercase; }
         h1 span { color: #3b82f6; }
 
-        /* Cuadros de Estadísticas Restaurados */
+        /* Cuadros de Estadísticas como Botones */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: #1c1c1e; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #2c2c2e; }
+        .stat-card { background: #1c1c1e; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #2c2c2e; cursor: pointer; transition: 0.3s; }
+        .stat-card:active { transform: scale(0.95); background: #2c2c2e; }
+        .stat-card.active { border-color: #3b82f6; background: #1a2638; }
         .stat-card h2 { margin: 0; font-size: 28px; color: #3b82f6; }
         .stat-card p { margin: 5px 0 0 0; font-size: 10px; color: #8e8e93; text-transform: uppercase; font-weight: bold; }
         
@@ -36,13 +38,15 @@
         .card-servicio h3 { margin: 0 0 5px 0; font-size: 18px; color: #3b82f6; }
         .card-servicio p { margin: 4px 0; font-size: 13px; color: #aeaeb2; }
         
-        /* Botón de WhatsApp Circular */
         .btn-whatsapp-circular { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; background: #25d366; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 18px; }
 
-        .card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .btn-secondary { padding: 10px; border-radius: 8px; border: none; font-size: 11px; font-weight: bold; color: white; cursor: pointer; }
+        .card-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 15px; }
+        .btn-secondary { padding: 10px; border-radius: 8px; border: none; font-size: 10px; font-weight: bold; color: white; cursor: pointer; text-align: center; }
         .btn-edit { background: #5856d6; }
         .btn-delete { background: #ff3b30; }
+        .btn-complete { background: #25d366; }
+        
+        .view-title { font-size: 14px; color: #3b82f6; text-transform: uppercase; margin: 10px 0; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -52,11 +56,11 @@
     </div>
 
     <div class="stats-grid">
-        <div class="stat-card">
+        <div class="stat-card active" id="btn-view-pendientes" onclick="cambiarVista('pendiente')">
             <h2 id="count-pendientes">0</h2>
             <p>Pendientes</p>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" id="btn-view-completados" onclick="cambiarVista('completado')">
             <h2 id="count-completados">0</h2>
             <p>Completados</p>
         </div>
@@ -69,28 +73,24 @@
         <input type="text" id="direccion" placeholder="Dirección del servicio">
         <input type="tel" id="telefono" placeholder="WhatsApp (Ej: 13478659468)">
         <input type="email" id="empleado" placeholder="correo@empleado.com" value="geraldinepimiento17@gmail.com">
-        
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <input type="date" id="fecha-servicio">
             <input type="time" id="hora-servicio">
         </div>
-
         <textarea id="notas" placeholder="Notas..." rows="2"></textarea>
-
         <div class="type-grid">
             <button class="type-btn active" onclick="selectType(this)">ESTÁNDAR</button>
             <button class="type-btn" onclick="selectType(this)">PROFUNDA</button>
             <button class="type-btn" onclick="selectType(this)">MOVE-IN</button>
             <button class="type-btn" onclick="selectType(this)">MOVE-OUT</button>
         </div>
-
         <button class="save-btn" id="btn-principal" onclick="guardarServicio()">GUARDAR Y NOTIFICAR</button>
     </div>
 
+    <div class="view-title" id="titulo-lista">Mostrando: Pendientes</div>
     <div id="historial"></div>
 
     <script>
-        // Inicialización EmailJS
         emailjs.init("HND0NNg6H-dBCZtNq");
 
         const firebaseConfig = {
@@ -103,7 +103,17 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        
         let tipoSeleccionado = "ESTÁNDAR";
+        let vistaActual = "pendiente"; // Estado inicial
+
+        function cambiarVista(estado) {
+            vistaActual = estado;
+            document.getElementById('btn-view-pendientes').classList.toggle('active', estado === 'pendiente');
+            document.getElementById('btn-view-completados').classList.toggle('active', estado === 'completado');
+            document.getElementById('titulo-lista').innerText = `Mostrando: ${estado}s`;
+            cargarDatos();
+        }
 
         function selectType(btn) {
             document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
@@ -125,59 +135,65 @@
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            if(!data.cliente || !data.direccion) return alert("Faltan datos");
+            if(!data.cliente) return alert("Faltan datos");
 
             db.collection("servicios").add(data).then(() => {
-                const templateParams = {
+                emailjs.send("service_8kakktm", "template_r1nt4zb", {
                     to_email: data.empleado,
                     client_name: data.cliente,
                     address: data.direccion,
                     date_time: data.fecha_servicio + " " + data.hora_servicio,
                     notes: data.notas
-                };
-
-                emailjs.send("service_8kakktm", "template_r1nt4zb", templateParams)
-                .then(() => alert("✅ GUARDADO Y CORREO ENVIADO"))
-                .catch((err) => alert("❌ ERROR CORREO: " + err.text));
-
+                }).then(() => alert("✅ Guardado y Enviado"));
                 resetForm();
             });
+        }
+
+        function completarTrabajo(id) {
+            db.collection("servicios").doc(id).update({ estado: "completado" });
         }
 
         function resetForm() {
             document.getElementById('cliente').value = "";
             document.getElementById('direccion').value = "";
-            document.getElementById('telefono').value = "";
             document.getElementById('notas').value = "";
         }
 
-        db.collection("servicios").orderBy("timestamp", "desc").onSnapshot(snap => {
-            const historial = document.getElementById('historial');
-            historial.innerHTML = "";
-            let pendientes = 0; let completados = 0;
+        function cargarDatos() {
+            db.collection("servicios").orderBy("timestamp", "desc").onSnapshot(snap => {
+                const historial = document.getElementById('historial');
+                historial.innerHTML = "";
+                let p = 0; let c = 0;
 
-            snap.forEach(doc => {
-                const s = doc.data();
-                if(s.estado === "pendiente") pendientes++; else completados++;
+                snap.forEach(doc => {
+                    const s = doc.data();
+                    if(s.estado === "pendiente") p++; else c++;
 
-                const msgWS = encodeURIComponent(`*ELITE CLEANERS*\nCliente: ${s.cliente}\nDir: ${s.direccion}\nFecha: ${s.fecha_servicio}`);
-                const card = document.createElement('div');
-                card.className = 'card-servicio';
-                card.innerHTML = `
-                    <a href="https://wa.me/${s.telefono}?text=${msgWS}" class="btn-whatsapp-circular" target="_blank">📲</a>
-                    <h3>${s.cliente}</h3>
-                    <p>📍 ${s.direccion}</p>
-                    <p>📅 ${s.fecha_servicio} | ${s.hora_servicio}</p>
-                    <div class="card-actions">
-                        <button class="btn-secondary btn-edit" onclick='alert("Función editar en desarrollo")'>Editar</button>
-                        <button class="btn-secondary btn-delete" onclick="db.collection('servicios').doc('${doc.id}').delete()">Borrar</button>
-                    </div>
-                `;
-                historial.appendChild(card);
+                    // Solo mostrar si coincide con la vista actual (Pendiente o Completado)
+                    if(s.estado === vistaActual) {
+                        const card = document.createElement('div');
+                        card.className = 'card-servicio';
+                        card.innerHTML = `
+                            <a href="https://wa.me/${s.telefono}" class="btn-whatsapp-circular" target="_blank">📲</a>
+                            <h3>${s.cliente}</h3>
+                            <p>📍 ${s.direccion}</p>
+                            <p>📅 ${s.fecha_servicio} | ${s.hora_servicio}</p>
+                            <div class="card-actions">
+                                ${s.estado === 'pendiente' ? `<button class="btn-secondary btn-complete" onclick="completarTrabajo('${doc.id}')">Terminado ✓</button>` : ''}
+                                <button class="btn-secondary btn-edit">Editar</button>
+                                <button class="btn-secondary btn-delete" onclick="db.collection('servicios').doc('${doc.id}').delete()">Borrar</button>
+                            </div>
+                        `;
+                        historial.appendChild(card);
+                    }
+                });
+                document.getElementById('count-pendientes').innerText = p;
+                document.getElementById('count-completados').innerText = c;
             });
-            document.getElementById('count-pendientes').innerText = pendientes;
-            document.getElementById('count-completados').innerText = completados;
-        });
+        }
+
+        // Ejecutar carga inicial
+        cargarDatos();
     </script>
 </body>
 </html>
