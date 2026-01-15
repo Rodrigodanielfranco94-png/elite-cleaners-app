@@ -3,53 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Cleaners - Login</title>
+    <title>Mis Trabajos - Elite</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
-<body class="login-body">
-    <div class="login-container">
-        <h1 class="logo-text">ELITE <span>CLEANERS</span></h1>
-        <div class="card">
-            <input type="email" id="email" placeholder="Correo (admin@elite.com)" class="input-field">
-            <input type="password" id="password" placeholder="Contraseña (admin123)" class="input-field">
-            <button onclick="handleLogin()" class="send-btn">INGRESAR</button>
-            <p id="error-msg" style="color: #ff4d4d; font-size: 12px; margin-top: 10px; text-align: center;"></p>
-        </div>
+<body style="background: #000; color: white; font-family: sans-serif;">
+    <div style="padding: 20px;">
+        <h2>MIS <span style="color: #007bff;">TRABAJOS</span></h2>
+        <p id="user-email" style="font-size: 12px; color: #666;"></p>
+        <hr border="0" style="border-top: 1px solid #222; margin: 20px 0;">
+        
+        <div id="jobs-list">Cargando tus servicios...</div>
+        
+        <button onclick="logout()" style="margin-top: 30px; background: none; border: 1px solid #333; color: white; padding: 10px; width: 100%;">Cerrar Sesión</button>
     </div>
 
     <script>
-        // Configuración WEB corregida basada en tus capturas
         const firebaseConfig = {
-            apiKey: "AIzaSyC2...", // Asegúrate de copiar tu API Key completa de la consola Web
+            apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc lrH",
             authDomain: "elite-cleaners-app.firebaseapp.com",
             projectId: "elite-cleaners-app",
             storageBucket: "elite-cleaners-app.appspot.com",
-            messagingSenderId: "826642317319", // Tomado de tu captura
-            appId: "1:826642317319:web:tu_id_web_aqui" // Necesitas crear la app WEB en Firebase
+            messagingSenderId: "826642317319",
+            appId: "1:826642317319:web:cddce7904b590ae"
         };
         firebase.initializeApp(firebaseConfig);
 
-        function handleLogin() {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('password').value;
-            const errorMsg = document.getElementById('error-msg');
-
-            if (!email || !pass) {
-                errorMsg.innerText = "Por favor, completa todos los campos.";
-                return;
+        firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('user-email').innerText = user.email;
+                loadJobs(user.email);
+            } else {
+                window.location.href = "index.html";
             }
+        });
 
-            firebase.auth().signInWithEmailAndPassword(email, pass)
-                .then(() => {
-                    // Si el login es exitoso, redirige a admin.html
-                    window.location.href = "admin.html";
-                })
-                .catch((error) => {
-                    errorMsg.innerText = "Error: " + error.message;
-                    console.error("Login Error:", error.code);
+        function loadJobs(email) {
+            const container = document.getElementById('jobs-list');
+            firebase.database().ref('jobs').on('value', snap => {
+                container.innerHTML = "";
+                snap.forEach(child => {
+                    const j = child.val();
+                    if(j.email === email) {
+                        container.innerHTML += `
+                            <div style="background: #111; padding: 15px; border-radius: 10px; border-left: 4px solid #007bff; margin-bottom: 15px;">
+                                <h3 style="margin: 0;">${j.cliente}</h3>
+                                <p style="color: #007bff; font-weight: bold; margin: 5px 0;">${j.tipo}</p>
+                                <p style="font-size: 14px; margin: 5px 0;">📍 ${j.direccion}</p>
+                                <p style="font-size: 14px; margin: 0;">📅 ${j.fecha} - ${j.hora}</p>
+                            </div>`;
+                    }
                 });
+                if(container.innerHTML === "") container.innerHTML = "No tienes servicios asignados.";
+            });
+        }
+
+        function logout() {
+            firebase.auth().signOut().then(() => { window.location.href = "index.html"; });
         }
     </script>
 </body>
