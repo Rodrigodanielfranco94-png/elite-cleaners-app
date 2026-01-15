@@ -24,35 +24,35 @@
             <input type="text" id="empleado-nombre" placeholder="Nombre del Empleado" class="input-field">
             <input type="email" id="staff-email" placeholder="Gmail del Empleado" class="input-field">
             
-            <div class="row">
-                <input type="date" id="fecha" class="input-field half">
-                <input type="time" id="hora" class="input-field half">
+            <div class="row" style="display: flex; gap: 10px;">
+                <input type="date" id="fecha" class="input-field" style="flex: 1;">
+                <input type="time" id="hora" class="input-field" style="flex: 1;">
             </div>
 
-            <textarea id="notas" placeholder="Descripción del trabajo..." class="input-field textarea"></textarea>
+            <textarea id="notas" placeholder="Descripción del trabajo..." class="input-field textarea" style="height: 80px;"></textarea>
 
-            <p class="type-label">TIPO DE LIMPIEZA:</p>
-            <div class="type-grid">
-                <button id="btn-estandar" class="type-btn active" onclick="setType('Estándar')">ESTÁNDAR</button>
-                <button id="btn-profunda" class="type-btn" onclick="setType('Profunda')">PROFUNDA</button>
-                <button id="btn-movein" class="type-btn" onclick="setType('Move-in')">MOVE-IN</button>
-                <button id="btn-moveout" class="type-btn" onclick="setType('Move-out')">MOVE-OUT</button>
+            <p style="color: white; font-size: 12px; margin-bottom: 10px; text-align: left;">TIPO DE LIMPIEZA:</p>
+            <div class="type-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                <button id="btn-estandar" class="type-btn active" onclick="setType('Estándar')" style="padding: 10px; cursor: pointer;">ESTÁNDAR</button>
+                <button id="btn-profunda" class="type-btn" onclick="setType('Profunda')" style="padding: 10px; cursor: pointer;">PROFUNDA</button>
+                <button id="btn-movein" class="type-btn" onclick="setType('Move-in')" style="padding: 10px; cursor: pointer;">MOVE-IN</button>
+                <button id="btn-moveout" class="type-btn" onclick="setType('Move-out')" style="padding: 10px; cursor: pointer;">MOVE-OUT</button>
             </div>
 
-            <button id="main-send-btn" onclick="saveJob()" class="send-btn">GUARDAR Y NOTIFICAR POR EMAIL</button>
+            <button id="main-send-btn" onclick="saveJob()" class="send-btn" style="width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">GUARDAR Y NOTIFICAR POR EMAIL</button>
         </div>
 
-        <div class="search-section">
-            <p class="search-label">BUSCADOR DE EMPLEADO / CLIENTE</p>
-            <input type="text" id="search-input" placeholder="Escribe el nombre o email..." onkeyup="searchJobs()" class="search-input">
-            <div id="jobs-container"></div>
+        <div class="search-section" style="margin-top: 30px;">
+            <p style="color: #666; font-size: 11px;">BUSCADOR DE EMPLEADO / CLIENTE</p>
+            <input type="text" id="search-input" placeholder="Escribe el nombre o email..." onkeyup="searchJobs()" class="search-input" style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #333; color: white; padding: 10px 0;">
+            <div id="jobs-container" style="margin-top: 20px;"></div>
         </div>
     </div>
 
     <script>
         // CONFIGURACIÓN FIREBASE
         const firebaseConfig = {
-            apiKey: "AIzaSyC2...", 
+            apiKey: "AIzaSyC2...", // Asegúrate de que aquí esté tu clave completa
             authDomain: "elite-cleaners-company.firebaseapp.com",
             databaseURL: "https://elite-cleaners-company-default-rtdb.firebaseio.com",
             projectId: "elite-cleaners-company",
@@ -69,19 +69,29 @@
 
         let selectedType = "Estándar";
 
+        // Función para cambiar tipo de limpieza
         function setType(type) {
             selectedType = type;
-            // Desactiva todos
-            document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
-            // Activa el seleccionado
+            document.querySelectorAll('.type-btn').forEach(btn => {
+                btn.style.background = "#222";
+                btn.style.color = "white";
+            });
             const idMap = {'Estándar': 'btn-estandar', 'Profunda': 'btn-profunda', 'Move-in': 'btn-movein', 'Move-out': 'btn-moveout'};
-            document.getElementById(idMap[type]).classList.add('active');
+            const activeBtn = document.getElementById(idMap[type]);
+            activeBtn.style.background = "#007bff";
         }
 
+        // SEGURIDAD: VERIFICAR USUARIO (CORREGIDO)
         auth.onAuthStateChanged(user => {
-            if (!user) window.location.href = "index.html";
+            if (!user) {
+                // Si no hay sesión, regresa al login
+                window.location.href = "index.html";
+            } else {
+                console.log("Sesión activa:", user.email);
+            }
         });
 
+        // GUARDAR Y ENVIAR
         function saveJob() {
             const btn = document.getElementById('main-send-btn');
             const cliente = document.getElementById('cliente').value;
@@ -93,7 +103,7 @@
             const notas = document.getElementById('notas').value;
 
             if(!cliente || !email || !fecha) {
-                alert("Por favor completa los campos obligatorios");
+                alert("Completa al menos: Cliente, Gmail y Fecha.");
                 return;
             }
 
@@ -106,8 +116,9 @@
                 timestamp: Date.now()
             };
 
-            // Guardar en Firebase y enviar por Gmail
+            // 1. Guardar en Firebase
             db.ref('jobs').push(jobData).then(() => {
+                // 2. Enviar por EmailJS
                 emailjs.send("service_8kakktm", "template_r1nt4zb", {
                     to_email: email,
                     client_name: cliente,
@@ -117,7 +128,7 @@
                     type: selectedType,
                     notes: notas
                 }).then(() => {
-                    alert("¡Servicio guardado y email enviado!");
+                    alert("¡Éxito! Servicio guardado y notificado.");
                     location.reload();
                 });
             }).catch(err => {
@@ -127,27 +138,35 @@
             });
         }
 
+        // BUSCADOR
         function searchJobs() {
             const term = document.getElementById('search-input').value.toLowerCase();
             const container = document.getElementById('jobs-container');
-            db.ref('jobs').limitToLast(15).once('value', snap => {
+            db.ref('jobs').limitToLast(10).once('value', snap => {
                 container.innerHTML = "";
                 snap.forEach(child => {
                     const j = child.val();
                     if(j.cliente.toLowerCase().includes(term) || j.empleado?.toLowerCase().includes(term)) {
                         container.innerHTML += `
-                            <div class="job-item">
-                                <p><strong>${j.cliente}</strong> - ${j.tipo}</p>
-                                <p>Empleado: ${j.empleado || '---'}</p>
-                                <p>${j.fecha} | ${j.hora}</p>
+                            <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #007bff;">
+                                <p style="color: white; margin: 0;"><strong>${j.cliente}</strong> (${j.tipo})</p>
+                                <p style="color: #888; font-size: 13px; margin: 5px 0;">Empleado: ${j.empleado || '---'}</p>
+                                <p style="color: #888; font-size: 12px; margin: 0;">${j.fecha} | ${j.hora}</p>
                             </div>`;
                     }
                 });
             });
         }
 
-        function logout() { auth.signOut(); }
+        function logout() {
+            auth.signOut().then(() => {
+                window.location.href = "index.html";
+            });
+        }
+
+        // Carga inicial
         searchJobs();
+        setType('Estándar');
     </script>
 </body>
 </html>
