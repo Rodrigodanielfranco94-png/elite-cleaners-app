@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Elite Admin - Control Total</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -11,52 +11,47 @@
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
         body { font-family: 'Montserrat', sans-serif; background: #000; color: white; padding-bottom: 40px; }
         .glass { background: #111; border: 1px solid #222; border-radius: 28px; }
-        .input-elite { background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 14px; padding: 15px; width: 100%; outline: none; font-size: 14px; transition: 0.3s; }
-        .input-elite:focus { border-color: #007AFF; }
-        .btn-type { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 12px; font-size: 11px; font-weight: 800; text-transform: uppercase; transition: 0.3s; }
-        .btn-type.active { background: #007AFF; border-color: #007AFF; color: white; }
-        .btn-save { background: #0056b3; font-weight: 900; border-radius: 16px; width: 100%; padding: 18px; text-transform: uppercase; font-size: 13px; letter-spacing: 1px; margin-top: 10px; cursor: pointer; }
-        .time-badge { background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 8px; font-size: 10px; color: #aaa; border: 1px solid rgba(255,255,255,0.1); }
-        .stats-card { background: linear-gradient(145deg, #111, #000); border: 1px solid #222; border-radius: 20px; padding: 15px; text-align: center; }
+        .input-elite { background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 14px; padding: 15px; width: 100%; outline: none; font-size: 14px; }
+        .btn-type { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        .btn-type.active { background: #007AFF; border-color: #007AFF; }
+        .btn-save { background: #0056b3; font-weight: 900; border-radius: 16px; width: 100%; padding: 18px; text-transform: uppercase; }
+        .stats-card { background: #111; border: 1px solid #222; border-radius: 20px; padding: 15px; text-align: center; }
     </style>
 </head>
 <body class="p-4">
+    <script>
+        if (localStorage.getItem("userRole") !== "admin") window.location.href = "index.html";
+    </script>
+
     <header class="py-6 text-center">
         <h1 class="text-xl font-black italic uppercase">ELITE <span class="text-blue-500">ADMIN</span></h1>
-        <p class="text-[9px] text-gray-500 font-bold tracking-[0.3em]">CONTROL OPERATIVO TOTAL</p>
+        <button onclick="localStorage.clear(); window.location.href='index.html'" class="text-[8px] text-gray-600 font-bold underline mt-2">CERRAR SESIÓN</button>
     </header>
 
     <div class="grid grid-cols-2 gap-4 max-w-md mx-auto mb-6">
         <div class="stats-card">
-            <p class="text-[10px] text-gray-500 font-bold uppercase">Pendientes</p>
+            <p class="text-[9px] text-gray-500 font-bold uppercase">Pendientes</p>
             <h3 id="countPending" class="text-2xl font-black text-blue-500">0</h3>
         </div>
         <div class="stats-card">
-            <p class="text-[10px] text-gray-500 font-bold uppercase">Completados</p>
+            <p class="text-[9px] text-gray-500 font-bold uppercase">Completados</p>
             <h3 id="countDone" class="text-2xl font-black text-green-500">0</h3>
         </div>
     </div>
 
     <main class="max-w-md mx-auto space-y-6">
         <div class="glass p-6 space-y-4">
-            <h2 class="text-blue-500 text-[10px] font-black uppercase tracking-widest">Asignar Servicio</h2>
             <input type="hidden" id="jobId">
             <input type="text" id="cli" placeholder="Nombre del Cliente" class="input-elite">
             <input type="text" id="addr" placeholder="Dirección" class="input-elite">
             <input type="email" id="empEmail" placeholder="Email del Empleado" class="input-elite">
             
             <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <p class="text-[8px] text-gray-500 font-bold ml-2 mb-1 uppercase">Fecha</p>
-                    <input type="date" id="jobDate" class="input-elite">
-                </div>
-                <div>
-                    <p class="text-[8px] text-gray-500 font-bold ml-2 mb-1 uppercase">Hora Inicio</p>
-                    <input type="time" id="jobTime" class="input-elite">
-                </div>
+                <input type="date" id="jobDate" class="input-elite">
+                <input type="time" id="jobTime" class="input-elite">
             </div>
 
-            <textarea id="notes" placeholder="Requerimientos especiales / Notas" class="input-elite h-20"></textarea>
+            <textarea id="notes" placeholder="Notas / Requerimientos Especiales" class="input-elite h-20"></textarea>
 
             <div class="grid grid-cols-2 gap-2">
                 <button type="button" onclick="setType('Estándar', this)" class="btn-type active">Estándar</button>
@@ -65,32 +60,17 @@
                 <button type="button" onclick="setType('Move-up', this)" class="btn-type">Move-up</button>
             </div>
             
-            <button id="mainBtn" onclick="saveJob()" class="btn-save">Guardar y Notificar</button>
-        </div>
-
-        <div class="px-2">
-            <input type="text" id="searchInput" onkeyup="renderFeed()" placeholder="Buscar por cliente o empleado..." class="input-elite bg-transparent border-dashed italic">
+            <button id="mainBtn" onclick="saveJob()" class="btn-save">Guardar Servicio</button>
         </div>
 
         <div id="liveFeed" class="space-y-4"></div>
     </main>
 
     <script>
-        // --- COPIA TU CONFIGURACIÓN AQUÍ ---
-        const firebaseConfig = {
-            apiKey: "TU_API_KEY",
-            authDomain: "TU_PROYECTO.firebaseapp.com",
-            databaseURL: "TU_DATABASE_URL",
-            projectId: "TU_PROYECTO_ID",
-            storageBucket: "TU_PROYECTO.appspot.com",
-            messagingSenderId: "TU_ID",
-            appId: "TU_APP_ID"
-        };
-        // ----------------------------------
-
+        // PEGA AQUÍ TU CONFIGURACIÓN
+        const firebaseConfig = { }; 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        
         let selectedType = 'Estándar';
         let allJobs = {};
 
@@ -111,97 +91,34 @@
                 notes: document.getElementById('notes').value,
                 type: selectedType,
                 status: 'Pendiente',
-                arrivalTime: '',
-                finishTime: ''
+                arrivalTime: '', finishTime: ''
             };
-
-            if(!job.cli || !job.empEmail) return alert("Nombre y Email son obligatorios");
-
-            if(id) {
-                db.ref('jobs/' + id).update(job);
-            } else {
-                db.ref('jobs').push(job);
-            }
-            
-            resetForm();
-        }
-
-        function resetForm() {
-            document.getElementById('jobId').value = '';
-            document.getElementById('cli').value = '';
-            document.getElementById('addr').value = '';
-            document.getElementById('empEmail').value = '';
-            document.getElementById('jobDate').value = '';
-            document.getElementById('jobTime').value = '';
-            document.getElementById('notes').value = '';
-            document.getElementById('mainBtn').innerText = 'Guardar y Notificar';
-            selectedType = 'Estándar';
-            document.querySelectorAll('.btn-type').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.btn-type')[0].classList.add('active');
-        }
-
-        function editJob(id) {
-            const j = allJobs[id];
-            document.getElementById('jobId').value = id;
-            document.getElementById('cli').value = j.cli;
-            document.getElementById('addr').value = j.addr;
-            document.getElementById('empEmail').value = j.empEmail;
-            document.getElementById('jobDate').value = j.date || '';
-            document.getElementById('jobTime').value = j.time || '';
-            document.getElementById('notes').value = j.notes || '';
-            document.getElementById('mainBtn').innerText = 'Actualizar Servicio';
-            window.scrollTo({top: 0, behavior: 'smooth'});
+            if(id) db.ref('jobs/' + id).update(job);
+            else db.ref('jobs').push(job);
+            location.reload();
         }
 
         db.ref('jobs').on('value', snap => {
             allJobs = snap.val() || {};
-            renderFeed();
-        });
-
-        function renderFeed() {
             const feed = document.getElementById('liveFeed');
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            let pending = 0, done = 0;
-            
-            feed.innerHTML = '<h2 class="text-[10px] font-black uppercase text-gray-500 px-2 italic">Historial Operativo</h2>';
-            
-            const keys = Object.keys(allJobs).reverse();
-
-            keys.forEach(id => {
+            let p=0, d=0;
+            feed.innerHTML = '';
+            for(let id in allJobs) {
                 const j = allJobs[id];
-                if(j.cli.toLowerCase().includes(search) || j.empEmail.toLowerCase().includes(search)) {
-                    if(j.status === 'Completado') done++; else pending++;
-
-                    feed.innerHTML += `
-                        <div class="glass p-5 border-l-4 ${j.status==='Completado'?'border-green-500':'border-blue-500'}">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <b class="text-sm uppercase italic">${j.cli}</b>
-                                    <p class="text-[9px] text-blue-400 font-bold uppercase">${j.type} | ${j.date || 'Sin fecha'} @ ${j.time || '--:--'}</p>
-                                </div>
-                                <div class="flex gap-3">
-                                    <button onclick="editJob('${id}')" class="text-[9px] text-gray-400 font-bold">EDITAR</button>
-                                    <button onclick="db.ref('jobs/${id}').remove()" class="text-[9px] text-red-500 font-bold">BORRAR</button>
-                                </div>
-                            </div>
-                            
-                            ${j.notes ? `<p class="text-[10px] text-gray-400 bg-white/5 p-2 rounded mb-3 italic">"${j.notes}"</p>` : ''}
-
-                            <div class="grid grid-cols-2 gap-2 mb-4">
-                                <div class="time-badge">🕒 LLEGADA: <span class="text-white font-bold">${j.arrivalTime || '--:--'}</span></div>
-                                <div class="time-badge">🏁 SALIDA: <span class="text-white font-bold">${j.finishTime || '--:--'}</span></div>
-                            </div>
-
-                            <div class="flex justify-between items-center pt-3 border-t border-white/5">
-                                <span class="text-[9px] text-gray-500 font-bold uppercase">${j.empEmail}</span>
-                                <span class="text-[9px] font-black ${j.status==='Completado'?'text-green-500':'text-blue-500'} uppercase">${j.status}</span>
-                            </div>
-                        </div>`;
-                }
-            });
-            document.getElementById('countPending').innerText = pending;
-            document.getElementById('countDone').innerText = done;
-        }
+                if(j.status === 'Completado') d++; else p++;
+                feed.innerHTML += `<div class="glass p-5 border-l-4 ${j.status==='Completado'?'border-green-500':'border-blue-500'}">
+                    <div class="flex justify-between">
+                        <b>${j.cli}</b>
+                        <button onclick="db.ref('jobs/${id}').remove()" class="text-red-500 text-[9px]">BORRAR</button>
+                    </div>
+                    <p class="text-[10px] text-blue-400 font-bold">${j.type} | ${j.date} @ ${j.time}</p>
+                    <p class="text-[10px] text-gray-500 mt-2">${j.addr}</p>
+                    ${j.notes ? `<p class="text-[10px] italic text-gray-400 bg-white/5 p-2 rounded mt-2">"${j.notes}"</p>`:''}
+                </div>`;
+            }
+            document.getElementById('countPending').innerText = p;
+            document.getElementById('countDone').innerText = d;
+        });
     </script>
 </body>
 </html>
