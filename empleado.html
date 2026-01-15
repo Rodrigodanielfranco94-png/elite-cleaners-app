@@ -3,93 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Elite Cleaners Company - Staff</title>
+    <title>Elite - Staff App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
-        body { font-family: 'Montserrat', sans-serif; background: #000; color: white; }
-        .glass { background: rgba(25, 25, 25, 0.95); border: 1px solid rgba(255,255,255,0.05); border-radius: 28px; }
-        .btn-main { font-weight: 900; border-radius: 18px; transition: all 0.3s; text-transform: uppercase; font-size: 13px; padding: 18px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-main:active { transform: scale(0.96); opacity: 0.8; }
+        body { font-family: 'Montserrat', sans-serif; background: #000; color: white; padding-bottom: 50px; }
+        .glass { background: #111; border: 1px solid #222; border-radius: 24px; overflow: hidden; }
+        .btn-action { font-weight: 900; text-transform: uppercase; font-size: 11px; padding: 12px; border-radius: 12px; transition: 0.3s; width: 100%; }
+        .btn-check-in { background: #007AFF; color: white; }
+        .btn-check-out { background: #34C759; color: white; }
+        .note-box { background: rgba(255,255,255,0.05); border-left: 3px solid #007AFF; padding: 10px; border-radius: 8px; margin: 10px 0; }
+        .time-label { font-size: 10px; color: #888; font-bold uppercase; }
     </style>
 </head>
-<body class="p-5">
+<body class="p-4">
     <header class="py-8 text-center">
-        <h1 class="text-2xl font-black italic uppercase leading-none tracking-tighter">
-            ELITE <span class="text-blue-500">CLEANERS</span><br>
-            <span class="text-[14px] text-gray-400">COMPANY SYSTEM</span>
-        </h1>
+        <h1 class="text-xl font-black italic uppercase">ELITE <span class="text-blue-500">STAFF</span></h1>
+        <p id="userDisplay" class="text-[9px] text-gray-500 font-bold tracking-widest mt-1">CARGANDO SESIÓN...</p>
     </header>
-    
-    <div id="jobList" class="space-y-6 max-w-md mx-auto">
+
+    <div id="jobList" class="max-w-md mx-auto space-y-6">
         </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyCwWg4qKg2OozxA0ngQOoukb8U7XwJS6vU",
-            authDomain: "elite-cleaners-company.firebaseapp.com",
-            databaseURL: "https://elite-cleaners-company-default-rtdb.firebaseio.com",
-            projectId: "elite-cleaners-company",
-            storageBucket: "elite-cleaners-company.firebasestorage.app",
-            messagingSenderId: "720146701474",
-            appId: "1:720146701474:web:729a9dc1fe01cf976b8bfb"
-        };
+        // CONFIGURACIÓN DE FIREBASE (Usa la misma que en el Admin)
+        const firebaseConfig = { /* Tu config aquí */ };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        function updateStatus(id, field) {
-            const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const update = {};
-            update[field] = now;
-            if(field === 'finishTime') update['status'] = 'Completado';
-            
-            db.ref('jobs/' + id).update(update);
-            alert("Registro guardado: " + now);
-        }
+        // IMPORTANTE: Aquí puedes simular el email del empleado logueado
+        // En el futuro podemos agregar un login real
+        const currentEmpEmail = "empleado@ejemplo.com"; 
+        document.getElementById('userDisplay').innerText = `CONECTADO: ${currentEmpEmail.toUpperCase()}`;
 
         db.ref('jobs').on('value', snap => {
             const data = snap.val();
-            const list = document.getElementById('jobList');
-            list.innerHTML = '';
-            if(!data) {
-                list.innerHTML = '<p class="text-center text-gray-600 text-xs mt-10 uppercase tracking-widest">No hay servicios para hoy</p>';
-                return;
-            }
-            for(let id in data) {
+            const container = document.getElementById('jobList');
+            container.innerHTML = '';
+
+            for (let id in data) {
                 const j = data[id];
-                list.innerHTML += `
-                    <div class="glass p-7 mb-6 border border-white/5 shadow-2xl">
-                        <div class="mb-6">
-                            <h3 class="text-3xl font-black italic uppercase text-white leading-none mb-1">${j.cli}</h3>
-                            <p class="text-[11px] text-gray-500 font-bold uppercase tracking-tight">${j.addr}</p>
+                
+                // Solo mostrar tareas asignadas a este empleado que no estén completadas
+                if (j.empEmail === currentEmpEmail.toLowerCase() && j.status !== 'Completado') {
+                    container.innerHTML += `
+                        <div class="glass p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h2 class="text-lg font-black italic uppercase">${j.cli}</h2>
+                                    <p class="text-blue-500 text-[10px] font-bold uppercase">${j.type}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="time-label text-white font-black">${j.date || 'Hoy'}</p>
+                                    <p class="text-[12px] font-bold text-blue-400">🕒 ${j.time || '--:--'}</p>
+                                </div>
+                            </div>
+
+                            <p class="text-gray-400 text-xs mb-4">📍 ${j.addr}</p>
+
+                            ${j.notes ? `
+                            <div class="note-box">
+                                <p class="text-[9px] text-blue-400 font-bold uppercase mb-1">Requerimientos Especiales:</p>
+                                <p class="text-[11px] italic text-gray-200">${j.notes}</p>
+                            </div>` : ''}
+
+                            <div class="grid grid-cols-2 gap-3 mt-6">
+                                ${!j.arrivalTime ? 
+                                    `<button onclick="checkIn('${id}')" class="btn-action btn-check-in col-span-2">Registrar Llegada</button>` : 
+                                    `<div class="text-center p-2 bg-white/5 rounded-lg border border-white/10">
+                                        <p class="text-[8px] text-gray-500">LLEGADA</p>
+                                        <p class="text-xs font-bold">${j.arrivalTime}</p>
+                                     </div>
+                                     <button onclick="checkOut('${id}')" class="btn-action btn-check-out">Finalizar</button>`
+                                }
+                            </div>
                         </div>
-
-                        <div class="space-y-3">
-                            <button onclick="window.location.href='https://maps.apple.com/?q=${encodeURIComponent(j.addr)}'" 
-                                class="btn-main bg-[#1a1a1a] border border-white/10 text-white">
-                                🗺️ GPS Navegación
-                            </button>
-
-                            <button onclick="updateStatus('${id}', 'arrivalTime')" 
-                                class="btn-main ${j.arrivalTime ? 'bg-green-600' : 'bg-blue-600'} text-white shadow-lg">
-                                ⏱️ ${j.arrivalTime ? 'Llegada: ' + j.arrivalTime : 'Registrar Llegada'}
-                            </button>
-
-                            <button onclick="updateStatus('${id}', 'finishTime')" 
-                                class="btn-main ${j.finishTime ? 'bg-gray-800' : 'bg-red-600'} text-white shadow-lg">
-                                🏁 ${j.finishTime ? 'Finalizado: ' + j.finishTime : 'Finalizar Servicio'}
-                            </button>
-                        </div>
-
-                        ${j.notes ? `
-                        <div class="mt-6 p-4 bg-black/40 rounded-2xl border border-white/5 italic text-sm text-gray-400 text-center">
-                            "${j.notes}"
-                        </div>` : ''}
-                    </div>`;
+                    `;
+                }
+            }
+            if(container.innerHTML === '') {
+                container.innerHTML = '<p class="text-center text-gray-600 text-xs font-bold uppercase mt-10">No tienes tareas pendientes</p>';
             }
         });
+
+        function checkIn(id) {
+            const now = new Date();
+            const timeStr = now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
+            db.ref('jobs/' + id).update({
+                arrivalTime: timeStr,
+                status: 'En Proceso'
+            });
+        }
+
+        function checkOut(id) {
+            const now = new Date();
+            const timeStr = now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
+            db.ref('jobs/' + id).update({
+                finishTime: timeStr,
+                status: 'Completado'
+            });
+        }
     </script>
 </body>
 </html>
