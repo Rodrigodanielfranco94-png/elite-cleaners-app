@@ -3,43 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Elite Admin - Dashboard</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-</head>
-<body class="admin-body">
-    <div class="admin-container" style="padding: 20px; max-width: 500px; margin: auto;">
-        <h1 style="color: white; text-align: center;">ELITE <span style="color: #007bff;">ADMIN</span></h1>
-        <button onclick="logout()" style="float: right; background: none; border: none; color: #ff4d4d; cursor: pointer;">Cerrar Sesión</button>
+    <style>
+        :root { --bg-panel: #121212; --bg-card: #1c1c1e; --accent: #3b82f6; --text-gray: #8e8e93; }
+        body { background: #000; color: white; font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 20px; margin: 0; }
+        .container { max-width: 450px; margin: auto; }
+        
+        /* Cabecera y Contadores */
+        .header { text-align: center; margin-bottom: 25px; }
+        .header h1 { font-style: italic; font-weight: 900; margin: 0; font-size: 22px; }
+        .header span { color: var(--accent); }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+        .stat-box { background: var(--bg-card); padding: 15px; border-radius: 15px; text-align: center; border: 1px solid #2c2c2e; }
+        .stat-box span { display: block; font-size: 10px; color: var(--text-gray); font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+        .stat-box b { font-size: 24px; }
+        .stat-box.pending b { color: var(--accent); }
+        .stat-box.completed b { color: #34c759; }
 
-        <div class="card" style="background: #1a1a1a; padding: 20px; border-radius: 12px; margin-top: 40px;">
-            <input type="text" id="cliente" placeholder="Nombre del Cliente" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #333; background: #222; color: white;">
-            <input type="text" id="direccion" placeholder="Dirección" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #333; background: #222; color: white;">
-            <input type="text" id="empleado-nombre" placeholder="Nombre del Empleado" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #333; background: #222; color: white;">
-            <input type="email" id="staff-email" placeholder="Gmail del Empleado" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #333; background: #222; color: white;">
+        /* Formulario */
+        .form-card { background: var(--bg-card); padding: 20px; border-radius: 25px; border: 1px solid #2c2c2e; }
+        input, textarea, select { width: 100%; background: #2c2c2e; border: 1px solid #3a3a3c; border-radius: 12px; padding: 15px; margin-bottom: 12px; color: white; box-sizing: border-box; font-size: 14px; }
+        textarea { height: 80px; resize: none; }
+        
+        /* Botones de Tipo de Limpieza */
+        .service-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .type-btn { background: #2c2c2e; border: none; padding: 12px; border-radius: 10px; color: white; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .type-btn.active { background: var(--accent); }
+
+        .btn-save { width: 100%; background: #1d4ed8; color: white; border: none; padding: 18px; border-radius: 15px; font-weight: bold; font-size: 16px; text-transform: uppercase; cursor: pointer; }
+        .logout-link { color: var(--text-gray); font-size: 10px; text-decoration: none; display: block; margin-top: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ELITE <span>ADMIN</span></h1>
+            <a onclick="logout()" class="logout-link">CERRAR SESIÓN</a>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box pending"><span>Pendientes</span><b id="count-pending">0</b></div>
+            <div class="stat-box completed"><span>Completados</span><b id="count-completed">0</b></div>
+        </div>
+
+        <div class="form-card">
+            <input type="text" id="cliente" placeholder="Nombre del Cliente">
+            <input type="text" id="direccion" placeholder="Dirección">
+            <input type="email" id="staff-email" placeholder="Email del Empleado">
             
             <div style="display: flex; gap: 10px;">
-                <input type="date" id="fecha" style="flex: 1; padding: 10px; background: #222; color: white; border: 1px solid #333;">
-                <input type="time" id="hora" style="flex: 1; padding: 10px; background: #222; color: white; border: 1px solid #333;">
+                <input type="date" id="fecha">
+                <input type="time" id="hora">
             </div>
 
-            <p style="color: white; font-size: 12px; margin: 15px 0 5px;">TIPO DE SERVICIO:</p>
-            <select id="tipo-limpieza" style="width: 100%; padding: 10px; background: #222; color: white; margin-bottom: 15px;">
-                <option value="Estándar">Estándar</option>
-                <option value="Profunda">Profunda</option>
-                <option value="Move-in">Move-in</option>
-                <option value="Move-out">Move-out</option>
-            </select>
+            <textarea id="notas" placeholder="Notas / Requerimientos Especiales"></textarea>
 
-            <button onclick="saveJob()" style="width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 8px; font-weight: bold;">GUARDAR SERVICIO</button>
+            <div class="service-grid">
+                <button class="type-btn active" onclick="setType('Estándar', this)">Estándar</button>
+                <button class="type-btn" onclick="setType('Profunda', this)">Profunda</button>
+                <button class="type-btn" onclick="setType('Move-in', this)">Move-in</button>
+                <button class="type-btn" onclick="setType('Move-out', this)">Move-out</button>
+            </div>
+
+            <button class="btn-save" onclick="saveJob()">GUARDAR SERVICIO</button>
         </div>
     </div>
 
     <script>
         const firebaseConfig = {
-            apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc lrH",
+            apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
             authDomain: "elite-cleaners-app.firebaseapp.com",
             projectId: "elite-cleaners-app",
             storageBucket: "elite-cleaners-app.appspot.com",
@@ -49,26 +84,48 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        let selectedType = "Estándar";
+
+        function setType(type, btn) {
+            selectedType = type;
+            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        // Actualizar contadores en tiempo real
+        db.ref('jobs').on('value', snap => {
+            let p = 0; let c = 0;
+            snap.forEach(child => {
+                if(child.val().status === 'completado') c++;
+                else p++;
+            });
+            document.getElementById('count-pending').innerText = p;
+            document.getElementById('count-completed').innerText = c;
+        });
+
         function saveJob() {
             const data = {
                 cliente: document.getElementById('cliente').value,
                 direccion: document.getElementById('direccion').value,
-                empleado: document.getElementById('empleado-nombre').value,
-                email: document.getElementById('staff-email').value,
+                email: document.getElementById('staff-email').value.toLowerCase().trim(),
                 fecha: document.getElementById('fecha').value,
                 hora: document.getElementById('hora').value,
-                tipo: document.getElementById('tipo-limpieza').value
+                notas: document.getElementById('notas').value,
+                tipo: selectedType,
+                status: 'pendiente',
+                timestamp: Date.now()
             };
 
+            if(!data.cliente || !data.email) return alert("Faltan datos");
+
             db.ref('jobs').push(data).then(() => {
-                alert("Servicio asignado correctamente");
-                location.reload();
+                alert("Servicio guardado");
+                document.getElementById('cliente').value = "";
+                document.getElementById('notas').value = "";
             });
         }
 
-        function logout() {
-            firebase.auth().signOut().then(() => { window.location.href = "index.html"; });
-        }
+        function logout() { firebase.auth().signOut().then(() => location.href = "index.html"); }
     </script>
 </body>
 </html>
