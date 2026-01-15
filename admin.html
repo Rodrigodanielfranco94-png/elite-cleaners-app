@@ -3,151 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin - Control Total</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <title>Elite Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
-        body { font-family: 'Montserrat', sans-serif; background: #000; color: white; padding-bottom: 40px; }
-        .glass { background: #111; border: 1px solid #222; border-radius: 28px; }
-        .input-elite { background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 14px; padding: 15px; width: 100%; outline: none; font-size: 14px; }
-        .btn-type { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
-        .btn-type.active { background: #007AFF; border-color: #007AFF; }
-        .btn-save { background: #0056b3; font-weight: 900; border-radius: 16px; width: 100%; padding: 18px; text-transform: uppercase; cursor: pointer; }
-        .search-box { border-bottom: 2px dashed #333; padding: 10px; margin-bottom: 20px; }
-    </style>
 </head>
-<body class="p-4">
-    <script>
-        if (localStorage.getItem("userRole") !== "admin") window.location.href = "index.html";
-    </script>
+<body class="admin-body">
+    <div class="admin-container">
+        <h1 class="logo-text">ELITE <span>ADMIN</span></h1>
+        <button onclick="logout()" class="logout-link">CERRAR SESIÓN</button>
 
-    <header class="py-6 text-center">
-        <h1 class="text-xl font-black italic uppercase italic">ELITE <span class="text-blue-500">ADMIN</span></h1>
-        <button onclick="localStorage.clear(); window.location.href='index.html'" class="text-[8px] text-gray-600 font-bold underline mt-2 uppercase">Cerrar Sesión</button>
-    </header>
-
-    <main class="max-w-md mx-auto space-y-6">
-        <div class="glass p-6 space-y-4">
-            <h2 class="text-blue-500 text-[10px] font-black uppercase tracking-widest italic">Asignar Servicio</h2>
-            <input type="text" id="cli" placeholder="Nombre del Cliente" class="input-elite">
-            <input type="text" id="addr" placeholder="Dirección" class="input-elite">
-            <input type="email" id="empEmail" placeholder="Email del Empleado (Gmail)" class="input-elite">
+        <div class="card">
+            <h2 class="section-title">ASIGNAR SERVICIO</h2>
             
-            <div class="grid grid-cols-2 gap-2">
-                <input type="date" id="jobDate" class="input-elite">
-                <input type="time" id="jobTime" class="input-elite">
+            <input type="text" id="cliente" placeholder="Nombre del Cliente" class="input-field">
+            <input type="text" id="direccion" placeholder="Dirección del Servicio" class="input-field">
+            
+            <input type="text" id="empleado-nombre" placeholder="Nombre del Empleado" class="input-field">
+            <input type="email" id="staff-email" placeholder="Gmail del Empleado" class="input-field">
+            
+            <div class="row">
+                <input type="date" id="fecha" class="input-field half">
+                <input type="time" id="hora" class="input-field half">
             </div>
 
-            <textarea id="notes" placeholder="Requerimientos especiales / Notas" class="input-elite h-20"></textarea>
+            <textarea id="notas" placeholder="Descripción del trabajo..." class="input-field textarea"></textarea>
 
-            <div class="grid grid-cols-2 gap-2">
-                <button type="button" onclick="setType('Estándar', this)" class="btn-type active">Estándar</button>
-                <button type="button" onclick="setType('Profunda', this)" class="btn-type">Profunda</button>
+            <p class="type-label">TIPO DE LIMPIEZA:</p>
+            <div class="type-grid">
+                <button id="btn-estandar" class="type-btn active" onclick="setType('Estándar')">ESTÁNDAR</button>
+                <button id="btn-profunda" class="type-btn" onclick="setType('Profunda')">PROFUNDA</button>
+                <button id="btn-movein" class="type-btn" onclick="setType('Move-in')">MOVE-IN</button>
+                <button id="btn-moveout" class="type-btn" onclick="setType('Move-out')">MOVE-OUT</button>
             </div>
-            
-            <button onclick="saveJob()" class="btn-save w-full">Guardar y Notificar por Email</button>
+
+            <button id="main-send-btn" onclick="saveJob()" class="send-btn">GUARDAR Y NOTIFICAR POR EMAIL</button>
         </div>
 
-        <div class="search-box">
-            <p class="text-[9px] text-gray-500 font-bold mb-2 uppercase tracking-widest italic">Buscador de Empleado / Cliente</p>
-            <input type="text" id="search" onkeyup="renderFeed()" placeholder="Escribe el nombre o email..." class="input-elite bg-transparent border-none p-0 text-blue-400 placeholder-gray-700 italic">
+        <div class="search-section">
+            <p class="search-label">BUSCADOR DE EMPLEADO / CLIENTE</p>
+            <input type="text" id="search-input" placeholder="Escribe el nombre o email..." onkeyup="searchJobs()" class="search-input">
+            <div id="jobs-container"></div>
         </div>
-
-        <div id="liveFeed" class="space-y-4"></div>
-    </main>
+    </div>
 
     <script>
-        // PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE
-        const firebaseConfig = { }; 
+        // CONFIGURACIÓN FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2...", 
+            authDomain: "elite-cleaners-company.firebaseapp.com",
+            databaseURL: "https://elite-cleaners-company-default-rtdb.firebaseio.com",
+            projectId: "elite-cleaners-company",
+            storageBucket: "elite-cleaners-company.appspot.com",
+            messagingSenderId: "331885542036",
+            appId: "1:331885542036:web:46244dfb841793666d66e7"
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        
-        // INICIALIZAR EMAILJS (Opcional: regístrate en emailjs.com para obtener tu ID)
-        (function(){
-            emailjs.init("TU_PUBLIC_KEY_DE_EMAILJS");
-        })();
+        const auth = firebase.auth();
 
-        let selectedType = 'Estándar';
+        // CONFIGURACIÓN EMAILJS
+        emailjs.init("HND0NNg6H-dBCZtNq"); 
 
-        function setType(type, btn) {
+        let selectedType = "Estándar";
+
+        function setType(type) {
             selectedType = type;
-            document.querySelectorAll('.btn-type').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+            // Desactiva todos
+            document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+            // Activa el seleccionado
+            const idMap = {'Estándar': 'btn-estandar', 'Profunda': 'btn-profunda', 'Move-in': 'btn-movein', 'Move-out': 'btn-moveout'};
+            document.getElementById(idMap[type]).classList.add('active');
         }
+
+        auth.onAuthStateChanged(user => {
+            if (!user) window.location.href = "index.html";
+        });
 
         function saveJob() {
-            const email = document.getElementById('empEmail').value.toLowerCase().trim();
-            const cliente = document.getElementById('cli').value;
-            const direccion = document.getElementById('addr').value;
-            const fecha = document.getElementById('jobDate').value;
-            const hora = document.getElementById('jobTime').value;
+            const btn = document.getElementById('main-send-btn');
+            const cliente = document.getElementById('cliente').value;
+            const direccion = document.getElementById('direccion').value;
+            const empleado = document.getElementById('empleado-nombre').value;
+            const email = document.getElementById('staff-email').value;
+            const fecha = document.getElementById('fecha').value;
+            const hora = document.getElementById('hora').value;
+            const notas = document.getElementById('notas').value;
 
-            const job = {
-                cli: cliente,
-                addr: direccion,
-                empEmail: email,
-                date: fecha,
-                time: hora,
-                notes: document.getElementById('notes').value,
-                type: selectedType,
-                status: 'Pendiente'
+            if(!cliente || !email || !fecha) {
+                alert("Por favor completa los campos obligatorios");
+                return;
+            }
+
+            btn.innerText = "ENVIANDO...";
+            btn.disabled = true;
+
+            const jobData = {
+                cliente, direccion, empleado, email, fecha, hora, notas,
+                tipo: selectedType,
+                timestamp: Date.now()
             };
 
-            // 1. Guardar en Firebase
-            db.ref('jobs').push(job);
-
-            // 2. Simulación de envío de correo (O integración real con EmailJS)
-            console.log("Notificando a: " + email);
-            alert("Servicio guardado. Se ha enviado una notificación a " + email);
-            
-            // Si tienes EmailJS configurado, usarías esto:
-            /*
-            emailjs.send("service_id", "template_id", {
-                to_email: email,
-                client_name: cliente,
-                address: direccion,
-                date_time: fecha + " " + hora
+            // Guardar en Firebase y enviar por Gmail
+            db.ref('jobs').push(jobData).then(() => {
+                emailjs.send("service_8kakktm", "template_r1nt4zb", {
+                    to_email: email,
+                    client_name: cliente,
+                    staff_name: empleado,
+                    address: direccion,
+                    date_time: fecha + " @ " + hora,
+                    type: selectedType,
+                    notes: notas
+                }).then(() => {
+                    alert("¡Servicio guardado y email enviado!");
+                    location.reload();
+                });
+            }).catch(err => {
+                alert("Error: " + err.message);
+                btn.innerText = "GUARDAR Y NOTIFICAR POR EMAIL";
+                btn.disabled = false;
             });
-            */
-
-            location.reload();
         }
 
-        function renderFeed() {
-            const searchTerm = document.getElementById('search').value.toLowerCase();
-            db.ref('jobs').once('value', snap => {
-                const data = snap.val();
-                const feed = document.getElementById('liveFeed');
-                feed.innerHTML = '';
-                
-                for(let id in data) {
-                    const j = data[id];
-                    // FILTRO: Busca por nombre de cliente O por email de empleado
-                    if(j.cli.toLowerCase().includes(searchTerm) || j.empEmail.toLowerCase().includes(searchTerm)) {
-                        feed.innerHTML += `
-                            <div class="glass p-5 border-l-4 ${j.status==='Completado'?'border-green-500':'border-blue-500'}">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <b class="uppercase text-sm italic">${j.cli}</b>
-                                        <p class="text-[10px] text-blue-400 font-bold uppercase">${j.type} | ${j.date} @ ${j.time}</p>
-                                    </div>
-                                    <button onclick="db.ref('jobs/${id}').remove()" class="text-red-500 text-[9px] font-bold">BORRAR</button>
-                                </div>
-                                <div class="mt-3 pt-3 border-t border-white/5">
-                                    <p class="text-[9px] text-gray-500 font-bold italic uppercase tracking-tighter">Asignado a: ${j.empEmail}</p>
-                                    <p class="text-[9px] text-gray-400 mt-1 italic">${j.addr}</p>
-                                </div>
+        function searchJobs() {
+            const term = document.getElementById('search-input').value.toLowerCase();
+            const container = document.getElementById('jobs-container');
+            db.ref('jobs').limitToLast(15).once('value', snap => {
+                container.innerHTML = "";
+                snap.forEach(child => {
+                    const j = child.val();
+                    if(j.cliente.toLowerCase().includes(term) || j.empleado?.toLowerCase().includes(term)) {
+                        container.innerHTML += `
+                            <div class="job-item">
+                                <p><strong>${j.cliente}</strong> - ${j.tipo}</p>
+                                <p>Empleado: ${j.empleado || '---'}</p>
+                                <p>${j.fecha} | ${j.hora}</p>
                             </div>`;
                     }
-                }
+                });
             });
         }
 
-        // Carga inicial
-        db.ref('jobs').on('value', renderFeed);
+        function logout() { auth.signOut(); }
+        searchJobs();
     </script>
 </body>
 </html>
