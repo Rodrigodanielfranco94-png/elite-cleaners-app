@@ -16,6 +16,7 @@
         .label-text { font-size: 10px; color: #3b82f6; font-weight: bold; margin: 8px 0 4px 5px; display: block; text-transform: uppercase; }
         
         input, textarea { width: 100%; padding: 14px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: white; box-sizing: border-box; font-size: 15px; }
+        input[type="date"], input[type="time"] { color-scheme: dark; }
         .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         
         .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
@@ -24,16 +25,16 @@
         
         .save-btn { width: 100%; padding: 18px; background: #1d4ed8; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; margin-top: 20px; text-transform: uppercase; }
 
-        .card-servicio { background: #1c1c1e; padding: 15px; border-radius: 15px; border: 1px solid #2c2c2e; position: relative; margin-bottom: 12px; }
-        .card-servicio h3 { margin: 0 0 5px 0; font-size: 16px; color: #3b82f6; width: 80%; }
-        .card-servicio p { margin: 3px 0; font-size: 12px; color: #aeaeb2; }
+        .card-servicio { background: #1c1c1e; padding: 15px; border-radius: 15px; border: 1px solid #2c2c2e; position: relative; margin-bottom: 15px; }
+        .card-servicio h3 { margin: 0 0 5px 0; font-size: 17px; color: #3b82f6; padding-right: 40px; }
+        .card-servicio p { margin: 4px 0; font-size: 13px; color: #aeaeb2; }
         
-        /* BOTONES DE ACCIÓN */
-        .actions { display: flex; gap: 10px; margin-top: 10px; border-top: 1px solid #2c2c2e; padding-top: 10px; }
-        .btn-action { flex: 1; padding: 8px; border-radius: 8px; border: none; font-size: 12px; font-weight: bold; color: white; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .actions { display: flex; gap: 10px; margin-top: 12px; border-top: 1px solid #2c2c2e; padding-top: 12px; }
+        .btn-action { flex: 1; padding: 10px; border-radius: 8px; border: none; font-size: 12px; font-weight: bold; color: white; text-align: center; }
         .btn-edit { background: #5856d6; }
         .btn-delete { background: #ff3b30; }
-        .ws-btn { position: absolute; right: 15px; top: 15px; background: #25d366; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 20px; }
+        
+        .ws-btn { position: absolute; right: 15px; top: 15px; background: #25d366; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 20px; }
     </style>
 </head>
 <body>
@@ -43,7 +44,8 @@
     </div>
 
     <div class="form-container">
-        <input type="hidden" id="edit-id"> <span class="label-text">Cliente y Contacto</span>
+        <input type="hidden" id="edit-id">
+        <span class="label-text">Cliente y Contacto</span>
         <input type="text" id="cliente" placeholder="Nombre del cliente">
         <input type="text" id="direccion" placeholder="Dirección del servicio">
         <input type="tel" id="telefono" placeholder="Teléfono (Ej: 19456667788)">
@@ -69,7 +71,7 @@
         <button class="save-btn" id="btn-principal" onclick="guardarServicio()">GUARDAR Y ENVIAR</button>
     </div>
 
-    <h2 style="font-size: 14px; color: #8e8e93; margin-left: 5px;">HISTORIAL</h2>
+    <h2 style="font-size: 14px; color: #8e8e93; margin: 20px 0 10px 5px;">HISTORIAL DE TRABAJOS</h2>
     <div id="historial"></div>
 
     <script>
@@ -107,18 +109,26 @@
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
 
+            if(!data.cliente || !data.direccion || !data.empleado) return alert("Faltan datos obligatorios");
+
             if(id) {
-                // MODO EDICIÓN
+                // ACTUALIZAR REGISTRO EXISTENTE
                 db.collection("servicios").doc(id).update(data).then(() => {
                     alert("✅ ¡Servicio Actualizado!");
                     resetFormulario();
                 });
             } else {
-                // MODO NUEVO
+                // GUARDAR NUEVO Y ABRIR GMAIL DE EMPRESA
                 db.collection("servicios").add(data).then(() => {
                     alert("✅ ¡Servicio Guardado!");
-                    const body = `ELITE CLEANERS\n\nCliente: ${data.cliente}\nDirección: ${data.direccion}\nFecha: ${data.fecha_servicio}\nHora: ${data.hora_servicio}\nTipo: ${data.tipo}\nNotas: ${data.notas}`;
-                    window.location.href = `mailto:${data.empleado}?subject=Nuevo Servicio&body=${encodeURIComponent(body)}`;
+                    
+                    const asunto = encodeURIComponent(`Nuevo Servicio Elite Cleaners - ${data.cliente}`);
+                    const cuerpo = encodeURIComponent(`Hola,\n\nSe te ha asignado un nuevo servicio:\n\nCliente: ${data.cliente}\nDirección: ${data.direccion}\nFecha: ${data.fecha_servicio}\nHora: ${data.hora_servicio}\nTipo: ${data.tipo}\nNotas: ${data.notas}`);
+                    
+                    // URL para Gmail Web con la cuenta de la empresa
+                    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${data.empleado}&su=${asunto}&body=${cuerpo}&authuser=elitecleanerscompany@gmail.com`;
+                    
+                    window.open(gmailUrl, '_blank');
                     resetFormulario();
                 });
             }
@@ -134,20 +144,21 @@
             document.getElementById('hora-servicio').value = info.hora_servicio;
             document.getElementById('notas').value = info.notas;
             
-            // Activar botón de tipo
             document.querySelectorAll('.type-btn').forEach(b => {
-                if(b.innerText === info.tipo) selectType(b);
+                b.classList.remove('active');
+                if(b.innerText === info.tipo) b.classList.add('active');
             });
+            tipoSeleccionado = info.tipo;
 
             document.getElementById('btn-principal').innerText = "ACTUALIZAR CAMBIOS";
             document.getElementById('btn-principal').style.background = "#5856d6";
-            window.scrollTo(0,0);
+            window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
         function eliminarRegistro(id) {
-            if(confirm("¿Estás seguro de eliminar este servicio del historial?")) {
+            if(confirm("¿Seguro que quieres eliminar este registro permanentemente?")) {
                 db.collection("servicios").doc(id).delete().then(() => {
-                    alert("🗑️ Eliminado correctamente");
+                    alert("Registro eliminado");
                 });
             }
         }
@@ -157,6 +168,7 @@
             document.getElementById('cliente').value = "";
             document.getElementById('direccion').value = "";
             document.getElementById('telefono').value = "";
+            document.getElementById('notas').value = "";
             document.getElementById('btn-principal').innerText = "GUARDAR Y ENVIAR";
             document.getElementById('btn-principal').style.background = "#1d4ed8";
         }
@@ -167,23 +179,24 @@
             snap.forEach(doc => {
                 const s = doc.data();
                 const telLimpio = s.telefono ? s.telefono.replace(/\D/g,'') : '';
-                const wsUrl = `https://wa.me/${telLimpio}`;
                 
                 const card = document.createElement('div');
                 card.className = 'card-servicio';
                 card.innerHTML = `
-                    <a href="${wsUrl}" class="ws-btn" target="_blank">🟢</a>
+                    <a href="https://wa.me/${telLimpio}" class="ws-btn" target="_blank">🟢</a>
                     <h3>${s.cliente}</h3>
                     <p>📍 ${s.direccion}</p>
                     <p>📅 ${s.fecha_servicio} | ⏰ ${s.hora_servicio}</p>
                     <p style="color: #3b82f6; font-size: 11px;">📩 ${s.empleado}</p>
                     <div class="actions">
-                        <button class="btn-action btn-edit" id="edit-${doc.id}">✏️ Editar</button>
-                        <button class="btn-action btn-delete" onclick="eliminarRegistro('${doc.id}')">🗑️ Eliminar</button>
+                        <button class="btn-action btn-edit" id="btn-edit-${doc.id}">✏️ Editar</button>
+                        <button class="btn-action btn-delete" onclick='eliminarRegistro("${doc.id}")'>🗑️ Eliminar</button>
                     </div>
                 `;
                 historialDiv.appendChild(card);
-                document.getElementById(`edit-${doc.id}`).onclick = () => editarRegistro(doc.id, s);
+                
+                // Asignar evento de editar
+                document.getElementById(`btn-edit-${doc.id}`).onclick = () => editarRegistro(doc.id, s);
             });
         });
     </script>
