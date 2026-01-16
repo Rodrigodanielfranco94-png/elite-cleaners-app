@@ -32,10 +32,10 @@
         }
         .suggestion-item { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-size: 14px; font-weight: bold; }
 
-        /* FECHA Y HORA SEPARADAS */
+        /* FECHA Y HORA */
         .datetime-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-        /* BOTONES DE LIMPIEZA */
+        /* TIPOS DE LIMPIEZA */
         .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
         .type-btn { padding: 12px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: #8e8e93; font-weight: bold; font-size: 11px; cursor: pointer; text-transform: uppercase; }
         .type-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
@@ -102,7 +102,6 @@
     <div id="historial"></div>
 
     <script>
-        // Configuración de tu Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
             authDomain: "elite-cleaners-app.firebaseapp.com",
@@ -128,107 +127,7 @@
         function registrarStaff() {
             const n = document.getElementById('reg-nombre').value;
             const e = document.getElementById('reg-email').value.toLowerCase().trim();
-            if(!n || !e) return alert("Por favor ingresa nombre y correo");
-            db.collection("usuarios").add({ nombre: n, email: e, rol: "empleado" }).then(() => {
-                alert("✅ Staff registrado con éxito");
-                document.getElementById('reg-nombre').value = "";
-                document.getElementById('reg-email').value = "";
-            });
-        }
-
-        db.collection("usuarios").onSnapshot(snap => {
-            todosLosEmpleados = [];
-            snap.forEach(doc => { if(doc.data().rol === 'empleado') todosLosEmpleados.push(doc.data()); });
-        });
-
-        function filtrarEmpleados() {
-            const q = document.getElementById('search-empleado').value.toLowerCase();
-            const l = document.getElementById('suggestions');
-            l.innerHTML = "";
-            if (q.length < 1) { l.style.display = "none"; return; }
-            const f = todosLosEmpleados.filter(e => e.nombre.toLowerCase().includes(q));
-            if (f.length > 0) {
-                l.style.display = "block";
-                f.forEach(e => {
-                    const d = document.createElement('div');
-                    d.className = 'suggestion-item';
-                    d.innerHTML = e.nombre;
-                    d.onclick = () => {
-                        document.getElementById('search-empleado').value = e.nombre;
-                        document.getElementById('email-empleado').value = e.email;
-                        l.style.display = "none";
-                    };
-                    l.appendChild(d);
-                });
-            } else { l.style.display = "none"; }
-        }
-
-        function selectType(t) {
-            tipoSeleccionado = t;
-            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('btn-' + t).classList.add('active');
-        }
-
-        function asignarTrabajo() {
-            const email = document.getElementById('email-empleado').value;
-            if (!email) return alert("Escribe el nombre del empleado y selecciónalo de la lista azul");
-            
-            db.collection("servicios").add({
-                cliente: document.getElementById('cliente').value,
-                direccion: document.getElementById('direccion').value,
-                telefono: document.getElementById('telefono').value,
-                empleado_email: email,
-                empleado_nombre: document.getElementById('search-empleado').value,
-                fecha: document.getElementById('fecha').value,
-                hora: document.getElementById('hora').value,
-                notas: document.getElementById('notas').value,
-                tipo: tipoSeleccionado,
-                estado: "pendiente",
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => { 
-                alert("🚀 TRABAJO ASIGNADO Y GUARDADO"); 
-                location.reload(); 
-            });
-        }
-
-        function cargarHistorial() {
-            db.collection("servicios").orderBy("timestamp", "desc").onSnapshot(snap => {
-                const h = document.getElementById('historial');
-                h.innerHTML = "";
-                let p = 0; let c = 0;
-                snap.forEach(doc => {
-                    const s = doc.data();
-                    if(s.estado === "pendiente") p++; else c++;
-                    if(s.estado === vistaActual) {
-                        const card = document.createElement('div');
-                        card.className = 'card-servicio';
-                        card.innerHTML = `<h3>${s.cliente}</h3><p>📍 ${s.direccion}</p><p>👤 Staff: ${s.empleado_nombre}</p><p>📋 Tipo: ${s.tipo}</p>`;
-                        h.appendChild(card);
-                    }
-                });
-                document.getElementById('count-pendientes').innerText = p;
-                document.getElementById('count-completados').innerText = c;
-            });
-        }
-        cargarHistorial();
-    </script>
-</body>
-</html>
-
-        let todosLosEmpleados = [];
-        let vistaActual = "pendiente";
-
-        function cambiarVista(v) {
-            vistaActual = v;
-            document.getElementById('btn-pendientes').classList.toggle('active', v === 'pendiente');
-            document.getElementById('btn-completados').classList.toggle('active', v === 'completado');
-            cargarHistorial();
-        }
-
-        function registrarStaff() {
-            const n = document.getElementById('reg-nombre').value;
-            const e = document.getElementById('reg-email').value.toLowerCase().trim();
-            if(!n || !e) return alert("Faltan datos de staff");
+            if(!n || !e) return alert("Llena nombre y correo");
             db.collection("usuarios").add({ nombre: n, email: e, rol: "empleado" }).then(() => {
                 alert("✅ Guardado");
                 document.getElementById('reg-nombre').value = "";
@@ -271,7 +170,7 @@
 
         function asignarTrabajo() {
             const email = document.getElementById('email-empleado').value;
-            if (!email) return alert("Selecciona un empleado de la lista");
+            if (!email) return alert("Selecciona un empleado de la lista azul");
             db.collection("servicios").add({
                 cliente: document.getElementById('cliente').value,
                 direccion: document.getElementById('direccion').value,
@@ -298,7 +197,13 @@
                     if(s.estado === vistaActual) {
                         const card = document.createElement('div');
                         card.className = 'card-servicio';
-                        card.innerHTML = `<h3>${s.cliente}</h3><p>📍 ${s.direccion}</p><p>👤 Staff: ${s.empleado_nombre}</p>`;
+                        card.innerHTML = `
+                            <h3>${s.cliente}</h3>
+                            <p>📍 ${s.direccion}</p>
+                            <p>👤 Staff: ${s.empleado_nombre}</p>
+                            <p>📅 ${s.fecha} - ⏰ ${s.hora}</p>
+                            <p>📋 Tipo: ${s.tipo}</p>
+                        `;
                         h.appendChild(card);
                     }
                 });
