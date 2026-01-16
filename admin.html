@@ -13,46 +13,32 @@
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         h1 { font-style: italic; font-weight: 900; margin: 0; font-size: 22px; text-transform: uppercase; }
         h1 span { color: #3b82f6; }
-        
-        /* Contadores superiores */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .stat-card { background: #1c1c1e; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #2c2c2e; cursor: pointer; }
         .stat-card.active { border-color: #3b82f6; background: #1a2638; }
         .stat-card h2 { margin: 0; font-size: 28px; color: #3b82f6; }
         .stat-card p { margin: 5px 0 0 0; font-size: 10px; color: #8e8e93; text-transform: uppercase; }
-        
-        /* Formulario */
         .form-container { background: #1c1c1e; padding: 18px; border-radius: 18px; border: 1px solid #2c2c2e; margin-bottom: 20px; }
         .label-text { font-size: 10px; color: #3b82f6; font-weight: bold; margin: 8px 0 4px 5px; display: block; text-transform: uppercase; }
         input, textarea { width: 100%; padding: 14px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: white; box-sizing: border-box; font-size: 15px; }
-        
         .datetime-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        
-        /* Tipos de servicio */
         .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
         .type-btn { padding: 12px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: #8e8e93; font-weight: bold; font-size: 11px; cursor: pointer; }
         .type-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
-        
         .save-btn { width: 100%; padding: 18px; background: #1d4ed8; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; margin-top: 20px; cursor: pointer; }
-        
-        /* Tarjetas de historial */
         .card-servicio { background: #1c1c1e; padding: 20px; border-radius: 18px; border: 1px solid #2c2c2e; position: relative; margin-bottom: 15px; }
         .btn-whatsapp-circular { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; background: #25d366; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 18px; }
-        
         .card-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 15px; }
         .btn-secondary { padding: 10px; border-radius: 8px; border: none; font-size: 10px; font-weight: bold; color: white; cursor: pointer; }
         .btn-edit { background: #5856d6; }
         .btn-delete { background: #ff3b30; }
         .btn-complete { background: #25d366; }
-        
         .view-title { font-size: 14px; color: #3b82f6; text-transform: uppercase; margin: 15px 0 10px 5px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>ELITE <span>ADMIN</span></h1>
-    </div>
+    <div class="header"><h1>ELITE <span>ADMIN</span></h1></div>
 
     <div class="stats-grid">
         <div class="stat-card active" id="btn-view-pendientes" onclick="cambiarVista('pendiente')">
@@ -67,7 +53,6 @@
 
     <div class="form-container">
         <input type="hidden" id="edit-id">
-        
         <span class="label-text">Cliente y Contacto</span>
         <input type="text" id="cliente" placeholder="Nombre del cliente">
         <input type="text" id="direccion" placeholder="Dirección completa">
@@ -88,7 +73,7 @@
         </div>
 
         <span class="label-text">Notas Especiales</span>
-        <textarea id="notas" placeholder="¿Tienen mascotas? ¿Código de entrada?..." rows="2"></textarea>
+        <textarea id="notas" placeholder="Detalles importantes..." rows="2"></textarea>
 
         <span class="label-text">Tipo de Limpieza</span>
         <div class="type-grid">
@@ -105,7 +90,6 @@
     <div id="historial"></div>
 
     <script>
-        // --- CONFIGURACIÓN INICIAL ---
         emailjs.init("HND0NNg6H-dBCZtNq");
 
         const firebaseConfig = {
@@ -122,7 +106,6 @@
         let tipoSeleccionado = "ESTÁNDAR";
         let vistaActual = "pendiente";
 
-        // Cambiar entre Pendientes y Completados
         function cambiarVista(estado) {
             vistaActual = estado;
             document.getElementById('btn-view-pendientes').classList.toggle('active', estado === 'pendiente');
@@ -131,18 +114,15 @@
             cargarDatos();
         }
 
-        // Seleccionar tipo de limpieza
         function selectType(tipo) {
             tipoSeleccionado = tipo;
             document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('btn-' + tipo).classList.add('active');
         }
 
-        // --- FUNCIÓN PRINCIPAL DE GUARDADO Y ENVÍO ---
         function guardarServicio() {
             const id = document.getElementById('edit-id').value;
             const correoEmpleado = document.getElementById('empleado').value;
-
             const data = {
                 cliente: document.getElementById('cliente').value,
                 direccion: document.getElementById('direccion').value,
@@ -155,23 +135,19 @@
                 estado: "pendiente"
             };
 
-            if(!data.cliente || !correoEmpleado) {
-                return alert("Por favor ingresa al menos el Cliente y el Correo del Empleado");
-            }
+            if(!data.cliente || !correoEmpleado) return alert("Por favor ingresa Cliente y Correo");
 
             if(id) {
-                // Modo Edición
                 db.collection("servicios").doc(id).update(data).then(() => {
                     alert("✅ Cambios actualizados correctamente");
                     resetForm();
                 });
             } else {
-                // Modo Nuevo Registro
                 data.timestamp = firebase.firestore.FieldValue.serverTimestamp();
                 db.collection("servicios").add(data).then(() => {
                     
-                    // ENVÍO DE CORREO MEDIANTE EMAILJS
-                    emailjs.send("service_8kakktm", "template_r1nt4zb", {
+                    // --- AQUÍ SE ACTUALIZÓ EL SERVICE ID ---
+                    emailjs.send("service_10ipt7l", "template_r1nt4zb", {
                         to_email: correoEmpleado,
                         client_name: data.cliente,
                         address: data.direccion,
@@ -184,11 +160,10 @@
                         alert("❌ ERROR AL ENVIAR CORREO: " + JSON.stringify(error));
                     });
 
-                }).catch((error) => alert("Error en Base de Datos: " + error));
+                }).catch((error) => alert("Error: " + error));
             }
         }
 
-        // Cargar datos para editar
         function cargarEdicion(id) {
             db.collection("servicios").doc(id).get().then((doc) => {
                 const s = doc.data();
@@ -201,7 +176,6 @@
                 document.getElementById('hora-servicio').value = s.hora_servicio;
                 document.getElementById('notas').value = s.notas;
                 selectType(s.tipo || "ESTÁNDAR");
-                
                 document.getElementById('btn-principal').innerText = "ACTUALIZAR CAMBIOS";
                 document.getElementById('btn-principal').style.background = "#5856d6";
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -224,21 +198,17 @@
             selectType("ESTÁNDAR");
         }
 
-        // Cargar y Escuchar cambios en la base de datos
         function cargarDatos() {
             db.collection("servicios").orderBy("timestamp", "desc").onSnapshot(snap => {
                 const historial = document.getElementById('historial');
                 historial.innerHTML = "";
                 let p = 0; let c = 0;
-                
                 snap.forEach(doc => {
                     const s = doc.data();
                     if(s.estado === "pendiente") p++; else c++;
-                    
                     if(s.estado === vistaActual) {
                         const limpioTelefono = s.telefono ? s.telefono.replace(/\D/g,'') : '';
-                        const msgWS = encodeURIComponent(`Hola ${s.cliente}, soy de Elite Cleaners. Te escribo por el servicio de limpieza.`);
-                        
+                        const msgWS = encodeURIComponent(`Hola ${s.cliente}, somos de Elite Cleaners...`);
                         const card = document.createElement('div');
                         card.className = 'card-servicio';
                         card.innerHTML = `
@@ -250,7 +220,7 @@
                             <div class="card-actions">
                                 ${s.estado === 'pendiente' ? `<button class="btn-secondary btn-complete" onclick="completarTrabajo('${doc.id}')">Hecho ✓</button>` : ''}
                                 <button class="btn-secondary btn-edit" onclick="cargarEdicion('${doc.id}')">Editar</button>
-                                <button class="btn-secondary btn-delete" onclick="if(confirm('¿Borrar registro?')) db.collection('servicios').doc('${doc.id}').delete()">Borrar</button>
+                                <button class="btn-secondary btn-delete" onclick="if(confirm('¿Borrar?')) db.collection('servicios').doc('${doc.id}').delete()">Borrar</button>
                             </div>
                         `;
                         historial.appendChild(card);
@@ -260,10 +230,7 @@
                 document.getElementById('count-completados').innerText = c;
             });
         }
-
-        // Iniciar App
         cargarDatos();
     </script>
 </body>
 </html>
-
