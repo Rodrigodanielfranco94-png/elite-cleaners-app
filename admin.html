@@ -16,20 +16,20 @@
         .label-text { font-size: 10px; color: #3b82f6; font-weight: bold; margin: 8px 0 4px 5px; display: block; text-transform: uppercase; }
         input, textarea { width: 100%; padding: 14px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: white; box-sizing: border-box; font-size: 15px; }
 
-        /* Buscador con Lupa */
+        /* Buscador de Empleado */
         .search-container { position: relative; width: 100%; }
-        .search-icon { position: absolute; left: 12px; top: 12px; color: #3b82f6; font-size: 18px; z-index: 10; }
-        .search-input { padding-left: 40px !important; }
         .suggestions-list { 
             position: absolute; width: 100%; background: #2c2c2e; border-radius: 10px; 
             margin-top: -5px; z-index: 100; border: 1px solid #3b82f6; max-height: 200px; 
             overflow-y: auto; display: none; 
         }
         .suggestion-item { padding: 12px; border-bottom: 1px solid #3a3a3c; cursor: pointer; font-size: 14px; }
-        .suggestion-item:last-child { border-bottom: none; }
+
+        /* Separación de Fecha y Hora */
+        .datetime-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
         .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .type-btn { padding: 12px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: #8e8e93; font-weight: bold; font-size: 11px; }
+        .type-btn { padding: 12px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: #8e8e93; font-weight: bold; font-size: 11px; cursor: pointer; }
         .type-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
         
         .save-btn { width: 100%; padding: 18px; background: #1d4ed8; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; margin-top: 20px; cursor: pointer; }
@@ -48,17 +48,23 @@
         
         <span class="label-text">Notificar al empleado</span>
         <div class="search-container">
-            <span class="search-icon">🔍</span>
-            <input type="text" id="search-empleado" class="search-input" placeholder="Escribe iniciales..." oninput="filtrarEmpleados()">
+            <input type="text" id="search-empleado" placeholder="Escribe iniciales..." oninput="filtrarEmpleados()">
             <div id="suggestions" class="suggestions-list"></div>
         </div>
         <input type="hidden" id="email-empleado">
         
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <input type="date" id="fecha">
-            <input type="time" id="hora">
+        <div class="datetime-grid">
+            <div>
+                <span class="label-text">Fecha</span>
+                <input type="date" id="fecha">
+            </div>
+            <div>
+                <span class="label-text">Hora</span>
+                <input type="time" id="hora">
+            </div>
         </div>
 
+        <span class="label-text">Notas Especiales</span>
         <textarea id="notas" placeholder="Instrucciones especiales..." rows="2"></textarea>
 
         <span class="label-text">Tipo de Limpieza</span>
@@ -89,7 +95,7 @@
         let tipoSeleccionado = "ESTÁNDAR";
         let todosLosEmpleados = [];
 
-        // 1. Cargar empleados registrados desde la nube
+        // Cargar empleados de la base de datos
         db.collection("usuarios").where("rol", "==", "empleado").onSnapshot(snap => {
             todosLosEmpleados = [];
             snap.forEach(doc => {
@@ -97,22 +103,19 @@
             });
         });
 
-        // 2. Función del buscador inteligente
         function filtrarEmpleados() {
             const query = document.getElementById('search-empleado').value.toLowerCase();
             const list = document.getElementById('suggestions');
             list.innerHTML = "";
-
             if (query.length < 1) { list.style.display = "none"; return; }
 
             const filtrados = todosLosEmpleados.filter(e => e.nombre.toLowerCase().includes(query));
-
             if (filtrados.length > 0) {
                 list.style.display = "block";
                 filtrados.forEach(e => {
                     const div = document.createElement('div');
                     div.className = 'suggestion-item';
-                    div.innerHTML = `<strong>${e.nombre}</strong><br><small>${e.email}</small>`;
+                    div.innerHTML = `<strong>${e.nombre}</strong>`;
                     div.onclick = () => {
                         document.getElementById('search-empleado').value = e.nombre;
                         document.getElementById('email-empleado').value = e.email;
@@ -120,9 +123,7 @@
                     };
                     list.appendChild(div);
                 });
-            } else {
-                list.style.display = "none";
-            }
+            } else { list.style.display = "none"; }
         }
 
         function selectType(t) {
@@ -134,10 +135,9 @@
         function asignarTrabajo() {
             const email = document.getElementById('email-empleado').value;
             const nombreStaff = document.getElementById('search-empleado').value;
+            if (!email) return alert("Selecciona un empleado de la lista");
 
-            if (!email) return alert("Por favor, selecciona un empleado de la lista.");
-
-            const data = {
+            db.collection("servicios").add({
                 cliente: document.getElementById('cliente').value,
                 direccion: document.getElementById('direccion').value,
                 telefono: document.getElementById('telefono').value,
@@ -149,12 +149,10 @@
                 tipo: tipoSeleccionado,
                 estado: "pendiente",
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            db.collection("servicios").add(data).then(() => {
-                alert("🚀 TRABAJO ASIGNADO INTERNAMENTE A " + nombreStaff);
+            }).then(() => {
+                alert("🚀 ASIGNADO A " + nombreStaff);
                 location.reload();
-            }).catch(e => alert("Error: " + e));
+            });
         }
 
         function cargarHistorial() {
