@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Cleaners - Admin Control</title>
+    <title>Elite Admin - Control Interno</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     
     <style>
         body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; padding-bottom: 100px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        h1 { font-style: italic; font-weight: 900; margin: 0; font-size: 22px; text-transform: uppercase; }
+        h1 { font-style: italic; font-weight: 900; font-size: 22px; text-transform: uppercase; margin-bottom: 20px; }
         h1 span { color: #3b82f6; }
         
         /* ESTADÍSTICAS */
@@ -20,40 +19,41 @@
         .stat-card h2 { margin: 0; font-size: 28px; color: #3b82f6; }
         .stat-card p { margin: 5px 0 0 0; font-size: 10px; color: #8e8e93; text-transform: uppercase; }
 
-        .form-container { background: #1c1c1e; padding: 18px; border-radius: 18px; border: 1px solid #2c2c2e; margin-bottom: 20px; }
+        /* FORMULARIO */
+        .form-container { background: #1c1c1e; padding: 18px; border-radius: 20px; border: 1px solid #2c2c2e; margin-bottom: 20px; }
         .label-text { font-size: 10px; color: #3b82f6; font-weight: bold; margin: 8px 0 4px 5px; display: block; text-transform: uppercase; }
-        input, textarea { width: 100%; padding: 14px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: white; box-sizing: border-box; font-size: 15px; }
+        input, textarea { width: 100%; padding: 14px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #2c2c2e; background: #2c2c2e; color: white; box-sizing: border-box; font-size: 15px; }
 
         /* BUSCADOR */
-        .search-container { position: relative; width: 100%; }
-        .suggestions-list { position: absolute; width: 100%; background: #3b82f6; border-radius: 10px; margin-top: -5px; z-index: 100; max-height: 200px; overflow-y: auto; display: none; }
-        .suggestion-item { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-size: 14px; font-weight: bold; }
+        .search-container { position: relative; }
+        .suggestions-list { position: absolute; width: 100%; background: #3b82f6; border-radius: 10px; z-index: 100; max-height: 150px; overflow-y: auto; display: none; }
+        .suggestion-item { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-weight: bold; }
 
-        /* BOTONES DE LIMPIEZA */
+        /* BOTONES TIPO */
         .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .type-btn { padding: 12px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: #8e8e93; font-weight: bold; font-size: 11px; cursor: pointer; }
+        .type-btn { padding: 12px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: #8e8e93; font-weight: bold; font-size: 11px; cursor: pointer; text-transform: uppercase; }
         .type-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
         
-        .save-btn { width: 100%; padding: 18px; background: #3b82f6; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; margin-top: 20px; cursor: pointer; text-transform: uppercase; }
+        .save-btn { width: 100%; padding: 18px; background: #3b82f6; color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 16px; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
 
-        /* TARJETA DE TRABAJO ESTILO CAPTURA */
-        .card-servicio { background: #1c1c1e; padding: 18px; border-radius: 20px; border: 1px solid #2c2c2e; margin-bottom: 15px; position: relative; }
-        .status-icon { position: absolute; right: 15px; top: 20px; width: 35px; height: 35px; background: #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .card-servicio h3 { margin: 0; color: #3b82f6; font-size: 18px; }
-        .card-servicio p { margin: 5px 0; font-size: 13px; color: #e5e7eb; display: flex; align-items: center; gap: 5px; }
+        /* TARJETA DE TRABAJO ASIGNADO */
+        .card-servicio { background: #1c1c1e; padding: 18px; border-radius: 25px; border: 1px solid #2c2c2e; margin-bottom: 15px; position: relative; }
+        .status-icon { position: absolute; right: 15px; top: 15px; width: 35px; height: 35px; background: #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 0 10px rgba(34, 197, 94, 0.4); }
+        .card-servicio h3 { margin: 0 0 5px 0; color: #3b82f6; font-size: 18px; }
+        .card-servicio p { margin: 4px 0; font-size: 13px; color: #d1d5db; }
         
         .action-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 15px; }
-        .btn-action { padding: 10px; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 12px; cursor: pointer; }
+        .btn-action { padding: 10px; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 11px; cursor: pointer; }
         .btn-done { background: #22c55e; }
         .btn-edit { background: #6366f1; }
         .btn-delete { background: #ef4444; }
 
-        .reg-btn { background: #2c2c2e; color: #3b82f6; border: 1px solid #3b82f6; padding: 10px; width: 100%; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .reg-btn { background: #2c2c2e; color: #3b82f6; border: 1px solid #3b82f6; padding: 10px; width: 100%; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
-    <div class="header"><h1>ELITE <span>ADMIN</span></h1></div>
+    <h1>ELITE <span>ADMIN</span></h1>
 
     <div class="stats-grid">
         <div class="stat-card active" id="btn-pendientes" onclick="cambiarVista('pendiente')">
@@ -70,18 +70,17 @@
         <span class="label-text">Registrar Nuevo Staff</span>
         <input type="text" id="reg-nombre" placeholder="Nombre completo">
         <input type="email" id="reg-email" placeholder="Correo electrónico">
-        <button class="reg-btn" onclick="registrarStaff()">GUARDAR STAFF</button>
+        <button class="reg-btn" onclick="registrarStaff()">GUARDAR STAFF EN LA NUBE</button>
     </div>
 
     <div class="form-container">
-        <span class="label-text">Cliente y Contacto</span>
+        <span class="label-text">Cliente y Dirección</span>
         <input type="text" id="cliente" placeholder="Nombre del cliente">
-        <input type="text" id="direccion" placeholder="Dirección">
-        <input type="tel" id="telefono" placeholder="WhatsApp">
+        <input type="text" id="direccion" placeholder="Dirección del servicio">
         
-        <span class="label-text">Notificar al empleado</span>
+        <span class="label-text">Asignar a</span>
         <div class="search-container">
-            <input type="text" id="search-empleado" placeholder="Escribe iniciales..." oninput="filtrarEmpleados()" autocomplete="off">
+            <input type="text" id="search-empleado" placeholder="Escribe iniciales staff..." oninput="filtrarEmpleados()" autocomplete="off">
             <div id="suggestions" class="suggestions-list"></div>
         </div>
         <input type="hidden" id="email-empleado">
@@ -91,9 +90,10 @@
             <div><span class="label-text">Hora</span><input type="time" id="hora"></div>
         </div>
 
+        <span class="label-text">Notas</span>
         <textarea id="notas" placeholder="Instrucciones especiales..." rows="2"></textarea>
 
-        <span class="label-text">Tipo de Limpieza</span>
+        <span class="label-text">Tipo</span>
         <div class="type-grid">
             <button class="type-btn active" id="btn-ESTÁNDAR" onclick="selectType('ESTÁNDAR')">ESTÁNDAR</button>
             <button class="type-btn" id="btn-PROFUNDA" onclick="selectType('PROFUNDA')">PROFUNDA</button>
@@ -101,10 +101,9 @@
             <button class="type-btn" id="btn-MOVE-OUT" onclick="selectType('MOVE-OUT')">MOVE-OUT</button>
         </div>
 
-        <button class="save-btn" onclick="asignarTrabajo()">Asignar Trabajo</button>
+        <button class="save-btn" onclick="asignarTrabajo()">ASIGNAR TRABAJO</button>
     </div>
 
-    <h2 style="font-size: 14px; color: #3b82f6; margin-left: 10px;">TRABAJOS ASIGNADOS</h2>
     <div id="historial"></div>
 
     <script>
@@ -123,19 +122,12 @@
         let todosLosEmpleados = [];
         let vistaActual = "pendiente";
 
-        function cambiarVista(v) {
-            vistaActual = v;
-            document.getElementById('btn-pendientes').classList.toggle('active', v === 'pendiente');
-            document.getElementById('btn-completados').classList.toggle('active', v === 'completado');
-            cargarHistorial();
-        }
-
         function registrarStaff() {
             const n = document.getElementById('reg-nombre').value;
             const e = document.getElementById('reg-email').value.toLowerCase().trim();
-            if(!n || !e) return alert("Faltan datos");
+            if(!n || !e) return alert("Llena nombre y correo");
             db.collection("usuarios").add({ nombre: n, email: e, rol: "empleado" }).then(() => {
-                alert("✅ Guardado");
+                alert("✅ Staff registrado");
                 document.getElementById('reg-nombre').value = ""; document.getElementById('reg-email').value = "";
             });
         }
@@ -155,7 +147,7 @@
                 l.style.display = "block";
                 f.forEach(e => {
                     const d = document.createElement('div');
-                    d.className = 'suggestion-item'; d.innerHTML = e.nombre;
+                    d.className = 'suggestion-item'; d.innerText = e.nombre;
                     d.onclick = () => {
                         document.getElementById('search-empleado').value = e.nombre;
                         document.getElementById('email-empleado').value = e.email;
@@ -163,7 +155,7 @@
                     };
                     l.appendChild(d);
                 });
-            } else { l.style.display = "none"; }
+            }
         }
 
         function selectType(t) {
@@ -173,12 +165,12 @@
         }
 
         function asignarTrabajo() {
-            const email = document.getElementById('email-empleado').value;
-            if (!email) return alert("Selecciona un empleado de la lista azul");
+            const email = document.getElementById('email-email-empleado')?.value || document.getElementById('email-empleado').value;
+            if (!email) return alert("Busca y selecciona un empleado de la lista azul");
+            
             db.collection("servicios").add({
                 cliente: document.getElementById('cliente').value,
                 direccion: document.getElementById('direccion').value,
-                telefono: document.getElementById('telefono').value,
                 empleado_email: email,
                 empleado_nombre: document.getElementById('search-empleado').value,
                 fecha: document.getElementById('fecha').value,
@@ -187,7 +179,7 @@
                 tipo: tipoSeleccionado,
                 estado: "pendiente",
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => { alert("🚀 ASIGNADO"); location.reload(); });
+            }).then(() => { alert("🚀 TRABAJO ENVIADO A LA APP STAFF"); location.reload(); });
         }
 
         function cargarHistorial() {
@@ -203,16 +195,16 @@
                         const card = document.createElement('div');
                         card.className = 'card-servicio';
                         card.innerHTML = `
-                            <div class="status-icon">📲</div>
-                            <h3>${s.cliente || 'Sin nombre'}</h3>
-                            <p>📍 ${s.direccion || 'Sin dirección'}</p>
-                            <p>👤 Staff: ${s.empleado_nombre || 'No asignado'}</p>
-                            <p>🗓️ ${s.fecha || '--'} | ⏰ ${s.hora || '--'}</p>
-                            <p>✨ Tipo: ${s.tipo}</p>
+                            <div class="status-icon">✓</div>
+                            <h3>${s.cliente}</h3>
+                            <p>📍 ${s.direccion}</p>
+                            <p>👤 Staff: ${s.empleado_nombre}</p>
+                            <p>📅 ${s.fecha} | ⏰ ${s.hora}</p>
+                            <p>✨ ${s.tipo}</p>
                             <div class="action-buttons">
-                                <button class="btn-action btn-done" onclick="actualizarEstado('${id}', 'completado')">Terminado ✓</button>
-                                <button class="btn-action btn-edit" onclick="alert('Función editar próximamente')">Editar</button>
-                                <button class="btn-action btn-delete" onclick="borrarServicio('${id}')">Borrar</button>
+                                <button class="btn-action btn-done" onclick="marcar('${id}', 'completado')">Terminado</button>
+                                <button class="btn-action btn-edit" onclick="alert('Editar')">Editar</button>
+                                <button class="btn-action btn-delete" onclick="borrar('${id}')">Borrar</button>
                             </div>
                         `;
                         h.appendChild(card);
@@ -223,16 +215,10 @@
             });
         }
 
-        function actualizarEstado(id, nuevoEstado) {
-            db.collection("servicios").doc(id).update({ estado: nuevoEstado });
-        }
-
-        function borrarServicio(id) {
-            if(confirm("¿Seguro que quieres borrar este trabajo?")) {
-                db.collection("servicios").doc(id).delete();
-            }
-        }
-
+        function marcar(id, est) { db.collection("servicios").doc(id).update({ estado: est }); }
+        function borrar(id) { if(confirm("¿Borrar?")) db.collection("servicios").doc(id).delete(); }
+        function cambiarVista(v) { vistaActual = v; cargarHistorial(); }
+        
         cargarHistorial();
     </script>
 </body>
