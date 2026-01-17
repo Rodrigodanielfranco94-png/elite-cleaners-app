@@ -24,7 +24,7 @@
         .label-text { font-size: 10px; color: #3b82f6; font-weight: bold; margin: 8px 0 4px 5px; display: block; text-transform: uppercase; }
         input, textarea { width: 100%; padding: 14px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #2c2c2e; background: #2c2c2e; color: white; box-sizing: border-box; font-size: 15px; }
 
-        /* GESTIÓN DE STAFF - NUEVOS ESTILOS */
+        /* GESTIÓN DE STAFF - LISTA */
         .staff-list { margin-top: 15px; border-top: 1px solid #2c2c2e; padding-top: 15px; }
         .staff-item { background: #000; padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #2c2c2e; }
         .staff-info b { font-size: 13px; color: #fff; display: block; }
@@ -50,6 +50,11 @@
         .card-servicio h3 { margin: 0 0 10px 0; color: #3b82f6; font-size: 20px; }
         .card-servicio p { margin: 5px 0; font-size: 13px; color: #d1d5db; }
         
+        /* MONITOREO TIEMPO */
+        .time-box { background: #000; padding: 12px; border-radius: 15px; margin-top: 15px; border: 1px solid #3b82f633; }
+        .time-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
+        .time-row b { color: #3b82f6; font-size: 10px; text-transform: uppercase; }
+
         .action-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 15px; }
         .btn-action { padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 11px; cursor: pointer; text-transform: uppercase; }
         .btn-done { background: #22c55e; }
@@ -73,14 +78,13 @@
     </div>
 
     <div class="form-container section-staff">
-        <span class="label-text">Gestión de Staff</span>
+        <span class="label-text">Gestión de Personal</span>
         <input type="hidden" id="edit-staff-id">
         <input type="text" id="reg-nombre" placeholder="Nombre completo">
         <input type="email" id="reg-email" placeholder="Correo electrónico">
         <button class="reg-btn" id="btn-staff-main" onclick="registrarStaff()">GUARDAR STAFF</button>
         
-        <div class="staff-list" id="lista-visual-staff">
-            </div>
+        <div class="staff-list" id="lista-visual-staff"></div>
     </div>
 
     <div class="form-container">
@@ -105,7 +109,7 @@
         <span class="label-text">Notas</span>
         <textarea id="notas" placeholder="Instrucciones..." rows="2"></textarea>
 
-        <span class="label-text">Limpieza</span>
+        <span class="label-text">Tipo de Limpieza</span>
         <div class="type-grid">
             <button class="type-btn active" id="btn-ESTÁNDAR" onclick="selectType('ESTÁNDAR')">ESTÁNDAR</button>
             <button class="type-btn" id="btn-PROFUNDA" onclick="selectType('PROFUNDA')">PROFUNDA</button>
@@ -134,23 +138,20 @@
         let todosLosEmpleados = [];
         let vistaActual = "pendiente";
 
-        // --- GESTIÓN DE STAFF (NUEVAS FUNCIONES) ---
+        // --- GESTIÓN DE STAFF ---
         function registrarStaff() {
             const id = document.getElementById('edit-staff-id').value;
             const n = document.getElementById('reg-nombre').value;
             const e = document.getElementById('reg-email').value.toLowerCase().trim();
-            
             if(!n || !e) return alert("Completa nombre y correo");
 
             if(id) {
                 db.collection("usuarios").doc(id).update({ nombre: n, email: e }).then(() => {
-                    alert("✅ Staff Actualizado");
-                    resetStaffForm();
+                    alert("✅ Actualizado"); resetStaffForm();
                 });
             } else {
                 db.collection("usuarios").add({ nombre: n, email: e, rol: "empleado" }).then(() => {
-                    alert("✅ Guardado");
-                    resetStaffForm();
+                    alert("✅ Guardado"); resetStaffForm();
                 });
             }
         }
@@ -173,39 +174,28 @@
         }
 
         function borrarStaff(id, nombre) {
-            if(confirm("¿Seguro que deseas eliminar a " + nombre + "? No podrá entrar a su app.")) {
-                db.collection("usuarios").doc(id).delete();
-            }
+            if(confirm("¿Eliminar a " + nombre + "?")) db.collection("usuarios").doc(id).delete();
         }
 
-        // CARGAR STAFF EN BUSCADOR Y EN LISTA VISUAL
         db.collection("usuarios").where("rol", "==", "empleado").onSnapshot(snap => {
             todosLosEmpleados = [];
-            const listaVisual = document.getElementById('lista-visual-staff');
-            listaVisual.innerHTML = "";
-
+            const lv = document.getElementById('lista-visual-staff');
+            lv.innerHTML = "";
             snap.forEach(doc => {
-                const e = doc.data();
-                const id = doc.id;
+                const e = doc.data(); const id = doc.id;
                 todosLosEmpleados.push(e);
-
-                // Crear fila en la lista de gestión
-                listaVisual.innerHTML += `
+                lv.innerHTML += `
                     <div class="staff-item">
-                        <div class="staff-info">
-                            <b>${e.nombre}</b>
-                            <span>${e.email}</span>
-                        </div>
+                        <div class="staff-info"><b>${e.nombre}</b><span>${e.email}</span></div>
                         <div class="staff-actions">
-                            <button class="btn-mini" style="background:#6366f1" onclick="editarStaff('${id}', '${e.nombre}', '${e.email}')">Edit</button>
-                            <button class="btn-mini" style="background:#ef4444" onclick="borrarStaff('${id}', '${e.nombre}')">X</button>
+                            <button class="btn-mini" style="background:#6366f1" onclick="editarStaff('${id}','${e.nombre}','${e.email}')">Edit</button>
+                            <button class="btn-mini" style="background:#ef4444" onclick="borrarStaff('${id}','${e.nombre}')">X</button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         });
 
-        // --- LÓGICA DE SERVICIOS (TU CÓDIGO ORIGINAL) ---
+        // --- GESTIÓN DE SERVICIOS ---
         function filtrarEmpleados() {
             const q = document.getElementById('search-empleado').value.toLowerCase();
             const l = document.getElementById('suggestions');
@@ -247,16 +237,10 @@
             };
 
             if (id) {
-                db.collection("servicios").doc(id).update(data).then(() => {
-                    alert("✅ Cambios Guardados");
-                    location.reload();
-                });
+                db.collection("servicios").doc(id).update(data).then(() => { alert("✅ Cambios Guardados"); location.reload(); });
             } else {
                 data.estado = "pendiente";
-                db.collection("servicios").add(data).then(() => {
-                    alert("🚀 Trabajo Asignado");
-                    location.reload();
-                });
+                db.collection("servicios").add(data).then(() => { alert("🚀 Trabajo Asignado"); location.reload(); });
             }
         }
 
@@ -266,10 +250,9 @@
                 h.innerHTML = "";
                 let p = 0; let c = 0;
                 snap.forEach(doc => {
-                    const s = doc.data();
-                    const id = doc.id;
-                    if(s.estado === "pendiente") p++; else c++;
-                    if(s.estado === vistaActual) {
+                    const s = doc.data(); const id = doc.id;
+                    if(s.estado !== "completado") p++; else c++;
+                    if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
                         const card = document.createElement('div');
                         card.className = 'card-servicio';
                         card.innerHTML = `
@@ -278,15 +261,19 @@
                             <p>📍 ${s.direccion}</p>
                             <p>👤 Staff: ${s.empleado_nombre}</p>
                             <p>📅 ${s.fecha} | ⏰ ${s.hora}</p>
-                            <p>✨ ${s.tipo}</p>
+                            
+                            <div class="time-box">
+                                <div class="time-row"><b>▶ Inicio Real:</b> <span style="color:#3b82f6">${s.hora_inicio || '---'}</span></div>
+                                <div class="time-row"><b>✔ Fin Real:</b> <span style="color:#22c55e">${s.hora_fin || '---'}</span></div>
+                            </div>
+
                             <div class="action-buttons">
-                                <button class="btn-action btn-done" onclick="marcar('${id}', '${s.estado === 'pendiente' ? 'completado' : 'pendiente'}')">
-                                    ${s.estado === 'pendiente' ? 'Terminar' : 'Reabrir'}
+                                <button class="btn-action btn-done" onclick="marcar('${id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">
+                                    ${s.estado === 'completado' ? 'Reabrir' : 'Terminar'}
                                 </button>
                                 <button class="btn-action btn-edit" onclick="editar('${id}', ${JSON.stringify(s).replace(/"/g, '&quot;')})">Editar</button>
                                 <button class="btn-action btn-delete" onclick="borrar('${id}')">Borrar</button>
-                            </div>
-                        `;
+                            </div>`;
                         h.appendChild(card);
                     }
                 });
@@ -295,10 +282,7 @@
             });
         }
 
-        function abrirChat(num) {
-            if(!num) return alert("No hay número registrado");
-            window.location.href = `sms:${num}`;
-        }
+        function abrirChat(num) { if(!num) return alert("Sin número"); window.location.href = `sms:${num}`; }
 
         function editar(id, s) {
             document.getElementById('edit-id').value = id;
@@ -306,7 +290,7 @@
             document.getElementById('direccion').value = s.direccion;
             document.getElementById('whatsapp').value = s.whatsapp || "";
             document.getElementById('search-empleado').value = s.empleado_nombre;
-            document.getElementById('email-empleado').value = s.email_empleado || s.empleado_email;
+            document.getElementById('email-empleado').value = s.empleado_email;
             document.getElementById('fecha').value = s.fecha;
             document.getElementById('hora').value = s.hora;
             document.getElementById('notas').value = s.notas;
@@ -316,8 +300,7 @@
         }
 
         function marcar(id, est) { db.collection("servicios").doc(id).update({ estado: est }); }
-        function borrar(id) { if(confirm("¿Seguro que deseas eliminarlo?")) db.collection("servicios").doc(id).delete(); }
-        
+        function borrar(id) { if(confirm("¿Borrar servicio?")) db.collection("servicios").doc(id).delete(); }
         function cambiarVista(v) {
             vistaActual = v;
             document.getElementById('btn-pendientes').classList.toggle('active', v === 'pendiente');
