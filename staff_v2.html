@@ -16,21 +16,29 @@
         .label { font-size: 10px; color: #3b82f6; font-weight: bold; text-transform: uppercase; margin-left: 10px; margin-bottom: 5px; display: block; }
         input { width: 100%; padding: 20px; border-radius: 18px; border: 1px solid #2c2c2e; background: #1c1c1e; color: white; font-size: 16px; box-sizing: border-box; outline: none; }
         .btn-entrar { width: 100%; max-width: 350px; padding: 20px; background: #3b82f6; color: white; border: none; border-radius: 18px; font-weight: bold; font-size: 16px; text-transform: uppercase; cursor: pointer; margin-top: 10px; }
+        
         #main-app { display: none; padding: 20px; padding-bottom: 100px; }
         .user-info { background: #1a2638; border: 1px solid #3b82f6; padding: 15px; border-radius: 15px; text-align: center; margin-bottom: 30px; font-weight: bold; color: #3b82f6; text-transform: uppercase; font-size: 12px; }
         
-        /* TARJETA DE TRABAJO MEJORADA */
-        .card { background: #1c1c1e; border: 1px solid #2c2c2e; padding: 20px; border-radius: 25px; margin-bottom: 20px; }
-        .card h3 { color: #3b82f6; margin: 0 0 10px 0; font-size: 22px; }
-        .info-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 14px; color: #d1d5db; }
-        .info-row b { color: #3b82f6; margin-right: 5px; font-size: 11px; text-transform: uppercase; }
+        /* TARJETA DE TRABAJO PRIORIZADA */
+        .card { background: #1c1c1e; border: 1px solid #2c2c2e; padding: 20px; border-radius: 25px; margin-bottom: 20px; position: relative; }
         
-        .badge-tipo { display: inline-block; background: #3b82f6; color: white; padding: 5px 12px; border-radius: 10px; font-size: 11px; font-weight: bold; margin-bottom: 15px; text-transform: uppercase; }
-        .notas-box { background: #000; padding: 12px; border-radius: 12px; border: 1px dashed #444; margin: 10px 0; font-size: 13px; color: #a1a1aa; line-height: 1.4; }
+        .header-card { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .date-time-box { text-align: right; background: #1a2638; padding: 8px 12px; border-radius: 12px; border: 1px solid #3b82f6; min-width: 100px; }
+        .date-text { color: #fff; font-weight: 900; font-size: 14px; display: block; }
+        .time-text { color: #3b82f6; font-weight: 900; font-size: 16px; display: block; }
+
+        .card h3 { color: #3b82f6; margin: 0; font-size: 22px; max-width: 60%; }
+        .badge-tipo { display: inline-block; background: #3b82f6; color: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; text-transform: uppercase; margin-top: 5px; }
         
-        .btn-gps { background: #2c2c2e; color: #3b82f6; border: 1px solid #3b82f6; padding: 15px; border-radius: 12px; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 15px 0; font-size: 12px; }
+        .info-row { display: flex; align-items: flex-start; margin: 12px 0; font-size: 14px; color: #d1d5db; line-height: 1.4; }
+        
+        .notas-box { background: #000; padding: 12px; border-radius: 12px; border: 1px dashed #444; margin: 10px 0; font-size: 13px; color: #a1a1aa; }
+        .notas-box b { color: #3b82f6; font-size: 10px; text-transform: uppercase; }
+
+        .btn-gps { background: #2c2c2e; color: #3b82f6; border: 1px solid #3b82f6; padding: 15px; border-radius: 12px; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 15px 0; font-size: 12px; text-transform: uppercase; }
         .btn-status { width: 100%; padding: 18px; border-radius: 15px; border: none; font-weight: bold; color: white; text-transform: uppercase; margin-top: 10px; cursor: pointer; font-size: 14px; }
-        .time-label { display: block; font-size: 11px; color: #8e8e93; margin-top: 10px; text-align: center; font-weight: bold; }
+        .time-label { display: block; font-size: 11px; color: #22c55e; margin-top: 10px; text-align: center; font-weight: bold; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -52,7 +60,7 @@
         <h1>ELITE <span>STAFF</span></h1>
         <div id="welcome-msg" class="user-info"></div>
         <div id="job-list"></div>
-        <button onclick="logout()" style="background:none; border:none; color:red; width:100%; margin-top:40px; font-weight:bold;">CERRAR SESIÓN</button>
+        <button onclick="logout()" style="background:none; border:none; color:red; width:100%; margin-top:40px; font-weight:bold; letter-spacing: 2px;">CERRAR SESIÓN</button>
     </div>
 
     <script>
@@ -83,47 +91,64 @@
         }
 
         function fetchJobs(email) {
-            db.collection("servicios").where("empleado_email", "==", email).where("estado", "in", ["pendiente", "en curso"])
-            .onSnapshot(snap => {
-                const list = document.getElementById('job-list');
-                list.innerHTML = "";
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    const id = doc.id;
+            db.collection("servicios")
+                .where("empleado_email", "==", email)
+                .where("estado", "in", ["pendiente", "en curso"])
+                .onSnapshot(snap => {
+                    const list = document.getElementById('job-list');
+                    list.innerHTML = "";
                     
-                    let botonesHTML = "";
-                    if (!data.hora_inicio) {
-                        botonesHTML = `<button class="btn-status" style="background:#3b82f6" onclick="registrarTiempo('${id}', 'inicio')">▶ INICIAR TRABAJO</button>`;
-                    } else if (data.hora_inicio && !data.hora_fin) {
-                        botonesHTML = `
-                            <span class="time-label">INICIADO A LAS: ${data.hora_inicio}</span>
-                            <button class="btn-status" style="background:#22c55e" onclick="registrarTiempo('${id}', 'fin')">✔ TERMINAR TRABAJO</button>
-                        `;
-                    }
+                    let trabajos = [];
+                    snap.forEach(doc => { trabajos.push({ id: doc.id, ...doc.data() }); });
 
-                    list.innerHTML += `
-                        <div class="card">
-                            <div class="badge-tipo">${data.tipo || 'ESTÁNDAR'}</div>
-                            <h3>${data.cliente}</h3>
-                            <div class="info-row">📍 ${data.direccion}</div>
-                            <div class="info-row">⏰ ${data.fecha} | ${data.hora}</div>
-                            
-                            <div class="notas-box">
-                                <b>Notas Especiales:</b><br>
-                                ${data.notas || 'Sin notas adicionales.'}
+                    // ORDENAR POR FECHA Y HORA
+                    trabajos.sort((a, b) => {
+                        const fA = a.fecha + " " + a.hora;
+                        const fB = b.fecha + " " + b.hora;
+                        return fA.localeCompare(fB);
+                    });
+
+                    trabajos.forEach(data => {
+                        let botonesHTML = "";
+                        if (!data.hora_inicio) {
+                            botonesHTML = `<button class="btn-status" style="background:#3b82f6" onclick="registrarTiempo('${data.id}', 'inicio')">▶ INICIAR TRABAJO</button>`;
+                        } else if (data.hora_inicio && !data.hora_fin) {
+                            botonesHTML = `
+                                <span class="time-label">SISTEMA INICIADO: ${data.hora_inicio}</span>
+                                <button class="btn-status" style="background:#22c55e" onclick="registrarTiempo('${data.id}', 'fin')">✔ TERMINAR TRABAJO</button>
+                            `;
+                        }
+
+                        list.innerHTML += `
+                            <div class="card">
+                                <div class="header-card">
+                                    <div>
+                                        <h3>${data.cliente}</h3>
+                                        <div class="badge-tipo">${data.tipo || 'ESTÁNDAR'}</div>
+                                    </div>
+                                    <div class="date-time-box">
+                                        <span class="date-text">${data.fecha}</span>
+                                        <span class="time-text">${data.hora}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="info-row">📍 ${data.direccion}</div>
+                                
+                                <div class="notas-box">
+                                    <b>Instrucciones:</b><br>
+                                    ${data.notas || 'Sin notas especiales.'}
+                                </div>
+
+                                <a class="btn-gps" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.direccion)}" target="_blank">📍 ABRIR EN MAPAS</a>
+                                ${botonesHTML}
                             </div>
-
-                            <a class="btn-gps" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.direccion)}" target="_blank">📍 ABRIR MAPAS</a>
-                            ${botonesHTML}
-                        </div>
-                    `;
+                        `;
+                    });
                 });
-            });
         }
 
         function registrarTiempo(id, tipo) {
-            if (!navigator.geolocation) return alert("GPS no disponible.");
-
+            if (!navigator.geolocation) return alert("Activa tu GPS.");
             navigator.geolocation.getCurrentPosition((pos) => {
                 const ahora = new Date();
                 const horaString = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -136,7 +161,7 @@
                         estado: 'en curso'
                     });
                 } else {
-                    if(confirm("¿Terminar trabajo? Se registrará tu ubicación final.")) {
+                    if(confirm("¿Confirmar fin de trabajo? Se cerrará este registro.")) {
                         db.collection('servicios').doc(id).update({
                             hora_fin: horaString,
                             gps_fin: coords,
@@ -144,7 +169,7 @@
                         });
                     }
                 }
-            }, (err) => alert("Debes activar el GPS para continuar."), { enableHighAccuracy: true });
+            }, (err) => alert("Error GPS: Debes permitir la ubicación para trabajar."), { enableHighAccuracy: true });
         }
 
         function logout() { location.reload(); }
