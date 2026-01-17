@@ -3,46 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Staff - Mis Trabajos</title>
+    <title>Elite Staff - Acceso</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     
     <style>
-        body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; }
-        h1 { font-style: italic; font-weight: 900; font-size: 24px; text-transform: uppercase; text-align: center; margin-top: 20px; }
+        body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        .container { width: 90%; max-width: 400px; }
+        h1 { font-style: italic; font-weight: 900; font-size: 32px; text-transform: uppercase; margin-bottom: 40px; }
         h1 span { color: #3b82f6; }
         
-        /* PANTALLA DE ACCESO (SOLO CORREO) */
-        #login-screen { text-align: center; padding-top: 100px; }
-        .login-input { width: 100%; max-width: 320px; padding: 18px; border-radius: 15px; border: 1px solid #2c2c2e; background: #1c1c1e; color: white; font-size: 16px; margin-bottom: 20px; box-sizing: border-box; text-align: center; }
-        .login-btn { width: 100%; max-width: 320px; padding: 18px; background: #3b82f6; color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 16px; cursor: pointer; text-transform: uppercase; }
-
-        /* PANTALLA PRINCIPAL */
-        #app-screen { display: none; }
-        .welcome-badge { background: #1a2638; color: #3b82f6; padding: 12px; border-radius: 12px; text-align: center; font-size: 13px; font-weight: bold; margin: 20px 0; border: 1px solid #3b82f6; text-transform: uppercase; }
+        /* ELIMINADA LA CONTRASEÑA - SOLO CAMPO DE CORREO */
+        .login-input { width: 100%; padding: 20px; border-radius: 15px; border: 1px solid #2c2c2e; background: #1c1c1e; color: white; font-size: 16px; margin-bottom: 20px; box-sizing: border-box; text-align: center; }
+        .login-btn { width: 100%; padding: 20px; background: #3b82f6; color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 16px; cursor: pointer; text-transform: uppercase; }
         
-        .card-job { background: #1c1c1e; padding: 20px; border-radius: 25px; border: 1px solid #2c2c2e; margin-bottom: 20px; position: relative; }
-        .card-job h3 { margin: 0 0 12px 0; color: #3b82f6; font-size: 22px; }
-        .card-job p { margin: 8px 0; font-size: 14px; color: #d1d5db; line-height: 1.5; }
-        
-        /* BOTONES DE ACCIÓN */
-        .btn-maps { background: #2c2c2e; color: #3b82f6; border: 1px solid #3b82f6; padding: 15px; border-radius: 12px; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; margin: 15px 0; gap: 10px; }
-        
-        .staff-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .btn-staff { padding: 18px; border: none; border-radius: 12px; font-weight: bold; font-size: 13px; cursor: pointer; color: white; text-transform: uppercase; }
-        .btn-arrived { background: #f59e0b; }
-        .btn-finish { background: #22c55e; }
-        
-        .empty-state { text-align: center; color: #444; margin-top: 100px; font-weight: bold; font-size: 18px; }
-        .logout-btn { background: none; border: none; color: #ef4444; width: 100%; margin-top: 50px; font-weight: bold; font-size: 12px; text-transform: uppercase; cursor: pointer; opacity: 0.6; }
+        #app-screen { display: none; width: 100%; height: 100vh; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        .welcome-badge { background: #1a2638; color: #3b82f6; padding: 15px; border-radius: 15px; margin-bottom: 20px; font-weight: bold; text-transform: uppercase; border: 1px solid #3b82f6; }
+        .card-job { background: #1c1c1e; padding: 20px; border-radius: 25px; border: 1px solid #2c2c2e; margin-bottom: 20px; text-align: left; }
+        .btn-maps { background: #2c2c2e; color: #3b82f6; border: 1px solid #3b82f6; padding: 15px; border-radius: 12px; text-decoration: none; display: block; text-align: center; font-weight: bold; margin: 15px 0; }
+        .staff-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-staff { padding: 18px; border: none; border-radius: 12px; font-weight: bold; color: white; }
     </style>
 </head>
 <body>
 
-    <div id="login-screen">
+    <div id="login-screen" class="container">
         <h1>ELITE <span>STAFF</span></h1>
-        <p style="color: #8e8e93; margin-bottom: 30px;">Ingresa tu correo autorizado</p>
-        <input type="email" id="staff-email" class="login-input" placeholder="ejemplo@gmail.com">
+        <p style="color: #8e8e93; margin-bottom: 30px;">Ingresa tu correo para ver tus trabajos</p>
+        
+        <input type="email" id="staff-email" class="login-input" placeholder="Tu correo electrónico">
         <button class="login-btn" onclick="entrar()">Ingresar</button>
     </div>
 
@@ -50,7 +39,6 @@
         <h1>ELITE <span>STAFF</span></h1>
         <div id="user-welcome" class="welcome-badge"></div>
         <div id="lista-trabajos"></div>
-        <button class="logout-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
     </div>
 
     <script>
@@ -65,98 +53,47 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let emailLogueado = localStorage.getItem('elite_staff_email');
-        if (emailLogueado) { mostrarApp(); }
-
         function entrar() {
-            const emailInput = document.getElementById('staff-email').value.toLowerCase().trim();
-            if(!emailInput) return alert("Por favor, escribe tu correo.");
+            const email = document.getElementById('staff-email').value.toLowerCase().trim();
+            if(!email) return alert("Escribe tu correo");
 
-            // Verifica si el correo existe en tu base de datos de Staff
-            db.collection("usuarios").where("email", "==", emailInput).get().then(snap => {
+            // Busca si el correo existe en la colección 'usuarios' que registraste en el Admin
+            db.collection("usuarios").where("email", "==", email).get().then(snap => {
                 if(snap.empty) {
-                    alert("Acceso denegado. Tu correo no está registrado en el sistema Elite.");
+                    alert("Este correo no está autorizado. Regístralo primero en la App Admin.");
                 } else {
-                    localStorage.setItem('elite_staff_email', emailInput);
-                    emailLogueado = emailInput;
-                    mostrarApp();
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('app-screen').style.display = 'block';
+                    document.getElementById('user-welcome').innerText = "Bienvenida: " + email;
+                    cargarTrabajos(email);
                 }
-            }).catch(err => alert("Error de conexión: " + err));
-        }
-
-        function mostrarApp() {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('app-screen').style.display = 'block';
-            document.getElementById('user-welcome').innerText = "BIENVENIDA: " + emailLogueado;
-            cargarMisTrabajos();
-        }
-
-        function cargarMisTrabajos() {
-            db.collection("servicios")
-              .where("empleado_email", "==", emailLogueado)
-              .where("estado", "==", "pendiente")
-              .onSnapshot(snap => {
-                const contenedor = document.getElementById('lista-trabajos');
-                contenedor.innerHTML = "";
-                
-                if(snap.empty) {
-                    contenedor.innerHTML = '<p class="empty-state">¡Todo listo!<br>No tienes pendientes. ✨</p>';
-                    return;
-                }
-
-                snap.forEach(doc => {
-                    const s = doc.data();
-                    const id = doc.id;
-                    const card = document.createElement('div');
-                    card.className = 'card-job';
-                    
-                    // Enlace directo a Google Maps
-                    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.direccion)}`;
-
-                    card.innerHTML = `
-                        <h3>${s.cliente}</h3>
-                        <p>📍 <b>Dirección:</b><br>${s.direccion}</p>
-                        <p>⏰ <b>Horario:</b> ${s.fecha} | ${s.hora}</p>
-                        <p>✨ <b>Servicio:</b> ${s.tipo}</p>
-                        <p>📝 <b>Notas:</b> ${s.notas || 'Sin instrucciones adicionales'}</p>
-                        
-                        <a class="btn-maps" href="${mapsUrl}" target="_blank">
-                            🗺️ ABRIR GPS (GOOGLE MAPS)
-                        </a>
-
-                        <div class="staff-actions">
-                            <button class="btn-staff btn-arrived" id="btn-arr-${id}" onclick="avisarLlegada('${id}')">Ya llegué</button>
-                            <button class="btn-staff btn-finish" onclick="terminarTrabajo('${id}')">Terminado</button>
-                        </div>
-                    `;
-                    contenedor.appendChild(card);
-                });
             });
         }
 
-        function avisarLlegada(id) {
-            const btn = document.getElementById('btn-arr-' + id);
-            btn.innerText = "¡ESTOY AQUÍ! 🏠";
-            btn.style.background = "#444";
-            btn.disabled = true;
-        }
-
-        function terminarTrabajo(id) {
-            if(confirm("¿Confirmas que terminaste este servicio?")) {
-                db.collection("servicios").doc(id).update({
-                    estado: "completado",
-                    finalizado_en: new Date().toLocaleString()
-                }).then(() => {
-                    alert("¡Trabajo guardado como completado!");
+        function cargarTrabajos(email) {
+            db.collection("servicios")
+              .where("empleado_email", "==", email)
+              .where("estado", "==", "pendiente")
+              .onSnapshot(snap => {
+                const lista = document.getElementById('lista-trabajos');
+                lista.innerHTML = "";
+                snap.forEach(doc => {
+                    const s = doc.data();
+                    lista.innerHTML += `
+                        <div class="card-job">
+                            <h3>${s.cliente}</h3>
+                            <p>📍 ${s.direccion}</p>
+                            <p>⏰ ${s.fecha} | ${s.hora}</p>
+                            <a class="btn-maps" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.direccion)}" target="_blank">📍 VER GPS</a>
+                            <div class="staff-actions">
+                                <button class="btn-staff" style="background:#f59e0b" onclick="alert('Llegada notificada')">Ya llegué</button>
+                                <button class="btn-staff" style="background:#22c55e" onclick="alert('Trabajo terminado')">Terminado</button>
+                            </div>
+                        </div>
+                    `;
                 });
-            }
-        }
-
-        function cerrarSesion() {
-            localStorage.removeItem('elite_staff_email');
-            location.reload();
+            });
         }
     </script>
 </body>
 </html>
-
