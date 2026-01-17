@@ -24,6 +24,14 @@
         .label-text { font-size: 10px; color: #3b82f6; font-weight: bold; margin: 8px 0 4px 5px; display: block; text-transform: uppercase; }
         input, textarea { width: 100%; padding: 14px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #2c2c2e; background: #2c2c2e; color: white; box-sizing: border-box; font-size: 15px; }
 
+        /* GESTIÓN DE STAFF - NUEVOS ESTILOS */
+        .staff-list { margin-top: 15px; border-top: 1px solid #2c2c2e; padding-top: 15px; }
+        .staff-item { background: #000; padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #2c2c2e; }
+        .staff-info b { font-size: 13px; color: #fff; display: block; }
+        .staff-info span { font-size: 10px; color: #8e8e93; }
+        .staff-actions { display: flex; gap: 5px; }
+        .btn-mini { padding: 6px 10px; border: none; border-radius: 6px; font-size: 9px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; }
+
         /* BUSCADOR */
         .search-container { position: relative; }
         .suggestions-list { position: absolute; width: 100%; background: #3b82f6; border-radius: 10px; z-index: 100; max-height: 150px; overflow-y: auto; display: none; }
@@ -34,13 +42,11 @@
         .type-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
         
         .save-btn { width: 100%; padding: 18px; background: #3b82f6; color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 16px; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
-        .reg-btn { background: transparent; color: #3b82f6; border: 1px solid #3b82f6; width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 12px; cursor: pointer; margin-top: 5px; }
+        .reg-btn { background: #3b82f6; color: white; border: none; width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 12px; cursor: pointer; margin-top: 5px; text-transform: uppercase; }
 
-        /* TARJETAS */
+        /* TARJETAS SERVICIO */
         .card-servicio { background: #1c1c1e; padding: 20px; border-radius: 25px; border: 1px solid #2c2c2e; margin-bottom: 15px; position: relative; }
-        /* EL BOTÓN AHORA ES AZUL/VERDE PARA MENSAJES */
         .chat-btn { position: absolute; right: 15px; top: 15px; width: 45px; height: 45px; background: #007aff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; text-decoration: none; box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4); border: none; cursor: pointer; color: white; }
-        
         .card-servicio h3 { margin: 0 0 10px 0; color: #3b82f6; font-size: 20px; }
         .card-servicio p { margin: 5px 0; font-size: 13px; color: #d1d5db; }
         
@@ -67,10 +73,14 @@
     </div>
 
     <div class="form-container section-staff">
-        <span class="label-text">Nuevo Staff</span>
+        <span class="label-text">Gestión de Staff</span>
+        <input type="hidden" id="edit-staff-id">
         <input type="text" id="reg-nombre" placeholder="Nombre completo">
         <input type="email" id="reg-email" placeholder="Correo electrónico">
-        <button class="reg-btn" onclick="registrarStaff()">GUARDAR STAFF</button>
+        <button class="reg-btn" id="btn-staff-main" onclick="registrarStaff()">GUARDAR STAFF</button>
+        
+        <div class="staff-list" id="lista-visual-staff">
+            </div>
     </div>
 
     <div class="form-container">
@@ -124,21 +134,78 @@
         let todosLosEmpleados = [];
         let vistaActual = "pendiente";
 
+        // --- GESTIÓN DE STAFF (NUEVAS FUNCIONES) ---
         function registrarStaff() {
+            const id = document.getElementById('edit-staff-id').value;
             const n = document.getElementById('reg-nombre').value;
             const e = document.getElementById('reg-email').value.toLowerCase().trim();
+            
             if(!n || !e) return alert("Completa nombre y correo");
-            db.collection("usuarios").add({ nombre: n, email: e, rol: "empleado" }).then(() => {
-                alert("✅ Guardado");
-                document.getElementById('reg-nombre').value = ""; document.getElementById('reg-email').value = "";
-            });
+
+            if(id) {
+                db.collection("usuarios").doc(id).update({ nombre: n, email: e }).then(() => {
+                    alert("✅ Staff Actualizado");
+                    resetStaffForm();
+                });
+            } else {
+                db.collection("usuarios").add({ nombre: n, email: e, rol: "empleado" }).then(() => {
+                    alert("✅ Guardado");
+                    resetStaffForm();
+                });
+            }
         }
 
+        function resetStaffForm() {
+            document.getElementById('edit-staff-id').value = "";
+            document.getElementById('reg-nombre').value = "";
+            document.getElementById('reg-email').value = "";
+            document.getElementById('btn-staff-main').innerText = "GUARDAR STAFF";
+            document.getElementById('btn-staff-main').style.background = "#3b82f6";
+        }
+
+        function editarStaff(id, nombre, email) {
+            document.getElementById('edit-staff-id').value = id;
+            document.getElementById('reg-nombre').value = nombre;
+            document.getElementById('reg-email').value = email;
+            document.getElementById('btn-staff-main').innerText = "ACTUALIZAR DATOS";
+            document.getElementById('btn-staff-main').style.background = "#f59e0b";
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        function borrarStaff(id, nombre) {
+            if(confirm("¿Seguro que deseas eliminar a " + nombre + "? No podrá entrar a su app.")) {
+                db.collection("usuarios").doc(id).delete();
+            }
+        }
+
+        // CARGAR STAFF EN BUSCADOR Y EN LISTA VISUAL
         db.collection("usuarios").where("rol", "==", "empleado").onSnapshot(snap => {
             todosLosEmpleados = [];
-            snap.forEach(doc => todosLosEmpleados.push(doc.data()));
+            const listaVisual = document.getElementById('lista-visual-staff');
+            listaVisual.innerHTML = "";
+
+            snap.forEach(doc => {
+                const e = doc.data();
+                const id = doc.id;
+                todosLosEmpleados.push(e);
+
+                // Crear fila en la lista de gestión
+                listaVisual.innerHTML += `
+                    <div class="staff-item">
+                        <div class="staff-info">
+                            <b>${e.nombre}</b>
+                            <span>${e.email}</span>
+                        </div>
+                        <div class="staff-actions">
+                            <button class="btn-mini" style="background:#6366f1" onclick="editarStaff('${id}', '${e.nombre}', '${e.email}')">Edit</button>
+                            <button class="btn-mini" style="background:#ef4444" onclick="borrarStaff('${id}', '${e.nombre}')">X</button>
+                        </div>
+                    </div>
+                `;
+            });
         });
 
+        // --- LÓGICA DE SERVICIOS (TU CÓDIGO ORIGINAL) ---
         function filtrarEmpleados() {
             const q = document.getElementById('search-empleado').value.toLowerCase();
             const l = document.getElementById('suggestions');
@@ -228,10 +295,8 @@
             });
         }
 
-        // FUNCIÓN PARA CHAT PERSONAL (SMS)
         function abrirChat(num) {
             if(!num) return alert("No hay número registrado");
-            // Usa el protocolo SMS: para ir al chat personal del sistema
             window.location.href = `sms:${num}`;
         }
 
@@ -241,7 +306,7 @@
             document.getElementById('direccion').value = s.direccion;
             document.getElementById('whatsapp').value = s.whatsapp || "";
             document.getElementById('search-empleado').value = s.empleado_nombre;
-            document.getElementById('email-empleado').value = s.empleado_email;
+            document.getElementById('email-empleado').value = s.email_empleado || s.empleado_email;
             document.getElementById('fecha').value = s.fecha;
             document.getElementById('hora').value = s.hora;
             document.getElementById('notas').value = s.notas;
