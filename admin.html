@@ -3,57 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin - Control Interno</title>
+    <title>Elite Admin - Control Total</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     
     <style>
         body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; padding-bottom: 100px; }
-        h1 { font-style: italic; font-weight: 900; font-size: 22px; text-transform: uppercase; margin-bottom: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        h1 { font-style: italic; font-weight: 900; margin: 0; font-size: 22px; text-transform: uppercase; }
         h1 span { color: #3b82f6; }
         
-        /* ESTADÍSTICAS */
+        /* FILTROS DE ESTADO */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: #1c1c1e; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #2c2c2e; cursor: pointer; }
-        .stat-card.active { border-color: #3b82f6; background: #1a2638; }
+        .stat-card { background: #1c1c1e; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #2c2c2e; cursor: pointer; transition: 0.3s; }
+        .stat-card.active { border-color: #3b82f6; background: #1a2638; box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
         .stat-card h2 { margin: 0; font-size: 28px; color: #3b82f6; }
-        .stat-card p { margin: 5px 0 0 0; font-size: 10px; color: #8e8e93; text-transform: uppercase; }
+        .stat-card p { margin: 5px 0 0 0; font-size: 10px; color: #8e8e93; text-transform: uppercase; font-weight: bold; }
 
-        /* FORMULARIO */
         .form-container { background: #1c1c1e; padding: 18px; border-radius: 20px; border: 1px solid #2c2c2e; margin-bottom: 20px; }
         .label-text { font-size: 10px; color: #3b82f6; font-weight: bold; margin: 8px 0 4px 5px; display: block; text-transform: uppercase; }
         input, textarea { width: 100%; padding: 14px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #2c2c2e; background: #2c2c2e; color: white; box-sizing: border-box; font-size: 15px; }
 
-        /* BUSCADOR */
+        /* SUGERENCIAS EMPLEADOS */
         .search-container { position: relative; }
-        .suggestions-list { position: absolute; width: 100%; background: #3b82f6; border-radius: 10px; z-index: 100; max-height: 150px; overflow-y: auto; display: none; }
-        .suggestion-item { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-weight: bold; }
+        .suggestions-list { position: absolute; width: 100%; background: #3b82f6; border-radius: 10px; z-index: 100; max-height: 150px; overflow-y: auto; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .suggestion-item { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-weight: bold; color: white; }
 
-        /* BOTONES TIPO */
         .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .type-btn { padding: 12px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: #8e8e93; font-weight: bold; font-size: 11px; cursor: pointer; text-transform: uppercase; }
+        .type-btn { padding: 12px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: #8e8e93; font-weight: bold; font-size: 11px; cursor: pointer; }
         .type-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
         
         .save-btn { width: 100%; padding: 18px; background: #3b82f6; color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 16px; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
 
-        /* TARJETA DE TRABAJO ASIGNADO */
+        /* TARJETA DE TRABAJO */
         .card-servicio { background: #1c1c1e; padding: 18px; border-radius: 25px; border: 1px solid #2c2c2e; margin-bottom: 15px; position: relative; }
-        .status-icon { position: absolute; right: 15px; top: 15px; width: 35px; height: 35px; background: #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 0 10px rgba(34, 197, 94, 0.4); }
-        .card-servicio h3 { margin: 0 0 5px 0; color: #3b82f6; font-size: 18px; }
-        .card-servicio p { margin: 4px 0; font-size: 13px; color: #d1d5db; }
+        .status-badge { position: absolute; right: 15px; top: 15px; width: 30px; height: 30px; background: #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; color: white; border: 2px solid #1c1c1e; }
+        .card-servicio h3 { margin: 0 0 8px 0; color: #3b82f6; font-size: 18px; }
+        .card-servicio p { margin: 4px 0; font-size: 13px; color: #d1d5db; display: flex; align-items: center; gap: 8px; }
         
+        /* BOTONES DE ACCIÓN */
         .action-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 15px; }
-        .btn-action { padding: 10px; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 11px; cursor: pointer; }
+        .btn-action { padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
         .btn-done { background: #22c55e; }
         .btn-edit { background: #6366f1; }
         .btn-delete { background: #ef4444; }
-
-        .reg-btn { background: #2c2c2e; color: #3b82f6; border: 1px solid #3b82f6; padding: 10px; width: 100%; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; margin-bottom: 20px; }
+        .btn-ws { background: #25d366; width: 100%; margin-top: 8px; }
     </style>
 </head>
 <body>
 
-    <h1>ELITE <span>ADMIN</span></h1>
+    <div class="header"><h1>ELITE <span>ADMIN</span></h1></div>
 
     <div class="stats-grid">
         <div class="stat-card active" id="btn-pendientes" onclick="cambiarVista('pendiente')">
@@ -66,17 +65,11 @@
         </div>
     </div>
 
-    <div class="form-container" style="border-color: #3b82f6; border-style: dashed;">
-        <span class="label-text">Registrar Nuevo Staff</span>
-        <input type="text" id="reg-nombre" placeholder="Nombre completo">
-        <input type="email" id="reg-email" placeholder="Correo electrónico">
-        <button class="reg-btn" onclick="registrarStaff()">GUARDAR STAFF EN LA NUBE</button>
-    </div>
-
     <div class="form-container">
-        <span class="label-text">Cliente y Dirección</span>
+        <input type="hidden" id="edit-id"> <span class="label-text">Cliente y Contacto</span>
         <input type="text" id="cliente" placeholder="Nombre del cliente">
-        <input type="text" id="direccion" placeholder="Dirección del servicio">
+        <input type="text" id="direccion" placeholder="Dirección completa">
+        <input type="tel" id="whatsapp" placeholder="WhatsApp (Ej: 13478659468)">
         
         <span class="label-text">Asignar a</span>
         <div class="search-container">
@@ -90,10 +83,10 @@
             <div><span class="label-text">Hora</span><input type="time" id="hora"></div>
         </div>
 
-        <span class="label-text">Notas</span>
-        <textarea id="notas" placeholder="Instrucciones especiales..." rows="2"></textarea>
+        <span class="label-text">Notas Especiales</span>
+        <textarea id="notas" placeholder="Detalles importantes..." rows="2"></textarea>
 
-        <span class="label-text">Tipo</span>
+        <span class="label-text">Tipo de Limpieza</span>
         <div class="type-grid">
             <button class="type-btn active" id="btn-ESTÁNDAR" onclick="selectType('ESTÁNDAR')">ESTÁNDAR</button>
             <button class="type-btn" id="btn-PROFUNDA" onclick="selectType('PROFUNDA')">PROFUNDA</button>
@@ -101,9 +94,10 @@
             <button class="type-btn" id="btn-MOVE-OUT" onclick="selectType('MOVE-OUT')">MOVE-OUT</button>
         </div>
 
-        <button class="save-btn" onclick="asignarTrabajo()">ASIGNAR TRABAJO</button>
+        <button class="save-btn" id="main-button" onclick="asignarTrabajo()">ASIGNAR TRABAJO</button>
     </div>
 
+    <h2 style="font-size: 14px; color: #3b82f6; margin-left: 10px; text-transform: uppercase;" id="titulo-lista">Trabajos Pendientes</h2>
     <div id="historial"></div>
 
     <script>
@@ -122,19 +116,10 @@
         let todosLosEmpleados = [];
         let vistaActual = "pendiente";
 
-        function registrarStaff() {
-            const n = document.getElementById('reg-nombre').value;
-            const e = document.getElementById('reg-email').value.toLowerCase().trim();
-            if(!n || !e) return alert("Llena nombre y correo");
-            db.collection("usuarios").add({ nombre: n, email: e, rol: "empleado" }).then(() => {
-                alert("✅ Staff registrado");
-                document.getElementById('reg-nombre').value = ""; document.getElementById('reg-email').value = "";
-            });
-        }
-
-        db.collection("usuarios").onSnapshot(snap => {
+        // Cargar empleados
+        db.collection("usuarios").where("rol", "==", "empleado").onSnapshot(snap => {
             todosLosEmpleados = [];
-            snap.forEach(doc => { if(doc.data().rol === 'empleado') todosLosEmpleados.push(doc.data()); });
+            snap.forEach(doc => todosLosEmpleados.push(doc.data()));
         });
 
         function filtrarEmpleados() {
@@ -164,22 +149,41 @@
             document.getElementById('btn-' + t).classList.add('active');
         }
 
+        function cambiarVista(v) {
+            vistaActual = v;
+            document.getElementById('btn-pendientes').classList.toggle('active', v === 'pendiente');
+            document.getElementById('btn-completados').classList.toggle('active', v === 'completado');
+            document.getElementById('titulo-lista').innerText = v === 'pendiente' ? "Trabajos Pendientes" : "Trabajos Completados";
+            cargarHistorial();
+        }
+
         function asignarTrabajo() {
-            const email = document.getElementById('email-email-empleado')?.value || document.getElementById('email-empleado').value;
-            if (!email) return alert("Busca y selecciona un empleado de la lista azul");
-            
-            db.collection("servicios").add({
+            const id = document.getElementById('edit-id').value;
+            const data = {
                 cliente: document.getElementById('cliente').value,
                 direccion: document.getElementById('direccion').value,
-                empleado_email: email,
+                whatsapp: document.getElementById('whatsapp').value,
                 empleado_nombre: document.getElementById('search-empleado').value,
+                empleado_email: document.getElementById('email-empleado').value,
                 fecha: document.getElementById('fecha').value,
                 hora: document.getElementById('hora').value,
                 notas: document.getElementById('notas').value,
                 tipo: tipoSeleccionado,
-                estado: "pendiente",
+                estado: id ? undefined : "pendiente", // No cambia el estado si es edición
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => { alert("🚀 TRABAJO ENVIADO A LA APP STAFF"); location.reload(); });
+            };
+
+            if (id) {
+                db.collection("servicios").doc(id).update(data).then(() => {
+                    alert("✅ Actualizado");
+                    resetForm();
+                });
+            } else {
+                db.collection("servicios").add(data).then(() => {
+                    alert("🚀 Asignado correctamente");
+                    resetForm();
+                });
+            }
         }
 
         function cargarHistorial() {
@@ -187,25 +191,32 @@
                 const h = document.getElementById('historial');
                 h.innerHTML = "";
                 let p = 0; let c = 0;
+                
                 snap.forEach(doc => {
                     const s = doc.data();
                     const id = doc.id;
                     if(s.estado === "pendiente") p++; else c++;
+
                     if(s.estado === vistaActual) {
                         const card = document.createElement('div');
                         card.className = 'card-servicio';
                         card.innerHTML = `
-                            <div class="status-icon">✓</div>
-                            <h3>${s.cliente}</h3>
-                            <p>📍 ${s.direccion}</p>
-                            <p>👤 Staff: ${s.empleado_nombre}</p>
-                            <p>📅 ${s.fecha} | ⏰ ${s.hora}</p>
-                            <p>✨ ${s.tipo}</p>
+                            <div class="status-badge">✓</div>
+                            <h3>${s.cliente || 'Sin nombre'}</h3>
+                            <p>📍 ${s.direccion || 'Sin dirección'}</p>
+                            <p>👤 Staff: ${s.empleado_nombre || 'No asignado'}</p>
+                            <p>📅 ${s.fecha || '--'} | ⏰ ${s.hora || '--'}</p>
+                            <p>✨ Tipo: ${s.tipo}</p>
+                            
                             <div class="action-buttons">
-                                <button class="btn-action btn-done" onclick="marcar('${id}', 'completado')">Terminado</button>
-                                <button class="btn-action btn-edit" onclick="alert('Editar')">Editar</button>
+                                <button class="btn-action btn-done" onclick="cambiarEstado('${id}', '${s.estado === 'pendiente' ? 'completado' : 'pendiente'}')">
+                                    ${s.estado === 'pendiente' ? 'Terminado' : 'Reabrir'}
+                                </button>
+                                <button class="btn-action btn-edit" onclick="prepararEdicion('${id}', ${JSON.stringify(s).replace(/"/g, '&quot;')})">Editar</button>
                                 <button class="btn-action btn-delete" onclick="borrar('${id}')">Borrar</button>
                             </div>
+                            
+                            ${s.whatsapp ? `<button class="btn-action btn-ws" onclick="window.open('https://wa.me/${s.whatsapp}')">💬 WhatsApp Cliente</button>` : ''}
                         `;
                         h.appendChild(card);
                     }
@@ -215,10 +226,37 @@
             });
         }
 
-        function marcar(id, est) { db.collection("servicios").doc(id).update({ estado: est }); }
-        function borrar(id) { if(confirm("¿Borrar?")) db.collection("servicios").doc(id).delete(); }
-        function cambiarVista(v) { vistaActual = v; cargarHistorial(); }
-        
+        function prepararEdicion(id, data) {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('cliente').value = data.cliente;
+            document.getElementById('direccion').value = data.direccion;
+            document.getElementById('whatsapp').value = data.whatsapp || "";
+            document.getElementById('search-empleado').value = data.empleado_nombre;
+            document.getElementById('email-empleado').value = data.empleado_email;
+            document.getElementById('fecha').value = data.fecha;
+            document.getElementById('hora').value = data.hora;
+            document.getElementById('notas').value = data.notas;
+            selectType(data.tipo);
+            document.getElementById('main-button').innerText = "GUARDAR CAMBIOS";
+            window.scrollTo(0,0);
+        }
+
+        function resetForm() {
+            document.getElementById('edit-id').value = "";
+            document.getElementById('cliente').value = "";
+            document.getElementById('direccion').value = "";
+            document.getElementById('whatsapp').value = "";
+            document.getElementById('search-empleado').value = "";
+            document.getElementById('email-empleado').value = "";
+            document.getElementById('fecha').value = "";
+            document.getElementById('hora').value = "";
+            document.getElementById('notas').value = "";
+            document.getElementById('main-button').innerText = "ASIGNAR TRABAJO";
+        }
+
+        function cambiarEstado(id, nest) { db.collection("servicios").doc(id).update({ estado: nest }); }
+        function borrar(id) { if(confirm("¿Seguro?")) db.collection("servicios").doc(id).delete(); }
+
         cargarHistorial();
     </script>
 </body>
