@@ -3,58 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Staff - Mis Trabajos</title>
+    <title>Elite Staff - Control</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     
     <style>
         body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; }
-        .header { text-align: center; margin-bottom: 25px; padding-top: 10px; }
-        h1 { font-style: italic; font-weight: 900; font-size: 24px; text-transform: uppercase; margin: 0; }
+        h1 { font-style: italic; font-weight: 900; font-size: 24px; text-transform: uppercase; text-align: center; margin-top: 20px; }
         h1 span { color: #3b82f6; }
         
         /* LOGIN */
-        #login-screen { text-align: center; padding-top: 100px; }
-        .login-input { width: 90%; padding: 15px; border-radius: 12px; border: 1px solid #2c2c2e; background: #1c1c1e; color: white; font-size: 16px; margin-bottom: 15px; text-align: center; }
-        .login-btn { width: 90%; padding: 15px; background: #3b82f6; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        #login-screen { text-align: center; padding-top: 80px; }
+        .login-input { width: 100%; max-width: 300px; padding: 16px; border-radius: 15px; border: 1px solid #2c2c2e; background: #1c1c1e; color: white; font-size: 16px; margin-bottom: 15px; box-sizing: border-box; }
+        .login-btn { width: 100%; max-width: 300px; padding: 16px; background: #3b82f6; color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 16px; cursor: pointer; }
 
-        /* LISTA DE TRABAJOS */
+        /* APP SCREEN */
         #app-screen { display: none; }
-        .welcome-text { color: #8e8e93; font-size: 14px; margin-bottom: 20px; text-align: center; }
+        .welcome-badge { background: #1a2638; color: #3b82f6; padding: 10px; border-radius: 10px; text-align: center; font-size: 12px; font-weight: bold; margin-bottom: 25px; border: 1px solid #3b82f6; text-transform: uppercase; }
         
-        .card-job { background: #1c1c1e; padding: 20px; border-radius: 25px; border: 1px solid #2c2c2e; margin-bottom: 15px; position: relative; }
-        .card-job h3 { margin: 0 0 10px 0; color: #3b82f6; font-size: 20px; text-transform: uppercase; }
-        .card-job p { margin: 6px 0; font-size: 14px; color: #d1d5db; display: flex; align-items: center; gap: 10px; }
+        .card-job { background: #1c1c1e; padding: 20px; border-radius: 25px; border: 1px solid #2c2c2e; margin-bottom: 20px; position: relative; }
+        .card-job h3 { margin: 0 0 10px 0; color: #3b82f6; font-size: 22px; }
+        .card-job p { margin: 8px 0; font-size: 14px; color: #d1d5db; line-height: 1.4; }
         
-        /* BOTONES STAFF */
-        .btn-maps { background: #2c2c2e; color: #3b82f6; border: 1px solid #3b82f6; padding: 10px; border-radius: 10px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 100%; margin: 10px 0; font-weight: bold; font-size: 13px; }
+        /* BOTÓN GOOGLE MAPS CORREGIDO */
+        .btn-maps { background: #2c2c2e; color: #3b82f6; border: 1px solid #3b82f6; padding: 14px; border-radius: 12px; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; margin: 15px 0; gap: 8px; }
         
-        .staff-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .btn-staff { padding: 15px; border: none; border-radius: 12px; font-weight: bold; font-size: 13px; cursor: pointer; color: white; }
-        .btn-arrived { background: #f59e0b; } /* Naranja */
-        .btn-finish { background: #22c55e; }  /* Verde */
+        .staff-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-staff { padding: 16px; border: none; border-radius: 12px; font-weight: bold; font-size: 13px; cursor: pointer; color: white; text-transform: uppercase; }
+        .btn-arrived { background: #f59e0b; }
+        .btn-finish { background: #22c55e; }
         
-        .empty-state { text-align: center; color: #444; margin-top: 50px; font-weight: bold; }
+        .empty-state { text-align: center; color: #444; margin-top: 100px; font-weight: bold; font-size: 18px; }
+        .logout-btn { background: none; border: none; color: #ef4444; width: 100%; margin-top: 40px; font-weight: bold; font-size: 12px; text-transform: uppercase; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
         <h1>ELITE <span>STAFF</span></h1>
-        <p style="color: #8e8e93; margin-top: 10px;">Ingresa tu correo asignado</p>
-        <br>
-        <input type="email" id="staff-email" class="login-input" placeholder="ejemplo@gmail.com">
-        <button class="login-btn" onclick="entrar()">ENTRAR A MIS TRABAJOS</button>
+        <p style="color: #8e8e93; margin-bottom: 30px;">Panel de Trabajo</p>
+        <input type="email" id="staff-email" class="login-input" placeholder="Tu correo registrado">
+        <button class="login-btn" onclick="entrar()">INGRESAR</button>
     </div>
 
     <div id="app-screen">
-        <div class="header"><h1>ELITE <span>STAFF</span></h1></div>
-        <p class="welcome-text" id="user-welcome"></p>
+        <h1>ELITE <span>STAFF</span></h1>
+        <div id="user-welcome" class="welcome-badge"></div>
         <div id="lista-trabajos"></div>
-        <button onclick="cerrarSesion()" style="background: none; border: none; color: #ef4444; width: 100%; margin-top: 30px; font-weight: bold;">Cerrar Sesión</button>
+        <button class="logout-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
     </div>
 
     <script>
+        // CONFIGURACIÓN FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
             authDomain: "elite-cleaners-app.firebaseapp.com",
@@ -66,22 +66,16 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let emailLogueado = localStorage.getItem('elite_email');
-
-        if (emailLogueado) {
-            mostrarApp();
-        }
+        let emailLogueado = localStorage.getItem('elite_staff_email');
+        if (emailLogueado) { mostrarApp(); }
 
         function entrar() {
             const email = document.getElementById('staff-email').value.toLowerCase().trim();
-            if(!email) return alert("Escribe tu correo");
-            
-            // Verificar si el staff existe
+            if(!email) return alert("Ingresa tu correo");
             db.collection("usuarios").where("email", "==", email).get().then(snap => {
-                if(snap.empty) {
-                    alert("Este correo no está registrado como Staff.");
-                } else {
-                    localStorage.setItem('elite_email', email);
+                if(snap.empty) { alert("Correo no registrado."); }
+                else {
+                    localStorage.setItem('elite_staff_email', email);
                     emailLogueado = email;
                     mostrarApp();
                 }
@@ -91,41 +85,45 @@
         function mostrarApp() {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
-            document.getElementById('user-welcome').innerText = "Trabajos asignados para: " + emailLogueado;
-            cargarTrabajosStaff();
+            document.getElementById('user-welcome').innerText = "STAFF: " + emailLogueado;
+            cargarTrabajos();
         }
 
-        function cargarTrabajosStaff() {
+        function cargarTrabajos() {
             db.collection("servicios")
               .where("empleado_email", "==", emailLogueado)
               .where("estado", "==", "pendiente")
               .onSnapshot(snap => {
                 const lista = document.getElementById('lista-trabajos');
                 lista.innerHTML = "";
-                
                 if(snap.empty) {
-                    lista.innerHTML = '<p class="empty-state">No tienes trabajos pendientes por ahora. ✨</p>';
+                    lista.innerHTML = '<p class="empty-state">No hay trabajos hoy. ✨</p>';
                     return;
                 }
-
                 snap.forEach(doc => {
                     const s = doc.data();
                     const id = doc.id;
                     const card = document.createElement('div');
                     card.className = 'card-job';
+                    
+                    // CORRECCIÓN DEL ENLACE DE GOOGLE MAPS
+                    const addressEncoded = encodeURIComponent(s.direccion);
+                    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${addressEncoded}`;
+
                     card.innerHTML = `
                         <h3>${s.cliente}</h3>
-                        <p>🗓️ ${s.fecha} | ⏰ ${s.hora}</p>
-                        <p>✨ Tipo: ${s.tipo}</p>
-                        <p>📝 Notas: ${s.notas || 'Sin notas'}</p>
+                        <p>📍 <b>Dirección:</b><br>${s.direccion}</p>
+                        <p>⏰ <b>Horario:</b> ${s.fecha} | ${s.hora}</p>
+                        <p>✨ <b>Servicio:</b> ${s.tipo}</p>
+                        <p>📝 <b>Notas:</b> ${s.notas || 'Sin notas'}</p>
                         
-                        <a class="btn-maps" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.direccion)}" target="_blank">
-                            📍 VER DIRECCIÓN EN MAPS
+                        <a class="btn-maps" href="${mapsUrl}" target="_blank">
+                            🗺️ ABRIR GPS (GOOGLE MAPS)
                         </a>
 
                         <div class="staff-actions">
-                            <button class="btn-staff btn-arrived" id="arr-${id}" onclick="avisarLlegada('${id}')">YA LLEGUÉ</button>
-                            <button class="btn-staff btn-finish" onclick="terminarTrabajo('${id}')">TERMINADO</button>
+                            <button class="btn-staff btn-arrived" id="btn-arr-${id}" onclick="avisarLlegada('${id}')">Ya llegué</button>
+                            <button class="btn-staff btn-finish" onclick="terminarTrabajo('${id}')">Terminado</button>
                         </div>
                     `;
                     lista.appendChild(card);
@@ -134,26 +132,21 @@
         }
 
         function avisarLlegada(id) {
-            // Cambia el color del botón para confirmar
-            const btn = document.getElementById('arr-' + id);
-            btn.innerText = "¡EN SITIO! 🏠";
-            btn.style.background = "#555";
-            // Aquí podrías agregar una notificación para el admin en el futuro
+            const btn = document.getElementById('btn-arr-' + id);
+            btn.innerText = "EN EL SITIO ✓";
+            btn.style.background = "#444";
+            btn.disabled = true;
         }
 
         function terminarTrabajo(id) {
-            if(confirm("¿Confirmas que has terminado la limpieza?")) {
-                db.collection("servicios").doc(id).update({
-                    estado: "completado",
-                    hora_terminado: new Date().toLocaleTimeString()
-                }).then(() => {
-                    alert("¡Buen trabajo! 🎉");
-                });
+            if(confirm("¿Confirmas que terminaste la limpieza?")) {
+                db.collection("servicios").doc(id).update({ estado: "completado" })
+                .then(() => { alert("¡Excelente trabajo! Notificado al Admin."); });
             }
         }
 
         function cerrarSesion() {
-            localStorage.removeItem('elite_email');
+            localStorage.removeItem('elite_staff_email');
             location.reload();
         }
     </script>
