@@ -86,10 +86,8 @@
                     let botonesHTML = "";
                     
                     if (!data.hora_inicio) {
-                        // Si no ha iniciado
                         botonesHTML = `<button class="btn-status" style="background:#3b82f6" onclick="registrarTiempo('${id}', 'inicio')">▶ INICIAR TRABAJO</button>`;
                     } else if (data.hora_inicio && !data.hora_fin) {
-                        // Si ya inició pero no ha terminado
                         botonesHTML = `
                             <span class="time-label">INICIADO A LAS: ${data.hora_inicio}</span>
                             <button class="btn-status" style="background:#22c55e" onclick="registrarTiempo('${id}', 'fin')">✔ TERMINAR TRABAJO</button>
@@ -110,22 +108,39 @@
         }
 
         function registrarTiempo(id, tipo) {
-            const ahora = new Date();
-            const horaString = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-            if (tipo === 'inicio') {
-                db.collection('servicios').doc(id).update({
-                    hora_inicio: horaString,
-                    estado: 'en curso'
-                });
-            } else {
-                if(confirm("¿Estás seguro de terminar? No podrás cambiar la hora después.")) {
-                    db.collection('servicios').doc(id).update({
-                        hora_fin: horaString,
-                        estado: 'completado'
-                    });
-                }
+            if (!navigator.geolocation) {
+                return alert("Tu teléfono no soporta GPS. Contacta al Admin.");
             }
+
+            // Pedir ubicación con alta precisión
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const ahora = new Date();
+                const horaString = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const coords = {
+                    lat: pos.coords.latitude,
+                    lon: pos.coords.longitude
+                };
+
+                if (tipo === 'inicio') {
+                    db.collection('servicios').doc(id).update({
+                        hora_inicio: horaString,
+                        gps_inicio: coords,
+                        estado: 'en curso'
+                    });
+                } else {
+                    if(confirm("¿Estás seguro de terminar? Se guardará tu ubicación final para el cálculo de millas.")) {
+                        db.collection('servicios').doc(id).update({
+                            hora_fin: horaString,
+                            gps_fin: coords,
+                            estado: 'completado'
+                        }).then(() => {
+                            alert("¡Trabajo enviado al Admin!");
+                        });
+                    }
+                }
+            }, (error) => {
+                alert("ERROR: Debes activar el GPS y permitir el acceso en tu navegador para iniciar/terminar.");
+            }, { enableHighAccuracy: true });
         }
 
         function logout() { location.reload(); }
