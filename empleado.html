@@ -3,55 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Staff - Acceso Directo</title>
+    <title>Elite Staff - Acceso Personal</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     
     <style>
         body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
-        .login-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        .login-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px; text-align: center; }
         
-        h1 { font-style: italic; font-weight: 900; font-size: 32px; text-transform: uppercase; margin-bottom: 10px; }
+        h1 { font-style: italic; font-weight: 900; font-size: 32px; text-transform: uppercase; margin-bottom: 5px; }
         h1 span { color: #3b82f6; }
-        .subtitle { color: #8e8e93; margin-bottom: 40px; font-size: 14px; }
+        .subtitle { color: #8e8e93; margin-bottom: 35px; font-size: 13px; letter-spacing: 1px; }
 
-        /* SOLO CAMPO DE CORREO */
-        .input-field { width: 100%; max-width: 340px; padding: 20px; border-radius: 15px; border: 1px solid #2c2c2e; background: #1c1c1e; color: white; font-size: 16px; margin-bottom: 20px; box-sizing: border-box; text-align: center; outline: none; }
+        /* FORMULARIO DE ACCESO PERSONALIZADO */
+        .login-box { width: 100%; max-width: 340px; }
+        .label-login { display: block; text-align: left; font-size: 10px; color: #3b82f6; font-weight: bold; margin-bottom: 5px; margin-left: 5px; text-transform: uppercase; }
+        .input-field { width: 100%; padding: 18px; border-radius: 15px; border: 1px solid #2c2c2e; background: #1c1c1e; color: white; font-size: 16px; margin-bottom: 20px; box-sizing: border-box; outline: none; }
         .input-field:focus { border-color: #3b82f6; }
         
-        .action-btn { width: 100%; max-width: 340px; padding: 20px; background: #3b82f6; color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 16px; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
-        .action-btn:active { transform: scale(0.98); opacity: 0.8; }
+        .action-btn { width: 100%; padding: 20px; background: #3b82f6; color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 16px; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
 
-        /* PANTALLA PRINCIPAL DE TRABAJOS */
+        /* VISTA DE TRABAJOS */
         #app-screen { display: none; padding: 20px; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .badge { background: #1a2638; color: #3b82f6; padding: 12px; border-radius: 12px; display: inline-block; font-size: 12px; font-weight: bold; border: 1px solid #3b82f6; margin-bottom: 20px; text-transform: uppercase; }
+        .header-app { text-align: center; margin-bottom: 30px; }
+        .user-badge { background: #1a2638; color: #3b82f6; padding: 12px 20px; border-radius: 30px; display: inline-block; font-size: 12px; font-weight: 800; border: 1px solid #3b82f6; margin-bottom: 20px; }
         
-        .card { background: #1c1c1e; padding: 20px; border-radius: 25px; border: 1px solid #2c2c2e; margin-bottom: 20px; }
-        .card h3 { color: #3b82f6; margin: 0 0 10px 0; }
-        .card p { font-size: 14px; color: #d1d5db; margin: 8px 0; line-height: 1.4; }
+        .card { background: #1c1c1e; padding: 22px; border-radius: 28px; border: 1px solid #2c2c2e; margin-bottom: 20px; position: relative; }
+        .card h3 { color: #3b82f6; margin: 0 0 12px 0; font-size: 22px; text-transform: uppercase; }
+        .card p { font-size: 14px; color: #d1d5db; margin: 8px 0; line-height: 1.5; }
         
-        .btn-gps { background: #2c2c2e; color: #3b82f6; border: 1px solid #3b82f6; padding: 15px; border-radius: 12px; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 15px 0; gap: 8px; }
-        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn-status { padding: 18px; border: none; border-radius: 12px; font-weight: bold; color: white; text-transform: uppercase; font-size: 12px; }
+        .btn-gps { background: #2c2c2e; color: #3b82f6; border: 1px solid #3b82f6; padding: 16px; border-radius: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 20px 0; gap: 10px; font-size: 14px; }
         
-        .logout { color: #ef4444; background: none; border: none; width: 100%; margin-top: 40px; font-size: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .btn-status { padding: 18px; border: none; border-radius: 14px; font-weight: bold; color: white; text-transform: uppercase; font-size: 11px; cursor: pointer; }
+        
+        .logout { color: #ef4444; background: none; border: none; width: 100%; margin-top: 50px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
     <div id="login-screen" class="login-container">
         <h1>ELITE <span>STAFF</span></h1>
-        <p class="subtitle">Ingresa con tu correo autorizado</p>
+        <p class="subtitle">INGRESA TUS DATOS DE REGISTRO</p>
         
-        <input type="email" id="email-login" class="input-field" placeholder="ejemplo@gmail.com">
-        <button class="action-btn" onclick="validarEntrada()">Entrar</button>
+        <div class="login-box">
+            <span class="label-login">Nombre Completo</span>
+            <input type="text" id="name-login" class="input-field" placeholder="Ej: Geraldine Pimiento">
+            
+            <span class="label-login">Correo Electrónico</span>
+            <input type="email" id="email-login" class="input-field" placeholder="geraldine@example.com">
+            
+            <button class="action-btn" onclick="validarStaff()">Entrar al Panel</button>
+        </div>
     </div>
 
     <div id="app-screen">
-        <div class="header">
+        <div class="header-app">
             <h1>ELITE <span>STAFF</span></h1>
-            <div id="user-info" class="badge"></div>
+            <div id="user-display" class="user-badge"></div>
         </div>
         
         <div id="lista-servicios"></div>
@@ -71,29 +80,36 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Persistencia: Si ya entró antes, saltar login
-        let sesionActiva = localStorage.getItem('user_email');
-        if (sesionActiva) { mostrarPanel(sesionActiva); }
+        // Verificar sesión guardada
+        let guardadoEmail = localStorage.getItem('elite_staff_email');
+        let guardadoNombre = localStorage.getItem('elite_staff_nombre');
+        if (guardadoEmail && guardadoNombre) { mostrarPanel(guardadoNombre, guardadoEmail); }
 
-        function validarEntrada() {
-            const email = document.getElementById('email-login').value.toLowerCase().trim();
-            if(!email) return alert("Escribe tu correo");
+        function validarStaff() {
+            const nombreIn = document.getElementById('name-login').value.trim();
+            const emailIn = document.getElementById('email-login').value.toLowerCase().trim();
 
-            // Busca en la base de datos si el correo existe
-            db.collection("usuarios").where("email", "==", email).get().then(snap => {
+            if(!nombreIn || !emailIn) return alert("Por favor completa ambos campos");
+
+            // Busca que coincidan NOMBRE y EMAIL exactamente como en el Admin
+            db.collection("usuarios")
+              .where("nombre", "==", nombreIn)
+              .where("email", "==", emailIn)
+              .get().then(snap => {
                 if(snap.empty) {
-                    alert("Correo no registrado. Pide al administrador que te agregue.");
+                    alert("Datos incorrectos. Verifica que tu nombre y correo sean los mismos que el administrador registró.");
                 } else {
-                    localStorage.setItem('user_email', email);
-                    mostrarPanel(email);
+                    localStorage.setItem('elite_staff_nombre', nombreIn);
+                    localStorage.setItem('elite_staff_email', emailIn);
+                    mostrarPanel(nombreIn, emailIn);
                 }
-            });
+            }).catch(err => alert("Error: " + err));
         }
 
-        function mostrarPanel(email) {
+        function mostrarPanel(nombre, email) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
-            document.getElementById('user-info').innerText = "Staff: " + email;
+            document.getElementById('user-display').innerText = "BIENVENIDA: " + nombre.toUpperCase();
             cargarTrabajos(email);
         }
 
@@ -106,27 +122,29 @@
                 contenedor.innerHTML = "";
                 
                 if(snap.empty) {
-                    contenedor.innerHTML = '<p style="text-align:center; color:#444; margin-top:50px;">No tienes trabajos asignados.</p>';
+                    contenedor.innerHTML = '<p style="text-align:center; color:#555; margin-top:60px; font-weight:bold;">No tienes limpiezas asignadas por ahora. ✨</p>';
                     return;
                 }
 
                 snap.forEach(doc => {
                     const s = doc.data();
                     const id = doc.id;
+                    const encodedAddr = encodeURIComponent(s.direccion);
+                    
                     contenedor.innerHTML += `
                         <div class="card">
                             <h3>${s.cliente}</h3>
                             <p>📍 <b>Dirección:</b><br>${s.direccion}</p>
                             <p>⏰ <b>Horario:</b> ${s.fecha} | ${s.hora}</p>
-                            <p>📝 <b>Notas:</b> ${s.notas || 'Sin notas'}</p>
+                            <p>📝 <b>Notas:</b> ${s.notas || 'Sin instrucciones adicionales'}</p>
                             
-                            <a class="btn-gps" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.direccion)}" target="_blank">
-                                🗺️ ABRIR EN GOOGLE MAPS
+                            <a class="btn-gps" href="https://www.google.com/maps/search/?api=1&query=${encodedAddr}" target="_blank">
+                                🗺️ ABRIR GOOGLE MAPS
                             </a>
 
                             <div class="actions">
-                                <button class="btn-status" style="background:#f59e0b" onclick="actualizar(this, 'Llegué')">Ya llegué</button>
-                                <button class="btn-status" style="background:#22c55e" onclick="completar('${id}')">Terminado</button>
+                                <button class="btn-status" style="background:#f59e0b" onclick="this.innerText='EN SITIO ✓'; this.disabled=true; this.style.opacity='0.5'">Ya llegué</button>
+                                <button class="btn-status" style="background:#22c55e" onclick="finalizar('${id}')">Terminado</button>
                             </div>
                         </div>
                     `;
@@ -134,20 +152,14 @@
             });
         }
 
-        function actualizar(btn, texto) {
-            btn.innerText = "✓ " + texto;
-            btn.style.opacity = "0.5";
-            btn.disabled = true;
-        }
-
-        function completar(id) {
-            if(confirm("¿Confirmas que terminaste este trabajo?")) {
+        function finalizar(id) {
+            if(confirm("¿Confirmas que terminaste este servicio?")) {
                 db.collection("servicios").doc(id).update({ estado: "completado" });
             }
         }
 
         function salir() {
-            localStorage.removeItem('user_email');
+            localStorage.clear();
             location.reload();
         }
     </script>
