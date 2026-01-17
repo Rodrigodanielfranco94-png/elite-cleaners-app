@@ -6,59 +6,44 @@
     <title>Elite Staff v2</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    
     <style>
         body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 0; }
         .login-screen { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; box-sizing: border-box; }
-        
         h1 { font-style: italic; font-weight: 900; font-size: 35px; text-transform: uppercase; margin: 0; }
         h1 span { color: #3b82f6; }
         .tagline { color: #8e8e93; font-size: 12px; letter-spacing: 2px; margin-bottom: 40px; }
-
         .input-group { width: 100%; max-width: 350px; text-align: left; margin-bottom: 20px; }
         .label { font-size: 10px; color: #3b82f6; font-weight: bold; text-transform: uppercase; margin-left: 10px; margin-bottom: 5px; display: block; }
-        
-        /* AQUÍ SOLO HAY NOMBRE Y CORREO */
         input { width: 100%; padding: 20px; border-radius: 18px; border: 1px solid #2c2c2e; background: #1c1c1e; color: white; font-size: 16px; box-sizing: border-box; outline: none; }
-        input:focus { border-color: #3b82f6; }
-
         .btn-entrar { width: 100%; max-width: 350px; padding: 20px; background: #3b82f6; color: white; border: none; border-radius: 18px; font-weight: bold; font-size: 16px; text-transform: uppercase; cursor: pointer; margin-top: 10px; }
-
-        /* VISTA DE TRABAJOS */
         #main-app { display: none; padding: 20px; }
         .user-info { background: #1a2638; border: 1px solid #3b82f6; padding: 15px; border-radius: 15px; text-align: center; margin-bottom: 30px; font-weight: bold; color: #3b82f6; text-transform: uppercase; font-size: 12px; }
         .card { background: #1c1c1e; border: 1px solid #2c2c2e; padding: 20px; border-radius: 25px; margin-bottom: 20px; }
         .card h3 { color: #3b82f6; margin: 0 0 10px 0; font-size: 22px; }
         .btn-gps { background: #2c2c2e; color: #3b82f6; border: 1px solid #3b82f6; padding: 15px; border-radius: 12px; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 15px 0; }
-        .btn-status { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: bold; color: white; text-transform: uppercase; margin-top: 10px; }
+        .btn-status { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: bold; color: white; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
-
     <div id="login-view" class="login-screen">
         <h1>ELITE <span>STAFF</span></h1>
         <div class="tagline">ACCESO PERSONALIZADO</div>
-
         <div class="input-group">
             <span class="label">Nombre de Usuario</span>
             <input type="text" id="user-name" placeholder="Ej: Geraldine Pimiento">
         </div>
-
         <div class="input-group">
             <span class="label">Correo Electrónico</span>
             <input type="email" id="user-email" placeholder="ejemplo@correo.com">
         </div>
-
         <button class="btn-entrar" onclick="login()">Ingresar al Panel</button>
     </div>
-
     <div id="main-app">
         <h1>ELITE <span>STAFF</span></h1>
         <div id="welcome-msg" class="user-info"></div>
         <div id="job-list"></div>
         <button onclick="logout()" style="background:none; border:none; color:red; width:100%; margin-top:40px; font-weight:bold;">CERRAR SESIÓN</button>
     </div>
-
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
@@ -74,16 +59,10 @@
         function login() {
             const nom = document.getElementById('user-name').value.trim();
             const mail = document.getElementById('user-email').value.toLowerCase().trim();
-
             if(!nom || !mail) return alert("Completa ambos campos");
-
-            db.collection("usuarios")
-              .where("nombre", "==", nom)
-              .where("email", "==", mail)
-              .get().then(snap => {
-                if(snap.empty) {
-                    alert("No coinciden los datos. Revisa con el Administrador.");
-                } else {
+            db.collection("usuarios").where("nombre", "==", nom).where("email", "==", mail).get().then(snap => {
+                if(snap.empty) { alert("Datos incorrectos. Revisa el Admin."); }
+                else {
                     document.getElementById('login-view').style.display = 'none';
                     document.getElementById('main-app').style.display = 'block';
                     document.getElementById('welcome-msg').innerText = "BIENVENIDA: " + nom;
@@ -91,7 +70,6 @@
                 }
             });
         }
-
         function fetchJobs(email) {
             db.collection("servicios").where("empleado_email", "==", email).where("estado", "==", "pendiente")
             .onSnapshot(snap => {
@@ -111,7 +89,6 @@
                 });
             });
         }
-
         function logout() { location.reload(); }
     </script>
 </body>
