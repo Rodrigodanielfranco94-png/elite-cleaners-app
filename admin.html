@@ -56,6 +56,13 @@
         .btn-done { background: #22c55e; }
         .btn-edit { background: #6366f1; }
         .btn-delete { background: #ef4444; }
+
+        /* Estilos para la tabla de Resumen de Pagos */
+        .payroll-container { background: #1c1c1e; padding: 18px; border-radius: 20px; border: 1px solid #22c55e; margin-top: 30px; }
+        .payroll-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+        .payroll-table th { text-align: left; color: #22c55e; padding: 8px; border-bottom: 1px solid #2c2c2e; text-transform: uppercase; font-size: 10px; }
+        .payroll-table td { padding: 10px 8px; border-bottom: 1px solid #2c2c2e; }
+        .pay-amount { color: #22c55e; font-weight: bold; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -78,6 +85,7 @@
         <input type="hidden" id="edit-staff-id">
         <input type="text" id="reg-nombre" placeholder="Nombre completo">
         <input type="email" id="reg-email" placeholder="Correo electrónico">
+        <input type="number" id="reg-pago" placeholder="Pago por hora ($)">
         <button class="reg-btn" id="btn-staff-main" onclick="registrarStaff()">GUARDAR STAFF</button>
         <div class="staff-list" id="lista-visual-staff"></div>
     </div>
@@ -120,6 +128,21 @@
 
     <div id="historial"></div>
 
+    <div class="payroll-container">
+        <span class="label-text" style="color: #22c55e;">Resumen de Pagos (Completados)</span>
+        <table class="payroll-table">
+            <thead>
+                <tr>
+                    <th>Staff</th>
+                    <th>Horas Totales</th>
+                    <th>Total a Pagar</th>
+                </tr>
+            </thead>
+            <tbody id="lista-nomina">
+                </tbody>
+        </table>
+    </div>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
@@ -137,22 +160,17 @@
         let todosLosClientes = [];
         let vistaActual = "pendiente";
 
-        // FUNCIÓN CORREGIDA PARA EVITAR EL NaNh NaNm
+        // FUNCIÓN DE CÁLCULO MEJORADA (FORMATO AM/PM)
         function calcularTiempoTrabajado(inicio, fin) {
-            if (!inicio || !fin || inicio === "--:--" || fin === "--:--") return "En proceso...";
+            if (!inicio || !fin || inicio === "--:--" || fin === "--:--") return { texto: "En proceso...", minutos: 0 };
 
             const aMinutos = (horaStr) => {
-                // Limpia el texto y separa por espacio para detectar am/pm
                 let hLimpia = horaStr.toLowerCase().trim();
                 let meridiano = hLimpia.includes('p') ? 'pm' : hLimpia.includes('a') ? 'am' : null;
-                
-                // Extrae solo los números (ej: de "11:01 a.m." saca "11:01")
                 let soloHora = hLimpia.replace(/[apm.\s]/g, '');
                 let [hh, mm] = soloHora.split(':').map(Number);
-
                 if (meridiano === 'pm' && hh < 12) hh += 12;
                 if (meridiano === 'am' && hh === 12) hh = 0;
-                
                 return (hh * 60) + mm;
             };
 
@@ -160,15 +178,12 @@
                 const minInicio = aMinutos(inicio);
                 const minFin = aMinutos(fin);
                 let diferencia = minFin - minInicio;
-                
-                if (diferencia < 0) diferencia += 1440; // Caso cruce de medianoche
-
+                if (diferencia < 0) diferencia += 1440; 
                 const horas = Math.floor(diferencia / 60);
                 const minutos = diferencia % 60;
-
-                return `${horas}h ${minutos}m`;
+                return { texto: `${horas}h ${minutos}m`, minutos: diferencia };
             } catch (e) {
-                return "Error formato";
+                return { texto: "Error formato", minutos: 0 };
             }
         }
 
@@ -213,11 +228,12 @@
             const id = document.getElementById('edit-staff-id').value;
             const n = document.getElementById('reg-nombre').value;
             const e = document.getElementById('reg-email').value.toLowerCase().trim();
+            const p = document.getElementById('reg-pago').value || 0;
             if(!n || !e) return alert("Completa nombre y correo");
             if(id) {
-                db.collection("usuarios").doc(id).update({ nombre: n, email: e }).then(() => { alert("Staff Actualizado"); resetStaffForm(); });
+                db.collection("usuarios").doc(id).update({ nombre: n, email: e, pago_hora: p }).then(() => { alert("Staff Actualizado"); resetStaffForm(); });
             } else {
-                db.collection("usuarios").add({ nombre: n, email: e, rol: "empleado" }).then(() => { alert("Staff Guardado"); resetStaffForm(); });
+                db.collection("usuarios").add({ nombre: n, email: e, rol: "empleado", pago_hora: p }).then(() => { alert("Staff Guardado"); resetStaffForm(); });
             }
         }
 
@@ -225,6 +241,7 @@
             document.getElementById('edit-staff-id').value = "";
             document.getElementById('reg-nombre').value = "";
             document.getElementById('reg-email').value = "";
+            document.getElementById('reg-pago').value = "";
             document.getElementById('btn-staff-main').innerText = "GUARDAR STAFF";
         }
 
@@ -234,15 +251,16 @@
             lv.innerHTML = "";
             snap.forEach(doc => {
                 const e = doc.data(); const id = doc.id;
-                todosLosEmpleados.push(e);
+                todosLosEmpleados.push({id, ...e});
                 lv.innerHTML += `<div class="staff-item">
-                    <div class="staff-info"><b>${e.nombre}</b><span>${e.email}</span></div>
+                    <div class="staff-info"><b>${e.nombre}</b><span>${e.email} | $${e.pago_hora || 0}/hr</span></div>
                     <div class="staff-actions">
-                        <button class="btn-mini" style="background:#6366f1" onclick="editarStaff('${id}','${e.nombre}','${e.email}')">Edit</button>
+                        <button class="btn-mini" style="background:#6366f1" onclick="editarStaff('${id}','${e.nombre}','${e.email}','${e.pago_hora||0}')">Edit</button>
                         <button class="btn-mini" style="background:#ef4444" onclick="borrarStaff('${id}','${e.nombre}')">X</button>
                     </div>
                 </div>`;
             });
+            generarNomina();
         });
 
         function filtrarEmpleados() {
@@ -303,25 +321,27 @@
             }
         }
 
+        let todosLosServicios = [];
+
         function cargarHistorial() {
             db.collection("servicios").onSnapshot(snap => {
                 const h = document.getElementById('historial');
                 h.innerHTML = "";
                 let p = 0; let c = 0;
-                let lista = [];
+                todosLosServicios = [];
 
                 snap.forEach(doc => {
                     const s = doc.data();
                     if(s.estado !== "completado") p++; else c++;
-                    lista.push({ id: doc.id, ...s });
+                    todosLosServicios.push({ id: doc.id, ...s });
                 });
 
-                lista.sort((a, b) => (a.fecha + " " + a.hora).localeCompare(b.fecha + " " + b.hora));
+                todosLosServicios.sort((a, b) => (a.fecha + " " + a.hora).localeCompare(b.fecha + " " + b.hora));
 
-                lista.forEach(s => {
+                todosLosServicios.forEach(s => {
                     if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
                         const millas = calcularMillas(s.gps_inicio, s.gps_fin);
-                        const tiempoTotal = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
+                        const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
                         const card = document.createElement('div');
                         card.className = 'card-servicio';
                         card.innerHTML = `
@@ -335,7 +355,7 @@
                             <div class="time-box">
                                 <div class="time-row"><b>▶ Inicio Real:</b> <span>${s.hora_inicio || '--:--'}</span></div>
                                 <div class="time-row"><b>✔ Fin Real:</b> <span>${s.hora_fin || '--:--'}</span></div>
-                                <div class="time-row total-time-row"><b>⏱ Tiempo Total:</b> <span>${tiempoTotal}</span></div>
+                                <div class="time-row total-time-row"><b>⏱ Tiempo Total:</b> <span>${infoTiempo.texto}</span></div>
                                 <div class="time-row" style="border-top:1px solid #2c2c2e; margin-top:5px; padding-top:5px;">
                                     <b>🚗 Desplazamiento:</b> <span style="color:#f59e0b">${millas} mi</span>
                                 </div>
@@ -353,6 +373,37 @@
                 });
                 document.getElementById('count-pendientes').innerText = p;
                 document.getElementById('count-completados').innerText = c;
+                generarNomina();
+            });
+        }
+
+        function generarNomina() {
+            const tabla = document.getElementById('lista-nomina');
+            tabla.innerHTML = "";
+            
+            todosLosEmpleados.forEach(emp => {
+                let minutosTotales = 0;
+                
+                // Sumar minutos de servicios completados de este empleado
+                todosLosServicios.filter(s => s.estado === "completado" && s.empleado_email === emp.email).forEach(s => {
+                    const info = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
+                    minutosTotales += info.minutos;
+                });
+
+                if(minutosTotales > 0) {
+                    const horasDecimal = minutosTotales / 60;
+                    const horasH = Math.floor(minutosTotales / 60);
+                    const minsH = minutosTotales % 60;
+                    const totalPago = horasDecimal * (emp.pago_hora || 0);
+
+                    tabla.innerHTML += `
+                        <tr>
+                            <td><b>${emp.nombre}</b></td>
+                            <td>${horasH}h ${minsH}m</td>
+                            <td class="pay-amount">$${totalPago.toFixed(2)}</td>
+                        </tr>
+                    `;
+                }
             });
         }
 
@@ -379,10 +430,11 @@
             document.getElementById('btn-completados').classList.toggle('active', v === 'completado');
             cargarHistorial();
         }
-        function editarStaff(id, nombre, email) {
+        function editarStaff(id, nombre, email, pago) {
             document.getElementById('edit-staff-id').value = id;
             document.getElementById('reg-nombre').value = nombre;
             document.getElementById('reg-email').value = email;
+            document.getElementById('reg-pago').value = pago;
             document.getElementById('btn-staff-main').innerText = "ACTUALIZAR STAFF";
         }
         function borrarStaff(id, nombre) { if(confirm("¿Eliminar a " + nombre + "?")) db.collection("usuarios").doc(id).delete(); }
