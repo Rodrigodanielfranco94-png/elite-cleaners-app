@@ -34,8 +34,9 @@
         .suggestions-list { position: absolute; width: 100%; background: #3b82f6; border-radius: 10px; z-index: 100; max-height: 150px; overflow-y: auto; display: none; }
         .suggestion-item { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-weight: bold; }
 
+        /* Ajuste de grid para soportar más tipos de limpieza */
         .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .type-btn { padding: 12px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: #8e8e93; font-weight: bold; font-size: 11px; cursor: pointer; text-transform: uppercase; }
+        .type-btn { padding: 12px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: #8e8e93; font-weight: bold; font-size: 10px; cursor: pointer; text-transform: uppercase; }
         .type-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
         
         .save-btn { width: 100%; padding: 18px; background: #3b82f6; color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 16px; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
@@ -57,7 +58,6 @@
         .btn-edit { background: #6366f1; }
         .btn-delete { background: #ef4444; }
 
-        /* Estilos para la tabla de Resumen de Pagos */
         .payroll-container { background: #1c1c1e; padding: 18px; border-radius: 20px; border: 1px solid #22c55e; margin-top: 30px; }
         .payroll-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
         .payroll-table th { text-align: left; color: #22c55e; padding: 8px; border-bottom: 1px solid #2c2c2e; text-transform: uppercase; font-size: 10px; }
@@ -121,6 +121,8 @@
             <button class="type-btn" id="btn-PROFUNDA" onclick="selectType('PROFUNDA')">PROFUNDA</button>
             <button class="type-btn" id="btn-MOVE-IN" onclick="selectType('MOVE-IN')">MOVE-IN</button>
             <button class="type-btn" id="btn-MOVE-OUT" onclick="selectType('MOVE-OUT')">MOVE-OUT</button>
+            <button class="type-btn" id="btn-PRIMERA" onclick="selectType('PRIMERA')">PRIMERA LIMPIEZA</button>
+            <button class="type-btn" id="btn-POST-CONSTRUCCION" onclick="selectType('POST-CONSTRUCCION')">POST-CONSTRUCCIÓN</button>
         </div>
 
         <button class="save-btn" id="main-button" onclick="asignarTrabajo()">ASIGNAR TRABAJO</button>
@@ -138,8 +140,7 @@
                     <th>Total a Pagar</th>
                 </tr>
             </thead>
-            <tbody id="lista-nomina">
-                </tbody>
+            <tbody id="lista-nomina"></tbody>
         </table>
     </div>
 
@@ -160,10 +161,8 @@
         let todosLosClientes = [];
         let vistaActual = "pendiente";
 
-        // FUNCIÓN DE CÁLCULO MEJORADA (FORMATO AM/PM)
         function calcularTiempoTrabajado(inicio, fin) {
             if (!inicio || !fin || inicio === "--:--" || fin === "--:--") return { texto: "En proceso...", minutos: 0 };
-
             const aMinutos = (horaStr) => {
                 let hLimpia = horaStr.toLowerCase().trim();
                 let meridiano = hLimpia.includes('p') ? 'pm' : hLimpia.includes('a') ? 'am' : null;
@@ -173,7 +172,6 @@
                 if (meridiano === 'am' && hh === 12) hh = 0;
                 return (hh * 60) + mm;
             };
-
             try {
                 const minInicio = aMinutos(inicio);
                 const minFin = aMinutos(fin);
@@ -182,9 +180,7 @@
                 const horas = Math.floor(diferencia / 60);
                 const minutos = diferencia % 60;
                 return { texto: `${horas}h ${minutos}m`, minutos: diferencia };
-            } catch (e) {
-                return { texto: "Error formato", minutos: 0 };
-            }
+            } catch (e) { return { texto: "Error formato", minutos: 0 }; }
         }
 
         function calcularMillas(p1, p2) {
@@ -285,7 +281,9 @@
         function selectType(t) {
             tipoSeleccionado = t;
             document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('btn-' + t).classList.add('active');
+            // Ajuste para IDs con guiones
+            const btn = document.getElementById('btn-' + t);
+            if(btn) btn.classList.add('active');
         }
 
         function asignarTrabajo() {
@@ -329,15 +327,12 @@
                 h.innerHTML = "";
                 let p = 0; let c = 0;
                 todosLosServicios = [];
-
                 snap.forEach(doc => {
                     const s = doc.data();
                     if(s.estado !== "completado") p++; else c++;
                     todosLosServicios.push({ id: doc.id, ...s });
                 });
-
                 todosLosServicios.sort((a, b) => (a.fecha + " " + a.hora).localeCompare(b.fecha + " " + b.hora));
-
                 todosLosServicios.forEach(s => {
                     if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
                         const millas = calcularMillas(s.gps_inicio, s.gps_fin);
@@ -351,7 +346,6 @@
                             <p>📅 <b>${s.fecha}</b> | ⏰ <b>${s.hora}</b></p>
                             <p>📍 ${s.direccion}</p>
                             <p>👤 Staff: ${s.empleado_nombre}</p>
-                            
                             <div class="time-box">
                                 <div class="time-row"><b>▶ Inicio Real:</b> <span>${s.hora_inicio || '--:--'}</span></div>
                                 <div class="time-row"><b>✔ Fin Real:</b> <span>${s.hora_fin || '--:--'}</span></div>
@@ -360,7 +354,6 @@
                                     <b>🚗 Desplazamiento:</b> <span style="color:#f59e0b">${millas} mi</span>
                                 </div>
                             </div>
-
                             <div class="action-buttons">
                                 <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">
                                     ${s.estado === 'completado' ? 'Reabrir' : 'Terminar'}
@@ -379,30 +372,18 @@
 
         function generarNomina() {
             const tabla = document.getElementById('lista-nomina');
+            if(!tabla) return;
             tabla.innerHTML = "";
-            
             todosLosEmpleados.forEach(emp => {
                 let minutosTotales = 0;
-                
-                // Sumar minutos de servicios completados de este empleado
-                todosLosServicios.filter(s => s.estado === "completado" && s.empleado_email === emp.email).forEach(s => {
+                todosLosServicios.filter(s => s.estado === "completado" && (s.empleado_email === emp.email)).forEach(s => {
                     const info = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
                     minutosTotales += info.minutos;
                 });
-
                 if(minutosTotales > 0) {
                     const horasDecimal = minutosTotales / 60;
-                    const horasH = Math.floor(minutosTotales / 60);
-                    const minsH = minutosTotales % 60;
                     const totalPago = horasDecimal * (emp.pago_hora || 0);
-
-                    tabla.innerHTML += `
-                        <tr>
-                            <td><b>${emp.nombre}</b></td>
-                            <td>${horasH}h ${minsH}m</td>
-                            <td class="pay-amount">$${totalPago.toFixed(2)}</td>
-                        </tr>
-                    `;
+                    tabla.innerHTML += `<tr><td><b>${emp.nombre}</b></td><td>${Math.floor(minutosTotales/60)}h ${minutosTotales%60}m</td><td class="pay-amount">$${totalPago.toFixed(2)}</td></tr>`;
                 }
             });
         }
@@ -414,7 +395,7 @@
             document.getElementById('direccion').value = s.direccion;
             document.getElementById('whatsapp').value = s.whatsapp || "";
             document.getElementById('search-empleado').value = s.empleado_nombre;
-            document.getElementById('email-empleado').value = s.email_empleado || s.empleado_email;
+            document.getElementById('email-empleado').value = s.empleado_email;
             document.getElementById('fecha').value = s.fecha;
             document.getElementById('hora').value = s.hora;
             document.getElementById('notas').value = s.notas;
