@@ -30,11 +30,10 @@
         .staff-actions { display: flex; gap: 5px; }
         .btn-mini { padding: 6px 10px; border: none; border-radius: 6px; font-size: 9px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; }
 
-        .search-container { position: relative; }
+        .search-container { position: relative; margin-bottom: 5px; }
         .suggestions-list { position: absolute; width: 100%; background: #3b82f6; border-radius: 10px; z-index: 100; max-height: 150px; overflow-y: auto; display: none; }
         .suggestion-item { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-weight: bold; }
 
-        /* Ajuste de grid para soportar más tipos de limpieza */
         .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
         .type-btn { padding: 12px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: #8e8e93; font-weight: bold; font-size: 10px; cursor: pointer; text-transform: uppercase; }
         .type-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
@@ -100,12 +99,19 @@
         <input type="text" id="direccion" placeholder="Dirección del servicio">
         <input type="tel" id="whatsapp" placeholder="Teléfono Cliente">
         
-        <span class="label-text">Staff Asignado</span>
+        <span class="label-text">Staff 1 (Obligatorio)</span>
         <div class="search-container">
-            <input type="text" id="search-empleado" placeholder="Buscar staff..." oninput="filtrarEmpleados()" autocomplete="off">
-            <div id="suggestions" class="suggestions-list"></div>
+            <input type="text" id="search-empleado" placeholder="Buscar staff 1..." oninput="filtrarEmpleados(1)" autocomplete="off">
+            <div id="suggestions-1" class="suggestions-list"></div>
         </div>
         <input type="hidden" id="email-empleado">
+
+        <span class="label-text">Staff 2 (Opcional)</span>
+        <div class="search-container">
+            <input type="text" id="search-empleado-2" placeholder="Buscar staff 2..." oninput="filtrarEmpleados(2)" autocomplete="off">
+            <div id="suggestions-2" class="suggestions-list"></div>
+        </div>
+        <input type="hidden" id="email-empleado-2">
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div><span class="label-text">Fecha</span><input type="date" id="fecha"></div>
@@ -259,9 +265,13 @@
             generarNomina();
         });
 
-        function filtrarEmpleados() {
-            const q = document.getElementById('search-empleado').value.toLowerCase();
-            const l = document.getElementById('suggestions');
+        function filtrarEmpleados(num) {
+            const inputId = num === 1 ? 'search-empleado' : 'search-empleado-2';
+            const suggestionsId = num === 1 ? 'suggestions-1' : 'suggestions-2';
+            const emailId = num === 1 ? 'email-empleado' : 'email-empleado-2';
+            
+            const q = document.getElementById(inputId).value.toLowerCase();
+            const l = document.getElementById(suggestionsId);
             l.innerHTML = "";
             if (q.length < 1) { l.style.display = "none"; return; }
             const f = todosLosEmpleados.filter(e => e.nombre.toLowerCase().includes(q));
@@ -269,8 +279,8 @@
                 const d = document.createElement('div');
                 d.className = 'suggestion-item'; d.innerText = e.nombre;
                 d.onclick = () => {
-                    document.getElementById('search-empleado').value = e.nombre;
-                    document.getElementById('email-empleado').value = e.email;
+                    document.getElementById(inputId).value = e.nombre;
+                    document.getElementById(emailId).value = e.email;
                     l.style.display = "none";
                 };
                 l.appendChild(d);
@@ -281,7 +291,6 @@
         function selectType(t) {
             tipoSeleccionado = t;
             document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
-            // Ajuste para IDs con guiones
             const btn = document.getElementById('btn-' + t);
             if(btn) btn.classList.add('active');
         }
@@ -298,6 +307,8 @@
                 whatsapp: cli_tel,
                 empleado_nombre: document.getElementById('search-empleado').value,
                 empleado_email: document.getElementById('email-empleado').value,
+                empleado_nombre_2: document.getElementById('search-empleado-2').value || "",
+                empleado_email_2: document.getElementById('email-empleado-2').value || "",
                 fecha: document.getElementById('fecha').value,
                 hora: document.getElementById('hora').value,
                 notas: document.getElementById('notas').value,
@@ -337,6 +348,8 @@
                     if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
                         const millas = calcularMillas(s.gps_inicio, s.gps_fin);
                         const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
+                        const staffText = s.empleado_nombre_2 ? `${s.empleado_nombre} & ${s.empleado_nombre_2}` : s.empleado_nombre;
+                        
                         const card = document.createElement('div');
                         card.className = 'card-servicio';
                         card.innerHTML = `
@@ -345,7 +358,7 @@
                             <h3>${s.cliente}</h3>
                             <p>📅 <b>${s.fecha}</b> | ⏰ <b>${s.hora}</b></p>
                             <p>📍 ${s.direccion}</p>
-                            <p>👤 Staff: ${s.empleado_nombre}</p>
+                            <p>👤 Staff: ${staffText}</p>
                             <div class="time-box">
                                 <div class="time-row"><b>▶ Inicio Real:</b> <span>${s.hora_inicio || '--:--'}</span></div>
                                 <div class="time-row"><b>✔ Fin Real:</b> <span>${s.hora_fin || '--:--'}</span></div>
@@ -376,7 +389,8 @@
             tabla.innerHTML = "";
             todosLosEmpleados.forEach(emp => {
                 let minutosTotales = 0;
-                todosLosServicios.filter(s => s.estado === "completado" && (s.empleado_email === emp.email)).forEach(s => {
+                // Sumar si es staff 1 O staff 2
+                todosLosServicios.filter(s => s.estado === "completado" && (s.empleado_email === emp.email || s.empleado_email_2 === emp.email)).forEach(s => {
                     const info = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
                     minutosTotales += info.minutos;
                 });
@@ -389,6 +403,7 @@
         }
 
         function abrirChat(num) { if(!num) return alert("Sin número"); window.location.href = `sms:${num}`; }
+        
         function editar(id, s) {
             document.getElementById('edit-id').value = id;
             document.getElementById('cliente').value = s.cliente;
@@ -396,6 +411,8 @@
             document.getElementById('whatsapp').value = s.whatsapp || "";
             document.getElementById('search-empleado').value = s.empleado_nombre;
             document.getElementById('email-empleado').value = s.empleado_email;
+            document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || "";
+            document.getElementById('email-empleado-2').value = s.empleado_email_2 || "";
             document.getElementById('fecha').value = s.fecha;
             document.getElementById('hora').value = s.hora;
             document.getElementById('notas').value = s.notas;
@@ -403,6 +420,7 @@
             document.getElementById('main-button').innerText = "GUARDAR CAMBIOS";
             window.scrollTo({top: 0, behavior: 'smooth'});
         }
+
         function marcar(id, est) { db.collection("servicios").doc(id).update({ estado: est }); }
         function borrar(id) { if(confirm("¿Borrar servicio?")) db.collection("servicios").doc(id).delete(); }
         function cambiarVista(v) {
