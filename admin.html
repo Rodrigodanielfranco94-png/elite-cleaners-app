@@ -12,58 +12,47 @@
         body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; padding-bottom: 100px; }
         h1 { font-style: italic; font-weight: 900; font-size: 22px; text-transform: uppercase; margin-bottom: 20px; }
         h1 span { color: #3b82f6; }
-        
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .stat-card { background: #1c1c1e; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #2c2c2e; cursor: pointer; }
         .stat-card.active { border-color: #3b82f6; background: #1a2638; }
         .stat-card h2 { margin: 0; font-size: 28px; color: #3b82f6; }
         .stat-card p { margin: 5px 0 0 0; font-size: 10px; color: #8e8e93; text-transform: uppercase; }
-
         .form-container { background: #1c1c1e; padding: 18px; border-radius: 20px; border: 1px solid #2c2c2e; margin-bottom: 20px; }
         .section-staff { border-color: #3b82f6; border-style: dashed; }
         .label-text { font-size: 10px; color: #3b82f6; font-weight: bold; margin: 8px 0 4px 5px; display: block; text-transform: uppercase; }
         input, textarea { width: 100%; padding: 14px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #2c2c2e; background: #2c2c2e; color: white; box-sizing: border-box; font-size: 15px; }
-
         .staff-list { margin-top: 15px; border-top: 1px solid #2c2c2e; padding-top: 15px; }
         .staff-item { background: #000; padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #2c2c2e; }
         .staff-info b { font-size: 13px; color: #fff; display: block; }
         .staff-info span { font-size: 10px; color: #8e8e93; }
         .staff-actions { display: flex; gap: 5px; }
         .btn-mini { padding: 6px 10px; border: none; border-radius: 6px; font-size: 9px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; }
-
         .search-container { position: relative; margin-bottom: 5px; }
         .suggestions-list { position: absolute; width: 100%; background: #3b82f6; border-radius: 10px; z-index: 100; max-height: 150px; overflow-y: auto; display: none; }
         .suggestion-item { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-weight: bold; }
-
         .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
         .type-btn { padding: 12px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: #8e8e93; font-weight: bold; font-size: 10px; cursor: pointer; text-transform: uppercase; }
         .type-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
-        
         .save-btn { width: 100%; padding: 18px; background: #3b82f6; color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 16px; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
         .reg-btn { background: #3b82f6; color: white; border: none; width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 12px; cursor: pointer; margin-top: 5px; text-transform: uppercase; }
-
         .card-servicio { background: #1c1c1e; padding: 20px; border-radius: 25px; border: 1px solid #2c2c2e; margin-bottom: 15px; position: relative; }
         .chat-btn { position: absolute; right: 15px; top: 15px; width: 45px; height: 45px; background: #007aff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; text-decoration: none; border: none; cursor: pointer; color: white; }
         .card-servicio h3 { margin: 0 0 5px 0; color: #3b82f6; font-size: 20px; max-width: 80%; }
         .card-servicio p { margin: 4px 0; font-size: 13px; color: #d1d5db; }
-        
         .time-box { background: #000; padding: 12px; border-radius: 15px; margin-top: 15px; border: 1px solid #3b82f633; }
         .time-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
         .time-row b { color: #3b82f6; font-size: 10px; text-transform: uppercase; }
         .total-time-row { border-top: 1px solid #3b82f6; margin-top: 8px; padding-top: 8px; font-weight: bold; color: #22c55e !important; }
-
         .action-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 15px; }
         .btn-action { padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 11px; cursor: pointer; text-transform: uppercase; }
         .btn-done { background: #22c55e; }
         .btn-edit { background: #6366f1; }
         .btn-delete { background: #ef4444; }
-
         .payroll-container { background: #1c1c1e; padding: 18px; border-radius: 20px; border: 1px solid #22c55e; margin-top: 30px; }
         .payroll-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
         .payroll-table th { text-align: left; color: #22c55e; padding: 8px; border-bottom: 1px solid #2c2c2e; text-transform: uppercase; font-size: 10px; }
         .payroll-table td { padding: 10px 8px; border-bottom: 1px solid #2c2c2e; }
         .pay-amount { color: #22c55e; font-weight: bold; font-size: 14px; }
-        
         .btn-reset { width: 100%; padding: 15px; background: transparent; border: 1px solid #ef4444; color: #ef4444; border-radius: 12px; font-weight: bold; font-size: 11px; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
     </style>
 </head>
@@ -169,6 +158,7 @@
         let tipoSeleccionado = "ESTÁNDAR";
         let todosLosEmpleados = [];
         let todosLosClientes = [];
+        let todosLosServicios = [];
         let vistaActual = "pendiente";
 
         function calcularTiempoTrabajado(inicio, fin) {
@@ -273,7 +263,6 @@
             const inputId = num === 1 ? 'search-empleado' : 'search-empleado-2';
             const suggestionsId = num === 1 ? 'suggestions-1' : 'suggestions-2';
             const emailId = num === 1 ? 'email-empleado' : 'email-empleado-2';
-            
             const q = document.getElementById(inputId).value.toLowerCase();
             const l = document.getElementById(suggestionsId);
             l.innerHTML = "";
@@ -304,11 +293,8 @@
             const cli_nombre = document.getElementById('cliente').value;
             const cli_dir = document.getElementById('direccion').value;
             const cli_tel = document.getElementById('whatsapp').value.replace(/\D/g,'');
-
             const data = {
-                cliente: cli_nombre,
-                direccion: cli_dir,
-                whatsapp: cli_tel,
+                cliente: cli_nombre, direccion: cli_dir, whatsapp: cli_tel,
                 empleado_nombre: document.getElementById('search-empleado').value,
                 empleado_email: document.getElementById('email-empleado').value,
                 empleado_nombre_2: document.getElementById('search-empleado-2').value || "",
@@ -319,13 +305,7 @@
                 tipo: tipoSeleccionado,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
-
-            db.collection("clientes").doc(cli_nombre).set({
-                nombre: cli_nombre,
-                direccion: cli_dir,
-                whatsapp: cli_tel
-            });
-
+            db.collection("clientes").doc(cli_nombre).set({ nombre: cli_nombre, direccion: cli_dir, whatsapp: cli_tel });
             if (id) {
                 db.collection("servicios").doc(id).update(data).then(() => { alert("Guardado"); location.reload(); });
             } else {
@@ -333,8 +313,6 @@
                 db.collection("servicios").add(data).then(() => { alert("Asignado"); location.reload(); });
             }
         }
-
-        let todosLosServicios = [];
 
         function cargarHistorial() {
             db.collection("servicios").onSnapshot(snap => {
@@ -353,7 +331,6 @@
                         const millas = calcularMillas(s.gps_inicio, s.gps_fin);
                         const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
                         const staffText = s.empleado_nombre_2 ? `${s.empleado_nombre} & ${s.empleado_nombre_2}` : s.empleado_nombre;
-                        
                         const card = document.createElement('div');
                         card.className = 'card-servicio';
                         card.innerHTML = `
@@ -405,48 +382,59 @@
             });
         }
 
-        function reiniciarHorasMes() {
+        async function reiniciarHorasMes() {
             const completados = todosLosServicios.filter(s => s.estado === "completado");
-            if (completados.length === 0) return alert("No hay trabajos completados para reportar.");
+            if (completados.length === 0) return alert("No hay trabajos completados para reportar o borrar.");
 
-            if (confirm("Se descargará un Excel y se borrarán los trabajos completados. ¿Continuar?")) {
+            if (confirm("⚠️ SE BORRARÁ TODO EL HISTORIAL COMPLETADO. Los pendientes NO se borrarán. ¿Deseas generar el reporte y reiniciar a cero?")) {
+                
+                // 1. GENERAR DATA REPORTE
                 const dataReporte = [];
                 todosLosEmpleados.forEach(emp => {
-                    let minEmp = 0;
                     const misServicios = completados.filter(s => s.empleado_email === emp.email || s.empleado_email_2 === emp.email);
                     misServicios.forEach(s => {
                         const info = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
-                        minEmp += info.minutos;
                         dataReporte.push({
                             "Staff": emp.nombre,
                             "Fecha": s.fecha,
                             "Cliente": s.cliente,
                             "Horas": (info.minutos / 60).toFixed(2),
                             "Pago x Hora": emp.pago_hora,
-                            "Subtotal": ((info.minutos / 60) * emp.pago_hora).toFixed(2)
+                            "Pago Total Trabajo": ((info.minutos / 60) * emp.pago_hora).toFixed(2)
                         });
                     });
                 });
 
+                // 2. DESCARGAR EXCEL
                 const ws = XLSX.utils.json_to_sheet(dataReporte);
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Nomina");
-                XLSX.writeFile(wb, `Elite_Cierre_${new Date().getMonth()+1}.xlsx`);
+                XLSX.writeFile(wb, `Elite_Cierre_${new Date().getMonth()+1}_${new Date().getFullYear()}.xlsx`);
 
-                completados.forEach(s => db.collection("servicios").doc(s.id).delete());
-                alert("✅ Reporte listo y horas en cero.");
+                // 3. BORRADO FÍSICO EN FIREBASE
+                const batch = db.batch();
+                completados.forEach(s => {
+                    const ref = db.collection("servicios").doc(s.id);
+                    batch.delete(ref);
+                });
+
+                await batch.commit();
+                
+                // 4. LIMPIEZA LOCAL INMEDIATA
+                todosLosServicios = todosLosServicios.filter(s => s.estado !== "completado");
+                generarNomina();
+                alert("✅ Reporte descargado y horas completadas borradas. Los trabajos pendientes siguen intactos.");
             }
         }
 
         function abrirChat(num) { if(!num) return alert("Sin número"); window.location.href = `sms:${num}`; }
-        
         function editar(id, s) {
             document.getElementById('edit-id').value = id;
             document.getElementById('cliente').value = s.cliente;
             document.getElementById('direccion').value = s.direccion;
             document.getElementById('whatsapp').value = s.whatsapp || "";
             document.getElementById('search-empleado').value = s.empleado_nombre;
-            document.getElementById('email-empleado').value = s.email_empleado;
+            document.getElementById('email-empleado').value = s.empleado_email;
             document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || "";
             document.getElementById('email-empleado-2').value = s.email_empleado_2 || "";
             document.getElementById('fecha').value = s.fecha;
@@ -456,7 +444,6 @@
             document.getElementById('main-button').innerText = "GUARDAR CAMBIOS";
             window.scrollTo({top: 0, behavior: 'smooth'});
         }
-
         function marcar(id, est) { db.collection("servicios").doc(id).update({ estado: est }); }
         function borrar(id) { if(confirm("¿Borrar servicio?")) db.collection("servicios").doc(id).delete(); }
         function cambiarVista(v) {
