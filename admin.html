@@ -54,6 +54,9 @@
         .payroll-table td { padding: 10px 8px; border-bottom: 1px solid #2c2c2e; }
         .pay-amount { color: #22c55e; font-weight: bold; font-size: 14px; }
         .btn-reset { width: 100%; padding: 15px; background: transparent; border: 1px solid #ef4444; color: #ef4444; border-radius: 12px; font-weight: bold; font-size: 11px; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
+        
+        /* Nuevo estilo para corrección de horas */
+        .correction-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #2c2c2e; padding: 10px; border-radius: 12px; margin-top: 10px; border: 1px solid #3b82f6; }
     </style>
 </head>
 <body>
@@ -81,7 +84,7 @@
         <div class="staff-list" id="lista-visual-staff"></div>
     </div>
 
-    <div class="form-container">
+    <div class="form-container" id="main-form">
         <input type="hidden" id="edit-id">
         <span class="label-text">Cliente</span>
         <div class="search-container">
@@ -113,6 +116,21 @@
         <span class="label-text">Notas</span>
         <textarea id="notas" placeholder="Instrucciones..." rows="2"></textarea>
 
+        <div id="admin-correction" style="display: none;">
+            <span class="label-text" style="color: #f59e0b;">Corrección de Horas Reales</span>
+            <div class="correction-container">
+                <div>
+                    <span class="label-text" style="color: #fff; margin-left: 0;">Inicio Real</span>
+                    <input type="text" id="hora_inicio_real" placeholder="Ej: 10:30 am">
+                </div>
+                <div>
+                    <span class="label-text" style="color: #fff; margin-left: 0;">Fin Real</span>
+                    <input type="text" id="hora_fin_real" placeholder="Ej: 2:45 pm">
+                </div>
+            </div>
+            <p style="font-size: 9px; color: #8e8e93; margin-top: 5px;">* Usa formato "10:30 am" o "2:45 pm".</p>
+        </div>
+
         <span class="label-text">Tipo de Limpieza</span>
         <div class="type-grid">
             <button class="type-btn active" id="btn-ESTÁNDAR" onclick="selectType('ESTÁNDAR')">ESTÁNDAR</button>
@@ -124,6 +142,7 @@
         </div>
 
         <button class="save-btn" id="main-button" onclick="asignarTrabajo()">ASIGNAR TRABAJO</button>
+        <button id="cancel-edit" style="display:none; background:none; border:none; color:#ef4444; width:100%; margin-top:10px; font-weight:bold; cursor:pointer;" onclick="location.reload()">CANCELAR EDICIÓN</button>
     </div>
 
     <div id="historial"></div>
@@ -305,11 +324,20 @@
                 tipo: tipoSeleccionado,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
+
+            // Solo agregamos horas reales si estamos editando
+            if(id) {
+                data.hora_inicio = document.getElementById('hora_inicio_real').value || "--:--";
+                data.hora_fin = document.getElementById('hora_fin_real').value || "--:--";
+            }
+
             db.collection("clientes").doc(cli_nombre).set({ nombre: cli_nombre, direccion: cli_dir, whatsapp: cli_tel });
             if (id) {
                 db.collection("servicios").doc(id).update(data).then(() => { alert("Guardado"); location.reload(); });
             } else {
                 data.estado = "pendiente";
+                data.hora_inicio = "--:--";
+                data.hora_fin = "--:--";
                 db.collection("servicios").add(data).then(() => { alert("Asignado"); location.reload(); });
             }
         }
@@ -428,6 +456,7 @@
         }
 
         function abrirChat(num) { if(!num) return alert("Sin número"); window.location.href = `sms:${num}`; }
+        
         function editar(id, s) {
             document.getElementById('edit-id').value = id;
             document.getElementById('cliente').value = s.cliente;
@@ -436,14 +465,23 @@
             document.getElementById('search-empleado').value = s.empleado_nombre;
             document.getElementById('email-empleado').value = s.empleado_email;
             document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || "";
-            document.getElementById('email-empleado-2').value = s.email_empleado_2 || "";
+            document.getElementById('email-empleado-2').value = s.empleado_email_2 || "";
             document.getElementById('fecha').value = s.fecha;
             document.getElementById('hora').value = s.hora;
             document.getElementById('notas').value = s.notas;
+            
+            // CARGAR HORAS REALES PARA CORRECCIÓN
+            document.getElementById('admin-correction').style.display = "block";
+            document.getElementById('hora_inicio_real').value = s.hora_inicio || "";
+            document.getElementById('hora_fin_real').value = s.hora_fin || "";
+            
             selectType(s.tipo);
             document.getElementById('main-button').innerText = "GUARDAR CAMBIOS";
+            document.getElementById('cancel-edit').style.display = "block";
+            
             window.scrollTo({top: 0, behavior: 'smooth'});
         }
+
         function marcar(id, est) { db.collection("servicios").doc(id).update({ estado: est }); }
         function borrar(id) { if(confirm("¿Borrar servicio?")) db.collection("servicios").doc(id).delete(); }
         function cambiarVista(v) {
