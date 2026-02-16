@@ -101,25 +101,31 @@
         }
 
         function fetchJobs(email) {
+            // Se escuchan todos los servicios pendientes o en curso
             db.collection("servicios")
-                .where("empleado_email", "==", email)
                 .where("estado", "in", ["pendiente", "en curso"])
                 .onSnapshot(snap => {
                     const list = document.getElementById('job-list');
                     list.innerHTML = "";
                     
                     let trabajos = [];
-                    snap.forEach(doc => { trabajos.push({ id: doc.id, ...doc.data() }); });
+                    snap.forEach(doc => { 
+                        const data = doc.data();
+                        // CORRECCIÓN: Verifica si el usuario logueado es Staff 1 O Staff 2
+                        if(data.empleado_email === email || data.empleado_email_2 === email) {
+                            trabajos.push({ id: doc.id, ...data }); 
+                        }
+                    });
 
                     trabajos.sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
 
                     trabajos.forEach(data => {
                         let botonesHTML = "";
                         
-                        // LÓGICA REFORZADA: Si no hay hora de inicio, MOSTRAR SIEMPRE el botón
-                        if (!data.hora_inicio || data.hora_inicio === "" || data.hora_inicio === undefined) {
+                        // LÓGICA REFORZADA: Se asegura de que el botón cambie según el dato real de la DB
+                        if (!data.hora_inicio || data.hora_inicio === "" || data.hora_inicio === "--:--") {
                             botonesHTML = `<button class="btn-status" style="background:#3b82f6" onclick="registrarTiempo('${data.id}', 'inicio')">▶ INICIAR TRABAJO</button>`;
-                        } else if (data.hora_inicio && (!data.hora_fin || data.hora_fin === "")) {
+                        } else if (data.hora_inicio && (!data.hora_fin || data.hora_fin === "" || data.hora_fin === "--:--")) {
                             botonesHTML = `
                                 <span class="time-label">SISTEMA INICIADO: ${data.hora_inicio}</span>
                                 <button class="btn-status" style="background:#22c55e" onclick="registrarTiempo('${data.id}', 'fin')">✔ TERMINAR TRABAJO</button>
@@ -161,9 +167,17 @@
         function registrarTiempo(id, tipo) {
             if (!navigator.geolocation) return alert("Tu navegador no soporta GPS.");
 
+            // Opción de alta precisión para el registro
+            const geoOptions = {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+            };
+
             navigator.geolocation.getCurrentPosition((pos) => {
                 const ahora = new Date();
-                const horaString = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+                // Formato de hora: 10:30 am
+                const horaString = ahora.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase();
                 const coords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
 
                 if (tipo === 'inicio') {
@@ -171,19 +185,23 @@
                         hora_inicio: horaString,
                         gps_inicio: coords,
                         estado: 'en curso'
-                    }).catch(err => alert("Error: " + err));
+                    }).then(() => {
+                        console.log("Inicio registrado con éxito");
+                    }).catch(err => alert("Error al iniciar: " + err));
                 } else {
                     if(confirm("¿Confirmar fin de trabajo?")) {
                         db.collection('servicios').doc(id).update({
                             hora_fin: horaString,
                             gps_fin: coords,
                             estado: 'completado'
-                        }).catch(err => alert("Error: " + err));
+                        }).then(() => {
+                            alert("Trabajo finalizado correctamente.");
+                        }).catch(err => alert("Error al finalizar: " + err));
                     }
                 }
             }, (err) => {
-                alert("GPS REQUERIDO: Debes activar la ubicación para marcar el tiempo.");
-            }, { enableHighAccuracy: true });
+                alert("GPS REQUERIDO: Debes activar la ubicación y dar permiso para marcar el tiempo.");
+            }, geoOptions);
         }
 
         function logout() { location.reload(); }
