@@ -43,11 +43,15 @@
         .time-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
         .time-row b { color: #3b82f6; font-size: 10px; text-transform: uppercase; }
         .total-time-row { border-top: 1px solid #3b82f6; margin-top: 8px; padding-top: 8px; font-weight: bold; color: #22c55e !important; }
-        .action-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 15px; }
+        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
+        /* Ajuste para 4 botones en cuadrícula */
+        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
         .btn-action { padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 11px; cursor: pointer; text-transform: uppercase; }
         .btn-done { background: #22c55e; }
         .btn-edit { background: #6366f1; }
         .btn-delete { background: #ef4444; }
+        .btn-contract { background: #004a99; }
+        
         .payroll-container { background: #1c1c1e; padding: 18px; border-radius: 20px; border: 1px solid #22c55e; margin-top: 30px; }
         .payroll-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
         .payroll-table th { text-align: left; color: #22c55e; padding: 8px; border-bottom: 1px solid #2c2c2e; text-transform: uppercase; font-size: 10px; }
@@ -55,7 +59,6 @@
         .pay-amount { color: #22c55e; font-weight: bold; font-size: 14px; }
         .btn-reset { width: 100%; padding: 15px; background: transparent; border: 1px solid #ef4444; color: #ef4444; border-radius: 12px; font-weight: bold; font-size: 11px; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
         
-        /* Nuevo estilo para corrección de horas */
         .correction-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #2c2c2e; padding: 10px; border-radius: 12px; margin-top: 10px; border: 1px solid #3b82f6; }
     </style>
 </head>
@@ -325,7 +328,6 @@
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            // Solo agregamos horas reales si estamos editando
             if(id) {
                 data.hora_inicio = document.getElementById('hora_inicio_real').value || "--:--";
                 data.hora_fin = document.getElementById('hora_fin_real').value || "--:--";
@@ -380,6 +382,9 @@
                                 <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">
                                     ${s.estado === 'completado' ? 'Reabrir' : 'Terminar'}
                                 </button>
+                                
+                                <button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Contrato</button>
+                                
                                 <button class="btn-action btn-edit" onclick="editar('${s.id}', ${JSON.stringify(s).replace(/"/g, '&quot;')})">Editar</button>
                                 <button class="btn-action btn-delete" onclick="borrar('${s.id}')">Borrar</button>
                             </div>`;
@@ -390,6 +395,13 @@
                 document.getElementById('count-completados').innerText = c;
                 generarNomina();
             });
+        }
+
+        function enviarContrato(id, telefono, cliente) {
+            if(!telefono) return alert("El cliente no tiene teléfono registrado.");
+            const urlFirma = `https://elite-cleaners-app.netlify.app/firmar.html?id=${id}&cliente=${encodeURIComponent(cliente)}`;
+            const mensaje = `Hola ${cliente}, es un placer saludarte de Elite Cleaners Company. 🌟 %0A%0APara confirmar tu servicio, por favor revisa y firma nuestro acuerdo de servicio en el siguiente enlace: %0A%0A${urlFirma}%0A%0A¡Gracias por confiar en nosotros!`;
+            window.location.href = `https://wa.me/${telefono}?text=${mensaje}`;
         }
 
         function generarNomina() {
@@ -415,8 +427,6 @@
             if (completados.length === 0) return alert("No hay trabajos completados para reportar o borrar.");
 
             if (confirm("⚠️ SE BORRARÁ TODO EL HISTORIAL COMPLETADO. Los pendientes NO se borrarán. ¿Deseas generar el reporte y reiniciar a cero?")) {
-                
-                // 1. GENERAR DATA REPORTE
                 const dataReporte = [];
                 todosLosEmpleados.forEach(emp => {
                     const misServicios = completados.filter(s => s.empleado_email === emp.email || s.empleado_email_2 === emp.email);
@@ -433,13 +443,11 @@
                     });
                 });
 
-                // 2. DESCARGAR EXCEL
                 const ws = XLSX.utils.json_to_sheet(dataReporte);
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Nomina");
                 XLSX.writeFile(wb, `Elite_Cierre_${new Date().getMonth()+1}_${new Date().getFullYear()}.xlsx`);
 
-                // 3. BORRADO FÍSICO EN FIREBASE
                 const batch = db.batch();
                 completados.forEach(s => {
                     const ref = db.collection("servicios").doc(s.id);
@@ -447,11 +455,9 @@
                 });
 
                 await batch.commit();
-                
-                // 4. LIMPIEZA LOCAL INMEDIATA
                 todosLosServicios = todosLosServicios.filter(s => s.estado !== "completado");
                 generarNomina();
-                alert("✅ Reporte descargado y horas completadas borradas. Los trabajos pendientes siguen intactos.");
+                alert("✅ Reporte descargado y horas completadas borradas.");
             }
         }
 
@@ -470,7 +476,6 @@
             document.getElementById('hora').value = s.hora;
             document.getElementById('notas').value = s.notas;
             
-            // CARGAR HORAS REALES PARA CORRECCIÓN
             document.getElementById('admin-correction').style.display = "block";
             document.getElementById('hora_inicio_real').value = s.hora_inicio || "";
             document.getElementById('hora_fin_real').value = s.hora_fin || "";
