@@ -33,15 +33,14 @@
         }
         .legal-box b { color: #fff; }
 
-        /* CUADRO DE FIRMA NEGRO PROFESIONAL */
         #signature-pad { 
-            background: #1c1c1e; /* Fondo oscuro igual al resto */
+            background: #1c1c1e; 
             border-radius: 15px; 
             cursor: crosshair; 
             touch-action: none;
             width: 100%;
             height: 250px;
-            border: 2px solid #3b82f6; /* Borde azul para resaltar */
+            border: 2px solid #3b82f6; 
         }
         
         .buttons { margin-top: 25px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -51,49 +50,58 @@
         .btn-clear { background: #2c2c2e; color: white; }
         .btn-save { background: #3b82f6; color: white; }
         
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        /* Estilo para el mensaje de carga */
-        #loading-overlay {
+        /* Pantalla de éxito final */
+        #success-screen {
             display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 1000;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            flex-direction: column;
+            padding-top: 50px;
+        }
+
+        #processing-msg {
+            display: none;
+            color: #3b82f6;
+            font-weight: bold;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
 
-<div id="loading-overlay">
-    <h2 style="color: #3b82f6;">PROCESANDO...</h2>
-    <p>Guardando contrato en Drive y Firebase</p>
-</div>
-
 <div class="container">
     <h2>ELITE CLEANERS <span>COMPANY</span></h2>
-    <p id="cliente-nombre">Cargando...</p>
 
-    <div class="legal-box">
-        <b style="color: #3b82f6; display: block; margin-bottom: 10px;">TÉRMINOS Y CONDICIONES</b>
-        Al firmar, el cliente acepta que <b>Elite Cleaners Company</b> realice los servicios acordados:<br><br>
-        1. <b>ACCESO:</b> Autoriza el acceso en la fecha y hora programada.<br>
-        2. <b>PAGO:</b> Pago completo al finalizar el servicio.<br>
-        3. <b>CALIDAD:</b> Trabajo profesional y garantizado.<br>
-        4. <b>MASCOTAS:</b> Bajo vigilancia del dueño. No limpiamos desechos biológicos.<br>
-        5. <b>FOTOS/VIDEOS:</b> Autoriza registro para control de calidad.<br>
-        6. <b>OBJETOS PESADOS:</b> No nos responsabilizamos por daños al mover muebles pesados.<br>
-        7. <b>NO CONTRATACIÓN:</b> Prohibido contratar al personal directamente por 12 meses. Multa: <b>$2,500 USD</b>.
+    <div id="main-content">
+        <p id="cliente-nombre">Cargando...</p>
+
+        <div class="legal-box">
+            <b style="color: #3b82f6; display: block; margin-bottom: 10px;">TÉRMINOS Y CONDICIONES</b>
+            Al firmar, el cliente acepta que <b>Elite Cleaners Company</b> realice los servicios acordados:<br><br>
+            1. <b>ACCESO:</b> Autoriza el acceso en la fecha y hora programada.<br>
+            2. <b>PAGO:</b> Pago completo al finalizar el servicio.<br>
+            3. <b>CALIDAD:</b> Trabajo profesional y garantizado.<br>
+            4. <b>MASCOTAS:</b> Bajo vigilancia del dueño. No limpiamos desechos biológicos.<br>
+            5. <b>FOTOS/VIDEOS:</b> Autoriza registro para control de calidad.<br>
+            6. <b>OBJETOS PESADOS:</b> No nos responsabilizamos por daños al mover muebles pesados.<br>
+            7. <b>NO CONTRATACIÓN:</b> Prohibido contratar al personal directamente por 12 meses. Multa: <b>$2,500 USD</b>.
+        </div>
+
+        <canvas id="signature-pad"></canvas>
+
+        <div id="processing-msg">PROCESANDO CONTRATO...</div>
+
+        <div class="buttons" id="action-buttons">
+            <button class="btn-clear" onclick="limpiar()">Borrar</button>
+            <button class="btn-save" id="btn-confirmar" onclick="procesarFirma()">Confirmar y Firmar</button>
+        </div>
     </div>
 
-    <canvas id="signature-pad"></canvas>
-
-    <div class="buttons">
-        <button class="btn-clear" id="btn-borrar" onclick="limpiar()">Borrar</button>
-        <button class="btn-save" id="btn-confirmar" onclick="procesarFirma()">Confirmar y Firmar</button>
+    <div id="success-screen">
+        <div style="font-size: 60px; margin-bottom: 20px;">✅</div>
+        <h3 style="color: #fff; font-size: 22px;">¡CONTRATO FIRMADO CON ÉXITO!</h3>
+        <p style="color: #8e8e93;">Se ha guardado una copia en nuestros registros de seguridad.</p>
+        <p style="color: #3b82f6; font-weight: bold; margin-top: 30px;">Ya puede cerrar esta pestaña.</p>
     </div>
 </div>
 
@@ -123,7 +131,7 @@
         canvas.width = canvas.offsetWidth * ratio;
         canvas.height = canvas.offsetHeight * ratio;
         ctx.scale(ratio, ratio);
-        ctx.strokeStyle = "#FFFFFF"; // TRAZO BLANCO sobre fondo oscuro
+        ctx.strokeStyle = "#FFFFFF"; 
         ctx.lineWidth = 3;
         ctx.lineJoin = "round";
         ctx.lineCap = "round";
@@ -148,31 +156,29 @@
     function limpiar() { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.beginPath(); }
 
     async function procesarFirma() {
-        document.getElementById('loading-overlay').style.display = 'flex';
         document.getElementById('btn-confirmar').disabled = true;
+        document.getElementById('processing-msg').style.display = 'block';
 
         try {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
-            // Cabecera PDF
+            // PDF Diseño
             doc.setFillColor(0, 0, 0);
             doc.rect(0, 0, 210, 40, 'F');
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(22);
             doc.text("ELITE CLEANERS COMPANY", 105, 25, { align: "center" });
 
-            // Cuerpo PDF
             doc.setTextColor(0, 0, 0);
             doc.setFontSize(12);
             doc.text(`Cliente: ${nombreCliente}`, 20, 60);
             doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, 70);
             
-            const legalParaPDF = "Terminos: 1. Acceso a propiedad. 2. Pago al finalizar. 3. Calidad garantizada. 4. Mascotas vigiladas. 5. Registro multimedia. 6. Muebles pesados bajo riesgo del cliente. 7. Clausula de No Contratacion Directa: Multa $2,500 USD.";
+            const legalParaPDF = "1. Acceso a propiedad. 2. Pago al finalizar. 3. Calidad garantizada. 4. Mascotas bajo vigilancia. 5. Registro multimedia. 6. Riesgo de muebles pesados. 7. Clausula No Contratacion Directa: Multa $2,500 USD.";
             doc.text(doc.splitTextToSize(legalParaPDF, 170), 20, 85);
 
-            // Imagen de la firma
-            // Convertimos la firma blanca a negra para el PDF (fondo blanco)
+            // Firma para PDF (Negra)
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
             const tCtx = tempCanvas.getContext('2d');
@@ -187,7 +193,7 @@
 
             const pdfBase64 = doc.output('datauristring').split(',')[1];
             
-            // 1. Enviar a Google Drive
+            // 1. Enviar a Drive
             await fetch("https://script.google.com/macros/s/AKfycbxhB-fw9qJGm1eJyF2EPDeXEWvO_4SYU47WDZdn_aszndEx-okNsUoUKFVcoPl_y1A/exec", {
                 method: 'POST',
                 mode: 'no-cors',
@@ -199,18 +205,18 @@
 
             // 2. Actualizar Firebase
             await db.collection("servicios").doc(idServicio).update({
-                estado: "pendiente",
                 firma_cliente: true,
                 fecha_firma: new Date().toISOString()
             });
 
-            // 3. REDIRECCIÓN CORRECTA (Evita el 404)
-            window.location.href = "https://rodrigodanielfranco94-png.github.io/EliteCleaners/admin.html";
+            // 3. MOSTRAR PANTALLA DE ÉXITO (Sin redirección)
+            document.getElementById('main-content').style.display = 'none';
+            document.getElementById('success-screen').style.display = 'flex';
 
         } catch (e) {
             alert("Error: " + e.message);
-            document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('btn-confirmar').disabled = false;
+            document.getElementById('processing-msg').style.display = 'none';
         }
     }
 </script>
