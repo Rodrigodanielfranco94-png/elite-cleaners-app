@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin - Control Total</title>
+    <title>Elite Admin - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -151,11 +151,7 @@
         <span class="label-text" style="color: #22c55e;">Resumen de Pagos</span>
         <table class="payroll-table">
             <thead>
-                <tr>
-                    <th>Staff</th>
-                    <th>Horas</th>
-                    <th>Total</th>
-                </tr>
+                <tr><th>Staff</th><th>Horas</th><th>Total</th></tr>
             </thead>
             <tbody id="lista-nomina"></tbody>
         </table>
@@ -180,15 +176,17 @@
         let todosLosServicios = [];
         let vistaActual = "pendiente";
 
-        // Función corregida con comillas invertidas obligatorias
+        // ==========================================
+        // FUNCIÓN DE CONTRATO ACTUALIZADA
+        // ==========================================
         function enviarContrato(id, telefono, cliente) {
-            if(!telefono) return alert("El cliente no tiene teléfono registrado.");
-            
-            // Link real de Netlify usando ${ }
-            const urlFirma = `https://sensational-lamington-de5c02.netlify.app/firmar.html?id=${id}&cliente=${encodeURIComponent(cliente)}`;
-            
-            // Mensaje optimizado usando ${ }
-            const mensaje = `Hola ${cliente}, es un placer saludarte de *Elite Cleaners Company*. 🌟%0A%0APara confirmar tu servicio, por favor revisa y firma nuestro acuerdo aquí:%0A%0A✍️ *[FIRMAR CONTRATO DE LIMPIEZA]*%0A${urlFirma}`;
+            if (!telefono) return alert("El cliente no tiene teléfono registrado.");
+
+            // CAMBIA 'TU-NUEVO-LINK' POR EL LINK DE NETLIFY
+            const urlBase = 'https://TU-NUEVO-LINK.netlify.app'; 
+            const urlFirma = `${urlBase}/firmar.html?id=${id}&cliente=${encodeURIComponent(cliente)}`;
+
+            const mensaje = `Hola ${cliente}, es un placer saludarte de *Elite Cleaners Company*. 🌟%0A%0APara confirmar tu servicio, por favor revisa y firma nuestro acuerdo de servicio en el siguiente enlace:%0A%0A${urlFirma}`;
 
             window.location.href = `https://wa.me/${telefono}?text=${mensaje}`;
         }
@@ -256,9 +254,9 @@
             const p = document.getElementById('reg-pago').value || 0;
             if(!n || !e) return alert("Faltan datos");
             if(id) {
-                db.collection("usuarios").doc(id).update({ nombre: n, email: e, pago_hora: p }).then(() => { alert("OK"); resetStaffForm(); });
+                db.collection("usuarios").doc(id).update({ nombre: n, email: e, pago_hora: p }).then(() => { resetStaffForm(); });
             } else {
-                db.collection("usuarios").add({ nombre: n, email: e, rol: "empleado", pago_hora: p }).then(() => { alert("OK"); resetStaffForm(); });
+                db.collection("usuarios").add({ nombre: n, email: e, rol: "empleado", pago_hora: p }).then(() => { resetStaffForm(); });
             }
         }
 
@@ -345,9 +343,9 @@
             db.collection("clientes").doc(cli_nombre).set({ nombre: cli_nombre, direccion: data.direccion, whatsapp: data.whatsapp });
             
             if (id) {
-                db.collection("servicios").doc(id).update(data).then(() => { alert("Guardado"); location.reload(); });
+                db.collection("servicios").doc(id).update(data).then(() => { location.reload(); });
             } else {
-                db.collection("servicios").add(data).then(() => { alert("Asignado"); location.reload(); });
+                db.collection("servicios").add(data).then(() => { location.reload(); });
             }
         }
 
@@ -416,18 +414,15 @@
 
         async function reiniciarHorasMes() {
             const completados = todosLosServicios.filter(s => s.estado === "completado");
-            if (completados.length === 0 || !confirm("¿Cerrar mes y borrar completados?")) return;
-            
+            if (completados.length === 0 || !confirm("¿Cerrar mes?")) return;
             const data = completados.map(s => ({ Cliente: s.cliente, Fecha: s.fecha, Tiempo: calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).texto }));
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Cierre");
-            XLSX.writeFile(wb, "Elite_Reporte.xlsx");
-
+            XLSX.writeFile(wb, "Reporte_Elite.xlsx");
             const batch = db.batch();
             completados.forEach(s => batch.delete(db.collection("servicios").doc(s.id)));
             await batch.commit();
-            alert("Mes cerrado.");
         }
 
         function abrirChat(num) { if(num) window.location.href = `sms:${num}`; }
@@ -441,7 +436,7 @@
             document.getElementById('reg-pago').value = p;
             document.getElementById('btn-staff-main').innerText = "ACTUALIZAR STAFF";
         }
-        function borrarStaff(id, n) { if(confirm("¿Eliminar a " + n + "?")) db.collection("usuarios").doc(id).delete(); }
+        function borrarStaff(id, n) { if(confirm("¿Eliminar?")) db.collection("usuarios").doc(id).delete(); }
         
         function editar(id, s) {
             document.getElementById('edit-id').value = id;
