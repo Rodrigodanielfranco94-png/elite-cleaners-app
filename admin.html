@@ -177,19 +177,17 @@
         let vistaActual = "pendiente";
 
         // ==========================================
-        // FUNCIÓN DE CONTRATO CORREGIDA
+        // FUNCIÓN DE CONTRATO CORREGIDA (V4)
         // ==========================================
         function enviarContrato(id, telefono, cliente) {
             if (!telefono) return alert("El cliente no tiene teléfono registrado.");
 
-            // 1. URL DE TU PROYECTO DE ADMIN (Donde SI está firmar.html)
-            const urlBase = 'https://elite-cleaners-app.netlify.app'; 
-            const urlFirma = `${urlBase}/firmar.html?id=${id}&cliente=${encodeURIComponent(cliente)}`;
+            // URL CORREGIDA: Apunta al sitio elite-cleaners-contratos que tienes activo en Netlify.
+            // Asegúrate de que el archivo firmar.html esté en la raíz del repositorio de GitHub.
+            const urlFirma = `https://elite-cleaners-contratos.netlify.app/firmar.html?id=${id}&cliente=${encodeURIComponent(cliente)}`;
 
-            // 2. Mensaje Profesional
-            const mensaje = `Hola ${cliente}, es un placer saludarte de *Elite Cleaners Company*. 🌟%0A%0APara confirmar tu servicio, por favor revisa y firma nuestro acuerdo aquí:%0A%0A✍️ [FIRMAR CONTRATO DE LIMPIEZA]%0A${urlFirma}`;
+            const mensaje = `Hola ${cliente}, es un placer saludarte de *Elite Cleaners Company*. 🌟%0A%0APara confirmar tu servicio, por favor revisa y firma nuestro acuerdo aquí:%0A%0A✍️ *[FIRMAR CONTRATO DE LIMPIEZA]*%0A${urlFirma}`;
 
-            // 3. Envío a WhatsApp
             window.location.href = `https://wa.me/${telefono}?text=${mensaje}`;
         }
 
@@ -465,4 +463,3 @@
     </script>
 </body>
 </html>
-
