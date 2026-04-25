@@ -13,7 +13,7 @@
         h1 { font-style: italic; font-weight: 900; font-size: 22px; text-transform: uppercase; margin-bottom: 20px; }
         h1 span { color: #3b82f6; }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: #1c1c1e; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #2c2c2e; cursor: pointer; }
+        .stat-card { background: #1c1c1e; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #2c2c2e; cursor: pointer; transition: 0.3s; }
         .stat-card.active { border-color: #3b82f6; background: #1a2638; }
         .stat-card h2 { margin: 0; font-size: 28px; color: #3b82f6; }
         .stat-card p { margin: 5px 0 0 0; font-size: 10px; color: #8e8e93; text-transform: uppercase; }
@@ -205,17 +205,36 @@
         let vistaActual = "pendiente";
 
         // ==========================================
-        // FUNCIONES DE CONTRATO (ENVIAR Y VER)
+        // FUNCIONES DE VISTA Y CONTRATO CORREGIDAS
         // ==========================================
+
+        function cambiarVista(v) {
+            vistaActual = v;
+            
+            // Cambiar visualmente el botón activo
+            document.getElementById('btn-pendientes').classList.remove('active');
+            document.getElementById('btn-completados').classList.remove('active');
+            
+            if (v === 'pendiente') {
+                document.getElementById('btn-pendientes').classList.add('active');
+            } else {
+                document.getElementById('btn-completados').classList.add('active');
+            }
+            
+            // Re-dibujar pantalla sin volver a descargar de Firebase
+            renderHistorial();
+        }
+
         function enviarContrato(id, telefono, cliente) {
             if (!telefono) return alert("El cliente no tiene teléfono registrado.");
 
+            // ==========================================
             // REEMPLAZA ESTA URL CON TU LINK DE NETLIFY
+            // ==========================================
             const urlBase = 'https://TU-LINK-DE-NETLIFY.netlify.app'; 
+            
             const urlFirma = `${urlBase}/firmar.html?id=${id}&cliente=${encodeURIComponent(cliente)}`;
-
             const mensaje = `Hola ${cliente}, es un placer saludarte de *Elite Cleaners Company*. 🌟%0A%0APara confirmar tu servicio, por favor revisa y firma nuestro acuerdo de servicio en el siguiente enlace:%0A%0A${urlFirma}`;
-
             window.location.href = `https://wa.me/${telefono}?text=${mensaje}`;
         }
 
@@ -225,7 +244,6 @@
             
             document.getElementById('modal-cliente').innerText = "Cliente: " + servicio.cliente;
             
-            // Formatear la fecha
             let fechaTexto = "Fecha desconocida";
             if (servicio.fecha_firma) {
                 const fechaObj = new Date(servicio.fecha_firma);
@@ -233,12 +251,11 @@
             }
             document.getElementById('modal-fecha').innerText = "Firmado el: " + fechaTexto;
             
-            // Cargar la imagen de la firma
             if (servicio.firma_imagen) {
                 document.getElementById('modal-img-firma').src = servicio.firma_imagen;
             } else {
                 document.getElementById('modal-img-firma').src = "";
-                document.getElementById('modal-img-firma').alt = "Firma no disponible (Versión antigua)";
+                document.getElementById('modal-img-firma').alt = "Firma no disponible";
             }
             
             document.getElementById('modal-firma').style.display = 'block';
@@ -403,61 +420,70 @@
             }
         }
 
-        function cargarHistorial() {
-            db.collection("servicios").onSnapshot(snap => {
-                const h = document.getElementById('historial');
-                h.innerHTML = "";
-                let p = 0; let c = 0;
-                todosLosServicios = [];
-                snap.forEach(doc => {
-                    const s = doc.data();
-                    if(s.estado !== "completado") p++; else c++;
-                    todosLosServicios.push({ id: doc.id, ...s });
-                });
-                todosLosServicios.sort((a, b) => (a.fecha + " " + a.hora).localeCompare(b.fecha + " " + b.hora));
-                
-                todosLosServicios.forEach(s => {
-                    if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
-                        const millas = calcularMillas(s.gps_inicio, s.gps_fin);
-                        const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
-                        
-                        // LÓGICA DEL BOTÓN DE CONTRATO (Azul si no ha firmado, Verde si ya firmó)
-                        let btnContratoHTML = '';
-                        if (s.firma_cliente === true) {
-                            btnContratoHTML = `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">Ver Firma</button>`;
-                        } else {
-                            btnContratoHTML = `<button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Contrato</button>`;
-                        }
+        // ==========================================
+        // OPTIMIZACIÓN: CARGAR UNA VEZ, RENDERIZAR RÁPIDO
+        // ==========================================
+        
+        // 1. Escuchar la base de datos UNA SOLA VEZ
+        db.collection("servicios").onSnapshot(snap => {
+            let p = 0; let c = 0;
+            todosLosServicios = [];
+            snap.forEach(doc => {
+                const s = doc.data();
+                if(s.estado !== "completado") p++; else c++;
+                todosLosServicios.push({ id: doc.id, ...s });
+            });
+            todosLosServicios.sort((a, b) => (a.fecha + " " + a.hora).localeCompare(b.fecha + " " + b.hora));
+            
+            document.getElementById('count-pendientes').innerText = p;
+            document.getElementById('count-completados').innerText = c;
+            
+            renderHistorial();
+            generarNomina();
+        });
 
-                        const card = document.createElement('div');
-                        card.className = 'card-servicio';
-                        card.innerHTML = `
-                            <button class="chat-btn" onclick="abrirChat('${s.whatsapp}')">💬</button>
-                            <div style="font-size:10px; color:#3b82f6; font-weight:bold; text-transform:uppercase;">${s.tipo}</div>
-                            <h3>${s.cliente}</h3>
-                            <p>📅 <b>${s.fecha}</b> | ⏰ <b>${s.hora}</b></p>
-                            <p>📍 ${s.direccion}</p>
-                            <p>👤 ${s.empleado_nombre_2 ? s.empleado_nombre+' & '+s.empleado_nombre_2 : s.empleado_nombre}</p>
-                            <div class="time-box">
-                                <div class="time-row"><b>Inicio:</b> <span>${s.hora_inicio}</span></div>
-                                <div class="time-row"><b>Fin:</b> <span>${s.hora_fin}</span></div>
-                                <div class="time-row total-time-row"><b>Tiempo:</b> <span>${infoTiempo.texto}</span></div>
-                                <div class="time-row" style="border-top:1px solid #2c2c2e; margin-top:5px; padding-top:5px;">
-                                    <b>Millas:</b> <span style="color:#f59e0b">${millas} mi</span>
-                                </div>
-                            </div>
-                            <div class="action-buttons">
-                                <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">${s.estado === 'completado' ? 'Abrir' : 'Terminar'}</button>
-                                ${btnContratoHTML}
-                                <button class="btn-action btn-edit" onclick="editar('${s.id}', ${JSON.stringify(s).replace(/"/g, '&quot;')})">Edit</button>
-                                <button class="btn-action btn-delete" onclick="borrar('${s.id}')">X</button>
-                            </div>`;
-                        h.appendChild(card);
+        // 2. Función dedicada para dibujar la pantalla rápidamente
+        function renderHistorial() {
+            const h = document.getElementById('historial');
+            h.innerHTML = "";
+            
+            todosLosServicios.forEach(s => {
+                if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
+                    const millas = calcularMillas(s.gps_inicio, s.gps_fin);
+                    const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
+                    
+                    let btnContratoHTML = '';
+                    if (s.firma_cliente === true) {
+                        btnContratoHTML = `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">Ver Firma</button>`;
+                    } else {
+                        btnContratoHTML = `<button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Contrato</button>`;
                     }
-                });
-                document.getElementById('count-pendientes').innerText = p;
-                document.getElementById('count-completados').innerText = c;
-                generarNomina();
+
+                    const card = document.createElement('div');
+                    card.className = 'card-servicio';
+                    card.innerHTML = `
+                        <button class="chat-btn" onclick="abrirChat('${s.whatsapp}')">💬</button>
+                        <div style="font-size:10px; color:#3b82f6; font-weight:bold; text-transform:uppercase;">${s.tipo}</div>
+                        <h3>${s.cliente}</h3>
+                        <p>📅 <b>${s.fecha}</b> | ⏰ <b>${s.hora}</b></p>
+                        <p>📍 ${s.direccion}</p>
+                        <p>👤 ${s.empleado_nombre_2 ? s.empleado_nombre+' & '+s.empleado_nombre_2 : s.empleado_nombre}</p>
+                        <div class="time-box">
+                            <div class="time-row"><b>Inicio:</b> <span>${s.hora_inicio}</span></div>
+                            <div class="time-row"><b>Fin:</b> <span>${s.hora_fin}</span></div>
+                            <div class="time-row total-time-row"><b>Tiempo:</b> <span>${infoTiempo.texto}</span></div>
+                            <div class="time-row" style="border-top:1px solid #2c2c2e; margin-top:5px; padding-top:5px;">
+                                <b>Millas:</b> <span style="color:#f59e0b">${millas} mi</span>
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">${s.estado === 'completado' ? 'Abrir' : 'Terminar'}</button>
+                            ${btnContratoHTML}
+                            <button class="btn-action btn-edit" onclick="editar('${s.id}', ${JSON.stringify(s).replace(/"/g, '&quot;')})">Edit</button>
+                            <button class="btn-action btn-delete" onclick="borrar('${s.id}')">X</button>
+                        </div>`;
+                    h.appendChild(card);
+                }
             });
         }
 
@@ -491,7 +517,7 @@
         function abrirChat(num) { if(num) window.location.href = `sms:${num}`; }
         function marcar(id, est) { db.collection("servicios").doc(id).update({ estado: est }); }
         function borrar(id) { if(confirm("¿Borrar?")) db.collection("servicios").doc(id).delete(); }
-        function cambiarVista(v) { vistaActual = v; cargarHistorial(); }
+        
         function editarStaff(id, n, e, p) {
             document.getElementById('edit-staff-id').value = id;
             document.getElementById('reg-nombre').value = n;
@@ -507,9 +533,9 @@
             document.getElementById('direccion').value = s.direccion;
             document.getElementById('whatsapp').value = s.whatsapp || "";
             document.getElementById('search-empleado').value = s.empleado_nombre;
-            document.getElementById('email-empleado').value = s.email_empleado || "";
+            document.getElementById('email-empleado').value = s.empleado_email || ""; // Corregido
             document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || "";
-            document.getElementById('email-empleado-2').value = s.email_empleado_2 || "";
+            document.getElementById('email-empleado-2').value = s.empleado_email_2 || ""; // Corregido
             document.getElementById('fecha').value = s.fecha;
             document.getElementById('hora').value = s.hora;
             document.getElementById('notas').value = s.notas;
@@ -521,8 +547,6 @@
             document.getElementById('cancel-edit').style.display = "block";
             window.scrollTo({top: 0, behavior: 'smooth'});
         }
-
-        cargarHistorial();
     </script>
 </body>
 </html>
