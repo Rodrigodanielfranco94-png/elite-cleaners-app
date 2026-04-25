@@ -10,16 +10,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
-        /* Diseño Elegante en Fondo Negro */
         body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px; text-align: center; }
         .container { max-width: 500px; margin: auto; }
         
-        h2 { font-style: italic; font-weight: 900; color: #fff; text-transform: uppercase; margin-bottom: 5px; }
-        h2 span { color: #3b82f6; } /* "Company" en azul */
+        h2 { font-style: italic; font-weight: 900; color: #fff; text-transform: uppercase; margin-bottom: 5px; font-size: 24px; }
+        h2 span { color: #3b82f6; }
         
         p { color: #8e8e93; font-size: 14px; margin-bottom: 20px; }
         
-        /* Cuadro de Texto Legal Completo y Deslizable */
         .legal-box { 
             background: #1c1c1e; 
             padding: 18px; 
@@ -29,22 +27,21 @@
             line-height: 1.6; 
             border: 1px solid #2c2c2e;
             margin-bottom: 25px;
-            max-height: 250px;
+            max-height: 220px;
             overflow-y: auto;
             color: #d1d5db;
         }
-        .legal-box strong { color: #3b82f6; text-transform: uppercase; display: block; margin-bottom: 10px; font-size: 14px; }
         .legal-box b { color: #fff; }
 
-        /* Área de Firma (Blanca para contraste) */
+        /* CUADRO DE FIRMA NEGRO PROFESIONAL */
         #signature-pad { 
-            background: white; 
+            background: #1c1c1e; /* Fondo oscuro igual al resto */
             border-radius: 15px; 
             cursor: crosshair; 
             touch-action: none;
             width: 100%;
             height: 250px;
-            border: 2px solid #2c2c2e;
+            border: 2px solid #3b82f6; /* Borde azul para resaltar */
         }
         
         .buttons { margin-top: 25px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -55,31 +52,41 @@
         .btn-save { background: #3b82f6; color: white; }
         
         button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Estilo para el mensaje de carga */
+        #loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
     </style>
 </head>
 <body>
 
+<div id="loading-overlay">
+    <h2 style="color: #3b82f6;">PROCESANDO...</h2>
+    <p>Guardando contrato en Drive y Firebase</p>
+</div>
+
 <div class="container">
     <h2>ELITE CLEANERS <span>COMPANY</span></h2>
-    <p id="cliente-nombre">Cargando datos del contrato...</p>
+    <p id="cliente-nombre">Cargando...</p>
 
     <div class="legal-box">
-        <strong>TÉRMINOS Y CONDICIONES DEL SERVICIO</strong>
-        Al firmar este documento, el cliente acepta formalmente los siguientes términos para los servicios de limpieza prestados por <b>Elite Cleaners Company</b>:<br><br>
-        
-        <b>1. ACCESO A LA PROPIEDAD:</b> El cliente autoriza el acceso a la propiedad en la fecha y hora programada.<br><br>
-        
-        <b>2. PAGO DEL SERVICIO:</b> El cliente se compromete a realizar el pago completo al finalizar el servicio.<br><br>
-        
-        <b>3. CALIDAD Y PROFESIONALISMO:</b> Elite Cleaners Company se compromete a realizar un trabajo profesional y de calidad.<br><br>
-        
-        <b>4. MASCOTAS Y MENORES:</b> Las mascotas deben estar bajo vigilancia del dueño. No limpiamos desechos biológicos.<br><br>
-        
-        <b>5. FOTOS Y VIDEOS:</b> El cliente autoriza fotos/videos como registro de seguridad y calidad.<br><br>
-        
-        <b>6. OBJETOS PESADOS:</b> No nos responsabilizamos por daños al mover muebles pesados (nevera/estufa).<br><br>
-        
-        <b>7. NO CONTRATACIÓN DIRECTA:</b> Prohibido contratar al personal directamente por 12 meses. Multa: <b>$2,500 USD</b>.
+        <b style="color: #3b82f6; display: block; margin-bottom: 10px;">TÉRMINOS Y CONDICIONES</b>
+        Al firmar, el cliente acepta que <b>Elite Cleaners Company</b> realice los servicios acordados:<br><br>
+        1. <b>ACCESO:</b> Autoriza el acceso en la fecha y hora programada.<br>
+        2. <b>PAGO:</b> Pago completo al finalizar el servicio.<br>
+        3. <b>CALIDAD:</b> Trabajo profesional y garantizado.<br>
+        4. <b>MASCOTAS:</b> Bajo vigilancia del dueño. No limpiamos desechos biológicos.<br>
+        5. <b>FOTOS/VIDEOS:</b> Autoriza registro para control de calidad.<br>
+        6. <b>OBJETOS PESADOS:</b> No nos responsabilizamos por daños al mover muebles pesados.<br>
+        7. <b>NO CONTRATACIÓN:</b> Prohibido contratar al personal directamente por 12 meses. Multa: <b>$2,500 USD</b>.
     </div>
 
     <canvas id="signature-pad"></canvas>
@@ -91,7 +98,6 @@
 </div>
 
 <script>
-    // 1. Configuración Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
         authDomain: "elite-cleaners-app.firebaseapp.com",
@@ -103,39 +109,27 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Obtener parámetros de la URL
     const urlParams = new URLSearchParams(window.location.search);
     const idServicio = urlParams.get('id');
     const nombreCliente = urlParams.get('cliente') || "Cliente";
-    
     document.getElementById('cliente-nombre').innerText = "Contrato para: " + nombreCliente;
 
-    // 2. Configuración del Canvas (Firma)
     const canvas = document.getElementById('signature-pad');
     const ctx = canvas.getContext('2d');
     let dibujando = false;
 
-    // Ajustar resolución del canvas para pantallas retina
     function ajustarCanvas() {
         const ratio = window.devicePixelRatio || 1;
         canvas.width = canvas.offsetWidth * ratio;
         canvas.height = canvas.offsetHeight * ratio;
         ctx.scale(ratio, ratio);
-        
-        ctx.strokeStyle = "#000"; // Tinta negra
+        ctx.strokeStyle = "#FFFFFF"; // TRAZO BLANCO sobre fondo oscuro
         ctx.lineWidth = 3;
         ctx.lineJoin = "round";
         ctx.lineCap = "round";
     }
     window.addEventListener('resize', ajustarCanvas);
     ajustarCanvas();
-
-    // Eventos de dibujo (Mouse y Touch)
-    const eventos = {
-        start: ['mousedown', 'touchstart'],
-        move: ['mousemove', 'touchmove'],
-        end: ['mouseup', 'touchend']
-    };
 
     function obtenerPos(e) {
         const rect = canvas.getBoundingClientRect();
@@ -144,99 +138,81 @@
         return { x: clientX - rect.left, y: clientY - rect.top };
     }
 
-    canvas.addEventListener(eventos.start[0], (e) => { dibujando = true; ctx.beginPath(); const pos = obtenerPos(e); ctx.moveTo(pos.x, pos.y); });
-    canvas.addEventListener(eventos.start[1], (e) => { dibujando = true; ctx.beginPath(); const pos = obtenerPos(e); ctx.moveTo(pos.x, pos.y); e.preventDefault(); });
-
-    canvas.addEventListener(eventos.move[0], (e) => { if (!dibujando) return; const pos = obtenerPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); });
-    canvas.addEventListener(eventos.move[1], (e) => { if (!dibujando) return; const pos = obtenerPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); e.preventDefault(); });
-
-    window.addEventListener(eventos.end[0], () => { dibujando = false; });
-    window.addEventListener(eventos.end[1], () => { dibujando = false; });
+    canvas.addEventListener('mousedown', (e) => { dibujando = true; ctx.beginPath(); const pos = obtenerPos(e); ctx.moveTo(pos.x, pos.y); });
+    canvas.addEventListener('touchstart', (e) => { dibujando = true; ctx.beginPath(); const pos = obtenerPos(e); ctx.moveTo(pos.x, pos.y); e.preventDefault(); });
+    canvas.addEventListener('mousemove', (e) => { if (!dibujando) return; const pos = obtenerPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); });
+    canvas.addEventListener('touchmove', (e) => { if (!dibujando) return; const pos = obtenerPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); e.preventDefault(); });
+    window.addEventListener('mouseup', () => { dibujando = false; });
+    window.addEventListener('touchend', () => { dibujando = false; });
 
     function limpiar() { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.beginPath(); }
 
-    // 3. PROCESO TOTALMENTE AUTOMATIZADO
     async function procesarFirma() {
-        const btnC = document.getElementById('btn-confirmar');
-        const btnB = document.getElementById('btn-borrar');
-        
-        // Deshabilitar botones para evitar doble clic
-        btnC.disabled = true;
-        btnB.disabled = true;
-        btnC.innerText = "ENVIANDO CONTRATO...";
-
-        // Verificar si hay firma (básico)
-        // Podríamos añadir una validación real aquí, pero para agilizar:
+        document.getElementById('loading-overlay').style.display = 'flex';
+        document.getElementById('btn-confirmar').disabled = true;
 
         try {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
-            // --- DISEÑO DEL PDF PROFESIONAL ---
-            doc.setFillColor(59, 130, 246); // Color azul Elite
+            // Cabecera PDF
+            doc.setFillColor(0, 0, 0);
             doc.rect(0, 0, 210, 40, 'F');
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(22);
-            doc.setFont(undefined, 'bold');
             doc.text("ELITE CLEANERS COMPANY", 105, 25, { align: "center" });
 
+            // Cuerpo PDF
             doc.setTextColor(0, 0, 0);
-            doc.setFontSize(16);
-            doc.text("CONTRATO DE SERVICIO LEGAL", 105, 55, { align: "center" });
-
             doc.setFontSize(12);
-            doc.setFont(undefined, 'normal');
-            doc.text(`Cliente: ${nombreCliente}`, 20, 75);
-            doc.text(`Fecha de Firma: ${new Date().toLocaleDateString()}`, 20, 85);
-            doc.text(`ID de Servicio: ${idServicio}`, 20, 95);
-
-            doc.setFontSize(10);
-            doc.text("El cliente acepta los siguientes Términos y Condiciones:", 20, 110);
+            doc.text(`Cliente: ${nombreCliente}`, 20, 60);
+            doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, 70);
             
-            // Texto legal completo para el PDF
-            const legalText = "1. ACCESO A LA PROPIEDAD: Autoriza el acceso en la fecha y hora programada.\n2. PAGO: Se compromete a realizar el pago al finalizar.\n3. CALIDAD: Trabajo profesional y de calidad.\n4. MASCOTAS/MENORES: Vigilancia del dueño.\n5. FOTOS/VIDEOS: Registro de seguridad/calidad.\n6. OBJETOS PESADOS: No responsabilizamos por daños al mover.\n7. NO CONTRATACIÓN DIRECTA: Prohibido contratar personal directamente por 12 meses. Multa: $2,500 USD.";
-            
-            const splitText = doc.splitTextToSize(legalText, 170);
-            doc.text(splitText, 20, 118);
+            const legalParaPDF = "Terminos: 1. Acceso a propiedad. 2. Pago al finalizar. 3. Calidad garantizada. 4. Mascotas vigiladas. 5. Registro multimedia. 6. Muebles pesados bajo riesgo del cliente. 7. Clausula de No Contratacion Directa: Multa $2,500 USD.";
+            doc.text(doc.splitTextToSize(legalParaPDF, 170), 20, 85);
 
-            // Añadir la Firma
-            const imgData = canvas.toDataURL('image/png');
-            doc.text("FIRMA FORMAL DEL CLIENTE:", 20, 170);
-            doc.addImage(imgData, 'PNG', 20, 175, 60, 30);
+            // Imagen de la firma
+            // Convertimos la firma blanca a negra para el PDF (fondo blanco)
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
+            const tCtx = tempCanvas.getContext('2d');
+            tCtx.drawImage(canvas, 0, 0);
+            tCtx.globalCompositeOperation = 'difference';
+            tCtx.fillStyle = 'white';
+            tCtx.fillRect(0,0,tempCanvas.width,tempCanvas.height);
 
-            // --- ENVÍO AUTOMÁTICO A GOOGLE DRIVE (TU URL) ---
+            const imgData = tempCanvas.toDataURL('image/png');
+            doc.text("FIRMA DEL CLIENTE:", 20, 150);
+            doc.addImage(imgData, 'PNG', 20, 155, 70, 35);
+
             const pdfBase64 = doc.output('datauristring').split(',')[1];
-            const urlScript = "https://script.google.com/macros/s/AKfycbxhB-fw9qJGm1eJyF2EPDeXEWvO_4SYU47WDZdn_aszndEx-okNsUoUKFVcoPl_y1A/exec";
             
-            await fetch(urlScript, {
+            // 1. Enviar a Google Drive
+            await fetch("https://script.google.com/macros/s/AKfycbxhB-fw9qJGm1eJyF2EPDeXEWvO_4SYU47WDZdn_aszndEx-okNsUoUKFVcoPl_y1A/exec", {
                 method: 'POST',
-                mode: 'no-cors', // Evita errores de CORS
+                mode: 'no-cors',
                 body: JSON.stringify({
                     pdf: pdfBase64,
-                    nombreArchivo: `Contrato_Elite_${nombreCliente.replace(/\s+/g, '_')}_${Date.now()}.pdf`
+                    nombreArchivo: `Contrato_${nombreCliente.replace(/\s+/g, '_')}.pdf`
                 })
             });
 
-            // --- ACTUALIZACIÓN DE FIREBASE (Registro en base de datos) ---
+            // 2. Actualizar Firebase
             await db.collection("servicios").doc(idServicio).update({
-                firma_realizada: true,
-                contrato_firmado_pdf: true,
-                fecha_firma: firebase.firestore.FieldValue.serverTimestamp()
+                estado: "pendiente",
+                firma_cliente: true,
+                fecha_firma: new Date().toISOString()
             });
 
-            // --- REDIRECCIÓN AUTOMÁTICA FINAL (Sácarlo de esta página) ---
-            // Reemplaza esta URL por tu sitio web principal si prefieres
-            window.location.replace("https://rodri-franco.github.io/EliteCleaners/admin.html");
+            // 3. REDIRECCIÓN CORRECTA (Evita el 404)
+            window.location.href = "https://rodrigodanielfranco94-png.github.io/EliteCleaners/admin.html";
 
-        } catch (error) {
-            console.error("Error en el proceso:", error);
-            alert("Hubo un problema al enviar el contrato. Por favor, intente borrar y firmar nuevamente.");
-            btnC.disabled = false;
-            btnB.disabled = false;
-            btnC.innerText = "Confirmar y Firmar";
+        } catch (e) {
+            alert("Error: " + e.message);
+            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('btn-confirmar').disabled = false;
         }
     }
 </script>
-
 </body>
 </html>
