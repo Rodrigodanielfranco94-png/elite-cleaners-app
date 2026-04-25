@@ -204,34 +204,20 @@
         let todosLosServicios = [];
         let vistaActual = "pendiente";
 
-        // ==========================================
-        // FUNCIONES DE VISTA Y CONTRATO CORREGIDAS
-        // ==========================================
-
         function cambiarVista(v) {
             vistaActual = v;
-            
-            // Cambiar visualmente el botón activo
             document.getElementById('btn-pendientes').classList.remove('active');
             document.getElementById('btn-completados').classList.remove('active');
-            
-            if (v === 'pendiente') {
-                document.getElementById('btn-pendientes').classList.add('active');
-            } else {
-                document.getElementById('btn-completados').classList.add('active');
-            }
-            
-            // Re-dibujar pantalla sin volver a descargar de Firebase
+            if (v === 'pendiente') document.getElementById('btn-pendientes').classList.add('active');
+            else document.getElementById('btn-completados').classList.add('active');
             renderHistorial();
         }
 
         function enviarContrato(id, telefono, cliente) {
             if (!telefono) return alert("El cliente no tiene teléfono registrado.");
-
-            // ==========================================
-            // REEMPLAZA ESTA URL CON TU LINK DE NETLIFY
-            // ==========================================
-            const urlBase = 'https://TU-LINK-DE-NETLIFY.netlify.app'; 
+            
+            // LINK DE NETLIFY ACTUALIZADO
+            const urlBase = 'https://elite-cleaners-contratos.netlify.app'; 
             
             const urlFirma = `${urlBase}/firmar.html?id=${id}&cliente=${encodeURIComponent(cliente)}`;
             const mensaje = `Hola ${cliente}, es un placer saludarte de *Elite Cleaners Company*. 🌟%0A%0APara confirmar tu servicio, por favor revisa y firma nuestro acuerdo de servicio en el siguiente enlace:%0A%0A${urlFirma}`;
@@ -241,23 +227,14 @@
         function verFirma(id) {
             const servicio = todosLosServicios.find(s => s.id === id);
             if(!servicio) return;
-            
             document.getElementById('modal-cliente').innerText = "Cliente: " + servicio.cliente;
-            
             let fechaTexto = "Fecha desconocida";
             if (servicio.fecha_firma) {
-                const fechaObj = new Date(servicio.fecha_firma);
-                fechaTexto = fechaObj.toLocaleDateString() + " a las " + fechaObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const f = new Date(servicio.fecha_firma);
+                fechaTexto = f.toLocaleDateString() + " " + f.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             }
             document.getElementById('modal-fecha').innerText = "Firmado el: " + fechaTexto;
-            
-            if (servicio.firma_imagen) {
-                document.getElementById('modal-img-firma').src = servicio.firma_imagen;
-            } else {
-                document.getElementById('modal-img-firma').src = "";
-                document.getElementById('modal-img-firma').alt = "Firma no disponible";
-            }
-            
+            document.getElementById('modal-img-firma').src = servicio.firma_imagen || "";
             document.getElementById('modal-firma').style.display = 'block';
         }
 
@@ -323,11 +300,8 @@
             const e = document.getElementById('reg-email').value.toLowerCase().trim();
             const p = document.getElementById('reg-pago').value || 0;
             if(!n || !e) return alert("Faltan datos");
-            if(id) {
-                db.collection("usuarios").doc(id).update({ nombre: n, email: e, pago_hora: p }).then(() => { resetStaffForm(); });
-            } else {
-                db.collection("usuarios").add({ nombre: n, email: e, rol: "empleado", pago_hora: p }).then(() => { resetStaffForm(); });
-            }
+            if(id) db.collection("usuarios").doc(id).update({ nombre: n, email: e, pago_hora: p }).then(resetStaffForm);
+            else db.collection("usuarios").add({ nombre: n, email: e, rol: "empleado", pago_hora: p }).then(resetStaffForm);
         }
 
         function resetStaffForm() {
@@ -393,14 +367,13 @@
                 empleado_nombre: document.getElementById('search-empleado').value,
                 empleado_email: document.getElementById('email-empleado').value,
                 empleado_nombre_2: document.getElementById('search-empleado-2').value || "",
-                empleado_email_2: document.getElementById('email-empleado-2').value || "",
+                empleado_email_2: document.getElementById('email-empleado_2').value || "",
                 fecha: document.getElementById('fecha').value,
                 hora: document.getElementById('hora').value,
                 notas: document.getElementById('notas').value,
                 tipo: tipoSeleccionado,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
-
             if(id) {
                 data.hora_inicio = document.getElementById('hora_inicio_real').value || "--:--";
                 data.hora_fin = document.getElementById('hora_fin_real').value || "--:--";
@@ -410,21 +383,11 @@
                 data.hora_fin = "--:--";
                 data.firma_cliente = false;
             }
-
             db.collection("clientes").doc(cli_nombre).set({ nombre: cli_nombre, direccion: data.direccion, whatsapp: data.whatsapp });
-            
-            if (id) {
-                db.collection("servicios").doc(id).update(data).then(() => { location.reload(); });
-            } else {
-                db.collection("servicios").add(data).then(() => { location.reload(); });
-            }
+            if (id) db.collection("servicios").doc(id).update(data).then(() => location.reload());
+            else db.collection("servicios").add(data).then(() => location.reload());
         }
 
-        // ==========================================
-        // OPTIMIZACIÓN: CARGAR UNA VEZ, RENDERIZAR RÁPIDO
-        // ==========================================
-        
-        // 1. Escuchar la base de datos UNA SOLA VEZ
         db.collection("servicios").onSnapshot(snap => {
             let p = 0; let c = 0;
             todosLosServicios = [];
@@ -434,30 +397,21 @@
                 todosLosServicios.push({ id: doc.id, ...s });
             });
             todosLosServicios.sort((a, b) => (a.fecha + " " + a.hora).localeCompare(b.fecha + " " + b.hora));
-            
             document.getElementById('count-pendientes').innerText = p;
             document.getElementById('count-completados').innerText = c;
-            
             renderHistorial();
             generarNomina();
         });
 
-        // 2. Función dedicada para dibujar la pantalla rápidamente
         function renderHistorial() {
             const h = document.getElementById('historial');
             h.innerHTML = "";
-            
             todosLosServicios.forEach(s => {
                 if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
-                    const millas = calcularMillas(s.gps_inicio, s.gps_fin);
                     const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
-                    
-                    let btnContratoHTML = '';
-                    if (s.firma_cliente === true) {
-                        btnContratoHTML = `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">Ver Firma</button>`;
-                    } else {
-                        btnContratoHTML = `<button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Contrato</button>`;
-                    }
+                    const btnContrato = s.firma_cliente === true ? 
+                        `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">Ver Firma</button>` :
+                        `<button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Contrato</button>`;
 
                     const card = document.createElement('div');
                     card.className = 'card-servicio';
@@ -472,13 +426,10 @@
                             <div class="time-row"><b>Inicio:</b> <span>${s.hora_inicio}</span></div>
                             <div class="time-row"><b>Fin:</b> <span>${s.hora_fin}</span></div>
                             <div class="time-row total-time-row"><b>Tiempo:</b> <span>${infoTiempo.texto}</span></div>
-                            <div class="time-row" style="border-top:1px solid #2c2c2e; margin-top:5px; padding-top:5px;">
-                                <b>Millas:</b> <span style="color:#f59e0b">${millas} mi</span>
-                            </div>
                         </div>
                         <div class="action-buttons">
                             <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">${s.estado === 'completado' ? 'Abrir' : 'Terminar'}</button>
-                            ${btnContratoHTML}
+                            ${btnContrato}
                             <button class="btn-action btn-edit" onclick="editar('${s.id}', ${JSON.stringify(s).replace(/"/g, '&quot;')})">Edit</button>
                             <button class="btn-action btn-delete" onclick="borrar('${s.id}')">X</button>
                         </div>`;
@@ -495,9 +446,7 @@
                 todosLosServicios.filter(s => s.estado === "completado" && (s.empleado_email === emp.email || s.empleado_email_2 === emp.email)).forEach(s => {
                     min += calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).minutos;
                 });
-                if(min > 0) {
-                    tabla.innerHTML += `<tr><td><b>${emp.nombre}</b></td><td>${Math.floor(min/60)}h ${min%60}m</td><td class="pay-amount">$${((min/60)*emp.pago_hora).toFixed(2)}</td></tr>`;
-                }
+                if(min > 0) tabla.innerHTML += `<tr><td><b>${emp.nombre}</b></td><td>${Math.floor(min/60)}h ${min%60}m</td><td class="pay-amount">$${((min/60)*emp.pago_hora).toFixed(2)}</td></tr>`;
             });
         }
 
@@ -517,7 +466,6 @@
         function abrirChat(num) { if(num) window.location.href = `sms:${num}`; }
         function marcar(id, est) { db.collection("servicios").doc(id).update({ estado: est }); }
         function borrar(id) { if(confirm("¿Borrar?")) db.collection("servicios").doc(id).delete(); }
-        
         function editarStaff(id, n, e, p) {
             document.getElementById('edit-staff-id').value = id;
             document.getElementById('reg-nombre').value = n;
@@ -533,9 +481,9 @@
             document.getElementById('direccion').value = s.direccion;
             document.getElementById('whatsapp').value = s.whatsapp || "";
             document.getElementById('search-empleado').value = s.empleado_nombre;
-            document.getElementById('email-empleado').value = s.empleado_email || ""; // Corregido
+            document.getElementById('email-empleado').value = s.empleado_email || ""; 
             document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || "";
-            document.getElementById('email-empleado-2').value = s.empleado_email_2 || ""; // Corregido
+            document.getElementById('email-empleado-2').value = s.empleado_email_2 || ""; 
             document.getElementById('fecha').value = s.fecha;
             document.getElementById('hora').value = s.hora;
             document.getElementById('notas').value = s.notas;
