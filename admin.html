@@ -345,38 +345,59 @@
         }
 
         function asignarTrabajo() {
-            const id = document.getElementById('edit-id').value;
-            const cli_nombre = document.getElementById('cliente').value;
-            if(!cli_nombre || !document.getElementById('fecha').value) {
-                return alert("Por favor, ingresa el nombre del cliente y la fecha.");
-            }
-            const data = {
-                cliente: cli_nombre, direccion: document.getElementById('direccion').value,
-                whatsapp: document.getElementById('whatsapp').value.replace(/\D/g,''),
-                empleado_nombre: document.getElementById('search-empleado').value,
-                empleado_email: document.getElementById('email-empleado').value,
-                empleado_nombre_2: document.getElementById('search-empleado-2').value || "",
-                empleado_email_2: document.getElementById('email-empleado-2').value || "",
-                fecha: document.getElementById('fecha').value,
-                hora: document.getElementById('hora').value,
-                notas: document.getElementById('notas').value,
-                tipo: tipoSeleccionado,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            if(id) {
-                data.hora_inicio = document.getElementById('hora_inicio_real').value || "--:--";
-                data.hora_fin = document.getElementById('hora_fin_real').value || "--:--";
-            } else {
-                data.estado = "pendiente";
-                data.hora_inicio = "--:--";
-                data.hora_fin = "--:--";
-                data.firma_cliente = false;
-            }
-            db.collection("clientes").doc(cli_nombre).set({ nombre: cli_nombre, direccion: data.direccion, whatsapp: data.whatsapp });
-            if (id) {
-                db.collection("servicios").doc(id).update(data).then(() => { alert("¡Cambios guardados!"); location.reload(); });
-            } else {
-                db.collection("servicios").add(data).then(() => { alert("¡Trabajo asignado!"); location.reload(); });
+            try {
+                const id = document.getElementById('edit-id').value;
+                const cli_nombre = document.getElementById('cliente').value;
+                const fecha_val = document.getElementById('fecha').value;
+
+                if(!cli_nombre) return alert("Falta el nombre del cliente");
+                if(!fecha_val) return alert("Falta la fecha");
+
+                const data = {
+                    cliente: cli_nombre, 
+                    direccion: document.getElementById('direccion').value || "",
+                    whatsapp: (document.getElementById('whatsapp').value || "").replace(/\D/g,''),
+                    empleado_nombre: document.getElementById('search-empleado').value || "",
+                    empleado_email: document.getElementById('email-empleado').value || "",
+                    empleado_nombre_2: document.getElementById('search-empleado-2').value || "",
+                    empleado_email_2: document.getElementById('email-empleado-2').value || "",
+                    fecha: fecha_val,
+                    hora: document.getElementById('hora').value || "",
+                    notas: document.getElementById('notas').value || "",
+                    tipo: tipoSeleccionado,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                if(id) {
+                    data.hora_inicio = document.getElementById('hora_inicio_real').value || "--:--";
+                    data.hora_fin = document.getElementById('hora_fin_real').value || "--:--";
+                } else {
+                    data.estado = "pendiente";
+                    data.hora_inicio = "--:--";
+                    data.hora_fin = "--:--";
+                    data.firma_cliente = false;
+                }
+
+                db.collection("clientes").doc(cli_nombre).set({ 
+                    nombre: cli_nombre, 
+                    direccion: data.direccion, 
+                    whatsapp: data.whatsapp 
+                });
+
+                if (id) {
+                    db.collection("servicios").doc(id).update(data).then(() => {
+                        alert("¡Servicio actualizado!");
+                        location.reload();
+                    }).catch(e => alert("Error al actualizar: " + e.message));
+                } else {
+                    db.collection("servicios").add(data).then(() => {
+                        alert("¡Servicio asignado!");
+                        location.reload();
+                    }).catch(e => alert("Error al guardar: " + e.message));
+                }
+            } catch (error) {
+                alert("Ocurrió un error en el código: " + error.message);
+                console.error(error);
             }
         }
 
@@ -404,6 +425,7 @@
                     const btnContrato = s.firma_cliente === true ? 
                         `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">Ver Firma</button>` :
                         `<button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Contrato</button>`;
+
                     const card = document.createElement('div');
                     card.className = 'card-servicio';
                     card.innerHTML = `
@@ -471,7 +493,7 @@
             document.getElementById('cliente').value = s.cliente;
             document.getElementById('direccion').value = s.direccion;
             document.getElementById('whatsapp').value = s.whatsapp || "";
-            document.getElementById('search-empleado').value = s.empleado_nombre;
+            document.getElementById('search-empleado').value = s.empleado_nombre || "";
             document.getElementById('email-empleado').value = s.empleado_email || ""; 
             document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || "";
             document.getElementById('email-empleado-2').value = s.empleado_email_2 || ""; 
