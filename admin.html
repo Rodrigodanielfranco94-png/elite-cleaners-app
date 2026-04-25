@@ -13,7 +13,7 @@
         h1 { font-style: italic; font-weight: 900; font-size: 22px; text-transform: uppercase; margin-bottom: 20px; }
         h1 span { color: #3b82f6; }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: #1c1c1e; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #2c2c2e; cursor: pointer; transition: 0.3s; }
+        .stat-card { background: #1c1c1e; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #2c2c2e; cursor: pointer; }
         .stat-card.active { border-color: #3b82f6; background: #1a2638; }
         .stat-card h2 { margin: 0; font-size: 28px; color: #3b82f6; }
         .stat-card p { margin: 5px 0 0 0; font-size: 10px; color: #8e8e93; text-transform: uppercase; }
@@ -49,13 +49,20 @@
         .btn-edit { background: #6366f1; }
         .btn-delete { background: #ef4444; }
         .btn-contract { background: #004a99; }
+        
         .payroll-container { background: #1c1c1e; padding: 18px; border-radius: 20px; border: 1px solid #22c55e; margin-top: 30px; }
         .payroll-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
         .payroll-table th { text-align: left; color: #22c55e; padding: 8px; border-bottom: 1px solid #2c2c2e; text-transform: uppercase; font-size: 10px; }
         .payroll-table td { padding: 10px 8px; border-bottom: 1px solid #2c2c2e; }
         .pay-amount { color: #22c55e; font-weight: bold; font-size: 14px; }
         .btn-reset { width: 100%; padding: 15px; background: transparent; border: 1px solid #ef4444; color: #ef4444; border-radius: 12px; font-weight: bold; font-size: 11px; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
+        
         .correction-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #2c2c2e; padding: 10px; border-radius: 12px; margin-top: 10px; border: 1px solid #3b82f6; }
+
+        /* Estilos del visor de contratos */
+        #modal-firma { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; overflow-y:auto; padding:20px; box-sizing:border-box; }
+        .modal-content { background:#1c1c1e; padding:20px; border-radius:15px; border:1px solid #3b82f6; position:relative; max-width: 500px; margin: 0 auto; }
+        .btn-cerrar-modal { background:#ef4444; color:white; border:none; padding:8px 15px; border-radius:8px; font-weight:bold; cursor:pointer; width: 100%; margin-top: 15px; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -156,6 +163,29 @@
         <button class="btn-reset" onclick="reiniciarHorasMes()">Reiniciar Mes y Descargar Excel</button>
     </div>
 
+    <div id="modal-firma">
+        <div class="modal-content">
+            <h2 style="color:#fff; margin-top:0; text-align:center; font-style:italic;">ELITE CLEANERS <span style="color:#3b82f6;">COMPANY</span></h2>
+            <p id="modal-cliente" style="color:#3b82f6; font-weight:bold; font-size:18px; margin: 5px 0;"></p>
+            <p id="modal-fecha" style="color:#8e8e93; font-size:12px; margin: 0 0 15px 0;"></p>
+            
+            <div style="background:#000; padding:15px; border-radius:10px; font-size:11px; color:#d1d5db; line-height:1.5; margin-bottom:15px;">
+                1. <b>ACCESO:</b> Autoriza el acceso en la fecha y hora programada.<br>
+                2. <b>PAGO:</b> Pago completo al finalizar el servicio.<br>
+                3. <b>CALIDAD:</b> Trabajo profesional y garantizado.<br>
+                4. <b>MASCOTAS:</b> Bajo vigilancia del dueño. No limpiamos desechos biológicos.<br>
+                5. <b>FOTOS/VIDEOS:</b> Autoriza registro para control de calidad.<br>
+                6. <b>OBJETOS PESADOS:</b> No nos responsabilizamos por daños al mover muebles pesados.<br>
+                7. <b>NO CONTRATACIÓN:</b> Prohibido contratar al personal directamente por 12 meses. Multa: $2,500 USD.
+            </div>
+
+            <h3 style="color:#fff; margin-bottom:10px; font-size: 14px;">FIRMA ACEPTADA:</h3>
+            <img id="modal-img-firma" src="" style="width:100%; height:150px; background:#fff; border-radius:10px; object-fit:contain; border:2px solid #3b82f6;">
+            
+            <button class="btn-cerrar-modal" onclick="document.getElementById('modal-firma').style.display='none'">Cerrar Contrato</button>
+        </div>
+    </div>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
@@ -174,70 +204,44 @@
         let todosLosServicios = [];
         let vistaActual = "pendiente";
 
-        function cambiarVista(nuevaVista) {
-            vistaActual = nuevaVista;
-            document.getElementById('btn-pendientes').classList.remove('active');
-            document.getElementById('btn-completados').classList.remove('active');
-            if (nuevaVista === 'pendiente') document.getElementById('btn-pendientes').classList.add('active');
-            else document.getElementById('btn-completados').classList.add('active');
-            renderizarServicios();
-        }
-
-        function renderizarServicios() {
-            const h = document.getElementById('historial');
-            h.innerHTML = "";
-            let p = 0; let c = 0;
-
-            todosLosServicios.forEach(s => {
-                if(s.estado !== "completado") p++; else c++;
-                
-                const mostrarPendiente = (vistaActual === "pendiente" && s.estado !== "completado");
-                const mostrarCompletado = (vistaActual === "completado" && s.estado === "completado");
-
-                if(mostrarPendiente || mostrarCompletado) {
-                    const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
-                    const card = document.createElement('div');
-                    card.className = 'card-servicio';
-                    card.innerHTML = `
-                        <button class="chat-btn" onclick="abrirChat('${s.whatsapp}')">💬</button>
-                        <div style="font-size:10px; color:#3b82f6; font-weight:bold; text-transform:uppercase;">${s.tipo}</div>
-                        <h3>${s.cliente}</h3>
-                        <p>📅 <b>${s.fecha}</b> | ⏰ <b>${s.hora}</b></p>
-                        <p>📍 ${s.direccion}</p>
-                        <p>👤 ${s.empleado_nombre_2 ? s.empleado_nombre+' & '+s.empleado_nombre_2 : s.empleado_nombre}</p>
-                        <div class="time-box">
-                            <div class="time-row"><b>Inicio:</b> <span>${s.hora_inicio}</span></div>
-                            <div class="time-row"><b>Fin:</b> <span>${s.hora_fin}</span></div>
-                            <div class="time-row total-time-row"><b>Tiempo:</b> <span>${infoTiempo.texto}</span></div>
-                        </div>
-                        <div class="action-buttons">
-                            <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">${s.estado === 'completado' ? 'Reabrir' : 'Terminar'}</button>
-                            <button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Contrato</button>
-                            <button class="btn-action btn-edit" onclick="editar('${s.id}', ${JSON.stringify(s).replace(/"/g, '&quot;')})">Edit</button>
-                            <button class="btn-action btn-delete" onclick="borrar('${s.id}')">X</button>
-                        </div>`;
-                    h.appendChild(card);
-                }
-            });
-            document.getElementById('count-pendientes').innerText = p;
-            document.getElementById('count-completados').innerText = c;
-            generarNomina();
-        }
-
-        function cargarServicios() {
-            db.collection("servicios").onSnapshot(snap => {
-                todosLosServicios = [];
-                snap.forEach(doc => { todosLosServicios.push({ id: doc.id, ...doc.data() }); });
-                todosLosServicios.sort((a, b) => (a.fecha + " " + a.hora).localeCompare(b.fecha + " " + b.hora));
-                renderizarServicios();
-            });
-        }
-
+        // ==========================================
+        // FUNCIONES DE CONTRATO (ENVIAR Y VER)
+        // ==========================================
         function enviarContrato(id, telefono, cliente) {
-            if (!telefono) return alert("Falta el teléfono.");
-            const urlFirma = `https://elite-cleaners-contratos.netlify.app/firmar.html?id=${id}&cliente=${encodeURIComponent(cliente)}`;
-            const mensaje = `Hola ${cliente}, por favor firma el contrato aquí: ${urlFirma}`;
+            if (!telefono) return alert("El cliente no tiene teléfono registrado.");
+
+            // REEMPLAZA ESTA URL CON TU LINK DE NETLIFY
+            const urlBase = 'https://TU-LINK-DE-NETLIFY.netlify.app'; 
+            const urlFirma = `${urlBase}/firmar.html?id=${id}&cliente=${encodeURIComponent(cliente)}`;
+
+            const mensaje = `Hola ${cliente}, es un placer saludarte de *Elite Cleaners Company*. 🌟%0A%0APara confirmar tu servicio, por favor revisa y firma nuestro acuerdo de servicio en el siguiente enlace:%0A%0A${urlFirma}`;
+
             window.location.href = `https://wa.me/${telefono}?text=${mensaje}`;
+        }
+
+        function verFirma(id) {
+            const servicio = todosLosServicios.find(s => s.id === id);
+            if(!servicio) return;
+            
+            document.getElementById('modal-cliente').innerText = "Cliente: " + servicio.cliente;
+            
+            // Formatear la fecha
+            let fechaTexto = "Fecha desconocida";
+            if (servicio.fecha_firma) {
+                const fechaObj = new Date(servicio.fecha_firma);
+                fechaTexto = fechaObj.toLocaleDateString() + " a las " + fechaObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            }
+            document.getElementById('modal-fecha').innerText = "Firmado el: " + fechaTexto;
+            
+            // Cargar la imagen de la firma
+            if (servicio.firma_imagen) {
+                document.getElementById('modal-img-firma').src = servicio.firma_imagen;
+            } else {
+                document.getElementById('modal-img-firma').src = "";
+                document.getElementById('modal-img-firma').alt = "Firma no disponible (Versión antigua)";
+            }
+            
+            document.getElementById('modal-firma').style.display = 'block';
         }
 
         function calcularTiempoTrabajado(inicio, fin) {
@@ -257,7 +261,18 @@
                 let diferencia = minFin - minInicio;
                 if (diferencia < 0) diferencia += 1440; 
                 return { texto: `${Math.floor(diferencia/60)}h ${diferencia%60}m`, minutos: diferencia };
-            } catch (e) { return { texto: "Error", minutos: 0 }; }
+            } catch (e) { return { texto: "Err", minutos: 0 }; }
+        }
+
+        function calcularMillas(p1, p2) {
+            if (!p1 || !p2) return "0.00";
+            const R = 3958.8; 
+            const dLat = (p2.lat - p1.lat) * Math.PI / 180;
+            const dLon = (p2.lon - p1.lon) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(p1.lat * Math.PI / 180) * Math.cos(p2.lat * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            return (R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)))).toFixed(2);
         }
 
         db.collection("clientes").onSnapshot(snap => {
@@ -291,8 +306,11 @@
             const e = document.getElementById('reg-email').value.toLowerCase().trim();
             const p = document.getElementById('reg-pago').value || 0;
             if(!n || !e) return alert("Faltan datos");
-            if(id) db.collection("usuarios").doc(id).update({ nombre: n, email: e, pago_hora: p }).then(resetStaffForm);
-            else db.collection("usuarios").add({ nombre: n, email: e, rol: "empleado", pago_hora: p }).then(resetStaffForm);
+            if(id) {
+                db.collection("usuarios").doc(id).update({ nombre: n, email: e, pago_hora: p }).then(() => { resetStaffForm(); });
+            } else {
+                db.collection("usuarios").add({ nombre: n, email: e, rol: "empleado", pago_hora: p }).then(() => { resetStaffForm(); });
+            }
         }
 
         function resetStaffForm() {
@@ -314,10 +332,11 @@
                     <div class="staff-info"><b>${e.nombre}</b><span>$${e.pago_hora || 0}/hr</span></div>
                     <div class="staff-actions">
                         <button class="btn-mini" style="background:#6366f1" onclick="editarStaff('${id}','${e.nombre}','${e.email}','${e.pago_hora||0}')">Ed</button>
-                        <button class="btn-mini" style="background:#ef4444" onclick="borrarStaff('${id}')">X</button>
+                        <button class="btn-mini" style="background:#ef4444" onclick="borrarStaff('${id}','${e.nombre}')">X</button>
                     </div>
                 </div>`;
             });
+            generarNomina();
         });
 
         function filtrarEmpleados(num) {
@@ -364,6 +383,7 @@
                 tipo: tipoSeleccionado,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
+
             if(id) {
                 data.hora_inicio = document.getElementById('hora_inicio_real').value || "--:--";
                 data.hora_fin = document.getElementById('hora_fin_real').value || "--:--";
@@ -371,10 +391,74 @@
                 data.estado = "pendiente";
                 data.hora_inicio = "--:--";
                 data.hora_fin = "--:--";
+                data.firma_cliente = false;
             }
+
             db.collection("clientes").doc(cli_nombre).set({ nombre: cli_nombre, direccion: data.direccion, whatsapp: data.whatsapp });
-            if (id) db.collection("servicios").doc(id).update(data).then(() => location.reload());
-            else db.collection("servicios").add(data).then(() => location.reload());
+            
+            if (id) {
+                db.collection("servicios").doc(id).update(data).then(() => { location.reload(); });
+            } else {
+                db.collection("servicios").add(data).then(() => { location.reload(); });
+            }
+        }
+
+        function cargarHistorial() {
+            db.collection("servicios").onSnapshot(snap => {
+                const h = document.getElementById('historial');
+                h.innerHTML = "";
+                let p = 0; let c = 0;
+                todosLosServicios = [];
+                snap.forEach(doc => {
+                    const s = doc.data();
+                    if(s.estado !== "completado") p++; else c++;
+                    todosLosServicios.push({ id: doc.id, ...s });
+                });
+                todosLosServicios.sort((a, b) => (a.fecha + " " + a.hora).localeCompare(b.fecha + " " + b.hora));
+                
+                todosLosServicios.forEach(s => {
+                    if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
+                        const millas = calcularMillas(s.gps_inicio, s.gps_fin);
+                        const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
+                        
+                        // LÓGICA DEL BOTÓN DE CONTRATO (Azul si no ha firmado, Verde si ya firmó)
+                        let btnContratoHTML = '';
+                        if (s.firma_cliente === true) {
+                            btnContratoHTML = `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">Ver Firma</button>`;
+                        } else {
+                            btnContratoHTML = `<button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Contrato</button>`;
+                        }
+
+                        const card = document.createElement('div');
+                        card.className = 'card-servicio';
+                        card.innerHTML = `
+                            <button class="chat-btn" onclick="abrirChat('${s.whatsapp}')">💬</button>
+                            <div style="font-size:10px; color:#3b82f6; font-weight:bold; text-transform:uppercase;">${s.tipo}</div>
+                            <h3>${s.cliente}</h3>
+                            <p>📅 <b>${s.fecha}</b> | ⏰ <b>${s.hora}</b></p>
+                            <p>📍 ${s.direccion}</p>
+                            <p>👤 ${s.empleado_nombre_2 ? s.empleado_nombre+' & '+s.empleado_nombre_2 : s.empleado_nombre}</p>
+                            <div class="time-box">
+                                <div class="time-row"><b>Inicio:</b> <span>${s.hora_inicio}</span></div>
+                                <div class="time-row"><b>Fin:</b> <span>${s.hora_fin}</span></div>
+                                <div class="time-row total-time-row"><b>Tiempo:</b> <span>${infoTiempo.texto}</span></div>
+                                <div class="time-row" style="border-top:1px solid #2c2c2e; margin-top:5px; padding-top:5px;">
+                                    <b>Millas:</b> <span style="color:#f59e0b">${millas} mi</span>
+                                </div>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">${s.estado === 'completado' ? 'Abrir' : 'Terminar'}</button>
+                                ${btnContratoHTML}
+                                <button class="btn-action btn-edit" onclick="editar('${s.id}', ${JSON.stringify(s).replace(/"/g, '&quot;')})">Edit</button>
+                                <button class="btn-action btn-delete" onclick="borrar('${s.id}')">X</button>
+                            </div>`;
+                        h.appendChild(card);
+                    }
+                });
+                document.getElementById('count-pendientes').innerText = p;
+                document.getElementById('count-completados').innerText = c;
+                generarNomina();
+            });
         }
 
         function generarNomina() {
@@ -385,7 +469,9 @@
                 todosLosServicios.filter(s => s.estado === "completado" && (s.empleado_email === emp.email || s.empleado_email_2 === emp.email)).forEach(s => {
                     min += calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).minutos;
                 });
-                if(min > 0) tabla.innerHTML += `<tr><td><b>${emp.nombre}</b></td><td>${Math.floor(min/60)}h ${min%60}m</td><td class="pay-amount">$${((min/60)*emp.pago_hora).toFixed(2)}</td></tr>`;
+                if(min > 0) {
+                    tabla.innerHTML += `<tr><td><b>${emp.nombre}</b></td><td>${Math.floor(min/60)}h ${min%60}m</td><td class="pay-amount">$${((min/60)*emp.pago_hora).toFixed(2)}</td></tr>`;
+                }
             });
         }
 
@@ -405,6 +491,7 @@
         function abrirChat(num) { if(num) window.location.href = `sms:${num}`; }
         function marcar(id, est) { db.collection("servicios").doc(id).update({ estado: est }); }
         function borrar(id) { if(confirm("¿Borrar?")) db.collection("servicios").doc(id).delete(); }
+        function cambiarVista(v) { vistaActual = v; cargarHistorial(); }
         function editarStaff(id, n, e, p) {
             document.getElementById('edit-staff-id').value = id;
             document.getElementById('reg-nombre').value = n;
@@ -412,7 +499,7 @@
             document.getElementById('reg-pago').value = p;
             document.getElementById('btn-staff-main').innerText = "ACTUALIZAR STAFF";
         }
-        function borrarStaff(id) { if(confirm("¿Eliminar?")) db.collection("usuarios").doc(id).delete(); }
+        function borrarStaff(id, n) { if(confirm("¿Eliminar?")) db.collection("usuarios").doc(id).delete(); }
         
         function editar(id, s) {
             document.getElementById('edit-id').value = id;
@@ -420,9 +507,9 @@
             document.getElementById('direccion').value = s.direccion;
             document.getElementById('whatsapp').value = s.whatsapp || "";
             document.getElementById('search-empleado').value = s.empleado_nombre;
-            document.getElementById('email-empleado').value = s.email_empleado || s.empleado_email;
+            document.getElementById('email-empleado').value = s.email_empleado || "";
             document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || "";
-            document.getElementById('email-empleado-2').value = s.empleado_email_2 || "";
+            document.getElementById('email-empleado-2').value = s.email_empleado_2 || "";
             document.getElementById('fecha').value = s.fecha;
             document.getElementById('hora').value = s.hora;
             document.getElementById('notas').value = s.notas;
@@ -435,7 +522,7 @@
             window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
-        cargarServicios();
+        cargarHistorial();
     </script>
 </body>
 </html>
