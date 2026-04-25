@@ -180,20 +180,19 @@
         let todosLosServicios = [];
         let vistaActual = "pendiente";
 
-        // Función corregida para el envío de contrato
+        // Función corregida con comillas invertidas obligatorias
         function enviarContrato(id, telefono, cliente) {
             if(!telefono) return alert("El cliente no tiene teléfono registrado.");
             
-            // Link real de Netlify
+            // Link real de Netlify usando ${ }
             const urlFirma = `https://sensational-lamington-de5c02.netlify.app/firmar.html?id=${id}&cliente=${encodeURIComponent(cliente)}`;
             
-            // Mensaje optimizado: Corto, profesional y con título claro
+            // Mensaje optimizado usando ${ }
             const mensaje = `Hola ${cliente}, es un placer saludarte de *Elite Cleaners Company*. 🌟%0A%0APara confirmar tu servicio, por favor revisa y firma nuestro acuerdo aquí:%0A%0A✍️ *[FIRMAR CONTRATO DE LIMPIEZA]*%0A${urlFirma}`;
 
             window.location.href = `https://wa.me/${telefono}?text=${mensaje}`;
         }
 
-        // Lógica de Tiempos
         function calcularTiempoTrabajado(inicio, fin) {
             if (!inicio || !fin || inicio === "--:--" || fin === "--:--") return { texto: "En proceso...", minutos: 0 };
             const aMinutos = (horaStr) => {
@@ -225,7 +224,6 @@
             return (R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)))).toFixed(2);
         }
 
-        // Suscripción a Clientes
         db.collection("clientes").onSnapshot(snap => {
             todosLosClientes = [];
             snap.forEach(doc => todosLosClientes.push(doc.data()));
@@ -251,7 +249,6 @@
             l.style.display = f.length > 0 ? "block" : "none";
         }
 
-        // Gestión de Staff
         function registrarStaff() {
             const id = document.getElementById('edit-staff-id').value;
             const n = document.getElementById('reg-nombre').value;
@@ -421,7 +418,6 @@
             const completados = todosLosServicios.filter(s => s.estado === "completado");
             if (completados.length === 0 || !confirm("¿Cerrar mes y borrar completados?")) return;
             
-            // Generar Excel simple
             const data = completados.map(s => ({ Cliente: s.cliente, Fecha: s.fecha, Tiempo: calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).texto }));
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
