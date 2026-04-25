@@ -2,94 +2,204 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Cleaners - Firma de Contrato</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Firmar Contrato - Elite Cleaners Company</title>
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f4f4f9; padding: 15px; margin: 0; }
-        .box { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
-        h2 { color: #004a99; margin-top: 0; }
-        .contrato-texto { 
-            height: 250px; overflow-y: scroll; border: 1px solid #eee; 
-            padding: 15px; font-size: 12px; line-height: 1.5; color: #444;
-            background: #fafafa; border-radius: 10px; margin-bottom: 20px;
+        body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px; text-align: center; }
+        .container { max-width: 500px; margin: auto; }
+        h2 { font-style: italic; font-weight: 900; color: #3b82f6; text-transform: uppercase; margin-bottom: 5px; }
+        p { color: #8e8e93; font-size: 14px; margin-bottom: 20px; }
+        
+        /* Cuadro de texto legal */
+        .legal-box { 
+            background: #1c1c1e; 
+            padding: 15px; 
+            border-radius: 12px; 
+            text-align: left; 
+            font-size: 12px; 
+            line-height: 1.5; 
+            border: 1px solid #2c2c2e;
+            margin-bottom: 20px;
+            max-height: 150px;
+            overflow-y: auto;
+            color: #d1d5db;
         }
-        canvas { border: 2px dashed #3b82f6; width: 100%; height: 180px; border-radius: 15px; background: #fff; touch-action: none; }
-        .btn { 
-            width: 100%; padding: 18px; background: #3b82f6; color: white; 
-            border: none; border-radius: 15px; font-weight: bold; font-size: 16px; 
-            margin-top: 20px; cursor: pointer; 
+
+        #signature-pad { 
+            background: white; 
+            border-radius: 15px; 
+            cursor: crosshair; 
+            touch-action: none;
+            width: 100%;
+            height: 250px;
         }
+        
+        .buttons { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        button { padding: 15px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .btn-clear { background: #2c2c2e; color: white; }
+        .btn-save { background: #3b82f6; color: white; }
+        
+        #status { margin-top: 15px; font-size: 13px; color: #22c55e; display: none; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h2 id="saludo">Hola,</h2>
-        <p>Por favor revisa y firma el contrato de <b>Elite Cleaners Company</b> para confirmar tu servicio:</p>
-        
-        <div class="contrato-texto">
-            <strong>CLÁUSULA 1: SINCERIDAD DEL PRESUPUESTO</strong><br>
-            El Cliente se obliga a ser sincero sobre las condiciones de la propiedad. Si al llegar el estado no coincide, el precio podrá ser ajustado.<br><br>
-            <strong>CLÁUSULA 2: MUDANZAS (MOVE-IN/OUT)</strong><br>
-            La propiedad debe estar vacía y con agua/luz activos.<br><br>
-            <strong>CLÁUSULA 3: ANTICIPO (50%)</strong><br>
-            Requerido para reservar. No reembolsable si se cancela con menos de 24h.<br><br>
-            <strong>CLÁUSULA 4: MASCOTAS Y MENORES</strong><br>
-            Mascotas bajo vigilancia del dueño. No limpiamos desechos biológicos.<br><br>
-            <strong>CLÁUSULA 5: FOTOS Y VIDEOS</strong><br>
-            El cliente autoriza fotos/videos como registro de seguridad y calidad.<br><br>
-            <strong>CLÁUSULA 6: OBJETOS PESADOS</strong><br>
-            No nos responsabilizamos por daños al mover muebles pesados (nevera/estufa).<br><br>
-            <strong>CLÁUSULA 7: NO CONTRATACIÓN</strong><br>
-            Prohibido contratar al personal directamente por 12 meses. Multa: $2,500 USD.
-        </div>
 
-        <label><b>Firma aquí con tu dedo:</b></label>
-        <canvas id="signature-pad"></canvas>
-        <button class="btn" onclick="enviarFirma()">CONFIRMAR Y FIRMAR</button>
+<div class="container">
+    <h2>ELITE <span>CLEANERS</span></h2>
+    <p id="cliente-nombre">Cargando contrato...</p>
+
+    <div class="legal-box">
+        <strong>TÉRMINOS Y CONDICIONES:</strong><br>
+        Al firmar este documento, el cliente acepta que Elite Cleaners Company realice los servicios de limpieza acordados. El cliente se compromete a realizar el pago al finalizar el servicio. Elite Cleaners Company se compromete a realizar un trabajo profesional y de calidad. El cliente autoriza el acceso a la propiedad en la fecha y hora programada.
     </div>
 
-    <script>
-        // AQUÍ DEBES PEGAR TU CONFIGURACIÓN DE FIREBASE (La que tienes en tu Admin)
-        const firebaseConfig = {
-            apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
-            authDomain: "elite-cleaners-app.firebaseapp.com",
-            projectId: "elite-cleaners-app",
-            storageBucket: "elite-cleaners-app.appspot.com",
-            messagingSenderId: "826642317319",
-            appId: "1:826642317319:web:cddce7904b590ae"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+    <canvas id="signature-pad"></canvas>
 
-        // Leer datos de la URL
-        const params = new URLSearchParams(window.location.search);
-        const servicioId = params.get('id');
-        if(params.get('cliente')) document.getElementById('saludo').innerText = "Hola " + params.get('cliente') + ",";
+    <div class="buttons">
+        <button class="btn-clear" onclick="limpiar()">Borrar</button>
+        <button class="btn-save" id="btn-confirmar" onclick="procesarFirma()">Confirmar y Firmar</button>
+    </div>
 
-        // Configurar el panel de firma
-        const canvas = document.getElementById("signature-pad");
-        const signaturePad = new SignaturePad(canvas);
+    <div id="status">Generando PDF y guardando en Drive...</div>
+</div>
 
-        async function enviarFirma() {
-            if (signaturePad.isEmpty()) return alert("Por favor, firma antes de continuar.");
+<script>
+    // Configuración Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
+        authDomain: "elite-cleaners-app.firebaseapp.com",
+        projectId: "elite-cleaners-app",
+        storageBucket: "elite-cleaners-app.appspot.com",
+        messagingSenderId: "826642317319",
+        appId: "1:826642317319:web:cddce7904b590ae"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const idServicio = urlParams.get('id');
+    const nombreCliente = urlParams.get('cliente') || "Cliente";
+    
+    document.getElementById('cliente-nombre').innerText = "Contrato para: " + nombreCliente;
+
+    // Configuración del Canvas (Firma)
+    const canvas = document.getElementById('signature-pad');
+    const ctx = canvas.getContext('2d');
+    let dibujando = false;
+
+    function ajustarCanvas() {
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 3;
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+    }
+    window.addEventListener('resize', ajustarCanvas);
+    ajustarCanvas();
+
+    // Eventos de dibujo (Mouse y Touch)
+    const eventos = {
+        start: ['mousedown', 'touchstart'],
+        move: ['mousemove', 'touchmove'],
+        end: ['mouseup', 'touchend']
+    };
+
+    function obtenerPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
+    canvas.addEventListener(eventos.start[0], (e) => { dibujando = true; ctx.beginPath(); const pos = obtenerPos(e); ctx.moveTo(pos.x, pos.y); });
+    canvas.addEventListener(eventos.start[1], (e) => { dibujando = true; ctx.beginPath(); const pos = obtenerPos(e); ctx.moveTo(pos.x, pos.y); e.preventDefault(); });
+
+    canvas.addEventListener(eventos.move[0], (e) => { if (!dibujando) return; const pos = obtenerPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); });
+    canvas.addEventListener(eventos.move[1], (e) => { if (!dibujando) return; const pos = obtenerPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); e.preventDefault(); });
+
+    window.addEventListener(eventos.end[0], () => { dibujando = false; });
+    window.addEventListener(eventos.end[1], () => { dibujando = false; });
+
+    function limpiar() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+    // PROCESO DE GUARDADO (PDF + DRIVE + FIREBASE)
+    async function procesarFirma() {
+        const btn = document.getElementById('btn-confirmar');
+        const status = document.getElementById('status');
+        
+        btn.disabled = true;
+        btn.innerText = "PROCESANDO...";
+        status.style.display = "block";
+
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // 1. Diseño del PDF
+            doc.setFillColor(59, 130, 246); // Color azul Elite
+            doc.rect(0, 0, 210, 40, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.text("ELITE CLEANERS COMPANY", 105, 25, { align: "center" });
+
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(16);
+            doc.text("CONTRATO DE SERVICIO", 105, 55, { align: "center" });
+
+            doc.setFontSize(12);
+            doc.text(`Cliente: ${nombreCliente}`, 20, 75);
+            doc.text(`Fecha de Firma: ${new Date().toLocaleDateString()}`, 20, 85);
+            doc.text(`ID Servicio: ${idServicio}`, 20, 95);
+
+            doc.setFontSize(10);
+            const legalText = "Al firmar este documento, el cliente acepta que Elite Cleaners Company realice los servicios de limpieza acordados. El cliente se compromete a realizar el pago al finalizar el servicio. Elite Cleaners Company se compromete a realizar un trabajo profesional y de calidad. El cliente autoriza el acceso a la propiedad en la fecha y hora programada.";
+            const splitText = doc.splitTextToSize(legalText, 170);
+            doc.text(splitText, 20, 110);
+
+            // 2. Añadir la Firma al PDF
+            const imgData = canvas.toDataURL('image/png');
+            doc.text("FIRMA DEL CLIENTE:", 20, 150);
+            doc.addImage(imgData, 'PNG', 20, 155, 60, 30);
+
+            // 3. Convertir a Base64
+            const pdfBase64 = doc.output('datauristring').split(',')[1];
+
+            // 4. Enviar a Google Drive (Tu URL)
+            const urlScript = "https://script.google.com/macros/s/AKfycbxhB-fw9qJGm1eJyF2EPDeXEWvO_4SYU47WDZdn_aszndEx-okNsUoUKFVcoPl_y1A/exec";
             
-            const firmaImg = signaturePad.toDataURL(); // Convierte firma a imagen
+            await fetch(urlScript, {
+                method: 'POST',
+                mode: 'no-cors', // Importante para evitar errores de CORS con Google Scripts
+                body: JSON.stringify({
+                    pdf: pdfBase64,
+                    nombreArchivo: `Contrato_${nombreCliente.replace(/\s+/g, '_')}.pdf`
+                })
+            });
 
-            try {
-                await db.collection("servicios").doc(servicioId).update({
-                    firmado: "SÍ",
-                    firma_cliente: firmaImg,
-                    fecha_firma: new Date().toLocaleString()
-                });
-                alert("¡Gracias! Contrato firmado con éxito.");
-                window.location.href = "https://elitecleaners.company"; 
-            } catch (e) {
-                alert("Hubo un error al guardar. Inténtalo de nuevo.");
-            }
+            // 5. Actualizar Firebase
+            await db.collection("servicios").doc(idServicio).update({
+                estado: "completado", // O "firmado" según prefieras
+                firma_realizada: true,
+                fecha_firma: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            alert("¡Contrato firmado con éxito! Se ha guardado una copia en Google Drive.");
+            window.close(); // Intenta cerrar la ventana si es posible
+
+        } catch (error) {
+            console.error(error);
+            alert("Error al guardar: " + error.message);
+            btn.disabled = false;
+            btn.innerText = "Confirmar y Firmar";
         }
-    </script>
+    }
+</script>
+
 </body>
 </html>
