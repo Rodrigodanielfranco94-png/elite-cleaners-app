@@ -215,10 +215,7 @@
 
         function enviarContrato(id, telefono, cliente) {
             if (!telefono) return alert("El cliente no tiene teléfono registrado.");
-            
-            // LINK DE NETLIFY ACTUALIZADO
             const urlBase = 'https://elite-cleaners-contratos.netlify.app'; 
-            
             const urlFirma = `${urlBase}/firmar.html?id=${id}&cliente=${encodeURIComponent(cliente)}`;
             const mensaje = `Hola ${cliente}, es un placer saludarte de *Elite Cleaners Company*. 🌟%0A%0APara confirmar tu servicio, por favor revisa y firma nuestro acuerdo de servicio en el siguiente enlace:%0A%0A${urlFirma}`;
             window.location.href = `https://wa.me/${telefono}?text=${mensaje}`;
@@ -256,17 +253,6 @@
                 if (diferencia < 0) diferencia += 1440; 
                 return { texto: `${Math.floor(diferencia/60)}h ${diferencia%60}m`, minutos: diferencia };
             } catch (e) { return { texto: "Err", minutos: 0 }; }
-        }
-
-        function calcularMillas(p1, p2) {
-            if (!p1 || !p2) return "0.00";
-            const R = 3958.8; 
-            const dLat = (p2.lat - p1.lat) * Math.PI / 180;
-            const dLon = (p2.lon - p1.lon) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(p1.lat * Math.PI / 180) * Math.cos(p2.lat * Math.PI / 180) *
-                      Math.sin(dLon/2) * Math.sin(dLon/2);
-            return (R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)))).toFixed(2);
         }
 
         db.collection("clientes").onSnapshot(snap => {
@@ -361,13 +347,16 @@
         function asignarTrabajo() {
             const id = document.getElementById('edit-id').value;
             const cli_nombre = document.getElementById('cliente').value;
+            if(!cli_nombre || !document.getElementById('fecha').value) {
+                return alert("Por favor, ingresa el nombre del cliente y la fecha.");
+            }
             const data = {
                 cliente: cli_nombre, direccion: document.getElementById('direccion').value,
                 whatsapp: document.getElementById('whatsapp').value.replace(/\D/g,''),
                 empleado_nombre: document.getElementById('search-empleado').value,
                 empleado_email: document.getElementById('email-empleado').value,
                 empleado_nombre_2: document.getElementById('search-empleado-2').value || "",
-                empleado_email_2: document.getElementById('email-empleado_2').value || "",
+                empleado_email_2: document.getElementById('email-empleado-2').value || "",
                 fecha: document.getElementById('fecha').value,
                 hora: document.getElementById('hora').value,
                 notas: document.getElementById('notas').value,
@@ -384,8 +373,11 @@
                 data.firma_cliente = false;
             }
             db.collection("clientes").doc(cli_nombre).set({ nombre: cli_nombre, direccion: data.direccion, whatsapp: data.whatsapp });
-            if (id) db.collection("servicios").doc(id).update(data).then(() => location.reload());
-            else db.collection("servicios").add(data).then(() => location.reload());
+            if (id) {
+                db.collection("servicios").doc(id).update(data).then(() => { alert("¡Cambios guardados!"); location.reload(); });
+            } else {
+                db.collection("servicios").add(data).then(() => { alert("¡Trabajo asignado!"); location.reload(); });
+            }
         }
 
         db.collection("servicios").onSnapshot(snap => {
@@ -412,7 +404,6 @@
                     const btnContrato = s.firma_cliente === true ? 
                         `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">Ver Firma</button>` :
                         `<button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Contrato</button>`;
-
                     const card = document.createElement('div');
                     card.className = 'card-servicio';
                     card.innerHTML = `
