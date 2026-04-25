@@ -177,17 +177,19 @@
         let vistaActual = "pendiente";
 
         // ==========================================
-        // FUNCIÓN DE CONTRATO ACTUALIZADA
+        // FUNCIÓN DE CONTRATO CORREGIDA
         // ==========================================
         function enviarContrato(id, telefono, cliente) {
             if (!telefono) return alert("El cliente no tiene teléfono registrado.");
 
-            // CAMBIA 'TU-NUEVO-LINK' POR EL LINK DE NETLIFY
-            const urlBase = 'https://TU-NUEVO-LINK.netlify.app'; 
+            // 1. URL DE TU PROYECTO DE ADMIN (Donde SI está firmar.html)
+            const urlBase = 'https://elite-cleaners-app.netlify.app'; 
             const urlFirma = `${urlBase}/firmar.html?id=${id}&cliente=${encodeURIComponent(cliente)}`;
 
-            const mensaje = `Hola ${cliente}, es un placer saludarte de *Elite Cleaners Company*. 🌟%0A%0APara confirmar tu servicio, por favor revisa y firma nuestro acuerdo de servicio en el siguiente enlace:%0A%0A${urlFirma}`;
+            // 2. Mensaje Profesional
+            const mensaje = `Hola ${cliente}, es un placer saludarte de *Elite Cleaners Company*. 🌟%0A%0APara confirmar tu servicio, por favor revisa y firma nuestro acuerdo aquí:%0A%0A✍️ [FIRMAR CONTRATO DE LIMPIEZA]%0A${urlFirma}`;
 
+            // 3. Envío a WhatsApp
             window.location.href = `https://wa.me/${telefono}?text=${mensaje}`;
         }
 
@@ -444,9 +446,9 @@
             document.getElementById('direccion').value = s.direccion;
             document.getElementById('whatsapp').value = s.whatsapp || "";
             document.getElementById('search-empleado').value = s.empleado_nombre;
-            document.getElementById('email-empleado').value = s.empleado_email;
+            document.getElementById('email-empleado').value = s.email_empleado;
             document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || "";
-            document.getElementById('email-empleado-2').value = s.empleado_email_2 || "";
+            document.getElementById('email-empleado-2').value = s.email_empleado_2 || "";
             document.getElementById('fecha').value = s.fecha;
             document.getElementById('hora').value = s.hora;
             document.getElementById('notas').value = s.notas;
