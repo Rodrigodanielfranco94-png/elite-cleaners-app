@@ -7,14 +7,12 @@
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
         body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px; text-align: center; }
         .container { max-width: 500px; margin: auto; }
         h2 { font-style: italic; font-weight: 900; color: #fff; text-transform: uppercase; margin-bottom: 5px; font-size: 20px; }
         h2 span { color: #3b82f6; }
-        
         .legal-box { 
             background: #1c1c1e; 
             padding: 20px; 
@@ -24,13 +22,13 @@
             line-height: 1.6; 
             border: 1px solid #2c2c2e; 
             margin-bottom: 25px; 
-            max-height: 380px; 
+            max-height: 400px; 
             overflow-y: auto; 
             color: #d1d5db; 
         }
         .legal-box b { color: #fff; display: block; margin-top: 15px; }
         .title-contract { color: #3b82f6; font-weight: bold; font-size: 14px; display: block; text-align: center; margin-bottom: 15px; text-transform: uppercase; }
-
+        
         #signature-pad { background: #1c1c1e; border-radius: 15px; cursor: crosshair; touch-action: none; width: 100%; height: 250px; border: 2px solid #3b82f6; }
         .buttons { margin-top: 25px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         button { padding: 18px; border-radius: 15px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 14px; }
@@ -44,10 +42,9 @@
 
 <div class="container">
     <h2>ELITE CLEANERS <span>COMPANY</span></h2>
-
     <div id="main-content">
         <p id="cliente-nombre">Cargando contrato...</p>
-
+        
         <div class="legal-box">
             <span class="title-contract">CONTRATO DE PRESTACIÓN DE SERVICIOS DE LIMPIEZA</span>
             
@@ -85,8 +82,7 @@
         </div>
 
         <canvas id="signature-pad"></canvas>
-
-        <div id="processing-msg">PROCESANDO FIRMA...</div>
+        <div id="processing-msg">GUARDANDO FIRMA...</div>
 
         <div class="buttons">
             <button class="btn-clear" onclick="limpiar()">Borrar</button>
@@ -96,7 +92,7 @@
 
     <div id="success-screen">
         <div style="font-size: 60px; margin-bottom: 20px;">✅</div>
-        <h3 style="color: #fff;">¡CONTRATO FIRMADO!</h3>
+        <h3>¡CONTRATO FIRMADO!</h3>
         <p style="color: #3b82f6; font-weight: bold;">Ya puede cerrar esta pestaña.</p>
     </div>
 </div>
@@ -118,21 +114,9 @@
     const nombreCliente = urlParams.get('cliente') || "Cliente";
     document.getElementById('cliente-nombre').innerText = "Contrato para: " + nombreCliente;
 
-    let canvas, ctx, dibujando = false;
-
-    // ESTO ASEGURA QUE EL CANVAS SE CARGUE BIEN
-    window.onload = function() {
-        canvas = document.getElementById('signature-pad');
-        ctx = canvas.getContext('2d');
-        ajustarCanvas();
-
-        canvas.addEventListener('mousedown', iniciarDibujo);
-        canvas.addEventListener('touchstart', iniciarDibujo);
-        canvas.addEventListener('mousemove', moverDibujo);
-        canvas.addEventListener('touchmove', moverDibujo);
-        window.addEventListener('mouseup', detenerDibujo);
-        window.addEventListener('touchend', detenerDibujo);
-    };
+    const canvas = document.getElementById('signature-pad');
+    const ctx = canvas.getContext('2d');
+    let dibujando = false;
 
     function ajustarCanvas() {
         const r = window.devicePixelRatio || 1;
@@ -144,78 +128,36 @@
         ctx.lineJoin = "round";
         ctx.lineCap = "round";
     }
+    window.addEventListener('resize', ajustarCanvas);
+    ajustarCanvas();
 
     function obtenerPos(e) {
         const rect = canvas.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+        const clientY = (e.touches && e.touches[0]) ? e.touches[0].clientY : e.clientY;
         return { x: clientX - rect.left, y: clientY - rect.top };
     }
 
-    function iniciarDibujo(e) {
-        dibujando = true;
-        ctx.beginPath();
-        const p = obtenerPos(e);
-        ctx.moveTo(p.x, p.y);
-        if(e.type === 'touchstart') e.preventDefault();
-    }
+    canvas.addEventListener('mousedown', (e) => { dibujando = true; ctx.beginPath(); const p = obtenerPos(e); ctx.moveTo(p.x, p.y); });
+    canvas.addEventListener('touchstart', (e) => { dibujando = true; ctx.beginPath(); const p = obtenerPos(e); ctx.moveTo(p.x, p.y); e.preventDefault(); }, {passive: false});
+    canvas.addEventListener('mousemove', (e) => { if (!dibujando) return; const p = obtenerPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
+    canvas.addEventListener('touchmove', (e) => { if (!dibujando) return; const p = obtenerPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); }, {passive: false});
+    window.addEventListener('mouseup', () => { dibujando = false; });
+    window.addEventListener('touchend', () => { dibujando = false; });
 
-    function moverDibujo(e) {
-        if (!dibujando) return;
-        const p = obtenerPos(e);
-        ctx.lineTo(p.x, p.y);
-        ctx.stroke();
-        if(e.type === 'touchmove') e.preventDefault();
-    }
-
-    function detenerDibujo() { dibujando = false; }
-
-    function limpiar() { 
-        ctx.clearRect(0, 0, canvas.width, canvas.height); 
-        ctx.beginPath(); 
-    }
+    function limpiar() { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.beginPath(); }
 
     async function procesarFirma() {
         const btn = document.getElementById('btn-confirmar');
         btn.disabled = true;
         document.getElementById('processing-msg').style.display = 'block';
 
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
-        const tCtx = tempCanvas.getContext('2d');
-        tCtx.drawImage(canvas, 0, 0);
-        tCtx.globalCompositeOperation = 'difference';
-        tCtx.fillStyle = 'white';
-        tCtx.fillRect(0,0,tempCanvas.width,tempCanvas.height);
-        const firmaImg = tempCanvas.toDataURL('image/png');
+        const firmaImg = canvas.toDataURL('image/png');
 
         try {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.setFillColor(0, 0, 0); doc.rect(0, 0, 210, 40, 'F');
-            doc.setTextColor(255, 255, 255); doc.setFontSize(16);
-            doc.text("CONTRATO DE PRESTACIÓN DE SERVICIOS DE LIMPIEZA", 105, 25, { align: "center" });
-            
-            doc.setTextColor(0, 0, 0); doc.setFontSize(10);
-            doc.text(`Cliente: ${nombreCliente}`, 20, 55);
-            doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, 62);
-
-            const legalPDF = "1. OBJETO: Limpieza pactada.\n2. ACCESO: Suministros basicos garantizados.\n3. PAGO: 50% anticipo / 50% final.\n4. CANCELACION: <24h pierde anticipo.\n5. MENORES/MASCOTAS: Responsabilidad del cliente.\n6. EQUIPO: Productos del cliente bajo su riesgo.\n7. RECLAMOS: 24h con fotos.\n8. NO CONTRATACION: Multa $2,500 USD.\n9. OBJETOS PESADOS: Cliente DEBE ESTAR PRESENTE.\n10. EXONERACION: No respondemos por fallas previas.";
-            
-            doc.text(doc.splitTextToSize(legalPDF, 170), 20, 75);
-            doc.addImage(firmaImg, 'PNG', 20, 150, 60, 30);
-
-            const pdfBase64 = doc.output('datauristring').split(',')[1];
-            
-            await fetch("https://script.google.com/macros/s/AKfycbxhB-fw9qJGm1eJyF2EPDeXEWvO_4SYU47WDZdn_aszndEx-okNsUoUKFVcoPl_y1A/exec", {
-                method: 'POST', 
-                mode: 'no-cors',
-                body: JSON.stringify({ pdf: pdfBase64, nombreArchivo: `Contrato_${nombreCliente.replace(/\s+/g, '_')}.pdf` })
-            });
-
             await db.collection("servicios").doc(idServicio).update({
-                firma_cliente: true, 
-                firma_imagen: firmaImg, 
+                firma_cliente: true,
+                firma_imagen: firmaImg,
                 fecha_firma: new Date().toISOString()
             });
 
