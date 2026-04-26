@@ -57,11 +57,12 @@
         .pay-amount { color: #22c55e; font-weight: bold; font-size: 14px; }
         .btn-reset { width: 100%; padding: 15px; background: transparent; border: 1px solid #ef4444; color: #ef4444; border-radius: 12px; font-weight: bold; font-size: 11px; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
         
-        /* MODAL DE COMPROBANTE ACTUALIZADO */
+        /* MODAL DE COMPROBANTE CON CONTRATO DETALLADO */
         #modal-firma { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:1000; overflow-y:auto; padding:15px; box-sizing:border-box; }
         .modal-content { background:#1c1c1e; padding:20px; border-radius:20px; border:1px solid #3b82f6; max-width: 500px; margin: 0 auto; position: relative; }
-        .legal-view { background: #000; padding: 15px; border-radius: 12px; font-size: 11px; line-height: 1.4; color: #d1d5db; margin: 15px 0; border: 1px solid #2c2c2e; text-align: left; max-height: 300px; overflow-y: auto; }
-        .legal-view b { color: #3b82f6; display: block; margin-top: 8px; }
+        .legal-view { background: #000; padding: 15px; border-radius: 12px; font-size: 11px; line-height: 1.5; color: #d1d5db; margin: 15px 0; border: 1px solid #2c2c2e; text-align: left; max-height: 400px; overflow-y: auto; }
+        .legal-view b { color: #fff; display: block; margin-top: 12px; }
+        .legal-view span.title-contract { color: #3b82f6; font-weight: bold; font-size: 12px; display: block; text-align: center; margin-bottom: 10px; text-transform: uppercase; }
         .btn-cerrar-modal { background:#ef4444; color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; cursor:pointer; width: 100%; margin-top: 15px; text-transform: uppercase; }
     </style>
 </head>
@@ -163,24 +164,44 @@
             <p id="modal-cliente" style="color:#3b82f6; font-weight:bold; font-size:16px; margin: 5px 0; text-align: center;"></p>
             
             <div class="legal-view">
-                <center><b>CONTRATO DE PRESTACIÓN DE SERVICIOS</b></center><br>
-                <b>• CLÁUSULA 1: OBJETO</b> El servicio de limpieza se realiza bajo estándares profesionales según lo pactado.
-                <b>• CLÁUSULA 2: ACCESO</b> El cliente garantiza acceso, agua y electricidad.
-                <b>• CLÁUSULA 3: PAGO</b> 50% anticipo y 50% al finalizar. Mora del 5% tras 48h.
-                <b>• CLÁUSULA 4: CANCELACIÓN</b> Avisos con menos de 24h pierden el anticipo.
-                <b>• CLÁUSULA 5: MASCOTAS/NIÑOS</b> Deben estar resguardados; no limpiamos desechos biológicos.
-                <b>• CLÁUSULA 6: QUÍMICOS</b> Usamos maquinaria profesional. Productos del cliente bajo su riesgo.
-                <b>• CLÁUSULA 7: REPORTES</b> Daños deben reportarse en 24h con fotos.
-                <b>• CLÁUSULA 8: TALENTO</b> Multa de $2,500 por contratación directa de nuestro staff.
-                <b>• CLÁUSULA 9: OBJETOS PESADOS</b> Cliente presente para mover muebles; no respondemos por rayaduras.
-                <b>• CLÁUSULA 10: EXONERACIÓN</b> Elite Cleaners NO responde por daños en vidrios, puertas o instalaciones debido a mal estado, antigüedad o mala colocación previa.
+                <span class="title-contract">CONTRATO DE PRESTACIÓN DE SERVICIOS DE LIMPIEZA</span>
+                
+                <b>• CLÁUSULA 1: OBJETO Y ALCANCE DEL SERVICIO</b>
+                La empresa se compromete a realizar el servicio de limpieza bajo estándares de la industria, cumpliendo con el objetivo previamente pactado con el cliente. Las tareas adicionales se cotizarán por separado.
+
+                <b>• CLÁUSULA 2: SUMINISTROS Y ACCESO</b>
+                El cliente debe garantizar acceso libre y suministros básicos (agua y electricidad).
+
+                <b>• CLÁUSULA 3: TÉRMINOS ECONÓMICOS Y PAGO</b>
+                - Anticipo (50%): Para programar el servicio.<br>
+                - Liquidación (50%): Inmediatamente al finalizar.<br>
+                - Mora: Recargo del 5% tras 48 horas de retraso.
+
+                <b>• CLÁUSULA 4: CANCELACIÓN Y SERVICIOS FALLIDOS</b>
+                Avisos con menos de 24 horas resultan en la pérdida del anticipo. Si el personal no puede entrar (No-Show), el servicio se cobra como ejecutado.
+
+                <b>• CLÁUSULA 5: SEGURIDAD DE MENORES Y MASCOTAS</b>
+                Las mascotas y los Menores de edad deben estar resguardados; la empresa no se hace responsable por ellas. No se limpian desechos biológicos (humanos o animales).
+
+                <b>• CLÁUSULA 6: EQUIPO Y SUMINISTROS</b>
+                Elite Cleaners provee químicos y maquinaria profesional. El uso de productos del cliente es bajo su propio riesgo de daño en superficies.
+
+                <b>• CLÁUSULA 7: LÍMITE DE RESPONSABILIDAD</b>
+                Reportes de daños deben hacerse con fotos en un plazo de 24 horas. Esta cláusula está sujeta a las exoneraciones de las Cláusulas 9 y 10.
+
+                <b>• CLÁUSULA 8: PROTECCIÓN DE TALENTO (NO CONTRATACIÓN)</b>
+                Multa de $2,500 USD si el cliente contrata directamente a cualquier miembro del equipo hasta 12 meses después del servicio.
+
+                <b>• CLÁUSULA 9: MOVIMIENTO DE OBJETOS PESADOS</b>
+                Para mover heladeras, cocinas o muebles pesados, el cliente debe estar presente obligatoriamente. Elite Cleaners no se responsabiliza por rayaduras o daños en el piso derivados de estas maniobras.
+
+                <b>• CLÁUSULA 10: EXONERACIÓN POR FALLAS ESTRUCTURALES</b>
+                Elite Cleaners queda totalmente exonerado de responsabilidad por daños o roturas en vidrios, puertas, grifería o instalaciones debido a mal estado, antigüedad o mala colocación previa.
             </div>
 
             <p id="modal-fecha" style="color:#8e8e93; font-size:10px; margin-bottom:10px; text-align: center;"></p>
-            
-            <h3 style="color:#fff; margin-bottom:10px; font-size: 12px; text-transform: uppercase;">Firma del Cliente:</h3>
+            <h3 style="color:#fff; margin-bottom:5px; font-size: 11px; text-transform: uppercase;">Firma de Conformidad:</h3>
             <img id="modal-img-firma" src="" style="width:100%; height:120px; background:#fff; border-radius:12px; object-fit:contain; border:2px solid #3b82f6;">
-            
             <button class="btn-cerrar-modal" onclick="document.getElementById('modal-firma').style.display='none'">Cerrar Comprobante</button>
         </div>
     </div>
@@ -220,7 +241,6 @@
             window.location.href = `https://wa.me/${telefono}?text=${mensaje}`;
         }
 
-        /* FUNCIÓN DE VER FIRMA CON CONTRATO */
         function verFirma(id) {
             const servicio = todosLosServicios.find(s => s.id === id);
             if(!servicio) return;
