@@ -16,7 +16,6 @@
         h2 span { color: #3b82f6; }
         p { color: #8e8e93; font-size: 14px; margin-bottom: 20px; }
         
-        /* Ajuste para que el texto largo sea legible */
         .legal-box { 
             background: #1c1c1e; 
             padding: 20px; 
@@ -26,12 +25,12 @@
             line-height: 1.6; 
             border: 1px solid #2c2c2e; 
             margin-bottom: 25px; 
-            max-height: 350px; /* Un poco más alto para facilitar la lectura */
+            max-height: 350px; 
             overflow-y: auto; 
             color: #d1d5db; 
         }
-        .legal-box b { color: #fff; display: block; margin-top: 10px; }
-        .legal-box span.title-contract { color: #3b82f6; font-weight: bold; font-size: 14px; display: block; text-align: center; margin-bottom: 15px; }
+        .legal-box b { color: #fff; display: block; margin-top: 15px; }
+        .title-contract { color: #3b82f6; font-weight: bold; font-size: 14px; display: block; text-align: center; margin-bottom: 15px; text-transform: uppercase; }
 
         #signature-pad { background: #1c1c1e; border-radius: 15px; cursor: crosshair; touch-action: none; width: 100%; height: 250px; border: 2px solid #3b82f6; }
         .buttons { margin-top: 25px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -68,7 +67,7 @@
             Avisos con menos de 24 horas resultan en la pérdida del anticipo. Si el personal no puede entrar (No-Show), el servicio se cobra como ejecutado.
 
             <b>• CLÁUSULA 5: SEGURIDAD DE MENORES Y MASCOTAS</b>
-            Las mascotas y los Menores de edad deben estar resguardados; la empresa no se hace responsable por ellos. No se limpian desechos biológicos (humanos o animales).
+            Las mascotas y los Menores de edad deben estar resguardados; la empresa no se hace responsable por ellas. No se limpian desechos biológicos (humanos o animales).
 
             <b>• CLÁUSULA 6: EQUIPO Y SUMINISTROS</b>
             Elite Cleaners provee químicos y maquinaria profesional. El uso de productos del cliente es bajo su propio riesgo de daño en superficies.
@@ -126,11 +125,16 @@
 
     function ajustarCanvas() {
         const r = window.devicePixelRatio || 1;
-        canvas.width = canvas.offsetWidth * r; canvas.height = canvas.offsetHeight * r;
+        canvas.width = canvas.offsetWidth * r;
+        canvas.height = canvas.offsetHeight * r;
         ctx.scale(r, r);
-        ctx.strokeStyle = "#FFFFFF"; ctx.lineWidth = 3; ctx.lineJoin = "round"; ctx.lineCap = "round";
+        ctx.strokeStyle = "#FFFFFF";
+        ctx.lineWidth = 3;
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
     }
-    window.addEventListener('resize', ajustarCanvas); ajustarCanvas();
+    window.addEventListener('resize', ajustarCanvas);
+    ajustarCanvas();
 
     function obtenerPos(e) {
         const rect = canvas.getBoundingClientRect();
@@ -139,58 +143,96 @@
         return { x: clientX - rect.left, y: clientY - rect.top };
     }
 
-    canvas.addEventListener('mousedown', (e) => { dibujando = true; ctx.beginPath(); const p = obtenerPos(e); ctx.moveTo(p.x, p.y); });
-    canvas.addEventListener('touchstart', (e) => { dibujando = true; ctx.beginPath(); const p = obtenerPos(e); ctx.moveTo(p.x, p.y); e.preventDefault(); });
-    canvas.addEventListener('mousemove', (e) => { if (!dibujando) return; const p = obtenerPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
-    canvas.addEventListener('touchmove', (e) => { if (!dibujando) return; const p = obtenerPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); });
+    canvas.addEventListener('mousedown', (e) => { 
+        dibujando = true; 
+        ctx.beginPath(); 
+        const p = obtenerPos(e); 
+        ctx.moveTo(p.x, p.y); 
+    });
+    canvas.addEventListener('touchstart', (e) => { 
+        dibujando = true; 
+        ctx.beginPath(); 
+        const p = obtenerPos(e); 
+        ctx.moveTo(p.x, p.y); 
+        e.preventDefault(); 
+    });
+    canvas.addEventListener('mousemove', (e) => { 
+        if (!dibujando) return; 
+        const p = obtenerPos(e); 
+        ctx.lineTo(p.x, p.y); 
+        ctx.stroke(); 
+    });
+    canvas.addEventListener('touchmove', (e) => { 
+        if (!dibujando) return; 
+        const p = obtenerPos(e); 
+        ctx.lineTo(p.x, p.y); 
+        ctx.stroke(); 
+        e.preventDefault(); 
+    });
     window.addEventListener('mouseup', () => { dibujando = false; });
     window.addEventListener('touchend', () => { dibujando = false; });
 
-    function limpiar() { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.beginPath(); }
+    function limpiar() { 
+        ctx.clearRect(0, 0, canvas.width, canvas.height); 
+        ctx.beginPath(); 
+    }
 
     async function procesarFirma() {
-        document.getElementById('btn-confirmar').disabled = true;
+        const btn = document.getElementById('btn-confirmar');
+        btn.disabled = true;
         document.getElementById('processing-msg').style.display = 'block';
 
         const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
+        tempCanvas.width = canvas.width; 
+        tempCanvas.height = canvas.height;
         const tCtx = tempCanvas.getContext('2d');
         tCtx.drawImage(canvas, 0, 0);
-        tCtx.globalCompositeOperation = 'difference'; tCtx.fillStyle = 'white'; tCtx.fillRect(0,0,tempCanvas.width,tempCanvas.height);
+        tCtx.globalCompositeOperation = 'difference';
+        tCtx.fillStyle = 'white';
+        tCtx.fillRect(0,0,tempCanvas.width,tempCanvas.height);
         const firmaImg = tempCanvas.toDataURL('image/png');
 
         try {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            doc.setFillColor(0, 0, 0); doc.rect(0, 0, 210, 40, 'F');
-            doc.setTextColor(255, 255, 255); doc.setFontSize(18);
-            doc.text("CONTRATO DE PRESTACIÓN DE SERVICIOS", 105, 25, { align: "center" });
             
-            doc.setTextColor(0, 0, 0); doc.setFontSize(10);
+            doc.setFillColor(0, 0, 0); 
+            doc.rect(0, 0, 210, 40, 'F');
+            doc.setTextColor(255, 255, 255); 
+            doc.setFontSize(16);
+            doc.text("CONTRATO DE PRESTACIÓN DE SERVICIOS DE LIMPIEZA", 105, 25, { align: "center" });
+            
+            doc.setTextColor(0, 0, 0); 
+            doc.setFontSize(10);
             doc.text(`Cliente: ${nombreCliente}`, 20, 55);
             doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, 62);
 
-            const legalPDF = "CLAUSULAS:\n1. OBJETO: Limpieza bajo estandares industriales pactados.\n2. SUMINISTROS: Cliente garantiza agua y electricidad.\n3. PAGOS: 50% anticipo y 50% al finalizar. Mora 5% tras 48h.\n4. CANCELACION: Menos de 24h pierde anticipo. No-Show se cobra completo.\n5. MENORES/MASCOTAS: Deben estar resguardados. Elite no responde por ellos. No se limpian desechos biologicos.\n6. EQUIPO: Uso de productos del cliente es bajo su propio riesgo.\n7. RECLAMOS: Plazo de 24h con fotos.\n8. NO CONTRATACION: Multa de $2,500 USD por contratar personal directamente.\n9. OBJETOS PESADOS: Cliente DEBE ESTAR PRESENTE. No respondemos por rayaduras en pisos.\n10. EXONERACION: No respondemos por roturas de vidrios, puertas o instalaciones por mal estado, antiguedad o mala colocacion.";
+            const legalPDF = "1. OBJETO: Limpieza bajo estandares pactados.\n2. ACCESO: Cliente garantiza agua y electricidad.\n3. PAGO: 50% anticipo y 50% al finalizar.\n4. CANCELACION: Menos de 24h pierde anticipo.\n5. MENORES/MASCOTAS: Deben estar resguardados. Elite no responde por ellos.\n6. EQUIPO: Uso de productos del cliente es bajo su riesgo.\n7. RECLAMOS: Plazo de 24h con fotos.\n8. NO CONTRATACION: Multa de $2,500 USD.\n9. OBJETOS PESADOS: Cliente DEBE ESTAR PRESENTE. No respondemos por rayaduras.\n10. EXONERACION: No respondemos por roturas de vidrios o instalaciones por mal estado previo.";
             
             doc.text(doc.splitTextToSize(legalPDF, 170), 20, 75);
             doc.text("FIRMA DE CONFORMIDAD:", 20, 150);
             doc.addImage(firmaImg, 'PNG', 20, 155, 70, 35);
 
             const pdfBase64 = doc.output('datauristring').split(',')[1];
+            
             await fetch("https://script.google.com/macros/s/AKfycbxhB-fw9qJGm1eJyF2EPDeXEWvO_4SYU47WDZdn_aszndEx-okNsUoUKFVcoPl_y1A/exec", {
-                method: 'POST', mode: 'no-cors',
+                method: 'POST', 
+                mode: 'no-cors',
                 body: JSON.stringify({ pdf: pdfBase64, nombreArchivo: `Contrato_${nombreCliente.replace(/\s+/g, '_')}.pdf` })
             });
 
             await db.collection("servicios").doc(idServicio).update({
-                firma_cliente: true, firma_imagen: firmaImg, fecha_firma: new Date().toISOString()
+                firma_cliente: true, 
+                firma_imagen: firmaImg, 
+                fecha_firma: new Date().toISOString()
             });
 
             document.getElementById('main-content').style.display = 'none';
             document.getElementById('success-screen').style.display = 'flex';
         } catch (e) {
             alert("Error: " + e.message);
-            document.getElementById('btn-confirmar').disabled = false;
+            btn.disabled = false;
+            document.getElementById('processing-msg').style.display = 'none';
         }
     }
 </script>
