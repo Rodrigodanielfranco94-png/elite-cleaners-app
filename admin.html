@@ -57,9 +57,12 @@
         .pay-amount { color: #22c55e; font-weight: bold; font-size: 14px; }
         .btn-reset { width: 100%; padding: 15px; background: transparent; border: 1px solid #ef4444; color: #ef4444; border-radius: 12px; font-weight: bold; font-size: 11px; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
         
-        #modal-firma { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; overflow-y:auto; padding:20px; box-sizing:border-box; }
-        .modal-content { background:#1c1c1e; padding:20px; border-radius:15px; border:1px solid #3b82f6; position:relative; max-width: 500px; margin: 0 auto; }
-        .btn-cerrar-modal { background:#ef4444; color:white; border:none; padding:8px 15px; border-radius:8px; font-weight:bold; cursor:pointer; width: 100%; margin-top: 15px; text-transform: uppercase; }
+        /* MODAL DE COMPROBANTE ACTUALIZADO */
+        #modal-firma { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:1000; overflow-y:auto; padding:15px; box-sizing:border-box; }
+        .modal-content { background:#1c1c1e; padding:20px; border-radius:20px; border:1px solid #3b82f6; max-width: 500px; margin: 0 auto; position: relative; }
+        .legal-view { background: #000; padding: 15px; border-radius: 12px; font-size: 11px; line-height: 1.4; color: #d1d5db; margin: 15px 0; border: 1px solid #2c2c2e; text-align: left; max-height: 300px; overflow-y: auto; }
+        .legal-view b { color: #3b82f6; display: block; margin-top: 8px; }
+        .btn-cerrar-modal { background:#ef4444; color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; cursor:pointer; width: 100%; margin-top: 15px; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -156,12 +159,29 @@
 
     <div id="modal-firma">
         <div class="modal-content">
-            <h2 style="color:#fff; margin-top:0; text-align:center; font-style:italic;">ELITE CLEANERS <span style="color:#3b82f6;">COMPANY</span></h2>
-            <p id="modal-cliente" style="color:#3b82f6; font-weight:bold; font-size:18px; margin: 5px 0;"></p>
-            <p id="modal-fecha" style="color:#8e8e93; font-size:12px; margin: 0 0 15px 0;"></p>
-            <h3 style="color:#fff; margin-bottom:10px; font-size: 14px;">FIRMA ACEPTADA:</h3>
-            <img id="modal-img-firma" src="" style="width:100%; height:150px; background:#fff; border-radius:10px; object-fit:contain; border:2px solid #3b82f6;">
-            <button class="btn-cerrar-modal" onclick="document.getElementById('modal-firma').style.display='none'">Cerrar</button>
+            <h2 style="color:#fff; margin-top:0; text-align:center; font-style:italic; font-size:18px;">ELITE CLEANERS <span style="color:#3b82f6;">COMPANY</span></h2>
+            <p id="modal-cliente" style="color:#3b82f6; font-weight:bold; font-size:16px; margin: 5px 0; text-align: center;"></p>
+            
+            <div class="legal-view">
+                <center><b>CONTRATO DE PRESTACIÓN DE SERVICIOS</b></center><br>
+                <b>• CLÁUSULA 1: OBJETO</b> El servicio de limpieza se realiza bajo estándares profesionales según lo pactado.
+                <b>• CLÁUSULA 2: ACCESO</b> El cliente garantiza acceso, agua y electricidad.
+                <b>• CLÁUSULA 3: PAGO</b> 50% anticipo y 50% al finalizar. Mora del 5% tras 48h.
+                <b>• CLÁUSULA 4: CANCELACIÓN</b> Avisos con menos de 24h pierden el anticipo.
+                <b>• CLÁUSULA 5: MASCOTAS/NIÑOS</b> Deben estar resguardados; no limpiamos desechos biológicos.
+                <b>• CLÁUSULA 6: QUÍMICOS</b> Usamos maquinaria profesional. Productos del cliente bajo su riesgo.
+                <b>• CLÁUSULA 7: REPORTES</b> Daños deben reportarse en 24h con fotos.
+                <b>• CLÁUSULA 8: TALENTO</b> Multa de $2,500 por contratación directa de nuestro staff.
+                <b>• CLÁUSULA 9: OBJETOS PESADOS</b> Cliente presente para mover muebles; no respondemos por rayaduras.
+                <b>• CLÁUSULA 10: EXONERACIÓN</b> Elite Cleaners NO responde por daños en vidrios, puertas o instalaciones debido a mal estado, antigüedad o mala colocación previa.
+            </div>
+
+            <p id="modal-fecha" style="color:#8e8e93; font-size:10px; margin-bottom:10px; text-align: center;"></p>
+            
+            <h3 style="color:#fff; margin-bottom:10px; font-size: 12px; text-transform: uppercase;">Firma del Cliente:</h3>
+            <img id="modal-img-firma" src="" style="width:100%; height:120px; background:#fff; border-radius:12px; object-fit:contain; border:2px solid #3b82f6;">
+            
+            <button class="btn-cerrar-modal" onclick="document.getElementById('modal-firma').style.display='none'">Cerrar Comprobante</button>
         </div>
     </div>
 
@@ -194,25 +214,23 @@
 
         function enviarContrato(id, telefono, cliente) {
             if (!telefono) return alert("El cliente no tiene teléfono registrado.");
-            
-            // ACTUALIZADO A GITHUB PAGES
             const urlBase = 'https://rodrigodanielfranco94-png.github.io/elite-cleaners-app'; 
-            
             const urlFirma = `${urlBase}/firmar.html?id=${id}&cliente=${encodeURIComponent(cliente)}`;
             const mensaje = `Hola ${cliente}, es un placer saludarte de *Elite Cleaners Company*. 🌟%0A%0APara confirmar tu servicio, por favor revisa y firma nuestro acuerdo de servicio en el siguiente enlace:%0A%0A${urlFirma}`;
             window.location.href = `https://wa.me/${telefono}?text=${mensaje}`;
         }
 
+        /* FUNCIÓN DE VER FIRMA CON CONTRATO */
         function verFirma(id) {
             const servicio = todosLosServicios.find(s => s.id === id);
             if(!servicio) return;
-            document.getElementById('modal-cliente').innerText = "Cliente: " + servicio.cliente;
-            let fechaTexto = "Fecha desconocida";
+            document.getElementById('modal-cliente').innerText = "CLIENTE: " + servicio.cliente;
+            let fechaTexto = "Sin fecha";
             if (servicio.fecha_firma) {
                 const f = new Date(servicio.fecha_firma);
-                fechaTexto = f.toLocaleDateString() + " " + f.toLocaleTimeString();
+                fechaTexto = "Firmado digitalmente el: " + f.toLocaleDateString() + " " + f.toLocaleTimeString();
             }
-            document.getElementById('modal-fecha').innerText = "Firmado el: " + fechaTexto;
+            document.getElementById('modal-fecha').innerText = fechaTexto;
             document.getElementById('modal-img-firma').src = servicio.firma_imagen || "";
             document.getElementById('modal-firma').style.display = 'block';
         }
