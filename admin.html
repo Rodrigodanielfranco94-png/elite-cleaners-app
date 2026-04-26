@@ -443,8 +443,8 @@
                         <div class="action-buttons">
                             <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">${s.estado === 'completado' ? 'Abrir' : 'Terminar'}</button>
                             ${btnContrato}
-                            <button class="btn-action btn-edit" onclick="editar('${s.id}', ${JSON.stringify(s).replace(/"/g, '&quot;')})">Edit</button>
-                            <button class="btn-action btn-delete" onclick="borrar('${s.id}')">X</button>
+                            <button class="btn-action btn-edit" onclick="editar('${s.id}', ${JSON.stringify(s).replace(/"/g, '&quot;')})">Editar</button>
+                            <button class="btn-action btn-delete" onclick="borrar('${s.id}')">Eliminar</button>
                         </div>`;
                     h.appendChild(card);
                 }
