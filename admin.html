@@ -10,64 +10,383 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
-        body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; padding-bottom: 100px; }
-        h1 { font-style: italic; font-weight: 900; font-size: 22px; text-transform: uppercase; margin-bottom: 20px; }
-        h1 span { color: #3b82f6; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: #1c1c1e; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #2c2c2e; cursor: pointer; transition: 0.3s; }
-        .stat-card.active { border-color: #3b82f6; background: #1a2638; }
-        .stat-card h2 { margin: 0; font-size: 28px; color: #3b82f6; }
-        .stat-card p { margin: 5px 0 0 0; font-size: 10px; color: #8e8e93; text-transform: uppercase; }
-        .form-container { background: #1c1c1e; padding: 18px; border-radius: 20px; border: 1px solid #2c2c2e; margin-bottom: 20px; }
-        .section-staff { border-color: #3b82f6; border-style: dashed; }
-        .label-text { font-size: 10px; color: #3b82f6; font-weight: bold; margin: 8px 0 4px 5px; display: block; text-transform: uppercase; }
-        input, textarea { width: 100%; padding: 14px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #2c2c2e; background: #2c2c2e; color: white; box-sizing: border-box; font-size: 15px; }
-        .staff-list { margin-top: 15px; border-top: 1px solid #2c2c2e; padding-top: 15px; }
-        .staff-item { background: #000; padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #2c2c2e; }
-        .staff-info b { font-size: 13px; color: #fff; display: block; }
-        .staff-info span { font-size: 10px; color: #8e8e93; }
-        .staff-actions { display: flex; gap: 5px; }
-        .btn-mini { padding: 6px 10px; border: none; border-radius: 6px; font-size: 9px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; }
-        .search-container { position: relative; margin-bottom: 5px; }
-        .suggestions-list { position: absolute; width: 100%; background: #3b82f6; border-radius: 10px; z-index: 100; max-height: 150px; overflow-y: auto; display: none; }
-        .suggestion-item { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-weight: bold; }
-        .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .type-btn { padding: 12px; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: #8e8e93; font-weight: bold; font-size: 10px; cursor: pointer; text-transform: uppercase; }
-        .type-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
-        .save-btn { width: 100%; padding: 18px; background: #3b82f6; color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 16px; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
-        .reg-btn { background: #3b82f6; color: white; border: none; width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 12px; cursor: pointer; margin-top: 5px; text-transform: uppercase; }
-        .card-servicio { background: #1c1c1e; padding: 20px; border-radius: 25px; border: 1px solid #2c2c2e; margin-bottom: 15px; position: relative; }
-        .chat-btn { position: absolute; right: 15px; top: 15px; width: 45px; height: 45px; background: #007aff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; text-decoration: none; border: none; cursor: pointer; color: white; }
-        .card-servicio h3 { margin: 0 0 5px 0; color: #3b82f6; font-size: 20px; max-width: 80%; }
-        .card-servicio p { margin: 4px 0; font-size: 13px; color: #d1d5db; }
-        .time-box { background: #000; padding: 12px; border-radius: 15px; margin-top: 15px; border: 1px solid #3b82f633; }
-        .time-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
-        .time-row b { color: #3b82f6; font-size: 10px; text-transform: uppercase; }
-        .total-time-row { border-top: 1px solid #3b82f6; margin-top: 8px; padding-top: 8px; font-weight: bold; color: #22c55e !important; }
-        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
-        .btn-action { padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 11px; cursor: pointer; text-transform: uppercase; }
+        body { 
+            background: #000; 
+            color: white; 
+            font-family: -apple-system, sans-serif; 
+            margin: 0; 
+            padding: 15px; 
+            padding-bottom: 100px; 
+        }
+        h1 { 
+            font-style: italic; 
+            font-weight: 900; 
+            font-size: 22px; 
+            text-transform: uppercase; 
+            margin-bottom: 20px; 
+        }
+        h1 span { 
+            color: #3b82f6; 
+        }
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 15px; 
+            margin-bottom: 20px; 
+        }
+        .stat-card { 
+            background: #1c1c1e; 
+            padding: 20px; 
+            border-radius: 15px; 
+            text-align: center; 
+            border: 1px solid #2c2c2e; 
+            cursor: pointer; 
+            transition: 0.3s; 
+        }
+        .stat-card.active { 
+            border-color: #3b82f6; 
+            background: #1a2638; 
+        }
+        .stat-card h2 { 
+            margin: 0; 
+            font-size: 28px; 
+            color: #3b82f6; 
+        }
+        .stat-card p { 
+            margin: 5px 0 0 0; 
+            font-size: 10px; 
+            color: #8e8e93; 
+            text-transform: uppercase; 
+        }
+        .form-container { 
+            background: #1c1c1e; 
+            padding: 18px; 
+            border-radius: 20px; 
+            border: 1px solid #2c2c2e; 
+            margin-bottom: 20px; 
+        }
+        .section-staff { 
+            border-color: #3b82f6; 
+            border-style: dashed; 
+        }
+        .label-text { 
+            font-size: 10px; 
+            color: #3b82f6; 
+            font-weight: bold; 
+            margin: 8px 0 4px 5px; 
+            display: block; 
+            text-transform: uppercase; 
+        }
+        input, textarea { 
+            width: 100%; 
+            padding: 14px; 
+            margin-bottom: 10px; 
+            border-radius: 12px; 
+            border: 1px solid #2c2c2e; 
+            background: #2c2c2e; 
+            color: white; 
+            box-sizing: border-box; 
+            font-size: 15px; 
+        }
+        .staff-list { 
+            margin-top: 15px; 
+            border-top: 1px solid #2c2c2e; 
+            padding-top: 15px; 
+        }
+        .staff-item { 
+            background: #000; 
+            padding: 12px; 
+            border-radius: 12px; 
+            margin-bottom: 8px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border: 1px solid #2c2c2e; 
+        }
+        .staff-info b { 
+            font-size: 13px; 
+            color: #fff; 
+            display: block; 
+        }
+        .staff-info span { 
+            font-size: 10px; 
+            color: #8e8e93; 
+        }
+        .staff-actions { 
+            display: flex; 
+            gap: 5px; 
+        }
+        .btn-mini { 
+            padding: 6px 10px; 
+            border: none; 
+            border-radius: 6px; 
+            font-size: 9px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            color: white; 
+            text-transform: uppercase; 
+        }
+        .search-container { 
+            position: relative; 
+            margin-bottom: 5px; 
+        }
+        .suggestions-list { 
+            position: absolute; 
+            width: 100%; 
+            background: #3b82f6; 
+            border-radius: 10px; 
+            z-index: 100; 
+            max-height: 150px; 
+            overflow-y: auto; 
+            display: none; 
+        }
+        .suggestion-item { 
+            padding: 12px; 
+            border-bottom: 1px solid rgba(255,255,255,0.1); 
+            cursor: pointer; 
+            font-weight: bold; 
+        }
+        .type-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 8px; 
+            margin-top: 10px; 
+        }
+        .type-btn { 
+            padding: 12px; 
+            border-radius: 10px; 
+            border: 1px solid #2c2c2e; 
+            background: #2c2c2e; 
+            color: #8e8e93; 
+            font-weight: bold; 
+            font-size: 10px; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+        }
+        .type-btn.active { 
+            background: #3b82f6; 
+            color: white; 
+            border-color: #3b82f6; 
+        }
+        .save-btn { 
+            width: 100%; 
+            padding: 18px; 
+            background: #3b82f6; 
+            color: white; 
+            border: none; 
+            border-radius: 15px; 
+            font-weight: bold; 
+            font-size: 16px; 
+            margin-top: 15px; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+        }
+        .reg-btn { 
+            background: #3b82f6; 
+            color: white; 
+            border: none; 
+            width: 100%; 
+            padding: 12px; 
+            border-radius: 10px; 
+            font-weight: bold; 
+            font-size: 12px; 
+            cursor: pointer; 
+            margin-top: 5px; 
+            text-transform: uppercase; 
+        }
+        .card-servicio { 
+            background: #1c1c1e; 
+            padding: 20px; 
+            border-radius: 25px; 
+            border: 1px solid #2c2c2e; 
+            margin-bottom: 15px; 
+            position: relative; 
+        }
+        .chat-btn { 
+            position: absolute; 
+            right: 15px; 
+            top: 15px; 
+            width: 45px; 
+            height: 45px; 
+            background: #007aff; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 20px; 
+            text-decoration: none; 
+            border: none; 
+            cursor: pointer; 
+            color: white; 
+        }
+        .card-servicio h3 { 
+            margin: 0 0 5px 0; 
+            color: #3b82f6; 
+            font-size: 20px; 
+            max-width: 80%; 
+        }
+        .card-servicio p { 
+            margin: 4px 0; 
+            font-size: 13px; 
+            color: #d1d5db; 
+        }
+        .time-box { 
+            background: #000; 
+            padding: 12px; 
+            border-radius: 15px; 
+            margin-top: 15px; 
+            border: 1px solid #3b82f633; 
+        }
+        .time-row { 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 12px; 
+            margin-bottom: 5px; 
+        }
+        .time-row b { 
+            color: #3b82f6; 
+            font-size: 10px; 
+            text-transform: uppercase; 
+        }
+        .total-time-row { 
+            border-top: 1px solid #3b82f6; 
+            margin-top: 8px; 
+            padding-top: 8px; 
+            font-weight: bold; 
+            color: #22c55e !important; 
+        }
+        .action-buttons { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 8px; 
+            margin-top: 15px; 
+        }
+        .btn-action { 
+            padding: 12px; 
+            border: none; 
+            border-radius: 10px; 
+            color: white; 
+            font-weight: bold; 
+            font-size: 11px; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+        }
         .btn-done { background: #22c55e; }
         .btn-edit { background: #6366f1; }
         .btn-delete { background: #ef4444; }
         .btn-contract { background: #004a99; }
         .btn-review { background: #3b82f6; border: 1px solid #ffffff33; }
         
-        .payroll-container { background: #1c1c1e; padding: 18px; border-radius: 20px; border: 1px solid #22c55e; margin-top: 30px; }
-        .payroll-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
-        .payroll-table th { text-align: left; color: #22c55e; padding: 8px; border-bottom: 1px solid #2c2c2e; text-transform: uppercase; font-size: 10px; }
-        .payroll-table td { padding: 10px 8px; border-bottom: 1px solid #2c2c2e; }
-        .pay-amount { color: #22c55e; font-weight: bold; font-size: 14px; }
-        .btn-reset { width: 100%; padding: 15px; background: transparent; border: 1px solid #ef4444; color: #ef4444; border-radius: 12px; font-weight: bold; font-size: 11px; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
+        .payroll-container { 
+            background: #1c1c1e; 
+            padding: 18px; 
+            border-radius: 20px; 
+            border: 1px solid #22c55e; 
+            margin-top: 30px; 
+        }
+        .payroll-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 10px; 
+            font-size: 12px; 
+        }
+        .payroll-table th { 
+            text-align: left; 
+            color: #22c55e; 
+            padding: 8px; 
+            border-bottom: 1px solid #2c2c2e; 
+            text-transform: uppercase; 
+            font-size: 10px; 
+        }
+        .payroll-table td { 
+            padding: 10px 8px; 
+            border-bottom: 1px solid #2c2c2e; 
+        }
+        .pay-amount { 
+            color: #22c55e; 
+            font-weight: bold; 
+            font-size: 14px; 
+        }
+        .btn-reset { 
+            width: 100%; 
+            padding: 15px; 
+            background: transparent; 
+            border: 1px solid #ef4444; 
+            color: #ef4444; 
+            border-radius: 12px; 
+            font-weight: bold; 
+            font-size: 11px; 
+            margin-top: 15px; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+        }
         
-        #modal-firma { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:1000; overflow-y:auto; padding:15px; box-sizing:border-box; }
-        .modal-content { background:#1c1c1e; padding:20px; border-radius:20px; border:1px solid #3b82f6; max-width: 500px; margin: 0 auto; position: relative; }
+        #modal-firma { 
+            display:none; 
+            position:fixed; 
+            top:0; 
+            left:0; 
+            width:100%; 
+            height:100%; 
+            background:rgba(0,0,0,0.95); 
+            z-index:1000; 
+            overflow-y:auto; 
+            padding:15px; 
+            box-sizing:border-box; 
+        }
+        .modal-content { 
+            background:#1c1c1e; 
+            padding:20px; 
+            border-radius:20px; 
+            border:1px solid #3b82f6; 
+            max-width: 500px; 
+            margin: 0 auto; 
+            position: relative; 
+        }
         
-        .legal-view { background: #000; padding: 15px; border-radius: 12px; font-size: 11px; line-height: 1.5; color: #d1d5db; margin: 15px 0; border: 1px solid #2c2c2e; text-align: left; max-height: 400px; overflow-y: auto; }
-        .legal-view b { color: #fff; display: block; margin-top: 12px; }
-        .legal-view span.title-contract { color: #3b82f6; font-weight: bold; font-size: 12px; display: block; text-align: center; margin-bottom: 10px; text-transform: uppercase; }
+        .legal-view { 
+            background: #000; 
+            padding: 15px; 
+            border-radius: 12px; 
+            font-size: 11px; 
+            line-height: 1.5; 
+            color: #d1d5db; 
+            margin: 15px 0; 
+            border: 1px solid #2c2c2e; 
+            text-align: left; 
+            max-height: 400px; 
+            overflow-y: auto; 
+        }
+        .legal-view b { 
+            color: #fff; 
+            display: block; 
+            margin-top: 12px; 
+        }
+        .legal-view span.title-contract { 
+            color: #3b82f6; 
+            font-weight: bold; 
+            font-size: 12px; 
+            display: block; 
+            text-align: center; 
+            margin-bottom: 10px; 
+            text-transform: uppercase; 
+        }
         
-        .modal-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .btn-modal { padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; font-size: 11px; }
+        .modal-footer { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 10px; 
+            margin-top: 15px; 
+        }
+        .btn-modal { 
+            padding: 12px; 
+            border-radius: 12px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            border: none; 
+            text-transform: uppercase; 
+            font-size: 11px; 
+        }
         .btn-descargar { background: #22c55e; color: white; }
         .btn-cerrar { background: #ef4444; color: white; }
     </style>
@@ -216,32 +535,49 @@
         </div>
     </div>
 
-    <img src="nico.png" 
-         onclick="nicoSaluda()" 
-         style="width: 100px; position: fixed; bottom: 20px; right: 20px; z-index: 1000; cursor: pointer;">
-
     <script>
-        // --- MOTOR DE VOZ NICO ---
+        // --- ASISTENTE NICO (COMANDO DE VOZ) ---
         const NICO_API_KEY = "sk_ba07983d6079e159072231b407435733fc33ed16e952e1e8";
         const NICO_VOICE_ID = "pNInz6obpg8ndclKuzt1"; 
 
-        async function nicoSaluda() {
+        async function hablarNico(texto) {
             try {
                 const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${NICO_VOICE_ID}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'xi-api-key': NICO_API_KEY },
-                    body: JSON.stringify({
-                        text: "¡Dime, Rodrigo! Estoy aquí para ayudarte con la administración.",
-                        model_id: "eleven_multilingual_v2",
-                        voice_settings: { stability: 0.45, similarity_boost: 0.75 }
+                    body: JSON.stringify({ 
+                        text: texto, 
+                        model_id: "eleven_multilingual_v2", 
+                        voice_settings: { stability: 0.45, similarity_boost: 0.75 } 
                     })
                 });
                 const audioBlob = await response.blob();
                 new Audio(URL.createObjectURL(audioBlob)).play();
-            } catch (e) { console.error("Error Nico:", e); }
+            } catch (e) { 
+                console.error("Error en Nico Voz:", e); 
+            }
         }
 
-        // --- TU LÓGICA DE FIREBASE Y ADMIN (INTACTA) ---
+        // Activación "Nde Nico"
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'es-ES';
+            recognition.continuous = true;
+            recognition.interimResults = false;
+
+            recognition.onresult = (event) => {
+                const result = event.results[event.results.length - 1][0].transcript.toLowerCase();
+                if (result.includes("nde nico")) {
+                    hablarNico("¡Dime, Rodrigo! ¿Cómo va todo en Elite Cleaners hoy?");
+                }
+            };
+
+            recognition.onend = () => recognition.start();
+            recognition.start();
+        }
+
+        // --- TU LÓGICA DE FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
             authDomain: "elite-cleaners-app.firebaseapp.com",
@@ -259,20 +595,19 @@
         let todosLosServicios = [];
         let vistaActual = "pendiente";
 
+        // FUNCIONES DE VISTA Y CONTRATOS
         function cambiarVista(v) {
             vistaActual = v;
-            document.getElementById('btn-pendientes').classList.remove('active');
-            document.getElementById('btn-completados').classList.remove('active');
-            if (v === 'pendiente') document.getElementById('btn-pendientes').classList.add('active');
-            else document.getElementById('btn-completados').classList.add('active');
+            document.getElementById('btn-pendientes').classList.toggle('active', v === 'pendiente');
+            document.getElementById('btn-completados').classList.toggle('active', v === 'completado');
             renderHistorial();
         }
 
         function enviarContrato(id, telefono, cliente) {
-            if (!telefono) return alert("El cliente no tiene teléfono registrado.");
+            if (!telefono) return alert("El cliente no tiene teléfono.");
             const urlBase = 'https://rodrigodanielfranco94-png.github.io/elite-cleaners-app'; 
             const urlFirma = `${urlBase}/firmar.html?id=${id}&cliente=${encodeURIComponent(cliente)}`;
-            const mensaje = `Hola ${cliente}, es un placer saludarte de *Elite Cleaners Company*. 🌟%0A%0APara confirmar tu servicio, por favor revisa y firma nuestro acuerdo de servicio en el siguiente enlace:%0A%0A${urlFirma}`;
+            const mensaje = `Hola ${cliente}, revisa y firma tu contrato aquí: ${urlFirma}`;
             window.location.href = `https://wa.me/${telefono}?text=${mensaje}`;
         }
 
@@ -280,12 +615,7 @@
             const servicio = todosLosServicios.find(s => s.id === id);
             if(!servicio) return;
             document.getElementById('modal-cliente').innerText = "CLIENTE: " + servicio.cliente;
-            let fechaTexto = "Sin fecha";
-            if (servicio.fecha_firma) {
-                const f = new Date(servicio.fecha_firma);
-                fechaTexto = "Firmado digitalmente el: " + f.toLocaleDateString() + " " + f.toLocaleTimeString();
-            }
-            document.getElementById('modal-fecha').innerText = fechaTexto;
+            document.getElementById('modal-fecha').innerText = servicio.fecha_firma ? "Firmado el: " + new Date(servicio.fecha_firma).toLocaleString() : "Sin fecha";
             document.getElementById('modal-img-firma').src = servicio.firma_imagen || "";
             document.getElementById('modal-firma').style.display = 'block';
         }
@@ -294,21 +624,10 @@
             const area = document.getElementById('capture-area');
             const legal = document.getElementById('legal-content');
             const cliente = document.getElementById('modal-cliente').innerText.split(': ')[1];
-            
-            const originalMaxHeight = legal.style.maxHeight;
-            const originalOverflow = legal.style.overflowY;
+            const originalMax = legal.style.maxHeight;
             legal.style.maxHeight = 'none';
-            legal.style.overflowY = 'visible';
-
-            html2canvas(area, { 
-                backgroundColor: '#1c1c1e', 
-                scale: 2,
-                useCORS: true,
-                logging: false
-            }).then(canvas => {
-                legal.style.maxHeight = originalMaxHeight;
-                legal.style.overflowY = originalOverflow;
-
+            html2canvas(area, { backgroundColor: '#1c1c1e', scale: 2, useCORS: true }).then(canvas => {
+                legal.style.maxHeight = originalMax;
                 const link = document.createElement('a');
                 link.download = `Contrato_Elite_${cliente}.png`;
                 link.href = canvas.toDataURL('image/png');
@@ -316,24 +635,20 @@
             });
         }
 
+        // LÓGICA DE TIEMPO Y CLIENTES
         function calcularTiempoTrabajado(inicio, fin) {
             if (!inicio || !fin || inicio === "--:--" || fin === "--:--") return { texto: "En proceso...", minutos: 0 };
-            const aMinutos = (horaStr) => {
-                let hLimpia = horaStr.toLowerCase().trim();
-                let meridiano = hLimpia.includes('p') ? 'pm' : hLimpia.includes('a') ? 'am' : null;
-                let soloHora = hLimpia.replace(/[apm.\s]/g, '');
-                let [hh, mm] = soloHora.split(':').map(Number);
-                if (meridiano === 'pm' && hh < 12) hh += 12;
-                if (meridiano === 'am' && hh === 12) hh = 0;
+            const aMinutos = (h) => {
+                let s = h.toLowerCase().trim();
+                let pm = s.includes('p');
+                let [hh, mm] = s.replace(/[apm.\s]/g, '').split(':').map(Number);
+                if (pm && hh < 12) hh += 12;
+                if (!pm && hh === 12) hh = 0;
                 return (hh * 60) + mm;
             };
-            try {
-                const minInicio = aMinutos(inicio);
-                const minFin = aMinutos(fin);
-                let diferencia = minFin - minInicio;
-                if (diferencia < 0) diferencia += 1440; 
-                return { texto: `${Math.floor(diferencia/60)}h ${diferencia%60}m`, minutos: diferencia };
-            } catch (e) { return { texto: "Err", minutos: 0 }; }
+            let dif = aMinutos(fin) - aMinutos(inicio);
+            if (dif < 0) dif += 1440;
+            return { texto: `${Math.floor(dif/60)}h ${dif%60}m`, minutos: dif };
         }
 
         db.collection("clientes").onSnapshot(snap => {
@@ -361,12 +676,13 @@
             l.style.display = f.length > 0 ? "block" : "none";
         }
 
+        // GESTIÓN DE PERSONAL
         function registrarStaff() {
             const id = document.getElementById('edit-staff-id').value;
             const n = document.getElementById('reg-nombre').value;
             const e = document.getElementById('reg-email').value.toLowerCase().trim();
             const p = document.getElementById('reg-pago').value || 0;
-            if(!n || !e) return alert("Faltan datos");
+            if(!n || !e) return alert("Faltan datos.");
             if(id) db.collection("usuarios").doc(id).update({ nombre: n, email: e, pago_hora: p }).then(resetStaffForm);
             else db.collection("usuarios").add({ nombre: n, email: e, rol: "empleado", pago_hora: p }).then(resetStaffForm);
         }
@@ -387,10 +703,10 @@
                 const e = doc.data(); const id = doc.id;
                 todosLosEmpleados.push({id, ...e});
                 lv.innerHTML += `<div class="staff-item">
-                    <div class="staff-info"><b>${e.nombre}</b><span>$${e.pago_hora || 0}/hr</span></div>
+                    <div class="staff-info"><b>${e.nombre}</b><span>$${e.pago_hora}/hr</span></div>
                     <div class="staff-actions">
-                        <button class="btn-mini" style="background:#6366f1" onclick="editarStaff('${id}','${e.nombre}','${e.email}','${e.pago_hora||0}')">Editar</button>
-                        <button class="btn-mini" style="background:#ef4444" onclick="borrarStaff('${id}','${e.nombre}')">Eliminar</button>
+                        <button class="btn-mini" style="background:#6366f1" onclick="editarStaff('${id}','${e.nombre}','${e.email}','${e.pago_hora}')">Editar</button>
+                        <button class="btn-mini" style="background:#ef4444" onclick="borrarStaff('${id}')">Borrar</button>
                     </div>
                 </div>`;
             });
@@ -399,10 +715,10 @@
 
         function filtrarEmpleados(num) {
             const inputId = num === 1 ? 'search-empleado' : 'search-empleado-2';
-            const suggestionsId = num === 1 ? 'suggestions-1' : 'suggestions-2';
+            const suggId = num === 1 ? 'suggestions-1' : 'suggestions-2';
             const emailId = num === 1 ? 'email-empleado' : 'email-empleado-2';
             const q = document.getElementById(inputId).value.toLowerCase();
-            const l = document.getElementById(suggestionsId);
+            const l = document.getElementById(suggId);
             l.innerHTML = "";
             if (q.length < 1) { l.style.display = "none"; return; }
             const f = todosLosEmpleados.filter(e => e.nombre.toLowerCase().includes(q));
@@ -419,18 +735,17 @@
             l.style.display = f.length > 0 ? "block" : "none";
         }
 
+        // GESTIÓN DE SERVICIOS
         function selectType(t) {
             tipoSeleccionado = t;
             document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('btn-' + t).classList.add('active');
         }
 
-        function asignarTrabajo() {
+        async function asignarTrabajo() {
             const id = document.getElementById('edit-id').value;
-            const cli_nombre = document.getElementById('cliente').value;
-            if(!cli_nombre) return alert("Falta el cliente");
             const data = {
-                cliente: cli_nombre, 
+                cliente: document.getElementById('cliente').value, 
                 direccion: document.getElementById('direccion').value,
                 whatsapp: document.getElementById('whatsapp').value.replace(/\D/g,''),
                 empleado_nombre: document.getElementById('search-empleado').value,
@@ -443,26 +758,19 @@
                 tipo: tipoSeleccionado,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
-            if(id) {
-                data.hora_inicio = document.getElementById('hora_inicio_real').value || "--:--";
-                data.hora_fin = document.getElementById('hora_fin_real').value || "--:--";
-            } else {
-                data.estado = "pendiente";
-                data.hora_inicio = "--:--";
-                data.hora_fin = "--:--";
-                data.firma_cliente = false;
+            if(!id) {
+                data.estado = "pendiente"; data.hora_inicio = "--:--"; data.hora_fin = "--:--"; data.firma_cliente = false;
             }
-            db.collection("clientes").doc(cli_nombre).set({ nombre: cli_nombre, direccion: data.direccion, whatsapp: data.whatsapp });
             if (id) db.collection("servicios").doc(id).update(data).then(() => location.reload());
-            else db.collection("servicios").add(data).then(() => location.reload());
+            else db.collection("servicios").add(data).then(() => {
+                hablarNico("Trabajo asignado, Rodrigo.");
+                setTimeout(() => location.reload(), 2000);
+            });
         }
 
         db.collection("servicios").onSnapshot(snap => {
             todosLosServicios = [];
-            snap.forEach(doc => {
-                const s = doc.data();
-                todosLosServicios.push({ id: doc.id, ...s });
-            });
+            snap.forEach(doc => todosLosServicios.push({ id: doc.id, ...doc.data() }));
             document.getElementById('count-pendientes').innerText = todosLosServicios.filter(s => s.estado !== 'completado').length;
             document.getElementById('count-completados').innerText = todosLosServicios.filter(s => s.estado === 'completado').length;
             renderHistorial();
@@ -474,30 +782,27 @@
             h.innerHTML = "";
             todosLosServicios.forEach(s => {
                 if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
-                    const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
-                    const btnFirma = s.firma_cliente ? `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">Ver Firma</button>` : `<button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Contrato</button>`;
-                    const card = document.createElement('div');
-                    card.className = 'card-servicio';
-                    card.innerHTML = `
+                    const info = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
+                    const btnF = s.firma_cliente ? `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">Ver Firma</button>` : `<button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Contrato</button>`;
+                    h.innerHTML += `<div class="card-servicio">
                         <button class="chat-btn" onclick="abrirChat('${s.whatsapp}')">💬</button>
                         <div style="font-size:10px; color:#3b82f6; font-weight:bold;">${s.tipo}</div>
                         <h3>${s.cliente}</h3>
                         <p>📅 ${s.fecha} | ⏰ ${s.hora}</p>
                         <p>📍 ${s.direccion}</p>
-                        <p>👤 ${s.empleado_nombre_2 ? s.empleado_nombre+' & '+s.empleado_nombre_2 : s.empleado_nombre}</p>
                         <div class="time-box">
                             <div class="time-row"><b>Inicio:</b> ${s.hora_inicio}</div>
                             <div class="time-row"><b>Fin:</b> ${s.hora_fin}</div>
-                            <div class="time-row total-time-row"><b>Tiempo:</b> ${infoTiempo.texto}</div>
+                            <div class="time-row total-time-row"><b>Tiempo:</b> ${info.texto}</div>
                         </div>
                         <div class="action-buttons">
-                            <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">${s.estado === 'completado' ? 'Abrir' : 'Terminar'}</button>
-                            ${btnFirma}
+                            <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">Terminar</button>
+                            ${btnF}
                             <button class="btn-action btn-review" onclick="solicitarResenaGoogle('${s.cliente}', '${s.whatsapp}')">Reseña ⭐️</button>
-                            <button class="btn-action btn-edit" onclick="editar('${s.id}', ${JSON.stringify(s).replace(/"/g, '"')})">Editar</button>
+                            <button class="btn-action btn-edit" onclick='editar("${s.id}", ${JSON.stringify(s)})'>Editar</button>
                             <button class="btn-action btn-delete" onclick="borrar('${s.id}')">Eliminar</button>
-                        </div>`;
-                    h.appendChild(card);
+                        </div>
+                    </div>`;
                 }
             });
         }
@@ -530,43 +835,10 @@
         function abrirChat(num) { if(num) window.location.href = `sms:${num}`; }
         function marcar(id, est) { db.collection("servicios").doc(id).update({ estado: est }); }
         function borrar(id) { if(confirm("¿Borrar?")) db.collection("servicios").doc(id).delete(); }
-        function editarStaff(id, n, e, p) {
-            document.getElementById('edit-staff-id').value = id;
-            document.getElementById('reg-nombre').value = n;
-            document.getElementById('reg-email').value = e;
-            document.getElementById('reg-pago').value = p;
-            document.getElementById('btn-staff-main').innerText = "ACTUALIZAR STAFF";
-        }
-        function borrarStaff(id, n) { if(confirm("¿Eliminar?")) db.collection("usuarios").doc(id).delete(); }
-        
-        function editar(id, s) {
-            document.getElementById('edit-id').value = id;
-            document.getElementById('cliente').value = s.cliente;
-            document.getElementById('direccion').value = s.direccion;
-            document.getElementById('whatsapp').value = s.whatsapp || "";
-            document.getElementById('search-empleado').value = s.empleado_nombre;
-            document.getElementById('email-empleado').value = s.email_empleado || ""; 
-            document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || "";
-            document.getElementById('email-empleado-2').value = s.email_empleado_2 || ""; 
-            document.getElementById('fecha').value = s.fecha;
-            document.getElementById('hora').value = s.hora;
-            document.getElementById('notas').value = s.notas;
-            document.getElementById('admin-correction').style.display = "block";
-            document.getElementById('hora_inicio_real').value = s.hora_inicio;
-            document.getElementById('hora_fin_real').value = s.hora_fin;
-            selectType(s.tipo);
-            document.getElementById('main-button').innerText = "GUARDAR CAMBIOS";
-            document.getElementById('cancel-edit').style.display = "block";
-            window.scrollTo({top: 0, behavior: 'smooth'});
-        }
-
-        function solicitarResenaGoogle(nombre, telefono) {
-            if(!telefono) return alert("El cliente no tiene teléfono.");
-            const empresa = "Elite Cleaners Company";
-            const linkGoogle = "https://maps.app.goo.gl/VZjAsLsYbKYhszx27?g_st=ic";
-            const mensaje = `Hola ${nombre}, gracias por confiar en ${empresa}. 🌟 Fue un placer atenderte. Estaríamos muy agradecidos si nos dejaras una reseña en Google aquí: ${linkGoogle}`;
-            window.location.href = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
-        }
+        function editarStaff(id, n, e, p) { document.getElementById('edit-staff-id').value = id; document.getElementById('reg-nombre').value = n; document.getElementById('reg-email').value = e; document.getElementById('reg-pago').value = p; document.getElementById('btn-staff-main').innerText = "ACTUALIZAR STAFF"; }
+        function borrarStaff(id) { if(confirm("¿Eliminar?")) db.collection("usuarios").doc(id).delete(); }
+        function editar(id, s) { document.getElementById('edit-id').value = id; document.getElementById('cliente').value = s.cliente; document.getElementById('direccion').value = s.direccion; document.getElementById('whatsapp').value = s.whatsapp || ""; document.getElementById('search-empleado').value = s.empleado_nombre; document.getElementById('email-empleado').value = s.empleado_email || ""; document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || ""; document.getElementById('email-empleado-2').value = s.empleado_email_2 || ""; document.getElementById('fecha').value = s.fecha; document.getElementById('hora').value = s.hora; document.getElementById('notas').value = s.notas; document.getElementById('admin-correction').style.display = "block"; document.getElementById('hora_inicio_real').value = s.hora_inicio; document.getElementById('hora_fin_real').value = s.hora_fin; selectType(s.tipo); document.getElementById('main-button').innerText = "GUARDAR CAMBIOS"; document.getElementById('cancel-edit').style.display = "block"; window.scrollTo({top: 0, behavior: 'smooth'}); }
+        function solicitarResenaGoogle(nombre, telefono) { if(!telefono) return alert("Falta teléfono."); const linkG = "https://maps.app.goo.gl/VZjAsLsYbKYhszx27?g_st=ic"; const mensaje = `Hola ${nombre}, déjanos tu reseña: ${linkG}`; window.location.href = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`; }
     </script>
 </body>
 </html>
