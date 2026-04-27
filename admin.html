@@ -225,7 +225,6 @@
         const API_KEY_NICO = "sk_ba07983d6079e159072231b407435733fc33ed16e952e1e8";
         const VOICE_ID_NICO = "pNInz6obpg8ndclKuzt1";
 
-        // Función para reproducir el pitido de activación (Audio de sistema)
         function sonarPitido() {
             const context = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = context.createOscillator();
@@ -276,10 +275,11 @@
                     const frase = event.results[0][0].transcript.toLowerCase();
                     console.log("Nico escuchó:", frase);
                     
-                    if (frase.includes("hola") || frase.includes("estás ahí") || frase.includes("nico")) {
-                        nicoResponde("¡Hola Rodrigo! Aquí estoy, listo para ayudarte con Elite Cleaners.");
+                    // Ahora Nico es más sensible: reconoce "Hola Nico", "Nico" o "Hola"
+                    if (frase.includes("hola nico") || frase.includes("nico") || frase.includes("hola")) {
+                        nicoResponde("¡Hola Rodrigo! Aquí estoy, listo para ayudarte con Elite Cleaners Company.");
                     } else {
-                        nicoResponde("Te escuché decir: " + frase + ". ¿Necesitas algo más?");
+                        nicoResponde("Te escuché decir: " + frase + ". ¿Necesitas algo más de tu asistente Nico?");
                     }
                 };
 
@@ -295,7 +295,7 @@
                 
                 mic.start();
             } else {
-                alert("Tu navegador no soporta reconocimiento de voz. Prueba con Safari o Chrome.");
+                alert("Tu navegador no soporta reconocimiento de voz.");
             }
         }
 
@@ -485,7 +485,7 @@
                 empleado_nombre: document.getElementById('search-empleado').value,
                 empleado_email: document.getElementById('email-empleado').value,
                 empleado_nombre_2: document.getElementById('search-empleado-2').value || "",
-                empleado_email_2: document.getElementById('email-empleado_2').value || "",
+                empleado_email_2: document.getElementById('email-empleado-2').value || "",
                 fecha: document.getElementById('fecha').value,
                 hora: document.getElementById('hora').value,
                 notas: document.getElementById('notas').value,
@@ -575,7 +575,7 @@
         function borrar(id) { if(confirm("¿Borrar?")) db.collection("servicios").doc(id).delete(); }
         function editarStaff(id, n, e, p) { document.getElementById('edit-staff-id').value = id; document.getElementById('reg-nombre').value = n; document.getElementById('reg-email').value = e; document.getElementById('reg-pago').value = p; document.getElementById('btn-staff-main').innerText = "ACTUALIZAR STAFF"; }
         function borrarStaff(id, n) { if(confirm("¿Eliminar?")) db.collection("usuarios").doc(id).delete(); }
-        function editar(id, s) { document.getElementById('edit-id').value = id; document.getElementById('cliente').value = s.cliente; document.getElementById('direccion').value = s.direccion; document.getElementById('whatsapp').value = s.whatsapp || ""; document.getElementById('search-empleado').value = s.empleado_nombre; document.getElementById('email-empleado').value = s.email_empleado || ""; document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || ""; document.getElementById('email-empleado_2').value = s.email_empleado_2 || ""; document.getElementById('fecha').value = s.fecha; document.getElementById('hora').value = s.hora; document.getElementById('notas').value = s.notas; document.getElementById('admin-correction').style.display = "block"; document.getElementById('hora_inicio_real').value = s.hora_inicio; document.getElementById('hora_fin_real').value = s.hora_fin; selectType(s.tipo); document.getElementById('main-button').innerText = "GUARDAR CAMBIOS"; document.getElementById('cancel-edit').style.display = "block"; window.scrollTo({top: 0, behavior: 'smooth'}); }
+        function editar(id, s) { document.getElementById('edit-id').value = id; document.getElementById('cliente').value = s.cliente; document.getElementById('direccion').value = s.direccion; document.getElementById('whatsapp').value = s.whatsapp || ""; document.getElementById('search-empleado').value = s.empleado_nombre; document.getElementById('email-empleado').value = s.email_empleado || ""; document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || ""; document.getElementById('email-empleado-2').value = s.email_empleado_2 || ""; document.getElementById('fecha').value = s.fecha; document.getElementById('hora').value = s.hora; document.getElementById('notas').value = s.notas; document.getElementById('admin-correction').style.display = "block"; document.getElementById('hora_inicio_real').value = s.hora_inicio; document.getElementById('hora_fin_real').value = s.hora_fin; selectType(s.tipo); document.getElementById('main-button').innerText = "GUARDAR CAMBIOS"; document.getElementById('cancel-edit').style.display = "block"; window.scrollTo({top: 0, behavior: 'smooth'}); }
         function solicitarResenaGoogle(nombre, telefono) { if(!telefono) return alert("Falta teléfono."); const linkG = "https://maps.app.goo.gl/VZjAsLsYbKYhszx27?g_st=ic"; const mensaje = `Hola ${nombre}, déjanos tu reseña: ${linkG}`; window.location.href = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`; }
     </script>
 </body>
