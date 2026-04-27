@@ -226,16 +226,18 @@
         const VOICE_ID_NICO = "pNInz6obpg8ndclKuzt1";
 
         function sonarPitido() {
-            const context = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = context.createOscillator();
-            const gain = context.createGain();
-            oscillator.connect(gain);
-            gain.connect(context.destination);
-            oscillator.type = "sine";
-            oscillator.frequency.value = 880;
-            gain.gain.setValueAtTime(0.1, context.currentTime);
-            oscillator.start();
-            oscillator.stop(context.currentTime + 0.1);
+            try {
+                const context = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = context.createOscillator();
+                const gain = context.createGain();
+                oscillator.connect(gain);
+                gain.connect(context.destination);
+                oscillator.type = "sine";
+                oscillator.frequency.value = 880;
+                gain.gain.setValueAtTime(0.1, context.currentTime);
+                oscillator.start();
+                oscillator.stop(context.currentTime + 0.1);
+            } catch(e) { console.log("AudioContext no iniciado"); }
         }
 
         async function nicoResponde(texto) {
@@ -251,7 +253,7 @@
                 });
                 const blob = await response.blob();
                 const audio = new Audio(URL.createObjectURL(blob));
-                audio.play();
+                await audio.play();
             } catch (e) { 
                 console.error("Error en Nico:", e); 
             }
@@ -275,11 +277,12 @@
                     const frase = event.results[0][0].transcript.toLowerCase();
                     console.log("Nico escuchó:", frase);
                     
-                    // Ahora Nico es más sensible: reconoce "Hola Nico", "Nico" o "Hola"
-                    if (frase.includes("hola nico") || frase.includes("nico") || frase.includes("hola")) {
-                        nicoResponde("¡Hola Rodrigo! Aquí estoy, listo para ayudarte con Elite Cleaners Company.");
+                    // Lógica más abierta: si dices "Hola Nico", "Nico" o "Hola"
+                    if (frase.includes("nico") || frase.includes("hola")) {
+                        nicoResponde("¡Hola Rodrigo! Aquí estoy, listo para ayudarte con Elite Cleaners.");
                     } else {
-                        nicoResponde("Te escuché decir: " + frase + ". ¿Necesitas algo más de tu asistente Nico?");
+                        // Respuesta comodín por si no entiende bien la frase
+                        nicoResponde("Te escuché, Rodrigo. Dijiste " + frase + ". ¿Cómo puedo ayudarte?");
                     }
                 };
 
