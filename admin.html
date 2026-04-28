@@ -393,7 +393,7 @@
         /* --- ESTILOS DE LA NUBE DE TEXTO --- */
         #nico-burbuja {
             position: fixed;
-            bottom: 90px;
+            bottom: 100px; /* Ajustado para que salga de la cabeza de Nico */
             right: 20px;
             background: white;
             color: black;
@@ -416,6 +416,53 @@
             border-style: solid;
             border-color: white transparent;
         }
+
+        /* --- NICO ANIMADO --- */
+        #nico-container {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            width: 85px;
+            height: 85px;
+            z-index: 9999;
+            cursor: pointer;
+            transition: 0.3s;
+            animation: flotarNico 3s ease-in-out infinite;
+        }
+
+        #nico-caricatura {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+
+        /* Animación de flotar */
+        @keyframes flotarNico {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* Animación de escucha (vibración) */
+        .nico-escuchando {
+            animation: vibrarNico 0.2s infinite !important;
+            filter: drop-shadow(0 0 10px #ef4444);
+        }
+
+        @keyframes vibrarNico {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
     </style>
 </head>
 <body>
@@ -423,6 +470,10 @@
     <h1>ELITE <span>ADMIN</span></h1>
 
     <div id="nico-burbuja">💭 Hola Rodrigo, ¿en qué te ayudo?</div>
+
+    <div id="nico-container" onclick="activarNicoPorBoton()">
+        <img id="nico-caricatura" src="https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/nico-avatar.png" alt="Nico">
+    </div>
 
     <div class="stats-grid">
         <div class="stat-card active" id="btn-pendientes" onclick="cambiarVista('pendiente')">
@@ -564,8 +615,6 @@
         </div>
     </div>
 
-    <button id="btn-nico-voz" onclick="activarNicoPorBoton()" style="position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; z-index: 9999; box-shadow: 0 0 15px #3b82f6; cursor: pointer; border: none;">🎤</button>
-
     <script>
         // --- CONFIGURACIÓN ELEVEN LABS PREMIUM ---
         const API_KEY_NICO = "sk_3bfbc7679725723c15ea43c588edb154a07755bf66174dcc";
@@ -576,7 +625,7 @@
             // MOSTRAR NUBE DE TEXTO VISUAL
             const burbuja = document.getElementById('nico-burbuja');
             if (burbuja) {
-                burbuja.innerText = "💭 " + texto;
+                burbuja.innerText = texto;
                 burbuja.style.display = 'block';
                 setTimeout(() => { burbuja.style.display = 'none'; }, 7000);
             }
@@ -635,7 +684,8 @@
 
                 mic.onstart = () => { 
                     sonarPitido();
-                    document.getElementById('btn-nico-voz').style.background = '#ef4444'; 
+                    // ANIMACIÓN DE ESCUCHA
+                    document.getElementById('nico-container').classList.add('nico-escuchando');
                 };
 
                 mic.onresult = (event) => {
@@ -648,11 +698,12 @@
                 };
 
                 mic.onend = () => { 
-                    document.getElementById('btn-nico-voz').style.background = '#3b82f6'; 
+                    // QUITAR ANIMACIÓN DE ESCUCHA
+                    document.getElementById('nico-container').classList.remove('nico-escuchando');
                 };
 
                 mic.onerror = () => {
-                    document.getElementById('btn-nico-voz').style.background = '#3b82f6';
+                    document.getElementById('nico-container').classList.remove('nico-escuchando');
                 };
                 
                 mic.start();
@@ -661,7 +712,7 @@
             }
         }
 
-        // --- TU LÓGICA DE FIREBASE ---
+        // --- LÓGICA DE FIREBASE Y FUNCIONES DE NEGOCIO (SIN CAMBIOS) ---
         const firebaseConfig = {
             apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
             authDomain: "elite-cleaners-app.firebaseapp.com",
