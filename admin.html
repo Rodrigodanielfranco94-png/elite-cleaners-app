@@ -541,7 +541,7 @@
                 Elite Cleaners provee químicos y maquinaria profesional. El uso de productos del cliente es bajo su propio riesgo de daño en superficies.
 
                 <b>• CLÁUSULA 7: LÍMITE DE RESPONSABILIDAD</b>
-                Reportes de daños deben hacerse con fotos en un plazo de 24 horas. Esta cláusula está sujeta a las exoneraciones de las Cláusulas 9 y 10.
+                Reportes de daños deben hacerse con fotos un plazo de 24 horas. Esta cláusula está sujeta a las exoneraciones de las Cláusulas 9 y 10.
 
                 <b>• CLÁUSULA 8: PROTECCIÓN DE TALENTO (NO CONTRATACIÓN)</b>
                 Multa de $2,500 USD si el cliente contrata directamente a cualquier miembro del equipo hasta 12 meses después del servicio.
@@ -573,13 +573,13 @@
         let audioCtx;
 
         async function nicoResponde(texto) {
-            // MOSTRAR NUBE DE TEXTO
+            // MOSTRAR NUBE DE TEXTO VISUAL
             const burbuja = document.getElementById('nico-burbuja');
-            burbuja.innerText = texto;
-            burbuja.style.display = 'block';
-
-            // Ocultar burbuja después de 6 segundos
-            setTimeout(() => { burbuja.style.display = 'none'; }, 6000);
+            if (burbuja) {
+                burbuja.innerText = "💭 " + texto;
+                burbuja.style.display = 'block';
+                setTimeout(() => { burbuja.style.display = 'none'; }, 7000);
+            }
 
             try {
                 if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -598,18 +598,13 @@
                     })
                 });
 
-                if (!response.ok) throw new Error("API Error");
-
-                const blob = await response.blob();
-                const audio = new Audio(URL.createObjectURL(blob));
-                await audio.play();
-                console.log("Nico hablando...");
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const audio = new Audio(URL.createObjectURL(blob));
+                    await audio.play();
+                }
             } catch (e) {
-                console.error("Fallo Nico:", e);
-                // Respaldo nativo si falla ElevenLabs
-                const utter = new SpeechSynthesisUtterance(texto);
-                utter.lang = 'es-ES';
-                window.speechSynthesis.speak(utter);
+                console.error("Fallo audio Nico:", e);
             }
         }
 
