@@ -69,32 +69,7 @@
         .btn-descargar { background: #22c55e; color: white; }
         .btn-cerrar { background: #ef4444; color: white; }
 
-        /* --- ESTILOS DE NICO --- */
-        #nico-burbuja {
-            position: fixed;
-            bottom: 125px;
-            right: 25px;
-            background: white;
-            color: black;
-            padding: 15px;
-            border-radius: 20px;
-            max-width: 250px;
-            font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            display: none;
-            z-index: 10000;
-            border: 2px solid #3b82f6;
-            animation: popBurbuja 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        #nico-burbuja::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            right: 20px;
-            border-width: 10px 10px 0; border-style: solid; border-color: white transparent;
-        }
-
+        /* --- ESTILOS DE NICO (MODO CAMINANTE) --- */
         #nico-container {
             position: fixed;
             bottom: 20px;
@@ -103,44 +78,44 @@
             height: 100px;
             z-index: 9999;
             cursor: pointer;
-            transition: transform 0.3s;
+            transition: bottom 1.5s ease-in-out, right 1.5s ease-in-out, transform 0.3s;
         }
 
-        #nico-caricatura {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
+        #nico-burbuja {
+            position: absolute;
+            bottom: 110%;
+            right: 0;
+            background: white;
+            color: black;
+            padding: 12px;
+            border-radius: 15px;
+            width: 180px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 10000;
+            border: 2px solid #3b82f6;
+        }
+        #nico-burbuja::after {
+            content: ''; position: absolute; bottom: -10px; right: 20px;
+            border-width: 10px 10px 0; border-style: solid; border-color: white transparent;
         }
 
-        @keyframes popBurbuja {
-            from { transform: scale(0.5) translateY(20px); opacity: 0; }
-            to { transform: scale(1) translateY(0); opacity: 1; }
-        }
+        #nico-caricatura { width: 100%; height: 100%; object-fit: contain; }
 
         .nico-spin { animation: nicoGiro 0.6s ease-in-out; }
-        @keyframes nicoGiro { 
-            from { transform: rotate(0deg); } 
-            to { transform: rotate(360deg); } 
-        }
-
-        .nico-escuchando { 
-            filter: drop-shadow(0 0 15px #3b82f6) !important; 
-            animation: vibrarEscucha 0.3s infinite; 
-        }
-
-        @keyframes vibrarEscucha { 
-            0% { transform: scale(1); } 
-            50% { transform: scale(1.05); } 
-            100% { transform: scale(1); } 
-        }
+        @keyframes nicoGiro { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .nico-escuchando { filter: drop-shadow(0 0 15px #3b82f6) !important; animation: vibrarEscucha 0.3s infinite; }
+        @keyframes vibrarEscucha { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
 
     <h1>ELITE <span>ADMIN</span></h1>
 
-    <div id="nico-burbuja">💭 ¡Hola Rodrigo!</div>
     <div id="nico-container" onclick="controladorNico.interactuar()">
+        <div id="nico-burbuja">💭 ¡Hola Rodrigo!</div>
         <img id="nico-caricatura" src="nico-assets/reposo.png" alt="Nico">
     </div>
 
@@ -232,30 +207,12 @@
         <button class="btn-reset" onclick="reiniciarHorasMes()">Reiniciar Mes y Descargar Excel</button>
     </div>
 
-    <div id="modal-firma">
-        <div class="modal-content" id="capture-area">
-            <h2 style="color:#fff; margin-top:0; text-align:center; font-style:italic; font-size:18px;">ELITE CLEANERS <span style="color:#3b82f6;">COMPANY</span></h2>
-            <p id="modal-cliente" style="color:#3b82f6; font-weight:bold; font-size:16px; margin: 5px 0; text-align: center;"></p>
-            <div id="legal-content" class="legal-view">
-                <span class="title-contract">CONTRATO DE SERVICIOS</span>
-                <b>• CLÁUSULA 1: OBJETO</b>
-                Servicio de limpieza profesional.
-                <b>• CLÁUSULA 8: NO CONTRATACIÓN</b>
-                Multa de $2,500 USD por contratación directa.
-            </div>
-            <p id="modal-fecha" style="color:#8e8e93; font-size:10px; margin-bottom:10px; text-align: center;"></p>
-            <img id="modal-img-firma" src="" style="width:100%; height:120px; background:#fff; border-radius:12px; object-fit:contain; border:2px solid #3b82f6;">
-        </div>
-        <div class="modal-footer" style="max-width:500px; margin: 0 auto;">
-            <button class="btn-modal btn-descargar" onclick="descargarComprobante()">Descargar</button>
-            <button class="btn-modal btn-cerrar" onclick="document.getElementById('modal-firma').style.display='none'">Cerrar</button>
-        </div>
-    </div>
-
     <script>
         const controladorNico = {
             apiKey: "sk_3bfbc7679725723c15ea43c588edb154a07755bf66174dcc",
             voiceId: "pNInz6obpg8ndclKuzt1",
+            timerCaminata: null,
+            segundosInactivo: 0,
 
             cambiarImagen: function(nombre) {
                 const img = document.getElementById('nico-caricatura');
@@ -263,6 +220,7 @@
             },
 
             hablar: async function(texto, emocion = 'alegre') {
+                this.detenerCaminata();
                 this.cambiarImagen(emocion);
                 const burbuja = document.getElementById('nico-burbuja');
                 burbuja.innerText = "💭 " + texto;
@@ -287,33 +245,25 @@
                 setTimeout(() => {
                     burbuja.style.display = 'none';
                     this.cambiarImagen('reposo');
+                    this.segundosInactivo = 0;
+                    this.iniciarRelojCaminata();
                 }, 7000);
             },
 
             procesarComando: function(frase) {
-                // --- MEMORIA FAMILIAR INTELIGENTE ---
-                
-                // Dayana (Esposa/Cuñada) - Incluimos "Diana" por si el micro entiende mal
+                // MEMORIA FAMILIAR
                 if (frase.includes("dayana") || frase.includes("diana")) {
                     this.hablar("¡Mi cuñada Dayana! Es una mujer increíble, Rodrigo. Cuídala mucho, que es el corazón de tu casa.", "saluda");
                 }
-                
-                // Charlie (Sobrinito Perro)
                 else if (frase.includes("charlie")) {
                     this.hablar("¡Mi sobrinito Charlie! Seguro está haciendo alguna travesura ahora mismo. Es el más consentido de la familia.", "bien");
                 }
-
-                // Rodolfo (Papá)
                 else if (frase.includes("rodolfo") || frase.includes("papá")) {
                     this.hablar("Papá Rodolfo siempre nos enseñó que el trabajo duro rinde frutos. ¡Es un ejemplo para nosotros, hermano!", "bien");
                 }
-
-                // Julia (Mamá)
                 else if (frase.includes("julia") || frase.includes("mamá")) {
-                    this.hablar("Tu mamá Julia es una santa. Siempre que hablo con ella me pregunta por ti. Dale muchos besos de mi parte.", "alegre");
+                    this.hablar("Tu mamá Julia es una santa. Siempre que hablo con ella me pregunta por ti. Dale muchos besos.", "alegre");
                 }
-
-                // Jorge, Carol y Bastián
                 else if (frase.includes("bastián") || frase.includes("bastian")) {
                     this.hablar("¡Bastián! Mi sobrino es un campeón. Ya quiero que crezca para jugar fútbol con él.", "alegre");
                 }
@@ -323,21 +273,16 @@
                 else if (frase.includes("carol")) {
                     this.hablar("Mi cuñada Carol es súper atenta. Salúdala mucho de mi parte cuando la veas.", "saluda");
                 }
-
-                // --- LÓGICA DE NEGOCIO ---
+                // NEGOCIO
                 else if (frase.includes("mañana")) {
                     const mañana = new Date();
                     mañana.setDate(mañana.getDate() + 1);
                     const fechaStr = mañana.toISOString().split('T')[0];
                     const trabajos = todosLosServicios.filter(s => s.fecha === fechaStr).length;
-                    
-                    if (trabajos > 0) {
-                        this.hablar(`Hermano, mañana tenemos ${trabajos} servicios agendados. ¡A darle con todo!`, "bien");
-                    } else {
-                        this.hablar("Para mañana no hay servicios agendados aún. ¡Buen momento para descansar un poco!", "piensa");
-                    }
+                    if (trabajos > 0) this.hablar(`Hermano, mañana tenemos ${trabajos} servicios agendados. ¡A darle con todo!`, "bien");
+                    else this.hablar("Para mañana no hay servicios agendados aún. ¡Buen momento para descansar un poco!", "piensa");
                 } 
-                else if (frase.includes("hola") || frase.includes("qué tal") || frase.includes("nico") || frase.includes("oye nico")) {
+                else if (frase.includes("hola") || frase.includes("nico") || frase.includes("oye nico")) {
                     this.hablar("¡Qué onda, hermano! Aquí estoy listo para Elite Cleaners. ¿Qué me cuentas?", "saluda");
                 } 
                 else if (frase.includes("pendientes")) {
@@ -347,7 +292,6 @@
                 else if (frase.includes("cómo estás") || frase.includes("como estas")) {
                     this.hablar("¡Excelente, hermano! Feliz de ser parte de este equipo contigo.", "alegre");
                 }
-                // RESPUESTA HUMANA POR DEFECTO (No repite)
                 else {
                     this.hablar("No te capté bien eso, Rodrigo, pero sabes que aquí estoy firme como tu hermano.", "piensa");
                 }
@@ -359,6 +303,7 @@
                 const mic = new Recognition();
                 mic.lang = 'es-ES';
                 mic.onstart = () => {
+                    this.detenerCaminata();
                     document.getElementById('nico-container').classList.add('nico-escuchando');
                     this.cambiarImagen('celular'); 
                 };
@@ -377,19 +322,90 @@
                     container.classList.remove('nico-spin');
                     this.activarMicrofono();
                 }, 600);
+            },
+
+            // LÓGICA DE CAMINATA ESTILO DESKTOP BUDDY
+            iniciarRelojCaminata: function() {
+                this.timerCaminata = setInterval(() => {
+                    this.segundosInactivo++;
+                    if (this.segundosInactivo >= 15) { // Cada 15 segs de inactividad
+                        this.caminar();
+                        this.segundosInactivo = 0;
+                    }
+                }, 1000);
+            },
+
+            detenerCaminata: function() {
+                clearInterval(this.timerCaminata);
+                this.segundosInactivo = 0;
+            },
+
+            caminar: function() {
+                const container = document.getElementById('nico-container');
+                this.cambiarImagen('camina');
+                
+                // Calculamos posiciones aleatorias seguras
+                const maxX = window.innerWidth - 120;
+                const maxY = window.innerHeight - 250;
+                const randomX = Math.max(20, Math.floor(Math.random() * maxX));
+                const randomY = Math.max(20, Math.floor(Math.random() * maxY));
+
+                container.style.right = randomX + "px";
+                container.style.bottom = randomY + "px";
+
+                setTimeout(() => {
+                    this.cambiarImagen('reposo');
+                }, 1500);
             }
         };
 
-        // --- LÓGICA DE FIREBASE Y NEGOCIO ---
+        // INICIO
+        window.onload = () => {
+            controladorNico.iniciarRelojCaminata();
+        };
+
+        // LÓGICA FIREBASE
         const firebaseConfig = { apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH", authDomain: "elite-cleaners-app.firebaseapp.com", projectId: "elite-cleaners-app", storageBucket: "elite-cleaners-app.appspot.com", messagingSenderId: "826642317319", appId: "1:826642317319:web:cddce7904b590ae" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         
-        let tipoSeleccionado = "ESTÁNDAR";
+        let todosLosServicios = [];
         let todosLosEmpleados = [];
         let todosLosClientes = [];
-        let todosLosServicios = [];
         let vistaActual = "pendiente";
+        let tipoSeleccionado = "ESTÁNDAR";
+
+        db.collection("servicios").onSnapshot(snap => {
+            todosLosServicios = [];
+            snap.forEach(doc => todosLosServicios.push({ id: doc.id, ...doc.data() }));
+            document.getElementById('count-pendientes').innerText = todosLosServicios.filter(s => s.estado !== 'completado').length;
+            document.getElementById('count-completados').innerText = todosLosServicios.filter(s => s.estado === 'completado').length;
+            renderHistorial();
+            generarNomina();
+        });
+
+        db.collection("usuarios").where("rol", "==", "empleado").onSnapshot(snap => {
+            todosLosEmpleados = [];
+            const lv = document.getElementById('lista-visual-staff');
+            lv.innerHTML = "";
+            snap.forEach(doc => {
+                const e = doc.data(); const id = doc.id;
+                todosLosEmpleados.push({id, ...e});
+                lv.innerHTML += `<div class="staff-item">
+                    <div class="staff-info"><b>${e.nombre}</b><span>$${e.pago_hora || 0}/hr</span></div>
+                    <div class="staff-actions">
+                        <button class="btn-mini" style="background:#6366f1" onclick="editarStaff('${id}','${e.nombre}','${e.email}','${e.pago_hora||0}')">Editar</button>
+                        <button class="btn-mini" style="background:#ef4444" onclick="borrarStaff('${id}','${e.nombre}')">Eliminar</button>
+                    </div>
+                </div>`;
+            });
+            generarNomina();
+        });
+
+        db.collection("clientes").onSnapshot(snap => {
+            todosLosClientes = [];
+            snap.forEach(doc => todosLosClientes.push(doc.data()));
+        });
 
         function cambiarVista(v) {
             vistaActual = v;
@@ -398,23 +414,31 @@
             renderHistorial();
         }
 
-        function verFirma(id) {
-            const servicio = todosLosServicios.find(s => s.id === id);
-            if(!servicio) return;
-            document.getElementById('modal-cliente').innerText = "CLIENTE: " + servicio.cliente;
-            document.getElementById('modal-fecha').innerText = servicio.fecha_firma ? "Firmado el: " + new Date(servicio.fecha_firma).toLocaleString() : "Sin fecha";
-            document.getElementById('modal-img-firma').src = servicio.firma_imagen || "";
-            document.getElementById('modal-firma').style.display = 'block';
-        }
-
-        async function descargarComprobante() {
-            const area = document.getElementById('capture-area');
-            const cliente = document.getElementById('modal-cliente').innerText.split(': ')[1];
-            html2canvas(area, { backgroundColor: '#1c1c1e', scale: 2, useCORS: true }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `Contrato_Elite_${cliente}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
+        function renderHistorial() {
+            const h = document.getElementById('historial');
+            h.innerHTML = "";
+            todosLosServicios.forEach(s => {
+                if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
+                    const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
+                    const btnFirma = s.firma_cliente ? `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">Ver Firma</button>` : `<button class="btn-action" style="background:#004a99;" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Contrato</button>`;
+                    h.innerHTML += `<div class="card-servicio">
+                        <button class="chat-btn" onclick="abrirChat('${s.whatsapp}')">💬</button>
+                        <div style="font-size:10px; color:#3b82f6; font-weight:bold;">${s.tipo}</div>
+                        <h3>${s.cliente}</h3>
+                        <p>📅 ${s.fecha} | ⏰ ${s.hora}</p>
+                        <div class="time-box">
+                            <div class="time-row"><b>Inicio:</b> ${s.hora_inicio}</div>
+                            <div class="time-row"><b>Fin:</b> ${s.hora_fin}</div>
+                            <div class="time-row total-time-row"><b>Tiempo:</b> ${infoTiempo.texto}</div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">${s.estado === 'completado' ? 'Abrir' : 'Terminar'}</button>
+                            ${btnFirma}
+                            <button class="btn-action btn-edit" onclick='editar("${s.id}", ${JSON.stringify(s)})'>Editar</button>
+                            <button class="btn-action btn-delete" onclick="borrar('${s.id}')">Eliminar</button>
+                        </div>
+                    </div>`;
+                }
             });
         }
 
@@ -437,11 +461,6 @@
                 return { texto: `${Math.floor(diferencia/60)}h ${diferencia%60}m`, minutos: diferencia };
             } catch (e) { return { texto: "Err", minutos: 0 }; }
         }
-
-        db.collection("clientes").onSnapshot(snap => {
-            todosLosClientes = [];
-            snap.forEach(doc => todosLosClientes.push(doc.data()));
-        });
 
         function filtrarClientes() {
             const q = document.getElementById('cliente').value.toLowerCase();
@@ -480,24 +499,6 @@
             document.getElementById('reg-pago').value = "";
             document.getElementById('btn-staff-main').innerText = "GUARDAR STAFF";
         }
-
-        db.collection("usuarios").where("rol", "==", "empleado").onSnapshot(snap => {
-            todosLosEmpleados = [];
-            const lv = document.getElementById('lista-visual-staff');
-            lv.innerHTML = "";
-            snap.forEach(doc => {
-                const e = doc.data(); const id = doc.id;
-                todosLosEmpleados.push({id, ...e});
-                lv.innerHTML += `<div class="staff-item">
-                    <div class="staff-info"><b>${e.nombre}</b><span>$${e.pago_hora || 0}/hr</span></div>
-                    <div class="staff-actions">
-                        <button class="btn-mini" style="background:#6366f1" onclick="editarStaff('${id}','${e.nombre}','${e.email}','${e.pago_hora||0}')">Editar</button>
-                        <button class="btn-mini" style="background:#ef4444" onclick="borrarStaff('${id}','${e.nombre}')">Eliminar</button>
-                    </div>
-                </div>`;
-            });
-            generarNomina();
-        });
 
         function filtrarEmpleados(num) {
             const inputId = num === 1 ? 'search-empleado' : 'search-empleado-2';
@@ -553,46 +554,6 @@
             else db.collection("servicios").add(data).then(() => location.reload());
         }
 
-        db.collection("servicios").onSnapshot(snap => {
-            todosLosServicios = [];
-            snap.forEach(doc => {
-                const s = doc.data();
-                todosLosServicios.push({ id: doc.id, ...s });
-            });
-            document.getElementById('count-pendientes').innerText = todosLosServicios.filter(s => s.estado !== 'completado').length;
-            document.getElementById('count-completados').innerText = todosLosServicios.filter(s => s.estado === 'completado').length;
-            renderHistorial();
-            generarNomina();
-        });
-
-        function renderHistorial() {
-            const h = document.getElementById('historial');
-            h.innerHTML = "";
-            todosLosServicios.forEach(s => {
-                if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
-                    const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
-                    const btnFirma = s.firma_cliente ? `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">Ver Firma</button>` : `<button class="btn-action" style="background:#004a99;" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Contrato</button>`;
-                    h.innerHTML += `<div class="card-servicio">
-                        <button class="chat-btn" onclick="abrirChat('${s.whatsapp}')">💬</button>
-                        <div style="font-size:10px; color:#3b82f6; font-weight:bold;">${s.tipo}</div>
-                        <h3>${s.cliente}</h3>
-                        <p>📅 ${s.fecha} | ⏰ ${s.hora}</p>
-                        <div class="time-box">
-                            <div class="time-row"><b>Inicio:</b> ${s.hora_inicio}</div>
-                            <div class="time-row"><b>Fin:</b> ${s.hora_fin}</div>
-                            <div class="time-row total-time-row"><b>Tiempo:</b> ${infoTiempo.texto}</div>
-                        </div>
-                        <div class="action-buttons">
-                            <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">${s.estado === 'completado' ? 'Abrir' : 'Terminar'}</button>
-                            ${btnFirma}
-                            <button class="btn-action btn-edit" onclick='editar("${s.id}", ${JSON.stringify(s)})'>Editar</button>
-                            <button class="btn-action btn-delete" onclick="borrar('${s.id}')">Eliminar</button>
-                        </div>
-                    </div>`;
-                }
-            });
-        }
-
         function generarNomina() {
             const tabla = document.getElementById('lista-nomina');
             tabla.innerHTML = "";
@@ -622,9 +583,27 @@
         function marcar(id, est) { db.collection("servicios").doc(id).update({ estado: est }); }
         function borrar(id) { if(confirm("¿Borrar?")) db.collection("servicios").doc(id).delete(); }
         function editarStaff(id, n, e, p) { document.getElementById('edit-staff-id').value = id; document.getElementById('reg-nombre').value = n; document.getElementById('reg-email').value = e; document.getElementById('reg-pago').value = p; document.getElementById('btn-staff-main').innerText = "ACTUALIZAR STAFF"; }
-        function borrarStaff(id, n) { if(confirm("¿Eliminar?")) document.getElementById('edit-staff-id').value = id; db.collection("usuarios").doc(id).delete(); }
+        function borrarStaff(id, n) { if(confirm("¿Eliminar?")) db.collection("usuarios").doc(id).delete(); }
         function editar(id, s) { document.getElementById('edit-id').value = id; document.getElementById('cliente').value = s.cliente; document.getElementById('direccion').value = s.direccion; document.getElementById('whatsapp').value = s.whatsapp || ""; document.getElementById('search-empleado').value = s.empleado_nombre; document.getElementById('email-empleado').value = s.email_empleado || ""; document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || ""; document.getElementById('email-empleado-2').value = s.email_empleado_2 || ""; document.getElementById('fecha').value = s.fecha; document.getElementById('hora').value = s.hora; document.getElementById('notas').value = s.notas; document.getElementById('admin-correction').style.display = "block"; document.getElementById('hora_inicio_real').value = s.hora_inicio; document.getElementById('hora_fin_real').value = s.hora_fin; selectType(s.tipo); document.getElementById('main-button').innerText = "GUARDAR CAMBIOS"; document.getElementById('cancel-edit').style.display = "block"; window.scrollTo({top: 0, behavior: 'smooth'}); }
         function enviarContrato(id, telefono, cliente) { if (!telefono) return alert("Faltan datos."); window.location.href = `https://wa.me/${telefono}?text=Contrato:${id}`; }
+        function verFirma(id) {
+            const servicio = todosLosServicios.find(s => s.id === id);
+            if(!servicio) return;
+            document.getElementById('modal-cliente').innerText = "CLIENTE: " + servicio.cliente;
+            document.getElementById('modal-fecha').innerText = servicio.fecha_firma ? "Firmado el: " + new Date(servicio.fecha_firma).toLocaleString() : "Sin fecha";
+            document.getElementById('modal-img-firma').src = servicio.firma_imagen || "";
+            document.getElementById('modal-firma').style.display = 'block';
+        }
+        async function descargarComprobante() {
+            const area = document.getElementById('capture-area');
+            const cliente = document.getElementById('modal-cliente').innerText.split(': ')[1];
+            html2canvas(area, { backgroundColor: '#1c1c1e', scale: 2, useCORS: true }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Contrato_Elite_${cliente}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
     </script>
 </body>
 </html>
