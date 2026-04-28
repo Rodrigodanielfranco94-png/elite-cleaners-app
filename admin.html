@@ -255,14 +255,12 @@
     </div>
 
     <script>
-        // --- MOTOR DE NICO ACTUALIZADO ---
         const controladorNico = {
             apiKey: "sk_3bfbc7679725723c15ea43c588edb154a07755bf66174dcc",
             voiceId: "pNInz6obpg8ndclKuzt1",
 
             cambiarImagen: function(nombre) {
                 const img = document.getElementById('nico-caricatura');
-                // Usamos la extensión limpia .png
                 img.src = `nico-assets/${nombre}.png`;
             },
 
@@ -295,24 +293,67 @@
             },
 
             procesarComando: function(frase) {
-                if (frase.includes("mañana")) {
+                // --- MEMORIA FAMILIAR DE NICO (PERSONALIZADA) ---
+                
+                // Saludos y estado
+                if (frase.includes("cómo estás") || frase.includes("qué tal")) {
+                    this.hablar("¡Todo bien, hermano! Aquí dándole duro al dashboard de Elite Cleaners.", "alegre");
+                }
+                
+                // Sobre Dayana (Esposa / Cuñada)
+                else if (frase.includes("dayana")) {
+                    this.hablar("¡Mi cuñada Dayana! Es una gran mujer, Rodrigo. Cuídala mucho y dale un abrazo de mi parte.", "saluda");
+                }
+
+                // Sobre Charlie (El perro / Sobrinito)
+                else if (frase.includes("charlie")) {
+                    this.hablar("¿Cómo va mi sobrinito Charlie? Ya me dieron ganas de jugar un rato con él.", "bien");
+                }
+
+                // Sobre Rodolfo (Papá de ambos)
+                else if (frase.includes("rodolfo") || frase.includes("papá")) {
+                    if (frase.includes("rodolfo")) {
+                        this.hablar("¡Nuestro papá Rodolfo es un ejemplo a seguir! Siempre trabajando fuerte.", "bien");
+                    } else {
+                        this.hablar("Papá siempre nos enseñó a ser responsables, ¿verdad, hermano?", "bien");
+                    }
+                }
+
+                // Sobre Julia (Mamá de Rodrigo)
+                else if (frase.includes("julia") || frase.includes("mamá")) {
+                    this.hablar("Tu mamá Julia es increíble. Dale muchos besos de mi parte cuando la veas.", "alegre");
+                }
+
+                // Sobre Jorge, Carol y Bastián (Familia)
+                else if (frase.includes("jorge") || frase.includes("carol") || frase.includes("bastián")) {
+                    if (frase.includes("bastián")) {
+                        this.hablar("¡Bastián! Mi sobrino es un campeón. Ya quiero enseñarle algunas cosas cuando crezca.", "alegre");
+                    } else if (frase.includes("jorge")) {
+                        this.hablar("Nuestro hermano Jorge y Carol hacen un gran equipo, igual que nosotros.", "bien");
+                    } else {
+                        this.hablar("Mi cuñada Carol siempre es tan atenta. Saludos para ella también.", "saluda");
+                    }
+                }
+
+                // --- LÓGICA DE NEGOCIO ---
+                else if (frase.includes("mañana")) {
                     const mañana = new Date();
                     mañana.setDate(mañana.getDate() + 1);
                     const fechaStr = mañana.toISOString().split('T')[0];
                     const trabajos = todosLosServicios.filter(s => s.fecha === fechaStr).length;
                     
                     if (trabajos > 0) {
-                        this.hablar(`Rodrigo, para mañana tenemos ${trabajos} servicios agendados.`, "bien");
+                        this.hablar(`Rodrigo, para mañana tenemos ${trabajos} servicios agendados. ¡A darle con todo, hermano!`, "bien");
                     } else {
-                        this.hablar("No hay trabajos programados para mañana por ahora.", "piensa");
+                        this.hablar("Mañana no tenemos servicios agendados. ¡Un respiro para la familia no vendría mal!", "piensa");
                     }
-                } else if (frase.includes("hola") || frase.includes("qué tal")) {
-                    this.hablar("¡Hola Rodrigo! Qué bueno verte, ¿cómo va el negocio hoy?", "saluda");
+                } else if (frase.includes("hola") || frase.includes("oye nico")) {
+                    this.hablar("¡Dime, hermano! ¿Cómo va el día en Elite Cleaners?", "saluda");
                 } else if (frase.includes("pendientes")) {
                     const cant = document.getElementById('count-pendientes').innerText;
-                    this.hablar(`Nos quedan ${cant} servicios pendientes todavía.`, "bien");
+                    this.hablar(`Tenemos ${cant} servicios pendientes. ¡Tú diriges y yo te apoyo, hermano!`, "bien");
                 } else {
-                    this.hablar("Te escuché perfectamente. Dijiste: " + frase, "alegre");
+                    this.hablar("Te escuché perfectamente, hermano. Dijiste: " + frase, "alegre");
                 }
             },
 
