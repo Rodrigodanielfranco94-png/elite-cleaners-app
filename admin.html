@@ -10,7 +10,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
-        /* --- ESTILOS BASE (Mantenidos) --- */
         body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; padding-bottom: 100px; }
         h1 { font-style: italic; font-weight: 900; font-size: 22px; text-transform: uppercase; margin-bottom: 20px; }
         h1 span { color: #3b82f6; }
@@ -70,29 +69,29 @@
         .btn-descargar { background: #22c55e; color: white; }
         .btn-cerrar { background: #ef4444; color: white; }
 
-        /* --- NUEVOS ESTILOS DE NICO (Optimizados) --- */
+        /* --- ESTILOS DE NICO (Actualizados) --- */
         #nico-burbuja {
             position: fixed;
-            bottom: 120px; 
+            bottom: 110px;
             right: 25px;
             background: white;
             color: black;
-            padding: 12px 18px;
-            border-radius: 18px;
-            max-width: 220px;
-            font-size: 13px;
+            padding: 15px;
+            border-radius: 20px;
+            max-width: 250px;
+            font-size: 14px;
             font-weight: 600;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             display: none;
             z-index: 10000;
             border: 2px solid #3b82f6;
-            transition: 0.3s;
+            animation: popBurbuja 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         #nico-burbuja::after {
             content: '';
             position: absolute;
             bottom: -10px;
-            right: 30px;
+            right: 20px;
             border-width: 10px 10px 0;
             border-style: solid;
             border-color: white transparent;
@@ -100,34 +99,48 @@
 
         #nico-container {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 85px;
-            height: 85px;
+            bottom: 15px;
+            right: 15px;
+            width: 90px;
+            height: 90px;
             z-index: 9999;
             cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3));
+            animation: flotarNico 3s ease-in-out infinite;
+            filter: drop-shadow(0 5px 15px rgba(59, 130, 246, 0.4));
+            transition: transform 0.3s;
         }
 
-        #nico-caricatura { width: 100%; height: 100%; object-fit: contain; transition: 0.3s; }
+        #nico-caricatura {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
 
-        /* Estados Animados */
-        .estado-flotar { animation: nicoFlotar 3s ease-in-out infinite; }
-        .estado-escucha { filter: drop-shadow(0 0 20px #ef4444) !important; transform: scale(1.1); animation: nicoVibrar 0.2s infinite; }
-        .estado-giro { animation: nicoGiro 0.6s ease-in-out; }
-
-        @keyframes nicoFlotar { 
+        @keyframes flotarNico { 
             0%, 100% { transform: translateY(0); } 
-            50% { transform: translateY(-10px); } 
+            50% { transform: translateY(-12px); } 
         }
-        @keyframes nicoVibrar { 
-            0% { transform: translateX(-2px) scale(1.1); } 
-            100% { transform: translateX(2px) scale(1.1); } 
+
+        @keyframes popBurbuja {
+            from { transform: scale(0.5) translateY(20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
         }
+
+        .nico-spin { animation: nicoGiro 0.6s ease-in-out; }
         @keyframes nicoGiro { 
-            from { transform: rotate(0deg); } 
-            to { transform: rotate(360deg); } 
+            from { transform: rotate(0deg) scale(1); } 
+            to { transform: rotate(360deg) scale(1.1); } 
+        }
+
+        .nico-escuchando { 
+            filter: drop-shadow(0 0 20px #ef4444) !important; 
+            animation: vibrarEscucha 0.3s infinite !important; 
+        }
+
+        @keyframes vibrarEscucha { 
+            0% { transform: translateX(0); } 
+            25% { transform: translateX(2px); } 
+            75% { transform: translateX(-2px); } 
         }
     </style>
 </head>
@@ -135,9 +148,9 @@
 
     <h1>ELITE <span>ADMIN</span></h1>
 
-    <div id="nico-burbuja">¡Hola Rodrigo!</div>
-    <div id="nico-container" class="estado-flotar" onclick="controladorNico.interactuar()">
-        <img id="nico-caricatura" src="image.png" alt="Nico">
+    <div id="nico-burbuja">💭 ¡Hola Rodrigo!</div>
+    <div id="nico-container" onclick="controladorNico.interactuar()">
+        <img id="nico-caricatura" src="nico-assets/reposo.png.PNG" alt="Nico">
     </div>
 
     <div class="stats-grid">
@@ -233,13 +246,11 @@
             <h2 style="color:#fff; margin-top:0; text-align:center; font-style:italic; font-size:18px;">ELITE CLEANERS <span style="color:#3b82f6;">COMPANY</span></h2>
             <p id="modal-cliente" style="color:#3b82f6; font-weight:bold; font-size:16px; margin: 5px 0; text-align: center;"></p>
             <div id="legal-content" class="legal-view">
-                <span class="title-contract">CONTRATO DE PRESTACIÓN DE SERVICIOS DE LIMPIEZA</span>
-                <b>• CLÁUSULA 1: OBJETO Y ALCANCE DEL SERVICIO</b>
-                La empresa se compromete a realizar el servicio de limpieza bajo estándares de la industria.
-                <b>• CLÁUSULA 2: SUMINISTROS Y ACCESO</b>
-                El cliente debe garantizar acceso libre.
-                <b>• CLÁUSULA 8: PROTECCIÓN DE TALENTO</b>
-                Multa de $2,500 USD si el cliente contrata directamente a cualquier miembro del equipo.
+                <span class="title-contract">CONTRATO DE SERVICIOS</span>
+                <b>• CLÁUSULA 1: OBJETO</b>
+                Servicio de limpieza profesional.
+                <b>• CLÁUSULA 8: NO CONTRATACIÓN</b>
+                Multa de $2,500 USD por contratación directa.
             </div>
             <p id="modal-fecha" style="color:#8e8e93; font-size:10px; margin-bottom:10px; text-align: center;"></p>
             <img id="modal-img-firma" src="" style="width:100%; height:120px; background:#fff; border-radius:12px; object-fit:contain; border:2px solid #3b82f6;">
@@ -251,72 +262,102 @@
     </div>
 
     <script>
-        // --- MOTOR DE NICO SIMPLIFICADO (STATE MACHINE) ---
+        // --- MOTOR DE NICO ACTUALIZADO ---
         const controladorNico = {
             apiKey: "sk_3bfbc7679725723c15ea43c588edb154a07755bf66174dcc",
             voiceId: "pNInz6obpg8ndclKuzt1",
-            estaEscuchando: false,
 
-            hablar: async function(texto) {
+            cambiarImagen: function(nombre) {
+                const img = document.getElementById('nico-caricatura');
+                // Usamos la extensión doble tal como está en tus assets
+                img.src = `nico-assets/${nombre}.png.PNG`;
+            },
+
+            hablar: async function(texto, emocion = 'alegre') {
+                this.cambiarImagen(emocion);
                 const burbuja = document.getElementById('nico-burbuja');
                 burbuja.innerText = "💭 " + texto;
                 burbuja.style.display = 'block';
-                setTimeout(() => burbuja.style.display = 'none', 6000);
-
+                
                 try {
                     const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${this.voiceId}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'xi-api-key': this.apiKey },
-                        body: JSON.stringify({ text: texto, model_id: "eleven_multilingual_v2", voice_settings: { stability: 0.4, similarity_boost: 0.8 } })
+                        body: JSON.stringify({ 
+                            text: texto, 
+                            model_id: "eleven_multilingual_v2", 
+                            voice_settings: { stability: 0.5, similarity_boost: 0.75 } 
+                        })
                     });
                     if (res.ok) {
                         const blob = await res.blob();
                         new Audio(URL.createObjectURL(blob)).play();
                     }
-                } catch (e) { console.error("Error voz Nico", e); }
+                } catch (e) { console.error("Error voz", e); }
+                
+                setTimeout(() => {
+                    burbuja.style.display = 'none';
+                    this.cambiarImagen('reposo');
+                }, 7000);
             },
 
-            interactuar: function() {
-                const nico = document.getElementById('nico-container');
-                nico.classList.add('estado-giro');
-                setTimeout(() => nico.classList.remove('estado-giro'), 600);
-                this.activarMicrofono();
+            procesarComando: function(frase) {
+                if (frase.includes("mañana")) {
+                    const mañana = new Date();
+                    mañana.setDate(mañana.getDate() + 1);
+                    const fechaStr = mañana.toISOString().split('T')[0];
+                    const trabajos = todosLosServicios.filter(s => s.fecha === fechaStr).length;
+                    
+                    if (trabajos > 0) {
+                        this.hablar(`Rodrigo, para mañana tenemos ${trabajos} servicios agendados.`, "bien");
+                    } else {
+                        this.hablar("No hay trabajos programados para mañana por ahora.", "piensa");
+                    }
+                } else if (frase.includes("hola") || frase.includes("qué tal")) {
+                    this.hablar("¡Hola Rodrigo! Qué bueno verte, ¿cómo va el negocio hoy?", "saluda");
+                } else if (frase.includes("pendientes")) {
+                    const cant = document.getElementById('count-pendientes').innerText;
+                    this.hablar(`Nos quedan ${cant} servicios pendientes todavía.`, "bien");
+                } else {
+                    this.hablar("Te escuché perfectamente. Dijiste: " + frase, "alegre");
+                }
             },
 
             activarMicrofono: function() {
                 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (!Recognition) return alert("Tu navegador no soporta reconocimiento de voz.");
+                if (!Recognition) return;
 
                 const mic = new Recognition();
                 mic.lang = 'es-ES';
                 
                 mic.onstart = () => {
-                    document.getElementById('nico-container').classList.add('estado-escucha');
-                    this.estaEscuchando = true;
+                    document.getElementById('nico-container').classList.add('nico-escuchando');
+                    this.cambiarImagen('canta'); // Estado para simular que escucha
                 };
 
                 mic.onresult = (event) => {
                     const frase = event.results[0][0].transcript.toLowerCase();
-                    if (frase.includes("hola") || frase.includes("nico")) {
-                        this.hablar("¡Hola Rodrigo! Aquí estoy, revisando los servicios de hoy.");
-                    } else if (frase.includes("completado")) {
-                        const cant = document.getElementById('count-completados').innerText;
-                        this.hablar(`Llevamos ${cant} limpiezas terminadas hoy. ¡Excelente trabajo!`);
-                    } else {
-                        this.hablar("Te escuché decir: " + frase);
-                    }
+                    this.procesarComando(frase);
                 };
 
                 mic.onend = () => {
-                    document.getElementById('nico-container').classList.remove('estado-escucha');
-                    this.estaEscuchando = false;
+                    document.getElementById('nico-container').classList.remove('nico-escuchando');
                 };
 
                 mic.start();
+            },
+
+            interactuar: function() {
+                const container = document.getElementById('nico-container');
+                container.classList.add('nico-spin');
+                setTimeout(() => {
+                    container.classList.remove('nico-spin');
+                    this.activarMicrofono();
+                }, 600);
             }
         };
 
-        // --- LÓGICA DE FIREBASE Y NEGOCIO (Mantenida intacta) ---
+        // --- LÓGICA DE FIREBASE Y NEGOCIO ---
         const firebaseConfig = { apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH", authDomain: "elite-cleaners-app.firebaseapp.com", projectId: "elite-cleaners-app", storageBucket: "elite-cleaners-app.appspot.com", messagingSenderId: "826642317319", appId: "1:826642317319:web:cddce7904b590ae" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
@@ -507,7 +548,7 @@
             todosLosServicios.forEach(s => {
                 if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
                     const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
-                    const btnFirma = s.firma_cliente ? `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">Ver Firma</button>` : `<button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Contrato</button>`;
+                    const btnFirma = s.firma_cliente ? `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">Ver Firma</button>` : `<button class="btn-action" style="background:#004a99;" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Contrato</button>`;
                     h.innerHTML += `<div class="card-servicio">
                         <button class="chat-btn" onclick="abrirChat('${s.whatsapp}')">💬</button>
                         <div style="font-size:10px; color:#3b82f6; font-weight:bold;">${s.tipo}</div>
