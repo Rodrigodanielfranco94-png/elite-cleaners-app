@@ -393,8 +393,8 @@
         /* --- ESTILOS DE LA NUBE DE TEXTO --- */
         #nico-burbuja {
             position: fixed;
-            bottom: 100px; /* Ajustado para que salga de la cabeza de Nico */
-            right: 20px;
+            bottom: 110px; /* Ajustado para salir desde la cabeza de Nico */
+            right: 25px;
             background: white;
             color: black;
             padding: 15px;
@@ -406,6 +406,7 @@
             display: none;
             z-index: 10000;
             border: 2px solid #3b82f6;
+            animation: popBurbuja 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         #nico-burbuja::after {
             content: '';
@@ -417,51 +418,59 @@
             border-color: white transparent;
         }
 
-        /* --- NICO ANIMADO --- */
+        /* --- NICO ANIMADO ESTILO MERLÍN --- */
         #nico-container {
             position: fixed;
-            bottom: 10px;
-            right: 10px;
-            width: 85px;
-            height: 85px;
+            bottom: 15px;
+            right: 15px;
+            width: 90px;
+            height: 90px;
             z-index: 9999;
             cursor: pointer;
-            transition: 0.3s;
-            animation: flotarNico 3s ease-in-out infinite;
+            animation: entradaMerlin 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275), flotarNico 3s ease-in-out infinite;
+            filter: drop-shadow(0 5px 15px rgba(59, 130, 246, 0.4));
+            transition: transform 0.3s;
         }
 
         #nico-caricatura {
             width: 100%;
             height: 100%;
             object-fit: contain;
-            border-radius: 50%;
         }
 
-        /* Animación de flotar */
-        @keyframes flotarNico {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
+        @keyframes entradaMerlin { 
+            from { transform: scale(0) rotate(-45deg); opacity: 0; } 
+            to { transform: scale(1) rotate(0); opacity: 1; } 
         }
 
-        /* Animación de escucha (vibración) */
-        .nico-escuchando {
-            animation: vibrarNico 0.2s infinite !important;
-            filter: drop-shadow(0 0 10px #ef4444);
+        @keyframes flotarNico { 
+            0%, 100% { transform: translateY(0) rotate(0deg); } 
+            50% { transform: translateY(-12px) rotate(2deg); } 
         }
 
-        @keyframes vibrarNico {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        @keyframes popBurbuja {
+            from { transform: scale(0.5) translateY(20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .nico-spin { 
+            animation: nicoGiro 0.6s ease-in-out !important; 
+        }
+
+        @keyframes nicoGiro { 
+            from { transform: rotate(0deg) scale(1); } 
+            to { transform: rotate(360deg) scale(1.2); } 
+        }
+
+        .nico-escuchando { 
+            filter: drop-shadow(0 0 20px #ef4444) !important; 
+            animation: vibrarEscucha 0.3s infinite !important; 
+        }
+
+        @keyframes vibrarEscucha { 
+            0% { transform: translateX(0); } 
+            25% { transform: translateX(2px); } 
+            75% { transform: translateX(-2px); } 
         }
     </style>
 </head>
@@ -469,10 +478,10 @@
 
     <h1>ELITE <span>ADMIN</span></h1>
 
-    <div id="nico-burbuja">💭 Hola Rodrigo, ¿en qué te ayudo?</div>
+    <div id="nico-burbuja">💭 ¡Hola Rodrigo! Soy Nico, ¿listo para trabajar?</div>
 
-    <div id="nico-container" onclick="activarNicoPorBoton()">
-        <img id="nico-caricatura" src="https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/nico-avatar.png" alt="Nico">
+    <div id="nico-container" onclick="giroYActivarNico()">
+        <img id="nico-caricatura" src="image.png" alt="Nico">
     </div>
 
     <div class="stats-grid">
@@ -570,36 +579,26 @@
             
             <div id="legal-content" class="legal-view">
                 <span class="title-contract">CONTRATO DE PRESTACIÓN DE SERVICIOS DE LIMPIEZA</span>
-                
                 <b>• CLÁUSULA 1: OBJETO Y ALCANCE DEL SERVICIO</b>
                 La empresa se compromete a realizar el servicio de limpieza bajo estándares de la industria, cumpliendo con el objetivo previamente pactado con el cliente. Las tareas adicionales se cotizarán por separado.
-
                 <b>• CLÁUSULA 2: SUMINISTROS Y ACCESO</b>
                 El cliente debe garantizar acceso libre y suministros básicos (agua y electricidad).
-
                 <b>• CLÁUSULA 3: TÉRMINOS ECONÓMICOS Y PAGO</b>
                 - Anticipo (50%): Para programar el servicio.<br>
                 - Liquidación (50%): Inmediatamente al finalizar.<br>
                 - Mora: Recargo del 5% tras 48 horas de retraso.
-
                 <b>• CLÁUSULA 4: CANCELACIÓN Y SERVICIOS FALLIDOS</b>
                 Avisos con menos de 24 horas resultan en la pérdida del anticipo. Si el personal no puede entrar (No-Show), el servicio se cobra como ejecutado.
-
                 <b>• CLÁUSULA 5: SEGURIDAD DE MENORES Y MASCOTAS</b>
                 Las mascotas y los Menores de edad deben estar resguardados; la empresa no se hace responsable por ellas. No se limpian desechos biológicos (humanos o animales).
-
                 <b>• CLÁUSULA 6: EQUIPO Y SUMINISTROS</b>
                 Elite Cleaners provee químicos y maquinaria profesional. El uso de productos del cliente es bajo su propio riesgo de daño en superficies.
-
                 <b>• CLÁUSULA 7: LÍMITE DE RESPONSABILIDAD</b>
                 Reportes de daños deben hacerse con fotos un plazo de 24 horas. Esta cláusula está sujeta a las exoneraciones de las Cláusulas 9 y 10.
-
                 <b>• CLÁUSULA 8: PROTECCIÓN DE TALENTO (NO CONTRATACIÓN)</b>
                 Multa de $2,500 USD si el cliente contrata directamente a cualquier miembro del equipo hasta 12 meses después del servicio.
-
                 <b>• CLÁUSULA 9: MOVIMIENTO DE OBJETOS PESADOS</b>
                 Para mover heladeras, cocinas o muebles pesados, el cliente debe estar presente obligatoriamente. Elite Cleaners no se responsabiliza por rayaduras o daños en el piso derivados de estas maniobras.
-
                 <b>• CLÁUSULA 10: EXONERACIÓN POR FALLAS ESTRUCTURALES</b>
                 Elite Cleaners queda totalmente exonerado de responsabilidad por daños o roturas en vidrios, puertas, grifería o instalaciones debido a mal estado, antigüedad o mala colocación previa.
             </div>
@@ -616,16 +615,24 @@
     </div>
 
     <script>
-        // --- CONFIGURACIÓN ELEVEN LABS PREMIUM ---
+        // --- MOTOR DE NICO MERLÍN ---
         const API_KEY_NICO = "sk_3bfbc7679725723c15ea43c588edb154a07755bf66174dcc";
         const VOICE_ID_NICO = "pNInz6obpg8ndclKuzt1"; 
         let audioCtx;
 
+        function giroYActivarNico() {
+            const container = document.getElementById('nico-container');
+            container.classList.add('nico-spin');
+            setTimeout(() => {
+                container.classList.remove('nico-spin');
+                activarNicoPorBoton();
+            }, 600);
+        }
+
         async function nicoResponde(texto) {
-            // MOSTRAR NUBE DE TEXTO VISUAL
             const burbuja = document.getElementById('nico-burbuja');
             if (burbuja) {
-                burbuja.innerText = texto;
+                burbuja.innerText = "💭 " + texto;
                 burbuja.style.display = 'block';
                 setTimeout(() => { burbuja.style.display = 'none'; }, 7000);
             }
@@ -636,15 +643,8 @@
 
                 const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID_NICO}`, {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json', 
-                        'xi-api-key': API_KEY_NICO 
-                    },
-                    body: JSON.stringify({ 
-                        text: texto, 
-                        model_id: "eleven_multilingual_v2", 
-                        voice_settings: { stability: 0.4, similarity_boost: 0.8 } 
-                    })
+                    headers: { 'Content-Type': 'application/json', 'xi-api-key': API_KEY_NICO },
+                    body: JSON.stringify({ text: texto, model_id: "eleven_multilingual_v2", voice_settings: { stability: 0.4, similarity_boost: 0.8 } })
                 });
 
                 if (response.ok) {
@@ -652,9 +652,7 @@
                     const audio = new Audio(URL.createObjectURL(blob));
                     await audio.play();
                 }
-            } catch (e) {
-                console.error("Fallo audio Nico:", e);
-            }
+            } catch (e) { console.error("Fallo audio Nico:", e); }
         }
 
         function sonarPitido() {
@@ -674,20 +672,14 @@
 
         function activarNicoPorBoton() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
             const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (Recognition) {
                 const mic = new Recognition();
                 mic.lang = 'es-ES';
-                mic.interimResults = false;
-                mic.maxAlternatives = 1;
-
                 mic.onstart = () => { 
                     sonarPitido();
-                    // ANIMACIÓN DE ESCUCHA
                     document.getElementById('nico-container').classList.add('nico-escuchando');
                 };
-
                 mic.onresult = (event) => {
                     const frase = event.results[0][0].transcript.toLowerCase();
                     if (frase.includes("nico") || frase.includes("hola")) {
@@ -696,31 +688,14 @@
                         nicoResponde("Te escuché perfectamente. Dijiste: " + frase);
                     }
                 };
-
-                mic.onend = () => { 
-                    // QUITAR ANIMACIÓN DE ESCUCHA
-                    document.getElementById('nico-container').classList.remove('nico-escuchando');
-                };
-
-                mic.onerror = () => {
-                    document.getElementById('nico-container').classList.remove('nico-escuchando');
-                };
-                
+                mic.onend = () => { document.getElementById('nico-container').classList.remove('nico-escuchando'); };
+                mic.onerror = () => { document.getElementById('nico-container').classList.remove('nico-escuchando'); };
                 mic.start();
-            } else {
-                alert("Navegador no soportado.");
             }
         }
 
-        // --- LÓGICA DE FIREBASE Y FUNCIONES DE NEGOCIO (SIN CAMBIOS) ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
-            authDomain: "elite-cleaners-app.firebaseapp.com",
-            projectId: "elite-cleaners-app",
-            storageBucket: "elite-cleaners-app.appspot.com",
-            messagingSenderId: "826642317319",
-            appId: "1:826642317319:web:cddce7904b590ae"
-        };
+        // --- LÓGICA DE FIREBASE Y NEGOCIO ---
+        const firebaseConfig = { apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH", authDomain: "elite-cleaners-app.firebaseapp.com", projectId: "elite-cleaners-app", storageBucket: "elite-cleaners-app.appspot.com", messagingSenderId: "826642317319", appId: "1:826642317319:web:cddce7904b590ae" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         
@@ -762,12 +737,7 @@
             const originalOverflow = legal.style.overflowY;
             legal.style.maxHeight = 'none';
             legal.style.overflowY = 'visible';
-
-            html2canvas(area, { 
-                backgroundColor: '#1c1c1e', 
-                scale: 2,
-                useCORS: true
-            }).then(canvas => {
+            html2canvas(area, { backgroundColor: '#1c1c1e', scale: 2, useCORS: true }).then(canvas => {
                 legal.style.maxHeight = originalMaxHeight;
                 legal.style.overflowY = originalOverflow;
                 const link = document.createElement('a');
