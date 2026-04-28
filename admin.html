@@ -17,6 +17,7 @@
             margin: 0; 
             padding: 15px; 
             padding-bottom: 100px; 
+            overflow-x: hidden;
         }
         h1 { 
             font-style: italic; 
@@ -390,23 +391,39 @@
         .btn-descargar { background: #22c55e; color: white; }
         .btn-cerrar { background: #ef4444; color: white; }
 
-        /* --- ESTILOS DE LA NUBE DE TEXTO --- */
-        #nico-burbuja {
+        /* --- NICO BUDDY STYLE --- */
+        #nico-container {
             position: fixed;
-            bottom: 110px; 
-            right: 25px;
+            bottom: 15px;
+            right: 15px;
+            width: 100px;
+            height: 100px;
+            z-index: 9999;
+            cursor: pointer;
+            transition: all 2s ease-in-out; /* Movimiento suave */
+            filter: drop-shadow(0 0 10px #3b82f6);
+        }
+        #nico-caricatura { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+            background: transparent;
+        }
+        #nico-burbuja {
+            position: absolute;
+            top: -70px;
+            right: 0;
             background: white;
             color: black;
-            padding: 15px;
-            border-radius: 20px;
-            max-width: 250px;
-            font-size: 14px;
-            font-weight: 500;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            padding: 12px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: bold;
             display: none;
-            z-index: 10000;
+            width: 160px;
             border: 2px solid #3b82f6;
-            animation: popBurbuja 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
         #nico-burbuja::after {
             content: '';
@@ -417,60 +434,23 @@
             border-style: solid;
             border-color: white transparent;
         }
-
-        /* --- NICO ANIMADO ESTILO MERLÍN --- */
-        #nico-container {
-            position: fixed;
-            bottom: 15px;
-            right: 15px;
-            width: 90px;
-            height: 90px;
-            z-index: 9999;
-            cursor: pointer;
-            animation: entradaMerlin 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275), flotarNico 3s ease-in-out infinite;
-            filter: drop-shadow(0 5px 15px rgba(59, 130, 246, 0.4));
-            transition: transform 0.3s;
+        .nico-escuchando { 
+            filter: drop-shadow(0 0 25px #ef4444) !important; 
+            animation: vibrar 0.1s infinite; 
         }
-
-        #nico-caricatura {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
+        @keyframes vibrar { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        
         @keyframes entradaMerlin { 
             from { transform: scale(0) rotate(-45deg); opacity: 0; } 
             to { transform: scale(1) rotate(0); opacity: 1; } 
         }
-
         @keyframes flotarNico { 
             0%, 100% { transform: translateY(0) rotate(0deg); } 
             50% { transform: translateY(-12px) rotate(2deg); } 
         }
-
         @keyframes popBurbuja {
             from { transform: scale(0.5) translateY(20px); opacity: 0; }
             to { transform: scale(1) translateY(0); opacity: 1; }
-        }
-
-        .nico-spin { 
-            animation: nicoGiro 0.6s ease-in-out !important; 
-        }
-
-        @keyframes nicoGiro { 
-            from { transform: rotate(0deg) scale(1); } 
-            to { transform: rotate(360deg) scale(1.2); } 
-        }
-
-        .nico-escuchando { 
-            filter: drop-shadow(0 0 20px #ef4444) !important; 
-            animation: vibrarEscucha 0.3s infinite !important; 
-        }
-
-        @keyframes vibrarEscucha { 
-            0% { transform: translateX(0); } 
-            25% { transform: translateX(2px); } 
-            75% { transform: translateX(-2px); } 
         }
     </style>
 </head>
@@ -478,10 +458,9 @@
 
     <h1>ELITE <span>ADMIN</span></h1>
 
-    <div id="nico-burbuja">💭 ¡Hola Rodrigo! Soy Nico, ¿listo para trabajar?</div>
-
-    <div id="nico-container" onclick="giroYActivarNico()">
-        <img id="nico-caricatura" src="nico-avatar.png.PNG" alt="Nico" style="background: transparent;">
+    <div id="nico-container" onclick="activarNicoBuddy()">
+        <div id="nico-burbuja">💭 ¡Hola Rodrigo!</div>
+        <img id="nico-caricatura" src="image.png" alt="Nico">
     </div>
 
     <div class="stats-grid">
@@ -619,14 +598,15 @@
         const VOICE_ID_NICO = "pNInz6obpg8ndclKuzt1"; 
         let audioCtx;
 
-        function giroYActivarNico() {
-            const container = document.getElementById('nico-container');
-            container.classList.add('nico-spin');
-            setTimeout(() => {
-                container.classList.remove('nico-spin');
-                activarNicoPorBoton();
-            }, 600);
+        // --- MOVIMIENTO MÁGICO DE NICO ---
+        function moverNico() {
+            const nico = document.getElementById('nico-container');
+            const x = Math.random() * (window.innerWidth - 110);
+            const y = Math.random() * (window.innerHeight - 180) + 50; 
+            nico.style.left = x + 'px';
+            nico.style.top = y + 'px';
         }
+        setInterval(moverNico, 12000); // Se mueve cada 12 segundos
 
         // --- CEREBRO DE NICO ---
         function obtenerRespuestaInteligente(pregunta) {
@@ -638,12 +618,12 @@
                 return `Rodrigo, actualmente tenemos ${pendientes} servicios pendientes en Elite Cleaners Company.`;
             }
             if (pregunta.includes("completados") || pregunta.includes("terminados")) {
-                return `Llevamos ${completados} trabajos completados con éxito hoy.`;
+                return `Llevamos ${completados} trabajos completados con éxito hoy. ¡Excelente trabajo!`;
             }
             if (pregunta.includes("hola") || pregunta.includes("nico")) {
-                return "¡Hola Rodrigo! Aquí estoy, listo para ayudarte con la administración.";
+                return "¡Hola Rodrigo! Soy Nico. Aquí estoy flotando y listo para ayudarte con la administración.";
             }
-            return `Te escuché, Rodrigo. Dijiste: "${pregunta}". ¿En qué más puedo ayudarte?`;
+            return `Te escuché, Rodrigo. Dijiste: "${pregunta}". ¿En qué más puedo ayudarte con la empresa?`;
         }
 
         async function nicoResponde(texto) {
@@ -651,7 +631,7 @@
             if (burbuja) {
                 burbuja.innerText = "💭 " + texto;
                 burbuja.style.display = 'block';
-                setTimeout(() => { burbuja.style.display = 'none'; }, 7000);
+                setTimeout(() => { burbuja.style.display = 'none'; }, 8000);
             }
 
             try {
@@ -687,9 +667,9 @@
             } catch(e) { console.log("AudioContext bloqueado"); }
         }
 
-        function activarNicoPorBoton() {
+        function activarNicoBuddy() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const Recognition = window.SpeechRecognition || window.webkitRecognition || window.webkitSpeechRecognition;
             if (Recognition) {
                 const mic = new Recognition();
                 mic.lang = 'es-ES';
@@ -708,7 +688,14 @@
             }
         }
 
-        const firebaseConfig = { apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH", authDomain: "elite-cleaners-app.firebaseapp.com", projectId: "elite-cleaners-app", storageBucket: "elite-cleaners-app.appspot.com", messagingSenderId: "826642317319", appId: "1:826642317319:web:cddce7904b590ae" };
+        const firebaseConfig = { 
+            apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH", 
+            authDomain: "elite-cleaners-app.firebaseapp.com", 
+            projectId: "elite-cleaners-app", 
+            storageBucket: "elite-cleaners-app.appspot.com", 
+            messagingSenderId: "826642317319", 
+            appId: "1:826642317319:web:cddce7904b590ae" 
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         
