@@ -393,7 +393,7 @@
         /* --- ESTILOS DE LA NUBE DE TEXTO --- */
         #nico-burbuja {
             position: fixed;
-            bottom: 110px; /* Ajustado para salir desde la cabeza de Nico */
+            bottom: 110px; 
             right: 25px;
             background: white;
             color: black;
@@ -481,7 +481,7 @@
     <div id="nico-burbuja">💭 ¡Hola Rodrigo! Soy Nico, ¿listo para trabajar?</div>
 
     <div id="nico-container" onclick="giroYActivarNico()">
-        <img id="nico-caricatura" src="image.png" alt="Nico">
+        <img id="nico-caricatura" src="nico-avatar.png.PNG" alt="Nico" style="background: transparent;">
     </div>
 
     <div class="stats-grid">
@@ -615,7 +615,6 @@
     </div>
 
     <script>
-        // --- MOTOR DE NICO MERLÍN ---
         const API_KEY_NICO = "sk_3bfbc7679725723c15ea43c588edb154a07755bf66174dcc";
         const VOICE_ID_NICO = "pNInz6obpg8ndclKuzt1"; 
         let audioCtx;
@@ -627,6 +626,24 @@
                 container.classList.remove('nico-spin');
                 activarNicoPorBoton();
             }, 600);
+        }
+
+        // --- CEREBRO DE NICO ---
+        function obtenerRespuestaInteligente(pregunta) {
+            pregunta = pregunta.toLowerCase();
+            const pendientes = document.getElementById('count-pendientes').innerText;
+            const completados = document.getElementById('count-completados').innerText;
+
+            if (pregunta.includes("pendientes") || pregunta.includes("mañana") || pregunta.includes("trabajo")) {
+                return `Rodrigo, actualmente tenemos ${pendientes} servicios pendientes en Elite Cleaners Company.`;
+            }
+            if (pregunta.includes("completados") || pregunta.includes("terminados")) {
+                return `Llevamos ${completados} trabajos completados con éxito hoy.`;
+            }
+            if (pregunta.includes("hola") || pregunta.includes("nico")) {
+                return "¡Hola Rodrigo! Aquí estoy, listo para ayudarte con la administración.";
+            }
+            return `Te escuché, Rodrigo. Dijiste: "${pregunta}". ¿En qué más puedo ayudarte?`;
         }
 
         async function nicoResponde(texto) {
@@ -681,12 +698,9 @@
                     document.getElementById('nico-container').classList.add('nico-escuchando');
                 };
                 mic.onresult = (event) => {
-                    const frase = event.results[0][0].transcript.toLowerCase();
-                    if (frase.includes("nico") || frase.includes("hola")) {
-                        nicoResponde("¡Hola Rodrigo! Soy Nico. Aquí estoy listo para ayudarte con Elite Cleaners Company.");
-                    } else {
-                        nicoResponde("Te escuché perfectamente. Dijiste: " + frase);
-                    }
+                    const frase = event.results[0][0].transcript;
+                    const respuesta = obtenerRespuestaInteligente(frase);
+                    nicoResponde(respuesta);
                 };
                 mic.onend = () => { document.getElementById('nico-container').classList.remove('nico-escuchando'); };
                 mic.onerror = () => { document.getElementById('nico-container').classList.remove('nico-escuchando'); };
@@ -694,7 +708,6 @@
             }
         }
 
-        // --- LÓGICA DE FIREBASE Y NEGOCIO ---
         const firebaseConfig = { apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH", authDomain: "elite-cleaners-app.firebaseapp.com", projectId: "elite-cleaners-app", storageBucket: "elite-cleaners-app.appspot.com", messagingSenderId: "826642317319", appId: "1:826642317319:web:cddce7904b590ae" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
