@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Elite Admin - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -10,7 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
-        body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; padding-bottom: 100px; }
+        body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; padding-bottom: 120px; }
         h1 { font-style: italic; font-weight: 900; font-size: 22px; text-transform: uppercase; margin-bottom: 20px; }
         h1 span { color: #3b82f6; }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
@@ -72,7 +72,7 @@
         /* --- ESTILOS DE NICO --- */
         #nico-burbuja {
             position: fixed;
-            bottom: 120px;
+            bottom: 125px;
             right: 25px;
             background: white;
             color: black;
@@ -101,8 +101,8 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            width: 90px;
-            height: 90px;
+            width: 100px;
+            height: 100px;
             z-index: 9999;
             cursor: pointer;
             transition: transform 0.3s;
@@ -126,13 +126,13 @@
         }
 
         .nico-escuchando { 
-            filter: drop-shadow(0 0 15px #ef4444) !important; 
+            filter: drop-shadow(0 0 15px #3b82f6) !important; 
             animation: vibrarEscucha 0.3s infinite; 
         }
 
         @keyframes vibrarEscucha { 
             0% { transform: scale(1); } 
-            50% { transform: scale(1.1); } 
+            50% { transform: scale(1.05); } 
             100% { transform: scale(1); } 
         }
     </style>
@@ -143,7 +143,7 @@
 
     <div id="nico-burbuja">💭 ¡Hola Rodrigo!</div>
     <div id="nico-container" onclick="controladorNico.interactuar()">
-        <img id="nico-caricatura" src="nico-assets/reposo.png.PNG" alt="Nico">
+        <img id="nico-caricatura" src="nico-assets/reposo.png" alt="Nico">
     </div>
 
     <div class="stats-grid">
@@ -262,8 +262,8 @@
 
             cambiarImagen: function(nombre) {
                 const img = document.getElementById('nico-caricatura');
-                // Se usa la extensión .png.PNG que tienen tus archivos
-                img.src = `nico-assets/${nombre}.png.PNG`;
+                // Usamos la extensión limpia .png
+                img.src = `nico-assets/${nombre}.png`;
             },
 
             hablar: async function(texto, emocion = 'alegre') {
@@ -325,7 +325,7 @@
                 
                 mic.onstart = () => {
                     document.getElementById('nico-container').classList.add('nico-escuchando');
-                    this.cambiarImagen('camina'); // Imagen mientras escucha
+                    this.cambiarImagen('celular'); 
                 };
 
                 mic.onresult = (event) => {
