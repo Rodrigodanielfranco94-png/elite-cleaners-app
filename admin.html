@@ -92,9 +92,7 @@
             position: absolute;
             bottom: -10px;
             right: 20px;
-            border-width: 10px 10px 0;
-            border-style: solid;
-            border-color: white transparent;
+            border-width: 10px 10px 0; border-style: solid; border-color: white transparent;
         }
 
         #nico-container {
@@ -293,46 +291,37 @@
             },
 
             procesarComando: function(frase) {
-                // --- MEMORIA FAMILIAR DE NICO (PERSONALIZADA) ---
+                // --- MEMORIA FAMILIAR INTELIGENTE ---
                 
-                // Saludos y estado
-                if (frase.includes("cómo estás") || frase.includes("qué tal")) {
-                    this.hablar("¡Todo bien, hermano! Aquí dándole duro al dashboard de Elite Cleaners.", "alegre");
+                // Dayana (Esposa/Cuñada) - Incluimos "Diana" por si el micro entiende mal
+                if (frase.includes("dayana") || frase.includes("diana")) {
+                    this.hablar("¡Mi cuñada Dayana! Es una mujer increíble, Rodrigo. Cuídala mucho, que es el corazón de tu casa.", "saluda");
                 }
                 
-                // Sobre Dayana (Esposa / Cuñada)
-                else if (frase.includes("dayana")) {
-                    this.hablar("¡Mi cuñada Dayana! Es una gran mujer, Rodrigo. Cuídala mucho y dale un abrazo de mi parte.", "saluda");
-                }
-
-                // Sobre Charlie (El perro / Sobrinito)
+                // Charlie (Sobrinito Perro)
                 else if (frase.includes("charlie")) {
-                    this.hablar("¿Cómo va mi sobrinito Charlie? Ya me dieron ganas de jugar un rato con él.", "bien");
+                    this.hablar("¡Mi sobrinito Charlie! Seguro está haciendo alguna travesura ahora mismo. Es el más consentido de la familia.", "bien");
                 }
 
-                // Sobre Rodolfo (Papá de ambos)
+                // Rodolfo (Papá)
                 else if (frase.includes("rodolfo") || frase.includes("papá")) {
-                    if (frase.includes("rodolfo")) {
-                        this.hablar("¡Nuestro papá Rodolfo es un ejemplo a seguir! Siempre trabajando fuerte.", "bien");
-                    } else {
-                        this.hablar("Papá siempre nos enseñó a ser responsables, ¿verdad, hermano?", "bien");
-                    }
+                    this.hablar("Papá Rodolfo siempre nos enseñó que el trabajo duro rinde frutos. ¡Es un ejemplo para nosotros, hermano!", "bien");
                 }
 
-                // Sobre Julia (Mamá de Rodrigo)
+                // Julia (Mamá)
                 else if (frase.includes("julia") || frase.includes("mamá")) {
-                    this.hablar("Tu mamá Julia es increíble. Dale muchos besos de mi parte cuando la veas.", "alegre");
+                    this.hablar("Tu mamá Julia es una santa. Siempre que hablo con ella me pregunta por ti. Dale muchos besos de mi parte.", "alegre");
                 }
 
-                // Sobre Jorge, Carol y Bastián (Familia)
-                else if (frase.includes("jorge") || frase.includes("carol") || frase.includes("bastián")) {
-                    if (frase.includes("bastián")) {
-                        this.hablar("¡Bastián! Mi sobrino es un campeón. Ya quiero enseñarle algunas cosas cuando crezca.", "alegre");
-                    } else if (frase.includes("jorge")) {
-                        this.hablar("Nuestro hermano Jorge y Carol hacen un gran equipo, igual que nosotros.", "bien");
-                    } else {
-                        this.hablar("Mi cuñada Carol siempre es tan atenta. Saludos para ella también.", "saluda");
-                    }
+                // Jorge, Carol y Bastián
+                else if (frase.includes("bastián") || frase.includes("bastian")) {
+                    this.hablar("¡Bastián! Mi sobrino es un campeón. Ya quiero que crezca para jugar fútbol con él.", "alegre");
+                }
+                else if (frase.includes("jorge")) {
+                    this.hablar("Mi hermano Jorge y su esposa Carol son una pareja de admirar. Me alegra mucho que les vaya bien.", "bien");
+                }
+                else if (frase.includes("carol")) {
+                    this.hablar("Mi cuñada Carol es súper atenta. Salúdala mucho de mi parte cuando la veas.", "saluda");
                 }
 
                 // --- LÓGICA DE NEGOCIO ---
@@ -343,41 +332,41 @@
                     const trabajos = todosLosServicios.filter(s => s.fecha === fechaStr).length;
                     
                     if (trabajos > 0) {
-                        this.hablar(`Rodrigo, para mañana tenemos ${trabajos} servicios agendados. ¡A darle con todo, hermano!`, "bien");
+                        this.hablar(`Hermano, mañana tenemos ${trabajos} servicios agendados. ¡A darle con todo!`, "bien");
                     } else {
-                        this.hablar("Mañana no tenemos servicios agendados. ¡Un respiro para la familia no vendría mal!", "piensa");
+                        this.hablar("Para mañana no hay servicios agendados aún. ¡Buen momento para descansar un poco!", "piensa");
                     }
-                } else if (frase.includes("hola") || frase.includes("oye nico")) {
-                    this.hablar("¡Dime, hermano! ¿Cómo va el día en Elite Cleaners?", "saluda");
-                } else if (frase.includes("pendientes")) {
+                } 
+                else if (frase.includes("hola") || frase.includes("qué tal") || frase.includes("nico") || frase.includes("oye nico")) {
+                    this.hablar("¡Qué onda, hermano! Aquí estoy listo para Elite Cleaners. ¿Qué me cuentas?", "saluda");
+                } 
+                else if (frase.includes("pendientes")) {
                     const cant = document.getElementById('count-pendientes').innerText;
-                    this.hablar(`Tenemos ${cant} servicios pendientes. ¡Tú diriges y yo te apoyo, hermano!`, "bien");
-                } else {
-                    this.hablar("Te escuché perfectamente, hermano. Dijiste: " + frase, "alegre");
+                    this.hablar(`Tenemos ${cant} servicios pendientes todavía. ¡Tú diriges, yo te apoyo!`, "bien");
+                } 
+                else if (frase.includes("cómo estás") || frase.includes("como estas")) {
+                    this.hablar("¡Excelente, hermano! Feliz de ser parte de este equipo contigo.", "alegre");
+                }
+                // RESPUESTA HUMANA POR DEFECTO (No repite)
+                else {
+                    this.hablar("No te capté bien eso, Rodrigo, pero sabes que aquí estoy firme como tu hermano.", "piensa");
                 }
             },
 
             activarMicrofono: function() {
                 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 if (!Recognition) return;
-
                 const mic = new Recognition();
                 mic.lang = 'es-ES';
-                
                 mic.onstart = () => {
                     document.getElementById('nico-container').classList.add('nico-escuchando');
                     this.cambiarImagen('celular'); 
                 };
-
                 mic.onresult = (event) => {
                     const frase = event.results[0][0].transcript.toLowerCase();
                     this.procesarComando(frase);
                 };
-
-                mic.onend = () => {
-                    document.getElementById('nico-container').classList.remove('nico-escuchando');
-                };
-
+                mic.onend = () => { document.getElementById('nico-container').classList.remove('nico-escuchando'); };
                 mic.start();
             },
 
@@ -633,7 +622,7 @@
         function marcar(id, est) { db.collection("servicios").doc(id).update({ estado: est }); }
         function borrar(id) { if(confirm("¿Borrar?")) db.collection("servicios").doc(id).delete(); }
         function editarStaff(id, n, e, p) { document.getElementById('edit-staff-id').value = id; document.getElementById('reg-nombre').value = n; document.getElementById('reg-email').value = e; document.getElementById('reg-pago').value = p; document.getElementById('btn-staff-main').innerText = "ACTUALIZAR STAFF"; }
-        function borrarStaff(id, n) { if(confirm("¿Eliminar?")) db.collection("usuarios").doc(id).delete(); }
+        function borrarStaff(id, n) { if(confirm("¿Eliminar?")) document.getElementById('edit-staff-id').value = id; db.collection("usuarios").doc(id).delete(); }
         function editar(id, s) { document.getElementById('edit-id').value = id; document.getElementById('cliente').value = s.cliente; document.getElementById('direccion').value = s.direccion; document.getElementById('whatsapp').value = s.whatsapp || ""; document.getElementById('search-empleado').value = s.empleado_nombre; document.getElementById('email-empleado').value = s.email_empleado || ""; document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || ""; document.getElementById('email-empleado-2').value = s.email_empleado_2 || ""; document.getElementById('fecha').value = s.fecha; document.getElementById('hora').value = s.hora; document.getElementById('notas').value = s.notas; document.getElementById('admin-correction').style.display = "block"; document.getElementById('hora_inicio_real').value = s.hora_inicio; document.getElementById('hora_fin_real').value = s.hora_fin; selectType(s.tipo); document.getElementById('main-button').innerText = "GUARDAR CAMBIOS"; document.getElementById('cancel-edit').style.display = "block"; window.scrollTo({top: 0, behavior: 'smooth'}); }
         function enviarContrato(id, telefono, cliente) { if (!telefono) return alert("Faltan datos."); window.location.href = `https://wa.me/${telefono}?text=Contrato:${id}`; }
     </script>
