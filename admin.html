@@ -69,10 +69,10 @@
         .btn-descargar { background: #22c55e; color: white; }
         .btn-cerrar { background: #ef4444; color: white; }
 
-        /* --- ESTILOS DE NICO (Actualizados) --- */
+        /* --- ESTILOS DE NICO --- */
         #nico-burbuja {
             position: fixed;
-            bottom: 110px;
+            bottom: 120px;
             right: 25px;
             background: white;
             color: black;
@@ -99,14 +99,12 @@
 
         #nico-container {
             position: fixed;
-            bottom: 15px;
-            right: 15px;
+            bottom: 20px;
+            right: 20px;
             width: 90px;
             height: 90px;
             z-index: 9999;
             cursor: pointer;
-            animation: flotarNico 3s ease-in-out infinite;
-            filter: drop-shadow(0 5px 15px rgba(59, 130, 246, 0.4));
             transition: transform 0.3s;
         }
 
@@ -116,11 +114,6 @@
             object-fit: contain;
         }
 
-        @keyframes flotarNico { 
-            0%, 100% { transform: translateY(0); } 
-            50% { transform: translateY(-12px); } 
-        }
-
         @keyframes popBurbuja {
             from { transform: scale(0.5) translateY(20px); opacity: 0; }
             to { transform: scale(1) translateY(0); opacity: 1; }
@@ -128,19 +121,19 @@
 
         .nico-spin { animation: nicoGiro 0.6s ease-in-out; }
         @keyframes nicoGiro { 
-            from { transform: rotate(0deg) scale(1); } 
-            to { transform: rotate(360deg) scale(1.1); } 
+            from { transform: rotate(0deg); } 
+            to { transform: rotate(360deg); } 
         }
 
         .nico-escuchando { 
-            filter: drop-shadow(0 0 20px #ef4444) !important; 
-            animation: vibrarEscucha 0.3s infinite !important; 
+            filter: drop-shadow(0 0 15px #ef4444) !important; 
+            animation: vibrarEscucha 0.3s infinite; 
         }
 
         @keyframes vibrarEscucha { 
-            0% { transform: translateX(0); } 
-            25% { transform: translateX(2px); } 
-            75% { transform: translateX(-2px); } 
+            0% { transform: scale(1); } 
+            50% { transform: scale(1.1); } 
+            100% { transform: scale(1); } 
         }
     </style>
 </head>
@@ -269,7 +262,7 @@
 
             cambiarImagen: function(nombre) {
                 const img = document.getElementById('nico-caricatura');
-                // Usamos la extensión doble tal como está en tus assets
+                // Se usa la extensión .png.PNG que tienen tus archivos
                 img.src = `nico-assets/${nombre}.png.PNG`;
             },
 
@@ -332,7 +325,7 @@
                 
                 mic.onstart = () => {
                     document.getElementById('nico-container').classList.add('nico-escuchando');
-                    this.cambiarImagen('canta'); // Estado para simular que escucha
+                    this.cambiarImagen('camina'); // Imagen mientras escucha
                 };
 
                 mic.onresult = (event) => {
