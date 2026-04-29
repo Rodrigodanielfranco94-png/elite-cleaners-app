@@ -61,7 +61,8 @@
         
         /* ESTILOS DE NICO */
         #nico-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; }
-        #nico-avatar { width: 60px; height: 60px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; cursor: pointer; border: 3px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        #nico-avatar { width: 60px; height: 60px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; cursor: pointer; border: 3px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5); overflow: hidden; }
+        #nico-avatar img { width: 100%; height: 100%; object-fit: cover; }
         #nico-avatar.listening { animation: pulse 1.5s infinite; background: #ef4444; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
         #nico-chat { display: none; position: absolute; bottom: 80px; right: 0; width: 300px; background: #1c1c1e; border: 1px solid #3b82f6; border-radius: 15px; padding: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.8); }
@@ -88,7 +89,9 @@
             <p id="nico-status" style="font-size: 10px; color: #3b82f6; text-transform: uppercase; margin-bottom: 10px;">Nico está listo...</p>
             <div id="nico-response" style="font-size: 13px; color: #fff; max-height: 100px; overflow-y: auto;">Pica en Nico para hablar.</div>
         </div>
-        <div id="nico-avatar" onclick="ToggleNico()">🤖</div>
+        <div id="nico-avatar" onclick="ToggleNico()">
+            <img src="https://raw.githubusercontent.com/rodrigodanielfranco94-png/elite-cleaners-app/main/nico-assets/nico-avatar.png.PNG" alt="Nico">
+        </div>
     </div>
 
     <div class="stats-grid">
@@ -249,10 +252,10 @@
         let todosLosServicios = [];
         let vistaActual = "pendiente";
 
-        // LLAVES DE API INTEGRADAS POR GEMINI
-        const OPENAI_API_KEY = "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";
+        // LLAVES DE API ACTUALIZADAS POR GEMINI
+        const OPENAI_API_KEY = "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";
         const ELEVENLABS_API_KEY = "75a3f05a66832f9ea32a826d24cb7bb5b419a5a25618a8a1";
-        const VOICE_ID = "pms79P9D8n0wZfEupBIn"; // ID por defecto para Nico
+        const VOICE_ID = "pms79P9D8n0wZfEupBIn"; 
 
         function cambiarVista(v) {
             vistaActual = v;
@@ -306,7 +309,7 @@
 
                 const link = document.createElement('a');
                 link.download = `Contrato_Elite_${cliente}.png`;
-                link.href = canvas.toDataURL('image/png');
+                link.href = canvas.toToDataURL('image/png');
                 link.click();
             });
         }
@@ -563,7 +566,7 @@
             window.location.href = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
         }
 
-        // LÓGICA DE NICO (IA & VOZ)
+        // LÓGICA DE NICO (IA & VOZ CORREGIDA)
         let isNicoOpen = false;
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = 'es-ES';
@@ -592,17 +595,31 @@
 
         async function talkToOpenAI(prompt) {
             try {
-                const response = await fetch("https://api.openai.com/v1/chat/completions", {
+                // Usamos un proxy para burlar el bloqueo de seguridad (CORS) del navegador
+                const proxyUrl = "https://corsproxy.io/?";
+                const apiUrl = "https://api.openai.com/v1/chat/completions";
+                
+                const response = await fetch(proxyUrl + encodeURIComponent(apiUrl), {
                     method: "POST",
-                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${OPENAI_API_KEY}` },
+                    headers: { 
+                        "Content-Type": "application/json", 
+                        "Authorization": `Bearer ${OPENAI_API_KEY}` 
+                    },
                     body: JSON.stringify({
-                        model: "gpt-3.5-turbo",
-                        messages: [{ role: "system", content: "Eres Nico, asistente inteligente de Elite Cleaners Company. Sé breve y profesional." }, { role: "user", content: prompt }]
+                        model: "gpt-4o-mini", // Modelo actualizado y más rápido
+                        messages: [
+                            { role: "system", content: "Eres Nico, asistente inteligente de Elite Cleaners Company. Eres amable, profesional y ayudas a Rodrigo con la administración de su negocio de limpieza en Pleasanton." }, 
+                            { role: "user", content: prompt }
+                        ]
                     })
                 });
                 const data = await response.json();
+                if (data.error) throw new Error(data.error.message);
                 return data.choices[0].message.content;
-            } catch(e) { return "Lo siento Rodrigo, algo falló en mi cerebro OpenAI."; }
+            } catch(e) { 
+                console.error(e);
+                return "Lo siento Rodrigo, tuve un problema de conexión. Inténtalo de nuevo en un momento."; 
+            }
         }
 
         async function speakWithElevenLabs(text) {
