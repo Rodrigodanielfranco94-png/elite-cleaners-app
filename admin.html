@@ -28,7 +28,6 @@
         .staff-info span { font-size: 10px; color: #8e8e93; }
         .staff-actions { display: flex; gap: 5px; }
         .btn-mini { padding: 6px 10px; border: none; border-radius: 6px; font-size: 9px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; }
-        .search-container { position: relative; margin-bottom: 5px; }
         .suggestions-list { position: absolute; width: 100%; background: #3b82f6; border-radius: 10px; z-index: 100; max-height: 150px; overflow-y: auto; display: none; }
         .suggestion-item { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-weight: bold; }
         .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
@@ -71,6 +70,12 @@
     </style>
 </head>
 <body>
+
+    <div id="capa-inicio">
+        <h1 style="color:white; font-style:italic;">ELITE <span style="color:#3b82f6;">SYSTEM</span></h1>
+        <button class="btn-activar" onclick="controladorNico.activarTodo()">ACTIVAR NICO</button>
+        <p style="color:#8e8e93; font-size:10px; margin-top:20px;">Restauración Completa Elite Admin v6.0</p>
+    </div>
 
     <h1>ELITE <span>ADMIN</span></h1>
 
@@ -125,8 +130,8 @@
         <input type="hidden" id="email-empleado-2">
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <div><span class="label-text">Fecha</span><input type="date" id="fecha"></div>
-            <div><span class="label-text">Hora</span><input type="time" id="hora"></div>
+            <div><span class="label-text">Fecha</span><input type="date" id="fecha" style="flex:1;"></div>
+            <div><span class="label-text">Hora</span><input type="time" id="hora" style="flex:1;"></div>
         </div>
         <span class="label-text">Notas</span>
         <textarea id="notas" placeholder="Instrucciones..." rows="2"></textarea>
@@ -134,40 +139,46 @@
         <div id="admin-correction" style="display: none;">
             <span class="label-text" style="color: #f59e0b;">Corrección de Horas Reales</span>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <input type="text" id="hora_inicio_real" placeholder="Inicio">
-                <input type="text" id="hora_fin_real" placeholder="Fin">
+                <input type="text" id="hora_inicio_real" placeholder="Inicio (Ej: 10:30 am)">
+                <input type="text" id="hora_fin_real" placeholder="Fin (Ej: 2:45 pm)">
             </div>
         </div>
 
+        <span class="label-text">Tipo de Limpieza</span>
         <div class="type-grid">
             <button class="type-btn active" id="btn-ESTÁNDAR" onclick="selectType('ESTÁNDAR')">ESTÁNDAR</button>
             <button class="type-btn" id="btn-PROFUNDA" onclick="selectType('PROFUNDA')">PROFUNDA</button>
             <button class="type-btn" id="btn-MOVE-IN" onclick="selectType('MOVE-IN')">MOVE-IN</button>
             <button class="type-btn" id="btn-MOVE-OUT" onclick="selectType('MOVE-OUT')">MOVE-OUT</button>
-            <button class="type-btn" id="btn-PRIMERA" onclick="selectType('PRIMERA')">PRIMERA</button>
+            <button class="type-btn" id="btn-PRIMERA" onclick="selectType('PRIMERA')">PRIMERA LIMPIEZA</button>
             <button class="type-btn" id="btn-POST" onclick="selectType('POST')">POST-CONSTR</button>
         </div>
         <button class="save-btn" id="main-button" onclick="asignarTrabajo()">ASIGNAR TRABAJO</button>
+        <button id="cancel-edit" style="display:none; background:none; border:none; color:#ef4444; width:100%; margin-top:10px; font-weight:bold; cursor:pointer;" onclick="location.reload()">CANCELAR EDICIÓN</button>
     </div>
 
     <div id="historial"></div>
 
     <div class="payroll-container">
-        <span class="label-text" style="color: #22c55e;">Nómina</span>
+        <span class="label-text" style="color: #22c55e;">Resumen de Pagos</span>
         <table class="payroll-table">
             <thead><tr><th>Staff</th><th>Horas</th><th>Total</th></tr></thead>
             <tbody id="lista-nomina"></tbody>
         </table>
+        <button class="btn-reset" onclick="reiniciarHorasMes()">Reiniciar Mes y Descargar Excel</button>
     </div>
 
     <div id="modal-firma">
         <div class="modal-content" id="capture-area">
             <h2 style="color:#fff; text-align:center;">ELITE CLEANERS</h2>
-            <p id="modal-cliente" style="color:#3b82f6; text-align: center;"></p>
-            <div class="legal-view" id="legal-content">
+            <p id="modal-cliente" style="color:#3b82f6; font-weight:bold; font-size:16px; margin: 5px 0; text-align: center;"></p>
+            
+            <div id="legal-content" class="legal-view">
                 <span class="title-contract">CONTRATO DE SERVICIOS</span>
                 <b>• CLÁUSULA 8: PROTECCIÓN DE TALENTO</b> Multa de $2,500 USD por contratación directa.
             </div>
+
+            <p id="modal-fecha" style="color:#8e8e93; font-size:10px; margin-bottom:10px; text-align: center;"></p>
             <img id="modal-img-firma" src="" style="width:100%; height:120px; background:#fff; border-radius:12px;">
         </div>
         <div class="modal-footer"><button class="btn-modal btn-descargar" onclick="descargarComprobante()">Descargar</button><button class="btn-modal btn-cerrar" onclick="document.getElementById('modal-firma').style.display='none'">Cerrar</button></div>
@@ -183,7 +194,8 @@
             setTimeout(() => b.style.display = 'none', 8000);
             try {
                 if (!audioCtx) audioCtx = new AudioContext();
-                const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'xi-api-key': ELEVEN_KEY }, body: JSON.stringify({ text: texto, model_id: "eleven_multilingual_v2" }) });
+                if (audioCtx.state === 'suspended') await audioCtx.resume();
+                const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'xi-api-key': ELEVEN_KEY }, body: JSON.stringify({ text: texto, model_id: "eleven_multilingual_v2", voice_settings: { stability: 0.4, similarity_boost: 0.8 } }) });
                 if (res.ok) { const blob = await res.blob(); new Audio(URL.createObjectURL(blob)).play(); }
             } catch (e) { console.error(e); }
         }
@@ -209,11 +221,40 @@
         const db = firebase.firestore();
         let todosLosServicios = [], todosLosEmpleados = [], todosLosClientes = [], vistaActual = "pendiente", tipoSeleccionado = "ESTÁNDAR";
 
+        // --- FUNCIONES STAFF RESTAURADAS AL 100% ---
+        function registrarStaff() {
+            const id = document.getElementById('edit-staff-id').value;
+            const n = document.getElementById('reg-nombre').value;
+            const e = document.getElementById('reg-email').value.toLowerCase().trim();
+            const p = document.getElementById('reg-pago').value || 0;
+            if(!n || !e) return alert("Faltan datos");
+            if(id) db.collection("usuarios").doc(id).update({ nombre: n, email: e, pago_hora: p }).then(resetStaffForm);
+            else db.collection("usuarios").add({ nombre: n, email: e, rol: "empleado", pago_hora: p }).then(resetStaffForm);
+        }
+
+        function editarStaff(id, n, e, p) {
+            document.getElementById('edit-staff-id').value = id;
+            document.getElementById('reg-nombre').value = n;
+            document.getElementById('reg-email').value = e;
+            document.getElementById('reg-pago').value = p;
+            document.getElementById('btn-staff-main').innerText = "ACTUALIZAR STAFF";
+        }
+
+        function borrarStaff(id, n) { if(confirm(`¿Eliminar a ${n}?`)) db.collection("usuarios").doc(id).delete(); }
+
+        function resetStaffForm() { document.getElementById('edit-staff-id').value = ""; document.getElementById('reg-nombre').value = ""; document.getElementById('reg-email').value = ""; document.getElementById('reg-pago').value = ""; document.getElementById('btn-staff-main').innerText = "GUARDAR STAFF"; }
+
         db.collection("usuarios").where("rol", "==", "empleado").onSnapshot(snap => {
             todosLosEmpleados = []; document.getElementById('lista-visual-staff').innerHTML = "";
-            snap.forEach(doc => { const e = doc.data(); todosLosEmpleados.push({id: doc.id, ...e}); document.getElementById('lista-visual-staff').innerHTML += `<div class="staff-item"><b>${e.nombre}</b><span>$${e.pago_hora}/hr</span> <button onclick="db.collection('usuarios').doc('${doc.id}').delete()">X</button></div>`; });
+            snap.forEach(doc => { 
+                const e = doc.data(); const id = doc.id; 
+                todosLosEmpleados.push({id, ...e}); 
+                document.getElementById('lista-visual-staff').innerHTML += `<div class="staff-item"><div class="staff-info"><b>${e.nombre}</b><span>$${e.pago_hora}/hr</span></div><div class="staff-actions"><button class="btn-mini" style="background:#6366f1" onclick="editarStaff('${id}','${e.nombre}','${e.email}','${e.pago_hora}')">Editar</button><button class="btn-mini" style="background:#ef4444" onclick="borrarStaff('${id}','${e.nombre}')">Eliminar</button></div></div>`; 
+            });
             generarNomina();
         });
+
+        // --- LÓGICA DE NEGOCIO RESTAURADA ---
         db.collection("clientes").onSnapshot(snap => { todosLosClientes = []; snap.forEach(doc => todosLosClientes.push(doc.data())); });
         db.collection("servicios").onSnapshot(snap => {
             todosLosServicios = []; snap.forEach(doc => todosLosServicios.push({ id: doc.id, ...doc.data() }));
@@ -231,7 +272,7 @@
                     h.innerHTML += `<div class="card-servicio">
                         <button class="chat-btn" onclick="window.location.href='sms:${s.whatsapp}'">💬</button>
                         <h3>${s.cliente}</h3><p>📅 ${s.fecha} (${s.tipo})</p><p>👤 ${s.empleado_nombre_2 ? s.empleado_nombre+' & '+s.empleado_nombre_2 : s.empleado_nombre}</p>
-                        <div class="time-box"><div class="time-row"><b>Inicio:</b> ${s.hora_inicio} | <b>Fin:</b> ${s.hora_fin}</div><div class="time-row total-time-row"><b>Tiempo:</b> ${t.texto}</div></div>
+                        <div class="time-box"><div class="time-row"><b>Inicio:</b> ${s.hora_inicio || "--"} | <b>Fin:</b> ${s.hora_fin || "--"}</div><div class="time-row total-time-row"><b>Tiempo:</b> ${t.texto}</div></div>
                         <div class="action-buttons">
                             <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">Estado</button>
                             ${btnFirma}
@@ -261,16 +302,16 @@
             f.forEach(e => { const d = document.createElement('div'); d.className = 'suggestion-item'; d.innerText = e.nombre; d.onclick = () => { document.getElementById(id).value = e.nombre; document.getElementById(em).value = e.email; l.style.display = "none"; }; l.appendChild(d); });
             l.style.display = f.length > 0 ? "block" : "none";
         }
-        function registrarStaff() { const n = document.getElementById('reg-nombre').value, e = document.getElementById('reg-email').value, p = document.getElementById('reg-pago').value; db.collection("usuarios").add({ nombre: n, email: e, pago_hora: p, rol: "empleado" }); }
         function asignarTrabajo() { const data = { cliente: document.getElementById('cliente').value, direccion: document.getElementById('direccion').value, whatsapp: document.getElementById('whatsapp').value, empleado_nombre: document.getElementById('search-empleado').value, empleado_email: document.getElementById('email-empleado').value, empleado_nombre_2: document.getElementById('search-empleado-2').value, empleado_email_2: document.getElementById('email-empleado-2').value, fecha: document.getElementById('fecha').value, hora: document.getElementById('hora').value, notas: document.getElementById('notas').value, tipo: tipoSeleccionado, estado: "pendiente", hora_inicio: "--:--", hora_fin: "--:--" }; db.collection("servicios").add(data).then(() => location.reload()); }
-        function generarNomina() { const tabla = document.getElementById('lista-nomina'); tabla.innerHTML = ""; todosLosEmpleados.forEach(emp => { let m = 0; todosLosServicios.filter(s => s.estado === "completado" && (s.empleado_email === emp.email || s.empleado_email_2 === emp.email)).forEach(s => m += calcularTiempo(s.hora_inicio, s.hora_fin).minutos); if(m > 0) tabla.innerHTML += `<tr><td><b>${emp.nombre}</b></td><td>${Math.floor(m/60)}h</td><td class="pay-amount">$${((m/60)*emp.pago_hora).toFixed(2)}</td></tr>`; }); }
+        function generarNomina() { const tabla = document.getElementById('lista-nomina'); tabla.innerHTML = ""; todosLosEmpleados.forEach(emp => { let m = 0; todosLosServicios.filter(s => s.estado === "completado" && (s.empleado_email === emp.email || s.empleado_email_2 === emp.email)).forEach(s => m += calcularTiempo(s.hora_inicio, s.hora_fin).minutos); if(m > 0) tabla.innerHTML += `<tr><td><b>${emp.nombre}</b></td><td>${Math.floor(m/60)}h</td><td class="pay-amount">$${((m/60)*emp.pago_hora).toFixed(2)}</td></tr>`; }); }); }
         function cambiarVista(v) { vistaActual = v; renderHistorial(); }
-        function selectType(t) { tipoSeleccionado = t; document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active')); document.getElementById('btn-'+t).classList.add('active'); }
+        function selectType(t) { tipoSeleccionado = t; document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); }
         function marcar(id, est) { db.collection("servicios").doc(id).update({ estado: est }); }
         function borrar(id) { if(confirm("¿Borrar?")) db.collection("servicios").doc(id).delete(); }
         function enviarContrato(id, t, c) { const url = `https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/firmar.html?id=${id}&cliente=${encodeURIComponent(c)}`; window.location.href = `https://wa.me/${t}?text=Firma tu contrato: ${url}`; }
         function verFirma(id) { const s = todosLosServicios.find(x => x.id === id); document.getElementById('modal-cliente').innerText = "CLIENTE: " + s.cliente; document.getElementById('modal-img-firma').src = s.firma_imagen; document.getElementById('modal-firma').style.display = 'block'; }
         function editar(id, s) { document.getElementById('edit-id').value = id; document.getElementById('cliente').value = s.cliente; document.getElementById('search-empleado').value = s.empleado_nombre; document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || ""; }
+        function descargarComprobante() { const area = document.getElementById('capture-area'); html2canvas(area).then(canvas => { const link = document.createElement('a'); link.download = 'Contrato.png'; link.href = canvas.toDataURL(); link.click(); }); }
     </script>
 </body>
 </html>
