@@ -309,7 +309,7 @@
 
                 const link = document.createElement('a');
                 link.download = `Contrato_Elite_${cliente}.png`;
-                link.href = canvas.toToDataURL('image/png');
+                link.href = canvas.toDataURL('image/png');
                 link.click();
             });
         }
@@ -606,7 +606,7 @@
                         "Authorization": `Bearer ${OPENAI_API_KEY}` 
                     },
                     body: JSON.stringify({
-                        model: "gpt-4o-mini", // Modelo actualizado y más rápido
+                        model: "gpt-4o-mini", // Modelo actualizado: gpt-4o-mini es más eficiente que gpt-3.5-turbo
                         messages: [
                             { role: "system", content: "Eres Nico, asistente inteligente de Elite Cleaners Company. Eres amable, profesional y ayudas a Rodrigo con la administración de su negocio de limpieza en Pleasanton." }, 
                             { role: "user", content: prompt }
