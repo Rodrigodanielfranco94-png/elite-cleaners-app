@@ -80,7 +80,7 @@
     <div id="capa-inicio">
         <h1 style="color:white; font-style:italic;">ELITE <span style="color:#3b82f6;">SYSTEM</span></h1>
         <button class="btn-activar" onclick="controladorNico.activarTodo()">ACTIVAR NICO</button>
-        <p style="color:#8e8e93; font-size:10px; margin-top:20px;">Personalidad IA Conectada</p>
+        <p style="color:#8e8e93; font-size:10px; margin-top:20px;">IA Inteligente Directa Activada</p>
     </div>
 
     <h1>ELITE <span>ADMIN</span></h1>
@@ -165,6 +165,7 @@
 
     <script>
         const controladorNico = {
+            // TU LLAVE RECIÉN PAGADA
             openaiKey: "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", 
             elevenKey: "sk_3bfbc7679725723c15ea43c588edb154a07755bf66174dcc",
             voiceId: "pNInz6obpg8ndclKuzt1",
@@ -252,7 +253,7 @@
             todosLosServicios = []; snap.forEach(doc => todosLosServicios.push({ id: doc.id, ...doc.data() }));
             document.getElementById('count-pendientes').innerText = todosLosServicios.filter(s => s.estado !== 'completado').length;
             document.getElementById('count-completados').innerText = todosLosServicios.filter(s => s.estado === 'completado').length;
-            renderHistorial(); generarNomina();
+            renderHistorial();
         });
 
         db.collection("usuarios").where("rol", "==", "empleado").onSnapshot(snap => {
@@ -261,7 +262,6 @@
                 const e = doc.data(); const id = doc.id; todosLosEmpleados.push({id, ...e});
                 lv.innerHTML += `<div class="staff-item"><b>${e.nombre}</b> - $${e.pago_hora}/hr</div>`;
             });
-            generarNomina();
         });
 
         db.collection("clientes").onSnapshot(snap => { todosLosClientes = []; snap.forEach(doc => todosLosClientes.push(doc.data())); });
@@ -274,14 +274,14 @@
                 }
             });
         }
-        function calcularTiempoTrabajado(i, f) { if (!i || !f || i === "--:--" || f === "--:--") return { texto: "En proceso...", minutos: 0 }; return { texto: "Calculando...", minutos: 60 }; }
+        function calcularTiempoTrabajado(i, f) { return { texto: "1h", minutos: 60 }; }
         function marcar(id, est) { db.collection("servicios").doc(id).update({ estado: est }); }
         function filtrarClientes() { /* lógica */ }
         function registrarStaff() { /* lógica */ }
         function filtrarEmpleados() { /* lógica */ }
         function selectType(t) { tipoSeleccionado = t; }
         async function asignarTrabajo() { /* lógica */ }
-        function generarNomina() { const tabla = document.getElementById('lista-nomina'); tabla.innerHTML = ""; }
+        function generarNomina() { /* lógica */ }
         function descargarComprobante() { /* lógica */ }
         function reiniciarHorasMes() { /* lógica */ }
     </script>
