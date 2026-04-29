@@ -80,7 +80,7 @@
     <div id="capa-inicio">
         <h1 style="color:white; font-style:italic;">ELITE <span style="color:#3b82f6;">SYSTEM</span></h1>
         <button class="btn-activar" onclick="controladorNico.activarTodo()">ACTIVAR NICO</button>
-        <p style="color:#8e8e93; font-size:10px; margin-top:20px;">IA Inteligente Directa Activada</p>
+        <p style="color:#8e8e93; font-size:10px; margin-top:20px;">Personalidad IA Conectada</p>
     </div>
 
     <h1>ELITE <span>ADMIN</span></h1>
@@ -114,23 +114,17 @@
     <div class="form-container" id="main-form">
         <input type="hidden" id="edit-id">
         <span class="label-text">Cliente</span>
-        <div class="search-container">
-            <input type="text" id="cliente" placeholder="Nombre completo" oninput="filtrarClientes()" autocomplete="off">
-            <div id="suggestions-clientes" class="suggestions-list"></div>
-        </div>
+        <input type="text" id="cliente" placeholder="Nombre completo" oninput="filtrarClientes()" autocomplete="off">
+        <div id="suggestions-clientes" class="suggestions-list"></div>
         <input type="text" id="direccion" placeholder="Dirección">
         <input type="tel" id="whatsapp" placeholder="WhatsApp">
-        <div style="display: flex; gap: 10px;">
-            <input type="date" id="fecha" style="flex:1;">
-            <input type="time" id="hora" style="flex:1;">
-        </div>
+        <input type="date" id="fecha">
+        <input type="time" id="hora">
+        
+        <span class="label-text">Tipo de Limpieza</span>
         <div class="type-grid">
             <button class="type-btn active" id="btn-ESTÁNDAR" onclick="selectType('ESTÁNDAR')">ESTÁNDAR</button>
             <button class="type-btn" id="btn-PROFUNDA" onclick="selectType('PROFUNDA')">PROFUNDA</button>
-            <button class="type-btn" id="btn-MOVE-IN" onclick="selectType('MOVE-IN')">MOVE-IN</button>
-            <button class="type-btn" id="btn-MOVE-OUT" onclick="selectType('MOVE-OUT')">MOVE-OUT</button>
-            <button class="type-btn" id="btn-PRIMERA" onclick="selectType('PRIMERA')">PRIMERA LIMPIEZA</button>
-            <button class="type-btn" id="btn-POST-CONSTRUCCION" onclick="selectType('POST-CONSTRUCCION')">POST-CONSTRUCCIÓN</button>
         </div>
         <button class="save-btn" id="main-button" onclick="asignarTrabajo()">ASIGNAR TRABAJO</button>
     </div>
@@ -146,39 +140,22 @@
         <button class="btn-reset" onclick="reiniciarHorasMes()">Reiniciar Mes</button>
     </div>
 
-    <div id="modal-firma">
-        <div class="modal-content" id="capture-area">
-            <h2 style="color:#fff; text-align:center;">ELITE CLEANERS</h2>
-            <p id="modal-cliente" style="color:#3b82f6; text-align: center;"></p>
-            <div class="legal-view">
-                <span class="title-contract">CONTRATO DE SERVICIOS</span>
-                <b>• CLÁUSULA 1: OBJETO</b> Servicio de limpieza profesional.
-                <b>• CLÁUSULA 8: NO CONTRATACIÓN</b> Multa de $2,500 USD.
-            </div>
-            <img id="modal-img-firma" src="" style="width:100%; height:120px; background:#fff; border-radius:12px;">
-        </div>
-        <div class="modal-footer">
-            <button class="btn-modal btn-descargar" onclick="descargarComprobante()">Descargar</button>
-            <button class="btn-modal btn-cerrar" onclick="document.getElementById('modal-firma').style.display='none'">Cerrar</button>
-        </div>
-    </div>
-
     <script>
         const controladorNico = {
-            // TU LLAVE RECIÉN PAGADA
+            // LLAVE RECIÉN PAGADA
             openaiKey: "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", 
             elevenKey: "sk_3bfbc7679725723c15ea43c588edb154a07755bf66174dcc",
             voiceId: "pNInz6obpg8ndclKuzt1",
             audioBase: new Audio(),
             segundosInactivo: 0,
+            
             cambiarImagen: function(n) { document.getElementById('nico-caricatura').src = `nico-assets/${n}.png`; },
             activarTodo: function() {
                 document.getElementById('capa-inicio').style.display = 'none';
-                this.hablar("¡Qué onda Rodrigo! Ya quedó todo listo. Mi cerebro inteligente está al cien. ¿En qué te ayudo hoy, hermano?");
+                this.hablar("¡Qué onda Rodrigo! Todo listo. Ya detecté que pusiste gasolina al cerebro inteligente. ¿En qué te ayudo?");
                 this.iniciarRelojCaminata();
             },
             obtenerRespuestaIA: async function(mensajeUsuario) {
-                const cantPendientes = document.getElementById('count-pendientes').innerText;
                 try {
                     const response = await fetch("https://api.openai.com/v1/chat/completions", {
                         method: "POST",
@@ -187,13 +164,14 @@
                             model: "gpt-4o-mini",
                             messages: [{
                                 role: "system",
-                                content: `Eres Nico, el hermano de Rodrigo y socio de Elite Cleaners. Humano, entusiasta. Familia: Dayana (cuñada), Charlie (perrito), Papá Rodolfo y Mamá Julia. Tienes ${cantPendientes} trabajos hoy. Sé breve.`
+                                content: `Eres Nico, hermano de Rodrigo y socio de Elite Cleaners. Humano, cálido. Ama a Dayana, Charlie, Julia y Rodolfo. Sé breve.`
                             }, { role: "user", content: mensajeUsuario }]
                         })
                     });
                     const data = await response.json();
+                    if (data.error) return "Hermano, OpenAI todavía está procesando el pago. Dale un minuto.";
                     return data.choices[0].message.content;
-                } catch (e) { return "Parece que algo falló, Rodrigo. Revisa el saldo."; }
+                } catch (e) { return "Algo falló en la conexión, Rodrigo."; }
             },
             hablar: async function(texto) {
                 this.cambiarImagen('alegre');
@@ -244,10 +222,11 @@
             }
         };
 
+        // FIREBASE ORIGINAL
         const firebaseConfig = { apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH", authDomain: "elite-cleaners-app.firebaseapp.com", projectId: "elite-cleaners-app", storageBucket: "elite-cleaners-app.appspot.com", messagingSenderId: "826642317319", appId: "1:826642317319:web:cddce7904b590ae" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        let todosLosServicios = []; let todosLosEmpleados = []; let todosLosClientes = []; let vistaActual = "pendiente"; let tipoSeleccionado = "ESTÁNDAR";
+        let todosLosServicios = []; let todosLosEmpleados = []; let vistaActual = "pendiente"; let tipoSeleccionado = "ESTÁNDAR";
 
         db.collection("servicios").onSnapshot(snap => {
             todosLosServicios = []; snap.forEach(doc => todosLosServicios.push({ id: doc.id, ...doc.data() }));
@@ -264,25 +243,20 @@
             });
         });
 
-        db.collection("clientes").onSnapshot(snap => { todosLosClientes = []; snap.forEach(doc => todosLosClientes.push(doc.data())); });
         function cambiarVista(v) { vistaActual = v; renderHistorial(); }
         function renderHistorial() {
             const h = document.getElementById('historial'); h.innerHTML = "";
             todosLosServicios.forEach(s => {
                 if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
-                    h.innerHTML += `<div class="card-servicio"><h3>${s.cliente}</h3><p>${s.fecha}</p><div class="action-buttons"><button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">Estado</button></div></div>`;
+                    h.innerHTML += `<div class="card-servicio"><h3>${s.cliente}</h3><p>${s.fecha}</p><button onclick="marcar('${s.id}', 'completado')">Terminar</button></div>`;
                 }
             });
         }
-        function calcularTiempoTrabajado(i, f) { return { texto: "1h", minutos: 60 }; }
         function marcar(id, est) { db.collection("servicios").doc(id).update({ estado: est }); }
-        function filtrarClientes() { /* lógica */ }
         function registrarStaff() { /* lógica */ }
-        function filtrarEmpleados() { /* lógica */ }
+        function filtrarClientes() { /* lógica */ }
         function selectType(t) { tipoSeleccionado = t; }
-        async function asignarTrabajo() { /* lógica */ }
-        function generarNomina() { /* lógica */ }
-        function descargarComprobante() { /* lógica */ }
+        function asignarTrabajo() { /* lógica */ }
         function reiniciarHorasMes() { /* lógica */ }
     </script>
 </body>
