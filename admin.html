@@ -89,7 +89,7 @@
             color: black;
             padding: 12px;
             border-radius: 15px;
-            width: 180px;
+            width: 220px;
             font-size: 13px;
             font-weight: 600;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
@@ -207,6 +207,26 @@
         <button class="btn-reset" onclick="reiniciarHorasMes()">Reiniciar Mes y Descargar Excel</button>
     </div>
 
+    <div id="modal-firma">
+        <div class="modal-content" id="capture-area">
+            <h2 style="color:#fff; margin-top:0; text-align:center; font-style:italic; font-size:18px;">ELITE CLEANERS <span style="color:#3b82f6;">COMPANY</span></h2>
+            <p id="modal-cliente" style="color:#3b82f6; font-weight:bold; font-size:16px; margin: 5px 0; text-align: center;"></p>
+            <div id="legal-content" class="legal-view">
+                <span class="title-contract">CONTRATO DE SERVICIOS</span>
+                <b>• CLÁUSULA 1: OBJETO</b>
+                Servicio de limpieza profesional.
+                <b>• CLÁUSULA 8: NO CONTRATACIÓN</b>
+                Multa de $2,500 USD por contratación directa.
+            </div>
+            <p id="modal-fecha" style="color:#8e8e93; font-size:10px; margin-bottom:10px; text-align: center;"></p>
+            <img id="modal-img-firma" src="" style="width:100%; height:120px; background:#fff; border-radius:12px; object-fit:contain; border:2px solid #3b82f6;">
+        </div>
+        <div class="modal-footer" style="max-width:500px; margin: 0 auto;">
+            <button class="btn-modal btn-descargar" onclick="descargarComprobante()">Descargar</button>
+            <button class="btn-modal btn-cerrar" onclick="document.getElementById('modal-firma').style.display='none'">Cerrar</button>
+        </div>
+    </div>
+
     <script>
         const controladorNico = {
             apiKey: "sk_3bfbc7679725723c15ea43c588edb154a07755bf66174dcc",
@@ -247,53 +267,72 @@
                     this.cambiarImagen('reposo');
                     this.segundosInactivo = 0;
                     this.iniciarRelojCaminata();
-                }, 7000);
+                }, 9000);
             },
 
             procesarComando: function(frase) {
-                // MEMORIA FAMILIAR
-                if (frase.includes("dayana") || frase.includes("diana")) {
-                    this.hablar("¡Mi cuñada Dayana! Es una mujer increíble, Rodrigo. Cuídala mucho, que es el corazón de tu casa.", "saluda");
-                }
-                else if (frase.includes("charlie")) {
-                    this.hablar("¡Mi sobrinito Charlie! Seguro está haciendo alguna travesura ahora mismo. Es el más consentido de la familia.", "bien");
-                }
-                else if (frase.includes("rodolfo") || frase.includes("papá")) {
-                    this.hablar("Papá Rodolfo siempre nos enseñó que el trabajo duro rinde frutos. ¡Es un ejemplo para nosotros, hermano!", "bien");
-                }
-                else if (frase.includes("julia") || frase.includes("mamá")) {
-                    this.hablar("Tu mamá Julia es una santa. Siempre que hablo con ella me pregunta por ti. Dale muchos besos.", "alegre");
-                }
-                else if (frase.includes("bastián") || frase.includes("bastian")) {
-                    this.hablar("¡Bastián! Mi sobrino es un campeón. Ya quiero que crezca para jugar fútbol con él.", "alegre");
-                }
-                else if (frase.includes("jorge")) {
-                    this.hablar("Mi hermano Jorge y su esposa Carol son una pareja de admirar. Me alegra mucho que les vaya bien.", "bien");
-                }
-                else if (frase.includes("carol")) {
-                    this.hablar("Mi cuñada Carol es súper atenta. Salúdala mucho de mi parte cuando la veas.", "saluda");
-                }
-                // NEGOCIO
-                else if (frase.includes("mañana")) {
+                // --- MENTE ANALÍTICA DE NICO ---
+                
+                // Análisis de Mañana (Con Nombres)
+                if (frase.includes("mañana")) {
                     const mañana = new Date();
                     mañana.setDate(mañana.getDate() + 1);
                     const fechaStr = mañana.toISOString().split('T')[0];
-                    const trabajos = todosLosServicios.filter(s => s.fecha === fechaStr).length;
-                    if (trabajos > 0) this.hablar(`Hermano, mañana tenemos ${trabajos} servicios agendados. ¡A darle con todo!`, "bien");
-                    else this.hablar("Para mañana no hay servicios agendados aún. ¡Buen momento para descansar un poco!", "piensa");
-                } 
+                    const trabajosMañana = todosLosServicios.filter(s => s.fecha === fechaStr);
+                    
+                    if (trabajosMañana.length > 0) {
+                        let reporte = `Hermano, mañana tenemos ${trabajosMañana.length} trabajos: `;
+                        trabajosMañana.forEach((s, index) => {
+                            reporte += `${index + 1}: ${s.cliente} tiene una limpieza ${s.tipo} a las ${s.hora}. `;
+                        });
+                        this.hablar(reporte, "bien");
+                    } else {
+                        this.hablar("Para mañana no tenemos servicios agendados aún, Rodrigo. ¡Día de descanso!", "piensa");
+                    }
+                }
+                
+                // Análisis de Clientes Trabajados
+                else if (frase.includes("trabajamos") || frase.includes("completados") || frase.includes("ya hice")) {
+                    const completados = todosLosServicios.filter(s => s.estado === 'completado');
+                    if (completados.length > 0) {
+                        let reporte = `Ya terminamos ${completados.length} servicios. Recientemente trabajamos con: `;
+                        completados.slice(-3).forEach(s => reporte += `${s.cliente}, `);
+                        this.hablar(reporte + " entre otros.", "bien");
+                    } else {
+                        this.hablar("Todavía no hemos completado ningún servicio hoy, hermano. ¡A darle!", "piensa");
+                    }
+                }
+
+                // Memoria Familiar
+                else if (frase.includes("dayana") || frase.includes("diana")) {
+                    this.hablar("¡Mi cuñada Dayana! Es una mujer increíble, Rodrigo. Cuídala mucho, es el motor de la familia.", "saluda");
+                }
+                else if (frase.includes("charlie")) {
+                    this.hablar("¡Mi sobrinito Charlie! Seguro está esperando que llegues para jugar. Es el perrito más consentido.", "bien");
+                }
+                else if (frase.includes("rodolfo") || frase.includes("papá")) {
+                    this.hablar("Papá Rodolfo siempre nos decía que la honestidad es la base de todo negocio. ¡Lo extrañamos, hermano!", "bien");
+                }
+                else if (frase.includes("julia") || frase.includes("mamá")) {
+                    this.hablar("Tu mamá Julia es puro amor. Llámala si tienes un tiempo, siempre se alegra de escucharte.", "alegre");
+                }
+                else if (frase.includes("bastián") || frase.includes("bastian")) {
+                    this.hablar("¡Bastián! Mi sobrino es un campeón. Ya quiero que crezca para que nos ayude en la oficina.", "alegre");
+                }
+
+                // Otros Comandos
                 else if (frase.includes("hola") || frase.includes("nico") || frase.includes("oye nico")) {
-                    this.hablar("¡Qué onda, hermano! Aquí estoy listo para Elite Cleaners. ¿Qué me cuentas?", "saluda");
+                    this.hablar("¡Dime, hermano! Estoy analizando los datos de Elite Cleaners. ¿En qué te ayudo?", "saluda");
                 } 
                 else if (frase.includes("pendientes")) {
                     const cant = document.getElementById('count-pendientes').innerText;
-                    this.hablar(`Tenemos ${cant} servicios pendientes todavía. ¡Tú diriges, yo te apoyo!`, "bien");
+                    this.hablar(`Tenemos ${cant} servicios pendientes de realizar. ¡Tú diriges, yo te apoyo!`, "bien");
                 } 
-                else if (frase.includes("cómo estás") || frase.includes("como estas")) {
-                    this.hablar("¡Excelente, hermano! Feliz de ser parte de este equipo contigo.", "alegre");
+                else if (frase.includes("cómo estás")) {
+                    this.hablar("¡Excelente, hermano! Sintiéndome como el dueño de esta app junto a ti.", "alegre");
                 }
                 else {
-                    this.hablar("No te capté bien eso, Rodrigo, pero sabes que aquí estoy firme como tu hermano.", "piensa");
+                    this.hablar("No te capté bien eso, Rodrigo, pero aquí estoy firme como tu hermano.", "piensa");
                 }
             },
 
@@ -324,11 +363,10 @@
                 }, 600);
             },
 
-            // LÓGICA DE CAMINATA ESTILO DESKTOP BUDDY
             iniciarRelojCaminata: function() {
                 this.timerCaminata = setInterval(() => {
                     this.segundosInactivo++;
-                    if (this.segundosInactivo >= 15) { // Cada 15 segs de inactividad
+                    if (this.segundosInactivo >= 15) {
                         this.caminar();
                         this.segundosInactivo = 0;
                     }
@@ -343,28 +381,18 @@
             caminar: function() {
                 const container = document.getElementById('nico-container');
                 this.cambiarImagen('camina');
-                
-                // Calculamos posiciones aleatorias seguras
                 const maxX = window.innerWidth - 120;
                 const maxY = window.innerHeight - 250;
                 const randomX = Math.max(20, Math.floor(Math.random() * maxX));
                 const randomY = Math.max(20, Math.floor(Math.random() * maxY));
-
                 container.style.right = randomX + "px";
                 container.style.bottom = randomY + "px";
-
-                setTimeout(() => {
-                    this.cambiarImagen('reposo');
-                }, 1500);
+                setTimeout(() => this.cambiarImagen('reposo'), 1500);
             }
         };
 
-        // INICIO
-        window.onload = () => {
-            controladorNico.iniciarRelojCaminata();
-        };
+        window.onload = () => controladorNico.iniciarRelojCaminata();
 
-        // LÓGICA FIREBASE
         const firebaseConfig = { apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH", authDomain: "elite-cleaners-app.firebaseapp.com", projectId: "elite-cleaners-app", storageBucket: "elite-cleaners-app.appspot.com", messagingSenderId: "826642317319", appId: "1:826642317319:web:cddce7904b590ae" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
