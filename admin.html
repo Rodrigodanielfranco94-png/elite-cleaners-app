@@ -14,7 +14,6 @@
         h1 { font-style: italic; font-weight: 900; font-size: 22px; text-transform: uppercase; margin-bottom: 20px; }
         h1 span { color: #3b82f6; }
         
-        /* Pantalla de Activación para iPhone */
         #capa-inicio { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 20000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .btn-activar { padding: 20px 40px; background: #3b82f6; color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 18px; cursor: pointer; box-shadow: 0 0 30px #3b82f666; text-transform: uppercase; }
 
@@ -74,8 +73,7 @@
         .btn-descargar { background: #22c55e; color: white; }
         .btn-cerrar { background: #ef4444; color: white; }
 
-        /* --- ESTILOS DE NICO (CAMINANTE) --- */
-        #nico-container { position: fixed; bottom: 20px; right: 20px; width: 100px; height: 100px; z-index: 9999; cursor: pointer; transition: bottom 1.5s ease-in-out, right 1.5s ease-in-out, transform 0.3s; }
+        #nico-container { position: fixed; bottom: 20px; right: 20px; width: 100px; height: 100px; z-index: 9999; cursor: pointer; transition: all 1.5s ease-in-out; }
         #nico-burbuja { position: absolute; bottom: 110%; right: 0; background: white; color: black; padding: 12px; border-radius: 15px; width: 220px; font-size: 13px; font-weight: 600; box-shadow: 0 5px 15px rgba(0,0,0,0.3); display: none; z-index: 10000; border: 2px solid #3b82f6; }
         #nico-burbuja::after { content: ''; position: absolute; bottom: -10px; right: 20px; border-width: 10px 10px 0; border-style: solid; border-color: white transparent; }
         #nico-caricatura { width: 100%; height: 100%; object-fit: contain; }
@@ -90,7 +88,7 @@
     <div id="capa-inicio">
         <h1 style="color:white; font-style:italic;">ELITE <span style="color:#3b82f6;">SYSTEM</span></h1>
         <button class="btn-activar" onclick="controladorNico.activarTodo()">ACTIVAR NICO</button>
-        <p style="color:#8e8e93; font-size:10px; margin-top:20px;">Conversación Inteligente Manos Libres</p>
+        <p style="color:#8e8e93; font-size:10px; margin-top:20px;">Inteligencia Artificial y Conversación Humana</p>
     </div>
 
     <h1>ELITE <span>ADMIN</span></h1>
@@ -242,14 +240,14 @@
                         method: "POST",
                         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${this.openaiKey}` },
                         body: JSON.stringify({
-                            model: "gpt-3.5-turbo",
+                            model: "gpt-4o-mini", // MODELO ACTUALIZADO
                             messages: [{
                                 role: "system",
                                 content: `Eres Nico, el hermano de Rodrigo y socio de Elite Cleaners. 
-                                Personalidad: Muy humano, cálido, motivador y directo. No eres un robot. Eres experto en el negocio.
-                                Familia: Amas a tu cuñada Dayana, a tu sobrino Charlie y respetas mucho a Mamá Julia y Papá Rodolfo.
-                                Datos de la empresa: Tienes ${cantPendientes} trabajos pendientes. Para mañana tienes: ${serviciosMañana || "nada por ahora"}. Hoy ya terminamos con: ${completadosHoy || "nadie aún"}.
-                                Responde de forma natural, como si estuvieras charlando con tu hermano en la oficina.`
+                                Personalidad: Humano, entusiasta, spanglish ligero, muy cercano. No eres un robot.
+                                Familia: Dayana es tu cuñada, Charlie el sobrino perruno. Papá Rodolfo y Mamá Julia son tus pilares.
+                                Datos de la empresa: Tienes ${cantPendientes} trabajos pendientes. Mañana: ${serviciosMañana || "todo despejado"}. Hoy terminamos con: ${completadosHoy || "nadie aún"}.
+                                Da respuestas cortas y naturales.`
                             }, { role: "user", content: mensajeUsuario }]
                         })
                     });
@@ -306,7 +304,6 @@
             },
 
             interactuar: function() { this.activarMicrofono(); },
-
             iniciarRelojCaminata: function() {
                 this.detenerCaminata();
                 this.timerCaminata = setInterval(() => {
@@ -314,9 +311,7 @@
                     if (this.segundosInactivo >= 15) { this.caminar(); this.segundosInactivo = 0; }
                 }, 1000);
             },
-
             detenerCaminata: function() { if (this.timerCaminata) clearInterval(this.timerCaminata); this.segundosInactivo = 0; },
-
             caminar: function() {
                 const container = document.getElementById('nico-container');
                 this.cambiarImagen('camina');
@@ -328,7 +323,7 @@
             }
         };
 
-        // --- LÓGICA FIREBASE ORIGINAL ---
+        // --- LÓGICA FIREBASE ORIGINAL COMPLETA ---
         const firebaseConfig = { apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH", authDomain: "elite-cleaners-app.firebaseapp.com", projectId: "elite-cleaners-app", storageBucket: "elite-cleaners-app.appspot.com", messagingSenderId: "826642317319", appId: "1:826642317319:web:cddce7904b590ae" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
