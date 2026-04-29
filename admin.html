@@ -10,13 +10,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
-        body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; padding-bottom: 120px; }
+        body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; padding-bottom: 120px; overflow-x: hidden; }
         h1 { font-style: italic; font-weight: 900; font-size: 22px; text-transform: uppercase; margin-bottom: 20px; }
         h1 span { color: #3b82f6; }
-        
-        #capa-inicio { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 20000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .btn-activar { padding: 20px 40px; background: #3b82f6; color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 18px; cursor: pointer; box-shadow: 0 0 30px #3b82f666; text-transform: uppercase; }
-
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .stat-card { background: #1c1c1e; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #2c2c2e; cursor: pointer; transition: 0.3s; }
         .stat-card.active { border-color: #3b82f6; background: #1a2638; }
@@ -51,22 +47,36 @@
         .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
         .btn-action { padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 11px; cursor: pointer; text-transform: uppercase; }
         .btn-done { background: #22c55e; } .btn-edit { background: #6366f1; } .btn-delete { background: #ef4444; } .btn-contract { background: #004a99; } .btn-review { background: #3b82f6; border: 1px solid #ffffff33; }
-        
-        #nico-burbuja { position: fixed; bottom: 110px; right: 25px; background: white; color: black; padding: 15px; border-radius: 20px; max-width: 250px; font-size: 14px; font-weight: 500; box-shadow: 0 5px 15px rgba(0,0,0,0.3); display: none; z-index: 10000; border: 2px solid #3b82f6; }
-        #nico-container { position: fixed; bottom: 15px; right: 15px; width: 90px; height: 90px; z-index: 9999; cursor: pointer; animation: flotarNico 3s ease-in-out infinite; filter: drop-shadow(0 5px 15px rgba(59, 130, 246, 0.4)); }
+        .payroll-container { background: #1c1c1e; padding: 18px; border-radius: 20px; border: 1px solid #22c55e; margin-top: 30px; }
+        .payroll-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+        .payroll-table th { text-align: left; color: #22c55e; padding: 8px; border-bottom: 1px solid #2c2c2e; text-transform: uppercase; font-size: 10px; }
+        .payroll-table td { padding: 10px 8px; border-bottom: 1px solid #2c2c2e; }
+        #modal-firma { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:1000; overflow-y:auto; padding:15px; box-sizing:border-box; }
+        .modal-content { background:#1c1c1e; padding:20px; border-radius:20px; border:1px solid #3b82f6; max-width: 500px; margin: 0 auto; position: relative; }
+        .legal-view { background: #000; padding: 15px; border-radius: 12px; font-size: 11px; line-height: 1.5; color: #d1d5db; margin: 15px 0; border: 1px solid #2c2c2e; text-align: left; max-height: 400px; overflow-y: auto; }
+        .legal-view b { color: #fff; display: block; margin-top: 12px; }
+        .legal-view span.title-contract { color: #3b82f6; font-weight: bold; font-size: 12px; display: block; text-align: center; margin-bottom: 10px; text-transform: uppercase; }
+        .modal-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .btn-modal { padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; font-size: 11px; }
+        .btn-descargar { background: #22c55e; color: white; } .btn-cerrar { background: #ef4444; color: white; }
+
+        /* --- NICO BUDDY STYLE --- */
+        #nico-container { position: fixed; bottom: 15px; right: 15px; width: 100px; height: 100px; z-index: 9999; cursor: pointer; animation: flotarNico 3s ease-in-out infinite; filter: drop-shadow(0 5px 15px rgba(59, 130, 246, 0.4)); }
         #nico-caricatura { width: 100%; height: 100%; object-fit: contain; }
+        #nico-burbuja { position: fixed; bottom: 110px; right: 25px; background: white; color: black; padding: 15px; border-radius: 20px; max-width: 250px; font-size: 14px; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.3); display: none; z-index: 10000; border: 2px solid #3b82f6; }
+        #nico-burbuja::after { content: ''; position: absolute; bottom: -10px; right: 20px; border-width: 10px 10px 0; border-style: solid; border-color: white transparent; }
         @keyframes flotarNico { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        .nico-escuchando { filter: drop-shadow(0 0 20px #ef4444) !important; }
+        .nico-escuchando { filter: drop-shadow(0 0 20px #ef4444) !important; animation: vibrar 0.1s infinite !important; }
+        @keyframes vibrar { 0% { transform: scale(1); } 50% { transform: scale(1.05); } }
     </style>
 </head>
 <body>
 
     <h1>ELITE <span>ADMIN</span></h1>
 
-    <div id="nico-burbuja">💭 ¡Hola Rodrigo! Soy Nico, ¿listo para trabajar?</div>
-
-    <div id="nico-container" onclick="activarNico()">
-        <img id="nico-caricatura" src="image.png" alt="Nico">
+    <div id="nico-burbuja">💭 ¡Hola Rodrigo! Soy Nico.</div>
+    <div id="nico-container" onclick="activarNicoBuddy()">
+        <img id="nico-caricatura" src="nico-assets/saluda.png" alt="Nico">
     </div>
 
     <div class="stats-grid">
@@ -118,11 +128,17 @@
             <div><span class="label-text">Fecha</span><input type="date" id="fecha"></div>
             <div><span class="label-text">Hora</span><input type="time" id="hora"></div>
         </div>
-
         <span class="label-text">Notas</span>
         <textarea id="notas" placeholder="Instrucciones..." rows="2"></textarea>
 
-        <span class="label-text">Tipo de Limpieza</span>
+        <div id="admin-correction" style="display: none;">
+            <span class="label-text" style="color: #f59e0b;">Corrección de Horas Reales</span>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <input type="text" id="hora_inicio_real" placeholder="Inicio">
+                <input type="text" id="hora_fin_real" placeholder="Fin">
+            </div>
+        </div>
+
         <div class="type-grid">
             <button class="type-btn active" id="btn-ESTÁNDAR" onclick="selectType('ESTÁNDAR')">ESTÁNDAR</button>
             <button class="type-btn" id="btn-PROFUNDA" onclick="selectType('PROFUNDA')">PROFUNDA</button>
@@ -131,60 +147,63 @@
             <button class="type-btn" id="btn-PRIMERA" onclick="selectType('PRIMERA')">PRIMERA</button>
             <button class="type-btn" id="btn-POST" onclick="selectType('POST')">POST-CONSTR</button>
         </div>
-
         <button class="save-btn" id="main-button" onclick="asignarTrabajo()">ASIGNAR TRABAJO</button>
     </div>
 
     <div id="historial"></div>
 
     <div class="payroll-container">
-        <span class="label-text" style="color: #22c55e;">Resumen de Pagos</span>
+        <span class="label-text" style="color: #22c55e;">Nómina</span>
         <table class="payroll-table">
             <thead><tr><th>Staff</th><th>Horas</th><th>Total</th></tr></thead>
             <tbody id="lista-nomina"></tbody>
         </table>
-        <button class="btn-reset" onclick="reiniciarHorasMes()">Reiniciar Mes</button>
+    </div>
+
+    <div id="modal-firma">
+        <div class="modal-content" id="capture-area">
+            <h2 style="color:#fff; text-align:center;">ELITE CLEANERS</h2>
+            <p id="modal-cliente" style="color:#3b82f6; text-align: center;"></p>
+            <div class="legal-view" id="legal-content">
+                <span class="title-contract">CONTRATO DE SERVICIOS</span>
+                <b>• CLÁUSULA 8: PROTECCIÓN DE TALENTO</b> Multa de $2,500 USD por contratación directa.
+            </div>
+            <img id="modal-img-firma" src="" style="width:100%; height:120px; background:#fff; border-radius:12px;">
+        </div>
+        <div class="modal-footer"><button class="btn-modal btn-descargar" onclick="descargarComprobante()">Descargar</button><button class="btn-modal btn-cerrar" onclick="document.getElementById('modal-firma').style.display='none'">Cerrar</button></div>
     </div>
 
     <script>
-        // --- NICO ENGINE ---
         const ELEVEN_KEY = "sk_3bfbc7679725723c15ea43c588edb154a07755bf66174dcc";
         const VOICE_ID = "pNInz6obpg8ndclKuzt1";
+        let audioCtx;
 
-        async function nicoHabla(texto) {
-            const burbuja = document.getElementById('nico-burbuja');
-            burbuja.innerText = "💭 " + texto;
-            burbuja.style.display = 'block';
-            setTimeout(() => burbuja.style.display = 'none', 5000);
+        async function nicoResponde(texto) {
+            const b = document.getElementById('nico-burbuja'); b.innerText = "💭 " + texto; b.style.display = 'block';
+            setTimeout(() => b.style.display = 'none', 8000);
             try {
-                const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'xi-api-key': ELEVEN_KEY },
-                    body: JSON.stringify({ text: texto, model_id: "eleven_multilingual_v2" })
-                });
-                if (response.ok) {
-                    const blob = await response.blob();
-                    new Audio(URL.createObjectURL(blob)).play();
-                }
+                if (!audioCtx) audioCtx = new AudioContext();
+                const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'xi-api-key': ELEVEN_KEY }, body: JSON.stringify({ text: texto, model_id: "eleven_multilingual_v2" }) });
+                if (res.ok) { const blob = await res.blob(); new Audio(URL.createObjectURL(blob)).play(); }
             } catch (e) { console.error(e); }
         }
 
-        function activarNico() {
-            const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (Recognition) {
-                const mic = new Recognition(); mic.lang = 'es-ES';
+        function activarNicoBuddy() {
+            const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (Rec) {
+                const mic = new Rec(); mic.lang = 'es-ES';
                 mic.onstart = () => document.getElementById('nico-container').classList.add('nico-escuchando');
                 mic.onresult = (e) => {
-                    const frase = e.results[0][0].transcript.toLowerCase();
-                    if (frase.includes("hola") || frase.includes("nico")) nicoHabla("¡Qué onda Rodrigo! Soy Nico, aquí ando listo para Elite Cleaners.");
-                    else nicoHabla("Te escuché decir: " + frase);
+                    const f = e.results[0][0].transcript.toLowerCase();
+                    const p = document.getElementById('count-pendientes').innerText;
+                    if (f.includes("pendiente") || f.includes("trabajo")) nicoResponde(`Rodrigo, tenemos ${p} trabajos pendientes ahora.`);
+                    else nicoResponde("¡Hola Rodrigo! Soy Nico, ¿en qué te ayudo con Elite Cleaners?");
                 };
                 mic.onend = () => document.getElementById('nico-container').classList.remove('nico-escuchando');
                 mic.start();
             }
         }
 
-        // --- FIREBASE & LOGIC ---
         const firebaseConfig = { apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH", authDomain: "elite-cleaners-app.firebaseapp.com", projectId: "elite-cleaners-app", storageBucket: "elite-cleaners-app.appspot.com", messagingSenderId: "826642317319", appId: "1:826642317319:web:cddce7904b590ae" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
@@ -192,15 +211,10 @@
 
         db.collection("usuarios").where("rol", "==", "empleado").onSnapshot(snap => {
             todosLosEmpleados = []; document.getElementById('lista-visual-staff').innerHTML = "";
-            snap.forEach(doc => {
-                const e = doc.data(); todosLosEmpleados.push({id: doc.id, ...e});
-                document.getElementById('lista-visual-staff').innerHTML += `<div class="staff-item"><b>${e.nombre}</b><span>$${e.pago_hora}/hr</span> <button onclick="db.collection('usuarios').doc('${doc.id}').delete()">X</button></div>`;
-            });
+            snap.forEach(doc => { const e = doc.data(); todosLosEmpleados.push({id: doc.id, ...e}); document.getElementById('lista-visual-staff').innerHTML += `<div class="staff-item"><b>${e.nombre}</b><span>$${e.pago_hora}/hr</span> <button onclick="db.collection('usuarios').doc('${doc.id}').delete()">X</button></div>`; });
             generarNomina();
         });
-
         db.collection("clientes").onSnapshot(snap => { todosLosClientes = []; snap.forEach(doc => todosLosClientes.push(doc.data())); });
-
         db.collection("servicios").onSnapshot(snap => {
             todosLosServicios = []; snap.forEach(doc => todosLosServicios.push({ id: doc.id, ...doc.data() }));
             document.getElementById('count-pendientes').innerText = todosLosServicios.filter(s => s.estado !== 'completado').length;
@@ -212,85 +226,51 @@
             const h = document.getElementById('historial'); h.innerHTML = "";
             todosLosServicios.forEach(s => {
                 if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
-                    const tiempo = calcularTiempo(s.hora_inicio, s.hora_fin);
+                    const t = calcularTiempo(s.hora_inicio, s.hora_fin);
+                    const btnFirma = s.firma_cliente ? `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">Ver Firma</button>` : `<button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Contrato</button>`;
                     h.innerHTML += `<div class="card-servicio">
-                        <button class="chat-btn" onclick="window.location.href='https://wa.me/${s.whatsapp}'">💬</button>
-                        <h3>${s.cliente}</h3>
-                        <p>📅 ${s.fecha} | ⏰ ${s.hora} (${s.tipo})</p>
-                        <p>👤 ${s.empleado_nombre_2 ? s.empleado_nombre + ' & ' + s.empleado_nombre_2 : s.empleado_nombre}</p>
-                        <div class="time-box">
-                            <div class="time-row"><b>Inicio:</b> ${s.hora_inicio || "--"} | <b>Fin:</b> ${s.hora_fin || "--"}</div>
-                            <div class="time-row total-time-row"><b>Tiempo:</b> ${tiempo.texto}</div>
-                        </div>
+                        <button class="chat-btn" onclick="window.location.href='sms:${s.whatsapp}'">💬</button>
+                        <h3>${s.cliente}</h3><p>📅 ${s.fecha} (${s.tipo})</p><p>👤 ${s.empleado_nombre_2 ? s.empleado_nombre+' & '+s.empleado_nombre_2 : s.empleado_nombre}</p>
+                        <div class="time-box"><div class="time-row"><b>Inicio:</b> ${s.hora_inicio} | <b>Fin:</b> ${s.hora_fin}</div><div class="time-row total-time-row"><b>Tiempo:</b> ${t.texto}</div></div>
                         <div class="action-buttons">
                             <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">Estado</button>
-                            <button class="btn-action btn-review" onclick="window.location.href='https://wa.me/${s.whatsapp}?text=Reseña'">Reseña ⭐️</button>
+                            ${btnFirma}
+                            <button class="btn-action btn-review" onclick="window.location.href='https://wa.me/${s.whatsapp}?text=Hola, déjanos tu reseña.'">Reseña ⭐️</button>
                             <button class="btn-action btn-edit" onclick='editar("${s.id}", ${JSON.stringify(s)})'>Editar</button>
-                            <button class="btn-action btn-delete" onclick="borrar('${s.id}')">Borrar</button>
-                        </div>
-                    </div>`;
+                            <button class="btn-action btn-delete" onclick="borrar('${s.id}')">Eliminar</button>
+                        </div></div>`;
                 }
             });
         }
 
         function calcularTiempo(i, f) {
-            if(!i || !f || i === "--:--") return { texto: "0h", min: 0 };
-            const m = (h) => { const [hh, mm] = h.split(':').map(Number); return hh * 60 + mm; };
-            const d = m(f) - m(i); return { texto: `${Math.floor(d/60)}h ${d%60}m`, min: d };
+            if(!i || !f || i === "--:--") return { texto: "0h", minutos: 0 };
+            const parse = (h) => { const [hh, mm] = h.split(':').map(Number); return hh * 60 + mm; };
+            const diff = parse(f) - parse(i); return { texto: `${Math.floor(diff/60)}h ${diff%60}m`, minutos: diff };
         }
-
-        function registrarStaff() {
-            const n = document.getElementById('reg-nombre').value, e = document.getElementById('reg-email').value, p = document.getElementById('reg-pago').value;
-            db.collection("usuarios").add({ nombre: n, email: e, pago_hora: p, rol: "empleado" });
-        }
-
-        function asignarTrabajo() {
-            const data = {
-                cliente: document.getElementById('cliente').value, direccion: document.getElementById('direccion').value, whatsapp: document.getElementById('whatsapp').value,
-                empleado_nombre: document.getElementById('search-empleado').value, empleado_email: document.getElementById('email-empleado').value,
-                empleado_nombre_2: document.getElementById('search-empleado-2').value, empleado_email_2: document.getElementById('email-empleado-2').value,
-                fecha: document.getElementById('fecha').value, hora: document.getElementById('hora').value, notas: document.getElementById('notas').value,
-                tipo: tipoSeleccionado, estado: "pendiente", hora_inicio: "--:--", hora_fin: "--:--"
-            };
-            db.collection("servicios").add(data).then(() => location.reload());
-        }
-
-        function generarNomina() {
-            const t = document.getElementById('lista-nomina'); t.innerHTML = "";
-            todosLosEmpleados.forEach(e => {
-                let m = 0;
-                todosLosServicios.filter(s => s.estado === "completado" && (s.empleado_email === e.email || s.empleado_email_2 === e.email)).forEach(s => m += calcularTiempo(s.hora_inicio, s.hora_fin).min);
-                if(m > 0) t.innerHTML += `<tr><td>${e.nombre}</td><td>${(m/60).toFixed(1)}h</td><td>$${((m/60)*e.pago_hora).toFixed(2)}</td></tr>`;
-            });
-        }
-
         function filtrarClientes() {
-            const q = document.getElementById('cliente').value.toLowerCase(), l = document.getElementById('suggestions-clientes'); l.innerHTML = "";
+            const q = document.getElementById('cliente').value.toLowerCase(); const l = document.getElementById('suggestions-clientes'); l.innerHTML = "";
             const f = todosLosClientes.filter(c => c.nombre.toLowerCase().includes(q));
-            f.forEach(c => {
-                const d = document.createElement('div'); d.className = 'suggestion-item'; d.innerText = c.nombre;
-                d.onclick = () => { document.getElementById('cliente').value = c.nombre; document.getElementById('direccion').value = c.direccion; document.getElementById('whatsapp').value = c.whatsapp; l.style.display = "none"; };
-                l.appendChild(d);
-            });
+            f.forEach(c => { const d = document.createElement('div'); d.className = 'suggestion-item'; d.innerText = c.nombre; d.onclick = () => { document.getElementById('cliente').value = c.nombre; document.getElementById('direccion').value = c.direccion; document.getElementById('whatsapp').value = c.whatsapp; l.style.display = "none"; }; l.appendChild(d); });
             l.style.display = f.length > 0 ? "block" : "none";
         }
-
-        function filtrarEmpleados(n) {
-            const id = n === 1 ? 'search-empleado' : 'search-empleado-2', sug = n === 1 ? 'suggestions-1' : 'suggestions-2', em = n === 1 ? 'email-empleado' : 'email-empleado-2';
-            const q = document.getElementById(id).value.toLowerCase(), l = document.getElementById(sug); l.innerHTML = "";
+        function filtrarEmpleados(num) {
+            const id = num === 1 ? 'search-empleado' : 'search-empleado-2'; const sug = num === 1 ? 'suggestions-1' : 'suggestions-2'; const em = num === 1 ? 'email-empleado' : 'email-empleado-2';
+            const q = document.getElementById(id).value.toLowerCase(); const l = document.getElementById(sug); l.innerHTML = "";
             const f = todosLosEmpleados.filter(e => e.nombre.toLowerCase().includes(q));
-            f.forEach(e => {
-                const d = document.createElement('div'); d.className = 'suggestion-item'; d.innerText = e.nombre;
-                d.onclick = () => { document.getElementById(id).value = e.nombre; document.getElementById(em).value = e.email; l.style.display = "none"; };
-                l.appendChild(d);
-            });
+            f.forEach(e => { const d = document.createElement('div'); d.className = 'suggestion-item'; d.innerText = e.nombre; d.onclick = () => { document.getElementById(id).value = e.nombre; document.getElementById(em).value = e.email; l.style.display = "none"; }; l.appendChild(d); });
             l.style.display = f.length > 0 ? "block" : "none";
         }
-
-        function selectType(t) { tipoSeleccionado = t; document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); }
+        function registrarStaff() { const n = document.getElementById('reg-nombre').value, e = document.getElementById('reg-email').value, p = document.getElementById('reg-pago').value; db.collection("usuarios").add({ nombre: n, email: e, pago_hora: p, rol: "empleado" }); }
+        function asignarTrabajo() { const data = { cliente: document.getElementById('cliente').value, direccion: document.getElementById('direccion').value, whatsapp: document.getElementById('whatsapp').value, empleado_nombre: document.getElementById('search-empleado').value, empleado_email: document.getElementById('email-empleado').value, empleado_nombre_2: document.getElementById('search-empleado-2').value, empleado_email_2: document.getElementById('email-empleado-2').value, fecha: document.getElementById('fecha').value, hora: document.getElementById('hora').value, notas: document.getElementById('notas').value, tipo: tipoSeleccionado, estado: "pendiente", hora_inicio: "--:--", hora_fin: "--:--" }; db.collection("servicios").add(data).then(() => location.reload()); }
+        function generarNomina() { const tabla = document.getElementById('lista-nomina'); tabla.innerHTML = ""; todosLosEmpleados.forEach(emp => { let m = 0; todosLosServicios.filter(s => s.estado === "completado" && (s.empleado_email === emp.email || s.empleado_email_2 === emp.email)).forEach(s => m += calcularTiempo(s.hora_inicio, s.hora_fin).minutos); if(m > 0) tabla.innerHTML += `<tr><td><b>${emp.nombre}</b></td><td>${Math.floor(m/60)}h</td><td class="pay-amount">$${((m/60)*emp.pago_hora).toFixed(2)}</td></tr>`; }); }
+        function cambiarVista(v) { vistaActual = v; renderHistorial(); }
+        function selectType(t) { tipoSeleccionado = t; document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active')); document.getElementById('btn-'+t).classList.add('active'); }
         function marcar(id, est) { db.collection("servicios").doc(id).update({ estado: est }); }
         function borrar(id) { if(confirm("¿Borrar?")) db.collection("servicios").doc(id).delete(); }
-        function editar(id, s) { document.getElementById('edit-id').value = id; document.getElementById('cliente').value = s.cliente; document.getElementById('direccion').value = s.direccion; document.getElementById('whatsapp').value = s.whatsapp; document.getElementById('fecha').value = s.fecha; document.getElementById('hora').value = s.hora; document.getElementById('notas').value = s.notas; }
+        function enviarContrato(id, t, c) { const url = `https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/firmar.html?id=${id}&cliente=${encodeURIComponent(c)}`; window.location.href = `https://wa.me/${t}?text=Firma tu contrato: ${url}`; }
+        function verFirma(id) { const s = todosLosServicios.find(x => x.id === id); document.getElementById('modal-cliente').innerText = "CLIENTE: " + s.cliente; document.getElementById('modal-img-firma').src = s.firma_imagen; document.getElementById('modal-firma').style.display = 'block'; }
+        function editar(id, s) { document.getElementById('edit-id').value = id; document.getElementById('cliente').value = s.cliente; document.getElementById('search-empleado').value = s.empleado_nombre; document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || ""; }
     </script>
 </body>
 </html>
