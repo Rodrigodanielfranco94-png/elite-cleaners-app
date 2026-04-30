@@ -166,7 +166,7 @@
 
     <div id="modal-firma">
         <div class="modal-content" id="capture-area">
-            <h2 style="color:#fff; margin-top:0; text-align:center; font-style:italic; font-size:18px;">ELITE CLEANERS <span style="color:#3b82f6;">COMPANY</span></h2>
+            <h2 id="modal-title-legal" style="color:#fff; margin-top:0; text-align:center; font-style:italic; font-size:18px;">ELITE CLEANERS <span style="color:#3b82f6;">COMPANY</span></h2>
             <p id="modal-cliente" style="color:#3b82f6; font-weight:bold; font-size:16px; margin: 5px 0; text-align: center;"></p>
             
             <div id="legal-content" class="legal-view">
@@ -206,7 +206,7 @@
             </div>
 
             <p id="modal-fecha" style="color:#8e8e93; font-size:10px; margin-bottom:10px; text-align: center;"></p>
-            <h3 style="color:#fff; margin-bottom:5px; font-size: 11px; text-transform: uppercase;">Firma de Conformidad:</h3>
+            <h3 id="modal-label-firma" style="color:#fff; margin-bottom:5px; font-size: 11px; text-transform: uppercase;">Firma de Conformidad:</h3>
             <img id="modal-img-firma" src="" style="width:100%; height:120px; background:#fff; border-radius:12px; object-fit:contain; border:2px solid #3b82f6;">
         </div>
         
@@ -268,21 +268,54 @@
         async function descargarComprobante() {
             const area = document.getElementById('capture-area');
             const legal = document.getElementById('legal-content');
-            const cliente = document.getElementById('modal-cliente').innerText.split(': ')[1];
+            const titleLegal = document.getElementById('modal-title-legal');
+            const labelFirma = document.getElementById('modal-label-firma');
+            const clienteLabel = document.getElementById('modal-cliente');
+            const fechaLabel = document.getElementById('modal-fecha');
+            const cliente = clienteLabel.innerText.split(': ')[1];
             
+            // GUARDAR ESTADOS ORIGINALES
             const originalMaxHeight = legal.style.maxHeight;
             const originalOverflow = legal.style.overflowY;
+            const originalBg = area.style.backgroundColor;
+            const originalContentBg = legal.style.backgroundColor;
+            const originalContentColor = legal.style.color;
+            const originalBorder = legal.style.borderColor;
+
+            // INVERTIR COLORES PARA EL CAPTURE (FONDO BLANCO / TEXTO NEGRO)
+            area.style.background = '#ffffff';
+            legal.style.background = '#ffffff';
+            legal.style.color = '#000000';
+            legal.style.borderColor = '#eeeeee';
             legal.style.maxHeight = 'none';
             legal.style.overflowY = 'visible';
+            titleLegal.style.color = '#000000'; // Elite Cleaners en Negro
+            labelFirma.style.color = '#000000';
+            clienteLabel.style.color = '#3b82f6'; // Mantenemos el azul para el cliente por estilo
+            fechaLabel.style.color = '#666666';
+
+            // Cambiar los <b> dentro del contrato a negro puro
+            const boldElements = legal.getElementsByTagName('b');
+            for(let b of boldElements) b.style.color = '#000000';
 
             html2canvas(area, { 
-                backgroundColor: '#1c1c1e', 
+                backgroundColor: '#ffffff', 
                 scale: 2,
                 useCORS: true,
                 logging: false
             }).then(canvas => {
+                // RESTAURAR TODO AL MODO OSCURO
                 legal.style.maxHeight = originalMaxHeight;
                 legal.style.overflowY = originalOverflow;
+                area.style.background = ''; // Vuelve al CSS original
+                legal.style.background = '';
+                legal.style.color = '';
+                legal.style.borderColor = '';
+                titleLegal.style.color = '#ffffff';
+                labelFirma.style.color = '#ffffff';
+                clienteLabel.style.color = '#3b82f6';
+                fechaLabel.style.color = '#8e8e93';
+                for(let b of boldElements) b.style.color = '#ffffff';
 
                 const link = document.createElement('a');
                 link.download = `Contrato_Elite_${cliente}.png`;
@@ -462,7 +495,6 @@
                     const card = document.createElement('div');
                     card.className = 'card-servicio';
                     
-                    // CORRECCIÓN CLAVE: Se usa una referencia directa para evitar errores de comillas en el onclick
                     card.innerHTML = `
                         <button class="chat-btn" onclick="abrirChat('${s.whatsapp}')">💬</button>
                         <div style="font-size:10px; color:#3b82f6; font-weight:bold;">${s.tipo}</div>
@@ -484,7 +516,6 @@
                         </div>`;
                     h.appendChild(card);
                     
-                    // Asignamos el evento de editar de forma segura
                     document.getElementById(`edit-btn-${s.id}`).onclick = () => editar(s.id, s);
                 }
             });
@@ -535,7 +566,7 @@
             document.getElementById('search-empleado').value = s.empleado_nombre;
             document.getElementById('email-empleado').value = s.empleado_email || ""; 
             document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || "";
-            document.getElementById('email-empleado-2').value = s.empleado_email_2 || ""; 
+            document.getElementById('email-empleado-2').value = s.email_empleado_2 || ""; 
             document.getElementById('fecha').value = s.fecha;
             document.getElementById('hora').value = s.hora;
             document.getElementById('notas').value = s.notas;
