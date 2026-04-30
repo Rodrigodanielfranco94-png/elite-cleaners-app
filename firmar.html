@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Firmar Contrato - Elite Cleaners Company</title>
+    <title>Sign Agreement - Elite Cleaners Company</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -42,57 +42,57 @@
 <div class="container">
     <h2>ELITE CLEANERS <span>COMPANY</span></h2>
     <div id="main-content">
-        <p id="cliente-nombre">Cargando contrato...</p>
+        <p id="cliente-nombre">Loading agreement...</p>
         
         <div class="legal-box">
-            <span class="title-contract">CONTRATO DE PRESTACIÓN DE SERVICIOS DE LIMPIEZA</span>
+            <span class="title-contract">CLEANING SERVICES AGREEMENT</span>
             
-            <b>• CLÁUSULA 1: OBJETO Y ALCANCE DEL SERVICIO</b>
-            La empresa se compromete a realizar el servicio de limpieza bajo estándares de la industria, cumpliendo con el objetivo previamente pactado con el cliente. Las tareas adicionales se cotizarán por separado.
+            <b>• CLAUSE 1: PURPOSE AND SCOPE OF SERVICE</b>
+            The company agrees to perform the cleaning service under industry standards, fulfilling the objective previously agreed upon with the client. Additional tasks will be quoted separately.
 
-            <b>• CLÁUSULA 2: SUMINISTROS Y ACCESO</b>
-            El cliente debe garantizar acceso libre y suministros básicos (agua y electricidad).
+            <b>• CLAUSE 2: SUPPLIES AND ACCESS</b>
+            The client must guarantee free access and basic supplies (water and electricity).
 
-            <b>• CLÁUSULA 3: TÉRMINOS ECONÓMICOS Y PAGO</b>
-            - Anticipo (50%): Para programar el servicio.<br>
-            - Liquidación (50%): Inmediatamente al finalizar.<br>
-            - Mora: Recargo del 5% tras 48 horas de retraso.
+            <b>• CLAUSE 3: ECONOMIC TERMS AND PAYMENT</b>
+            - Deposit (50%): To schedule the service.<br>
+            - Final Payment (50%): Immediately upon completion.<br>
+            - Late Fee: 5% surcharge after 48 hours of delay.
 
-            <b>• CLÁUSULA 4: CANCELACIÓN Y SERVICIOS FALLIDOS</b>
-            Avisos con menos de 24 horas resultan en la pérdida del anticipo. Si el personal no puede entrar (No-Show), el servicio se cobra como ejecutado.
+            <b>• CLAUSE 4: CANCELLATION AND FAILED SERVICES</b>
+            Notices with less than 24 hours result in the loss of the deposit. If staff cannot enter (No-Show), the service is charged as executed.
 
-            <b>• CLÁUSULA 5: SEGURIDAD DE MENORES Y MASCOTAS</b>
-            Las mascotas y los Menores de edad deben estar resguardados; la empresa no se hace responsable por ellas. No se limpian desechos biológicos (humanos o animales).
+            <b>• CLAUSE 5: CHILD AND PET SAFETY</b>
+            Pets and minors must be secured; the company is not responsible for them. Biological waste (human or animal) is not cleaned.
 
-            <b>• CLÁUSULA 6: EQUIPO Y SUMINISTROS</b>
-            Elite Cleaners provee químicos y maquinaria profesional. El uso de productos del cliente es bajo su propio riesgo de daño en superficies.
+            <b>• CLAUSE 6: EQUIPMENT AND SUPPLIES</b>
+            Elite Cleaners provides professional chemicals and machinery. Use of the client's products is at their own risk of surface damage.
 
-            <b>• CLÁUSULA 7: LÍMITE DE RESPONSABILIDAD</b>
-            Reportes de daños deben hacerse con fotos en un plazo de 24 horas. Esta cláusula está sujeta a las exoneraciones de las Cláusulas 9 y 10.
+            <b>• CLAUSE 7: LIMIT OF LIABILITY</b>
+            Damage reports must be made with photos within 24 hours. This clause is subject to the exemptions in Clauses 9 and 10.
 
-            <b>• CLÁUSULA 8: PROTECCIÓN DE TALENTO (NO CONTRATACIÓN)</b>
-            Multa de $2,500 USD si el cliente contrata directamente a cualquier miembro del equipo hasta 12 meses después del servicio.
+            <b>• CLAUSE 8: TALENT PROTECTION (NON-SOLICITATION)</b>
+            A $2,500 USD fine applies if the client directly hires any team member up to 12 months after the service.
 
-            <b>• CLÁUSULA 9: MOVIMIENTO DE OBJETOS PESADOS</b>
-            Para mover heladeras, cocinas o muebles pesados, el cliente debe estar presente obligatoriamente. Elite Cleaners no se responsabiliza por rayaduras o daños en el piso derivados de estas maniobras.
+            <b>• CLAUSE 9: MOVING HEAVY OBJECTS</b>
+            The client must be present to move refrigerators, stoves, or heavy furniture. Elite Cleaners is not responsible for scratches or floor damage resulting from these maneuvers.
 
-            <b>• CLÁUSULA 10: EXONERACIÓN POR FALLAS ESTRUCTURALES</b>
-            Elite Cleaners queda totalmente exonerado de responsabilidad por daños o roturas en vidrios, puertas, grifería o instalaciones debido a mal estado, antigüedad o mala colocación previa.
+            <b>• CLAUSE 10: EXEMPTION FOR STRUCTURAL FAILURES</b>
+            Elite Cleaners is fully exempt from liability for damage or breakage to glass, doors, faucets, or installations due to poor condition, age, or improper prior installation.
         </div>
 
         <canvas id="signature-pad"></canvas>
-        <div id="processing-msg">GUARDANDO FIRMA...</div>
+        <div id="processing-msg">SAVING SIGNATURE...</div>
 
         <div class="buttons">
-            <button class="btn-clear" onclick="limpiar()">Borrar</button>
-            <button class="btn-save" id="btn-confirmar" onclick="procesarFirma()">Confirmar y Firmar</button>
+            <button class="btn-clear" onclick="limpiar()">Clear</button>
+            <button class="btn-save" id="btn-confirmar" onclick="procesarFirma()">Confirm and Sign</button>
         </div>
     </div>
 
     <div id="success-screen">
         <div style="font-size: 60px; margin-bottom: 20px;">✅</div>
-        <h3>¡CONTRATO FIRMADO!</h3>
-        <p style="color: #3b82f6; font-weight: bold;">Ya puede cerrar esta pestaña.</p>
+        <h3>AGREEMENT SIGNED!</h3>
+        <p style="color: #3b82f6; font-weight: bold;">You may now close this tab.</p>
     </div>
 </div>
 
@@ -110,8 +110,8 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const idServicio = urlParams.get('id');
-    const nombreCliente = urlParams.get('cliente') || "Cliente";
-    document.getElementById('cliente-nombre').innerText = "Contrato para: " + nombreCliente;
+    const nombreCliente = urlParams.get('cliente') || "Customer";
+    document.getElementById('cliente-nombre').innerText = "Agreement for: " + nombreCliente;
 
     const canvas = document.getElementById('signature-pad');
     const ctx = canvas.getContext('2d');
@@ -151,7 +151,6 @@
         btn.disabled = true;
         document.getElementById('processing-msg').style.display = 'block';
 
-        // --- SOLUCIÓN: INVERTIR COLOR PARA QUE SEA NEGRA EN EL ADMIN ---
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
         const tCtx = tempCanvas.getContext('2d');
