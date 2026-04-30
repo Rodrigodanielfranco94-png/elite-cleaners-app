@@ -556,7 +556,7 @@
             document.getElementById('direccion').value = s.direccion;
             document.getElementById('whatsapp').value = s.whatsapp || "";
             document.getElementById('search-empleado').value = s.empleado_nombre;
-            document.getElementById('email-empleado').value = s.empleado_email || ""; 
+            document.getElementById('email-empleado').value = s.email_empleado || ""; 
             document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || "";
             document.getElementById('email-empleado-2').value = s.email_empleado_2 || ""; 
             document.getElementById('fecha').value = s.fecha;
@@ -573,7 +573,9 @@
 
         function solicitarResenaGoogle(nombre, telefono) {
             if(!telefono) return alert("The customer has no phone number.");
-            const mensaje = `Hello ${nombre}, thank you for trusting Elite Cleaners Company. 🌟 It was a pleasure serving you. We would be very grateful if you could leave us a review on Google here: https://maps.app.goo.gl/VZjAsLsYbKYhszx27?g_st=ic`;
+            const empresa = "Elite Cleaners Company";
+            const linkGoogle = "https://maps.app.goo.gl/VZjAsLsYbKYhszx27?g_st=ic";
+            const mensaje = `Hello ${nombre}, thank you for choosing ${empresa}. 🌟 It was a pleasure serving you! We would greatly appreciate it if you could leave us a review on Google here: ${linkGoogle}`;
             window.location.href = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
         }
     </script>
