@@ -447,6 +447,14 @@
         function renderHistorial() {
             const h = document.getElementById('historial');
             h.innerHTML = "";
+
+            // --- Lógica de Ordenamiento por Fecha y Hora ---
+            todosLosServicios.sort((a, b) => {
+                const fechaA = new Date(`${a.fecha}T${a.hora || '00:00'}`);
+                const fechaB = new Date(`${b.fecha}T${b.hora || '00:00'}`);
+                return fechaA - fechaB;
+            });
+
             todosLosServicios.forEach(s => {
                 if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
                     const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
@@ -469,7 +477,7 @@
                             <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">${s.estado === 'completado' ? 'Abrir' : 'Terminar'}</button>
                             ${btnFirma}
                             <button class="btn-action btn-review" onclick="solicitarResenaGoogle('${s.cliente}', '${s.whatsapp}')">Reseña ⭐️</button>
-                            <button class="btn-action btn-edit" onclick="editar('${s.id}', ${JSON.stringify(s).replace(/"/g, '&quot;')})">Editar</button>
+                            <button class="btn-action btn-edit" onclick="editar('${s.id}', ${JSON.stringify(s).replace(/"/g, '"')})">Editar</button>
                             <button class="btn-action btn-delete" onclick="borrar('${s.id}')">Eliminar</button>
                         </div>`;
                     h.appendChild(card);
