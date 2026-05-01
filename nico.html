@@ -51,29 +51,40 @@
 
 <button onclick="hablar()">Hablar con Nico</button>
 
-<!-- 💬 Burbuja de chat -->
 <div id="chat"></div>
 
 <script>
   const nico = document.getElementById("nico");
   const chat = document.getElementById("chat");
 
+  function hablarConVoz(texto) {
+    // Detiene cualquier voz anterior
+    window.speechSynthesis.cancel();
+
+    const audio = new SpeechSynthesisUtterance(texto);
+    audio.lang = "es-ES";
+    audio.pitch = 1;
+    audio.rate = 1;
+
+    window.speechSynthesis.speak(audio);
+  }
+
   function hablar() {
-    // Estado escuchando
     nico.src = "nico-assets/celular.png";
     chat.style.display = "none";
 
     setTimeout(() => {
-      // Estado pensando
       nico.src = "nico-assets/piensa.png";
     }, 1500);
 
     setTimeout(() => {
-      // Respuesta
-      nico.src = "nico-assets/alegre.png";
+      const respuesta = "¿Qué más pues Rodri? 😄 Estoy listo para ayudarte";
 
+      nico.src = "nico-assets/alegre.png";
       chat.style.display = "block";
-      chat.innerText = "¿Qué más pues Rodri? 😄 Estoy listo para ayudarte";
+      chat.innerText = respuesta;
+
+      hablarConVoz(respuesta);
     }, 3000);
   }
 </script>
