@@ -27,6 +27,18 @@
       margin-top: 20px;
       cursor: pointer;
     }
+
+    #chat {
+      margin-top: 20px;
+      background: #1c1c1e;
+      padding: 15px;
+      border-radius: 15px;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+      display: none;
+      font-size: 15px;
+    }
   </style>
 </head>
 <body>
@@ -39,12 +51,17 @@
 
 <button onclick="hablar()">Hablar con Nico</button>
 
+<!-- 💬 Burbuja de chat -->
+<div id="chat"></div>
+
 <script>
   const nico = document.getElementById("nico");
+  const chat = document.getElementById("chat");
 
   function hablar() {
     // Estado escuchando
     nico.src = "nico-assets/celular.png";
+    chat.style.display = "none";
 
     setTimeout(() => {
       // Estado pensando
@@ -54,7 +71,9 @@
     setTimeout(() => {
       // Respuesta
       nico.src = "nico-assets/alegre.png";
-      alert("¿Qué más pues Rodri? 😄 Estoy listo para ayudarte");
+
+      chat.style.display = "block";
+      chat.innerText = "¿Qué más pues Rodri? 😄 Estoy listo para ayudarte";
     }, 3000);
   }
 </script>
