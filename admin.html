@@ -51,6 +51,7 @@
         .btn-delete { background: #ef4444; }
         .btn-contract { background: #004a99; }
         .btn-review { background: #3b82f6; border: 1px solid #ffffff33; }
+        .btn-whatsapp { background: #25D366; } /* Verde WhatsApp */
         
         .payroll-container { background: #1c1c1e; padding: 18px; border-radius: 20px; border: 1px solid #22c55e; margin-top: 30px; }
         .payroll-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
@@ -501,6 +502,7 @@
                         <div class="action-buttons">
                             <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">${s.estado === 'completado' ? 'Reopen' : 'Finish'}</button>
                             ${btnFirma}
+                            <button class="btn-action btn-whatsapp" onclick="enviarRecordatorio('${s.id}')">Reminder 📱</button>
                             <button class="btn-action btn-review" onclick="solicitarResenaGoogle('${s.cliente}', '${s.whatsapp}')">Review ⭐️</button>
                             <button class="btn-action btn-edit" id="edit-btn-${s.id}">Edit</button>
                             <button class="btn-action btn-delete" onclick="borrar('${s.id}')">Delete</button>
@@ -577,6 +579,25 @@
             const linkGoogle = "https://maps.app.goo.gl/VZjAsLsYbKYhszx27?g_st=ic";
             const mensaje = `Hello ${nombre}, thank you for choosing ${empresa}. 🌟 It was a pleasure serving you! We would greatly appreciate it if you could leave us a review on Google here: ${linkGoogle}`;
             window.location.href = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
+        }
+
+        function enviarRecordatorio(id) {
+            const s = todosLosServicios.find(serv => serv.id === id);
+            if (!s) return;
+            if (!s.whatsapp) return alert("The customer has no registered phone number.");
+
+            let staffNombres = s.empleado_nombre;
+            if (s.empleado_nombre_2) {
+                staffNombres += ` and ${s.empleado_nombre_2}`;
+            }
+
+            const mensaje = `Hello ${s.cliente}! 🌟 This is a friendly reminder from *Elite Cleaners Company* about your upcoming cleaning service:%0A%0A` +
+                `📅 *Date:* ${s.fecha}%0A` +
+                `⏰ *Time:* ${s.hora}%0A` +
+                `👤 *Staff:* ${staffNombres}%0A%0A` +
+                `We look forward to seeing you! Please let us know if you have any questions.`;
+
+            window.location.href = `https://wa.me/${s.whatsapp}?text=${mensaje}`;
         }
     </script>
 </body>
