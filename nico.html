@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Nico Assistant</title>
+  <style>
+    body {
+      background: #000;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+
+    #nico {
+      width: 250px;
+      transition: 0.3s;
+    }
+
+    button {
+      padding: 15px;
+      border-radius: 10px;
+      border: none;
+      background: #3b82f6;
+      color: white;
+      font-size: 16px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Nico - Assistant</h2>
+
+<img id="nico" src="nico-assets/reposo.png">
+
+<br>
+
+<button onclick="hablar()">Hablar con Nico</button>
+
+<script>
+  const nico = document.getElementById("nico");
+
+  function hablar() {
+    // Estado escuchando
+    nico.src = "nico-assets/celular.png";
+
+    setTimeout(() => {
+      // Estado pensando
+      nico.src = "nico-assets/piensa.png";
+    }, 1500);
+
+    setTimeout(() => {
+      // Respuesta
+      nico.src = "nico-assets/alegre.png";
+      alert("¿Qué más pues Rodri? 😄 Estoy listo para ayudarte");
+    }, 3000);
+  }
+</script>
+
+</body>
+</html>
