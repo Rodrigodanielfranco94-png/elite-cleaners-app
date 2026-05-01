@@ -235,6 +235,17 @@
         let todosLosServicios = [];
         let vistaActual = "pendiente";
 
+        // FUNCION PARA CONVERTIR HORA 24H A AM/PM
+        function formatAMPM(hora24) {
+            if (!hora24 || hora24 === "--:--") return "--:--";
+            let [horas, minutos] = hora24.split(':');
+            horas = parseInt(horas);
+            const ampm = horas >= 12 ? 'PM' : 'AM';
+            horas = horas % 12;
+            horas = horas ? horas : 12; 
+            return `${horas.toString().padStart(2, '0')}:${minutos} ${ampm}`;
+        }
+
         function cambiarVista(v) {
             vistaActual = v;
             document.getElementById('btn-pendientes').classList.remove('active');
@@ -487,11 +498,14 @@
                     const card = document.createElement('div');
                     card.className = 'card-servicio';
                     
+                    // SE FORMATEA LA HORA PARA LA VISTA
+                    const horaFormateada = formatAMPM(s.hora);
+
                     card.innerHTML = `
                         <button class="chat-btn" onclick="abrirChat('${s.whatsapp}')">💬</button>
                         <div style="font-size:10px; color:#3b82f6; font-weight:bold;">${s.tipo}</div>
                         <h3>${s.cliente}</h3>
-                        <p>📅 ${s.fecha} | ⏰ ${s.hora}</p>
+                        <p>📅 ${s.fecha} | ⏰ ${horaFormateada}</p>
                         <p>📍 ${s.direccion}</p>
                         <p>👤 ${s.empleado_nombre_2 ? s.empleado_nombre+' & '+s.empleado_nombre_2 : s.empleado_nombre}</p>
                         <div class="time-box">
@@ -505,7 +519,7 @@
                             <button class="btn-action btn-whatsapp" onclick="enviarRecordatorio('${s.id}')">Reminder 📱</button>
                             <button class="btn-action btn-review" onclick="solicitarResenaGoogle('${s.cliente}', '${s.whatsapp}')">Review ⭐️</button>
                             <button class="btn-action btn-edit" id="edit-btn-${s.id}">Edit</button>
-                            <button class="btn-action btn-delete" onclick="borrar('${s.id}')">Delete</button>
+                            <button class="btn-action btn-review" style="background:#ef4444" onclick="borrar('${s.id}')">Delete</button>
                         </div>`;
                     h.appendChild(card);
                     
@@ -591,9 +605,12 @@
                 staffNombres += ` and ${s.empleado_nombre_2}`;
             }
 
+            // SE FORMATEA LA HORA PARA EL MENSAJE DE WHATSAPP
+            const horaAmPm = formatAMPM(s.hora);
+
             const mensaje = `Hello ${s.cliente}! 🌟 This is a friendly reminder from *Elite Cleaners Company* about your upcoming cleaning service:%0A%0A` +
                 `📅 *Date:* ${s.fecha}%0A` +
-                `⏰ *Time:* ${s.hora}%0A` +
+                `⏰ *Time:* ${horaAmPm}%0A` +
                 `👤 *Staff:* ${staffNombres}%0A%0A` +
                 `We look forward to seeing you! Please let us know if you have any questions.`;
 
