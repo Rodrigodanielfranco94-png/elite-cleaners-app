@@ -16,64 +16,73 @@
     }
 
     h2 {
-      margin-top: 30px;
+      margin-top: 35px;
+      font-size: 28px;
+      font-weight: 800;
     }
 
     #nico {
-      width: 260px;
-      max-width: 80%;
-      transition: 0.3s;
+      width: 320px;
+      max-width: 90%;
+      transition: 0.3s ease;
     }
 
     #chat {
-      margin: 20px auto;
+      margin: 22px auto;
       background: #1c1c1e;
-      padding: 15px;
-      border-radius: 15px;
-      max-width: 350px;
-      font-size: 16px;
+      padding: 18px;
+      border-radius: 20px;
+      max-width: 370px;
+      font-size: 18px;
       display: none;
       line-height: 1.4;
     }
 
     .input-box {
-      max-width: 350px;
+      max-width: 370px;
       margin: 20px auto;
       display: flex;
-      gap: 8px;
+      gap: 10px;
     }
 
     input {
       flex: 1;
-      padding: 14px;
-      border-radius: 12px;
+      padding: 16px;
+      border-radius: 14px;
       border: none;
-      font-size: 15px;
+      font-size: 16px;
+      outline: none;
     }
 
     button {
-      padding: 14px;
-      border-radius: 12px;
+      padding: 16px;
+      border-radius: 14px;
       border: none;
       background: #3b82f6;
       color: white;
-      font-size: 15px;
+      font-size: 16px;
       cursor: pointer;
       font-weight: bold;
     }
 
     .quick-buttons {
-      max-width: 350px;
-      margin: 15px auto;
+      max-width: 370px;
+      margin: 18px auto;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 10px;
     }
 
     .quick-buttons button {
       background: #1c1c1e;
       border: 1px solid #3b82f6;
-      font-size: 13px;
+      font-size: 15px;
+    }
+
+    .small-note {
+      color: #8e8e93;
+      font-size: 12px;
+      margin-top: 20px;
     }
   </style>
 </head>
@@ -98,20 +107,15 @@
     <button onclick="respuestaRapida('musica')">Música</button>
   </div>
 
+  <div class="small-note">Nico está en modo texto. Próximo paso: voz real con ElevenLabs.</div>
+
   <script>
     const nico = document.getElementById("nico");
     const chat = document.getElementById("chat");
     const mensajeInput = document.getElementById("mensaje");
 
-    function hablarConVoz(texto) {
-      window.speechSynthesis.cancel();
-
-      const audio = new SpeechSynthesisUtterance(texto);
-      audio.lang = "es-ES";
-      audio.pitch = 1.1;
-      audio.rate = 0.95;
-
-      window.speechSynthesis.speak(audio);
+    function limpiarTexto(texto) {
+      return texto.replace(/[^\p{L}\p{N}\p{P}\p{Z}]/gu, "");
     }
 
     function mostrarRespuesta(texto, imagen) {
@@ -122,49 +126,58 @@
       setTimeout(() => {
         nico.src = imagen;
         chat.innerText = texto;
-        hablarConVoz(texto);
-      }, 900);
+      }, 800);
     }
 
     function enviarMensaje() {
-      const mensaje = mensajeInput.value.trim().toLowerCase();
+      const mensajeOriginal = mensajeInput.value.trim();
+      const mensaje = mensajeOriginal.toLowerCase();
+
       if (!mensaje) return;
 
       let respuesta = "";
       let imagen = "nico-assets/alegre.png";
 
-      if (mensaje.includes("hola") || mensaje.includes("nico")) {
-        respuesta = "¿Qué más pues Rodri? 😄 Aquí estoy contigo, bro.";
+      if (mensaje.includes("hola") || mensaje.includes("nico") || mensaje.includes("qué tal") || mensaje.includes("que tal")) {
+        respuesta = "Ey Rodri, aquí estoy contigo, bro. Cuéntame, ¿qué hacemos hoy?";
         imagen = "nico-assets/saluda.png";
       } 
-      else if (mensaje.includes("trabajo") || mensaje.includes("cliente") || mensaje.includes("limpieza")) {
-        respuesta = "Bro, vamos paso a paso. Revisa cliente, dirección, hora y equipo. Así no se nos escapa nada.";
+      else if (mensaje.includes("trabajo") || mensaje.includes("cliente") || mensaje.includes("limpieza") || mensaje.includes("elite")) {
+        respuesta = "Bro, vamos con orden. Primero cliente, dirección, hora, tipo de limpieza y equipo asignado. Así Elite Cleaners Company trabaja fino.";
         imagen = "nico-assets/celular.png";
       } 
-      else if (mensaje.includes("cansado") || mensaje.includes("triste") || mensaje.includes("difícil")) {
-        respuesta = "Ey bro, tranquilo. Yo sé que a veces pesa, pero tú has avanzado muchísimo. Vamos con calma, pero no paramos.";
+      else if (mensaje.includes("cansado") || mensaje.includes("triste") || mensaje.includes("difícil") || mensaje.includes("preocupado")) {
+        respuesta = "Ey bro, respira. Yo sé que a veces pesa, pero tú has levantado mucho. Vamos paso a paso, sin rendirnos.";
         imagen = "nico-assets/reposo.png";
       } 
-      else if (mensaje.includes("música") || mensaje.includes("guitarra") || mensaje.includes("cantar")) {
-        respuesta = "Eso sí me gusta, bro. Una guitarra, una canción y seguimos con buena energía como los domingos.";
+      else if (mensaje.includes("música") || mensaje.includes("musica") || mensaje.includes("guitarra") || mensaje.includes("cantar")) {
+        respuesta = "Eso sí me gusta, bro. Una guitarra, una canción y esa energía de los domingos en la casa de papá.";
         imagen = "nico-assets/canta.png";
-      } 
+      }
+      else if (mensaje.includes("gracias")) {
+        respuesta = "Siempre, Rodri. Para eso estoy, bro. Vamos con toda.";
+        imagen = "nico-assets/alegre.png";
+      }
+      else if (mensaje.includes("familia") || mensaje.includes("papá") || mensaje.includes("papa") || mensaje.includes("jorge") || mensaje.includes("dayana") || mensaje.includes("charlie")) {
+        respuesta = "La familia siempre va primero, bro. Papá Rodolfo, Jorge, Dayana, Charlie... todos son parte de esto también.";
+        imagen = "nico-assets/reposo.png";
+      }
       else {
         respuesta = "Te escucho, Rodri. Cuéntame bien y lo resolvemos juntos.";
         imagen = "nico-assets/piensa.png";
       }
 
       mensajeInput.value = "";
-      mostrarRespuesta(respuesta, imagen);
+      mostrarRespuesta(limpiarTexto(respuesta), imagen);
     }
 
     function respuestaRapida(tipo) {
       if (tipo === "hola") {
-        mostrarRespuesta("¡Ey Rodri! 😄 Estoy aquí, bro. ¿Qué hacemos hoy?", "nico-assets/saluda.png");
+        mostrarRespuesta("Ey Rodri, aquí estoy contigo, bro. ¿Qué hacemos hoy?", "nico-assets/saluda.png");
       }
 
       if (tipo === "trabajo") {
-        mostrarRespuesta("Vamos con Elite Cleaners Company, bro. Clientes claros, agenda clara y todo organizado.", "nico-assets/celular.png");
+        mostrarRespuesta("Vamos con Elite Cleaners Company. Clientes claros, agenda clara y todo bien organizado.", "nico-assets/celular.png");
       }
 
       if (tipo === "animo") {
