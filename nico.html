@@ -1,54 +1,93 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Nico Assistant</title>
 
 <style>
-body {
-  background: #000;
-  color: white;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  text-align: center;
-  padding: 20px;
-}
+  body {
+    background: #000;
+    color: white;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    text-align: center;
+    padding: 20px;
+    margin: 0;
+  }
 
-#nico {
-  width: 280px;
-  margin-top: 20px;
-}
+  h2 {
+    margin-top: 35px;
+    font-size: 32px;
+    font-weight: 800;
+  }
 
-#chat {
-  margin: 20px auto;
-  background: #1c1c1e;
-  padding: 15px;
-  border-radius: 20px;
-  max-width: 350px;
-}
+  #nico {
+    width: 320px;
+    max-width: 90%;
+    margin-top: 20px;
+    transition: 0.3s ease;
+  }
 
-input {
-  width: 70%;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-}
+  #chat {
+    margin: 22px auto;
+    background: #1c1c1e;
+    padding: 18px;
+    border-radius: 22px;
+    max-width: 380px;
+    font-size: 18px;
+    line-height: 1.4;
+  }
 
-button {
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  background: #3b82f6;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-}
+  .input-box {
+    max-width: 380px;
+    margin: 20px auto;
+    display: flex;
+    gap: 10px;
+  }
 
-.quick-buttons button {
-  margin: 5px;
-  background: #111;
-  border: 1px solid #3b82f6;
-}
+  input {
+    flex: 1;
+    padding: 16px;
+    border-radius: 14px;
+    border: none;
+    font-size: 16px;
+    outline: none;
+  }
+
+  button {
+    padding: 16px;
+    border-radius: 14px;
+    border: none;
+    background: #3b82f6;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .quick-buttons {
+    max-width: 380px;
+    margin: 18px auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .quick-buttons button {
+    background: #1c1c1e;
+    border: 1px solid #3b82f6;
+  }
+
+  audio {
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  .note {
+    color: #8e8e93;
+    font-size: 12px;
+    margin-top: 18px;
+  }
 </style>
 </head>
 
@@ -56,14 +95,14 @@ button {
 
 <h2>Nico - Assistant</h2>
 
-<img id="nico" src="nico-assets/reposo.png">
+<img id="nico" src="nico-assets/reposo.png" alt="Nico Assistant">
 
-<div id="chat">Hola Rodri 👋</div>
+<div id="chat">Ey Rodri, aquí estoy contigo bro.</div>
 
-<br>
-
-<input id="mensaje" placeholder="Escríbele a Nico...">
-<button onclick="enviarMensaje()">Enviar</button>
+<div class="input-box">
+  <input id="mensaje" placeholder="Escríbele a Nico..." autocomplete="off">
+  <button onclick="enviarMensaje()">Enviar</button>
+</div>
 
 <div class="quick-buttons">
   <button onclick="respuestaRapida('hola')">Saludar</button>
@@ -72,103 +111,112 @@ button {
   <button onclick="respuestaRapida('musica')">Música</button>
 </div>
 
+<div class="note">Nico con voz real de ElevenLabs 🔥</div>
+
 <script>
+const VOZ_NICO_URL = "https://voznico-cnnxm2vdja-uc.a.run.app";
 
-const VOZ_NICO_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/vozNico";
-
+const nico = document.getElementById("nico");
 const chat = document.getElementById("chat");
 const mensajeInput = document.getElementById("mensaje");
 
-function limpiarTexto(texto){
-  return texto.replace(/[^\p{L}\p{N}\p{P}\p{Z}]/gu, "");
+function limpiarTexto(texto) {
+  return texto
+    .replace(/[^\p{L}\p{N}\p{P}\p{Z}¿¡áéíóúÁÉÍÓÚñÑ]/gu, "")
+    .trim();
 }
 
-// 🔥 FUNCIÓN QUE SÍ FUNCIONA EN IPHONE
-async function hablarConVoz(texto){
-
-  try{
-
-    const res = await fetch(VOZ_NICO_URL,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json"},
+async function hablarConVoz(texto) {
+  try {
+    const res = await fetch(VOZ_NICO_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ texto: limpiarTexto(texto) })
     });
 
-    if(!res.ok){
-      throw new Error("Error backend");
+    if (!res.ok) {
+      throw new Error("Error backend vozNico");
     }
 
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
 
-    // 🔥 AUDIO HTML (SOLUCIÓN REAL)
     chat.innerHTML += `
       <br>
-      <audio controls autoplay style="width:100%;margin-top:10px">
+      <audio controls autoplay playsinline>
         <source src="${url}" type="audio/mpeg">
       </audio>
     `;
-
-  }catch(e){
+  } catch (e) {
     console.log("Error voz:", e);
   }
 }
 
-function responder(texto){
+function responder(texto, imagen) {
   chat.innerHTML = texto;
+  nico.src = imagen;
   hablarConVoz(texto);
 }
 
-function enviarMensaje(){
+function enviarMensaje() {
+  const msg = mensajeInput.value.toLowerCase().trim();
+  if (!msg) return;
 
-  const msg = mensajeInput.value.toLowerCase();
+  let respuesta = "";
+  let imagen = "nico-assets/alegre.png";
 
-  if(!msg) return;
-
-  if(msg.includes("hola")){
-    responder("Ey Rodri, aquí estoy contigo bro.");
+  if (msg.includes("hola") || msg.includes("nico") || msg.includes("qué tal") || msg.includes("que tal")) {
+    respuesta = "Ey Rodri, aquí estoy contigo bro. Cuéntame, qué hacemos hoy.";
+    imagen = "nico-assets/saluda.png";
+  } 
+  else if (msg.includes("trabajo") || msg.includes("cliente") || msg.includes("limpieza") || msg.includes("elite")) {
+    respuesta = "Vamos con orden bro. Cliente, dirección, hora, tipo de limpieza y equipo asignado. Así Elite Cleaners trabaja fino.";
+    imagen = "nico-assets/celular.png";
+  } 
+  else if (msg.includes("cansado") || msg.includes("triste") || msg.includes("difícil") || msg.includes("preocupado") || msg.includes("animo") || msg.includes("ánimo")) {
+    respuesta = "Respira bro. Tú has avanzado muchísimo. Vamos paso a paso, sin rendirnos.";
+    imagen = "nico-assets/alegre.png";
+  } 
+  else if (msg.includes("música") || msg.includes("musica") || msg.includes("guitarra") || msg.includes("cantar")) {
+    respuesta = "Como los domingos con papá. Una guitarra, una canción y seguimos con toda.";
+    imagen = "nico-assets/canta.png";
+  } 
+  else if (msg.includes("gracias")) {
+    respuesta = "Siempre Rodri. Para eso estoy, bro.";
+    imagen = "nico-assets/alegre.png";
   }
-  else if(msg.includes("trabajo")){
-    responder("Vamos con orden bro, cliente, dirección y equipo.");
-  }
-  else if(msg.includes("animo")){
-    responder("Respira bro, tú puedes con esto.");
-  }
-  else if(msg.includes("musica")){
-    responder("Como los domingos con papá.");
-  }
-  else{
-    responder("Te escucho bro, cuéntame.");
+  else {
+    respuesta = "Te escucho bro. Cuéntame bien y lo resolvemos juntos.";
+    imagen = "nico-assets/piensa.png";
   }
 
   mensajeInput.value = "";
+  responder(respuesta, imagen);
 }
 
-function respuestaRapida(tipo){
-
-  if(tipo==="hola"){
-    responder("Ey Rodri, aquí estoy contigo bro.");
+function respuestaRapida(tipo) {
+  if (tipo === "hola") {
+    responder("Ey Rodri, aquí estoy contigo bro. Qué hacemos hoy.", "nico-assets/saluda.png");
   }
 
-  if(tipo==="trabajo"){
-    responder("Vamos con Elite Cleaners bien organizado.");
+  if (tipo === "trabajo") {
+    responder("Vamos con Elite Cleaners bien organizado. Clientes claros, agenda clara y todo fino.", "nico-assets/celular.png");
   }
 
-  if(tipo==="animo"){
-    responder("Paso a paso bro, tú puedes.");
+  if (tipo === "animo") {
+    responder("Paso a paso bro, tú puedes. Yo estoy contigo.", "nico-assets/alegre.png");
   }
 
-  if(tipo==="musica"){
-    responder("Como los domingos con papá.");
+  if (tipo === "musica") {
+    responder("Como los domingos con papá. Una musiquita y seguimos con toda.", "nico-assets/canta.png");
   }
 }
 
-mensajeInput.addEventListener("keydown", e=>{
-  if(e.key==="Enter"){
+mensajeInput.addEventListener("keydown", function(e) {
+  if (e.key === "Enter") {
     enviarMensaje();
   }
 });
-
 </script>
 
 </body>
