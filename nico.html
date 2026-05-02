@@ -163,23 +163,38 @@ async function hablar(texto){
       throw new Error("Error backend");
     }
 
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
+   const blob = await res.blob();
+const url = URL.createObjectURL(blob);
 
-    audioActual = new Audio(url);
-    audioActual.playsInline = true;
-    audioActual.muted = false;
+audioActual = new Audio(url);
 
-    const playPromise = audioActual.play();
+// 🔥 FIX iPhone
+audioActual.playsInline = true;
+audioActual.setAttribute("playsinline", "");
+audioActual.setAttribute("webkit-playsinline", "");
 
-    if(playPromise !== undefined){
-      playPromise.catch(() => {
-        console.log("iPhone bloqueó audio → fallback");
-        hablarFallback(texto);
-      });
-    }
+// intentar reproducir automático
+try {
+  await audioActual.play();
+} catch (err) {
+  console.log("iPhone bloqueó autoplay");
 
-  }catch(e){
+  // 🔊 botón manual SIEMPRE funciona
+  chat.innerHTML += `
+    <br>
+    <button onclick="window.playAudioNico()" 
+    style="margin-top:10px;padding:10px 16px;border-radius:12px;background:#3b82f6;color:white;border:none;">
+    🔊 Escuchar a Nico
+    </button>
+  `;
+}
+
+// función global
+window.playAudioNico = () => {
+  if (audioActual) {
+    audioActual.play();
+  }
+};
     console.log("Error voz:", e);
     hablarFallback(texto);
   }
