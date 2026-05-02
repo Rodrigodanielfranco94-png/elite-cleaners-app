@@ -1,133 +1,68 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Nico PRO Assistant</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nico Assistant PRO</title>
 
 <style>
-  body {
-    background: #000;
-    color: white;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    text-align: center;
-    padding: 18px;
-    margin: 0;
-  }
+body {
+  background: #000;
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  text-align: center;
+  padding: 20px;
+}
 
-  h2 {
-    margin-top: 35px;
-    font-size: 32px;
-    font-weight: 900;
-  }
+#nico {
+  width: 280px;
+  margin-top: 20px;
+}
 
-  #nico {
-    width: 330px;
-    max-width: 92%;
-    margin-top: 15px;
-    transition: 0.3s ease;
-  }
+#chat {
+  margin: 20px auto;
+  background: #1c1c1e;
+  padding: 15px;
+  border-radius: 20px;
+  max-width: 350px;
+}
 
-  #chat {
-    margin: 22px auto;
-    background: #1c1c1e;
-    padding: 18px;
-    border-radius: 24px;
-    max-width: 390px;
-    font-size: 18px;
-    line-height: 1.45;
-    box-shadow: 0 0 20px rgba(59,130,246,0.18);
-  }
+input {
+  width: 65%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+}
 
-  .input-box {
-    max-width: 390px;
-    margin: 18px auto;
-    display: flex;
-    gap: 10px;
-  }
+button {
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #3b82f6;
+  color: white;
+  font-weight: bold;
+}
 
-  input {
-    flex: 1;
-    padding: 16px;
-    border-radius: 16px;
-    border: none;
-    font-size: 16px;
-    outline: none;
-  }
-
-  button {
-    padding: 16px;
-    border-radius: 16px;
-    border: none;
-    background: #3b82f6;
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-
-  button:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-  }
-
-  .quick-buttons {
-    max-width: 390px;
-    margin: 18px auto;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  .quick-buttons button {
-    background: #1c1c1e;
-    border: 1px solid #3b82f6;
-  }
-
-  #audioBox {
-    margin-top: 12px;
-  }
-
-  .listen-btn {
-    margin-top: 10px;
-    padding: 14px 18px;
-    border-radius: 16px;
-    background: #2563eb;
-    color: white;
-    border: none;
-    font-weight: 800;
-    width: 100%;
-  }
-
-  .status {
-    color: #8e8e93;
-    font-size: 13px;
-    margin-top: 10px;
-  }
-
-  .note {
-    color: #8e8e93;
-    font-size: 12px;
-    margin-top: 18px;
-  }
+.quick-buttons button {
+  margin: 5px;
+  background: #111;
+  border: 1px solid #3b82f6;
+}
 </style>
 </head>
 
 <body>
 
-<h2>Nico - PRO</h2>
+<h2>Nico - Assistant</h2>
 
-<img id="nico" src="nico-assets/reposo.png" alt="Nico Assistant">
+<img id="nico" src="nico-assets/reposo.png">
 
-<div id="chat">
-  Ey Rodri, aquí estoy contigo bro.
-  <div id="audioBox"></div>
-</div>
+<div id="chat">Hola Rodri 👋</div>
 
-<div class="input-box">
-  <input id="mensaje" placeholder="Escríbele a Nico..." autocomplete="off">
-  <button id="btnEnviar" onclick="enviarMensaje()">Enviar</button>
-</div>
+<br>
+
+<input id="mensaje" placeholder="Escríbele a Nico...">
+<button onclick="enviarMensaje()">Enviar</button>
 
 <div class="quick-buttons">
   <button onclick="respuestaRapida('hola')">Saludar</button>
@@ -136,182 +71,92 @@
   <button onclick="respuestaRapida('musica')">Música</button>
 </div>
 
-<div class="note">Nico PRO con voz real de ElevenLabs 🔥</div>
-
 <script>
-const VOZ_NICO_URL = "https://voznico-cnnxm2vdja-uc.a.run.app";
 
-const nico = document.getElementById("nico");
+const VOZ_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/vozNico";
+const IA_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/pensarNico";
+
 const chat = document.getElementById("chat");
-const mensajeInput = document.getElementById("mensaje");
-const btnEnviar = document.getElementById("btnEnviar");
+const input = document.getElementById("mensaje");
 
-let audioActual = null;
-let hablando = false;
-
-function limpiarTexto(texto) {
-  return texto
-    .replace(/[^\p{L}\p{N}\p{P}\p{Z}¿¡áéíóúÁÉÍÓÚñÑ]/gu, "")
-    .trim();
-}
-
-function bloquear(bloquearEstado) {
-  hablando = bloquearEstado;
-  btnEnviar.disabled = bloquearEstado;
-  document.querySelectorAll(".quick-buttons button").forEach(btn => {
-    btn.disabled = bloquearEstado;
-  });
-}
-
-function setChat(texto) {
-  chat.innerHTML = `
-    <div>${texto}</div>
-    <div id="audioBox"></div>
-  `;
-}
-
-async function hablarConVoz(texto) {
-  try {
-    const audioBox = document.getElementById("audioBox");
-    audioBox.innerHTML = `<div class="status">Generando voz de Nico...</div>`;
-
-    const res = await fetch(VOZ_NICO_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ texto: limpiarTexto(texto) })
+// 🔊 VOZ
+async function hablar(texto){
+  try{
+    const res = await fetch(VOZ_URL,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json"},
+      body: JSON.stringify({ texto })
     });
-
-    if (!res.ok) {
-      throw new Error("Error backend vozNico");
-    }
 
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
 
-    if (audioActual) {
-      audioActual.pause();
-      audioActual.currentTime = 0;
-    }
-
-    audioActual = new Audio(url);
-    audioActual.playsInline = true;
-    audioActual.setAttribute("playsinline", "");
-    audioActual.setAttribute("webkit-playsinline", "");
-
-    window.playAudioNico = async function() {
-      try {
-        nico.src = "nico-assets/alegre.png";
-        await audioActual.play();
-      } catch (e) {
-        console.log("iPhone bloqueó audio:", e);
-      }
-    };
-
-    audioActual.onended = function() {
-      nico.src = "nico-assets/reposo.png";
-      bloquear(false);
-    };
-
-    audioActual.onerror = function() {
-      nico.src = "nico-assets/reposo.png";
-      bloquear(false);
-    };
-
-    audioBox.innerHTML = `
-      <button class="listen-btn" onclick="window.playAudioNico()">
-        🔊 Escuchar a Nico
-      </button>
+    chat.innerHTML += `
+      <br>
+      <audio controls autoplay style="width:100%">
+        <source src="${url}" type="audio/mpeg">
+      </audio>
     `;
 
-    try {
-      await window.playAudioNico();
-    } catch (e) {
-      console.log("Autoplay bloqueado. Usa el botón.");
-    }
-
-  } catch (e) {
+  }catch(e){
     console.log("Error voz:", e);
-    const audioBox = document.getElementById("audioBox");
-    if (audioBox) {
-      audioBox.innerHTML = `<div class="status">No pude reproducir la voz ahora.</div>`;
-    }
-    bloquear(false);
   }
 }
 
-function responder(texto, imagen) {
-  bloquear(true);
-  nico.src = "nico-assets/piensa.png";
-  setChat("Nico está pensando...");
+// 🧠 IA (OpenAI)
+async function pensar(mensaje){
 
-  setTimeout(() => {
-    nico.src = imagen;
-    setChat(texto);
-    hablarConVoz(texto);
-  }, 600);
+  const res = await fetch(IA_URL,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json"},
+    body: JSON.stringify({ mensaje })
+  });
+
+  const data = await res.json();
+  return data.respuesta;
 }
 
-function enviarMensaje() {
-  const msg = mensajeInput.value.toLowerCase().trim();
-  if (!msg || hablando) return;
+// 💬 ENVÍO
+async function enviarMensaje(){
 
-  let respuesta = "";
-  let imagen = "nico-assets/alegre.png";
+  const msg = input.value.trim();
+  if(!msg) return;
 
-  if (msg.includes("hola") || msg.includes("nico") || msg.includes("qué tal") || msg.includes("que tal")) {
-    respuesta = "Ey Rodri, aquí estoy contigo bro. Cuéntame, qué hacemos hoy.";
-    imagen = "nico-assets/saluda.png";
-  } 
-  else if (msg.includes("trabajo") || msg.includes("cliente") || msg.includes("limpieza") || msg.includes("elite")) {
-    respuesta = "Vamos con orden bro. Cliente, dirección, hora, tipo de limpieza y equipo asignado. Así Elite Cleaners trabaja fino.";
-    imagen = "nico-assets/celular.png";
-  } 
-  else if (msg.includes("cansado") || msg.includes("triste") || msg.includes("difícil") || msg.includes("preocupado") || msg.includes("animo") || msg.includes("ánimo")) {
-    respuesta = "Respira bro. Tú has avanzado muchísimo. Vamos paso a paso, sin rendirnos.";
-    imagen = "nico-assets/alegre.png";
-  } 
-  else if (msg.includes("música") || msg.includes("musica") || msg.includes("guitarra") || msg.includes("cantar")) {
-    respuesta = "Como los domingos con papá. Una guitarra, una canción y seguimos con toda.";
-    imagen = "nico-assets/canta.png";
-  } 
-  else if (msg.includes("gracias")) {
-    respuesta = "Siempre Rodri. Para eso estoy, bro.";
-    imagen = "nico-assets/alegre.png";
-  }
-  else {
-    respuesta = "Te escucho bro. Cuéntame bien y lo resolvemos juntos.";
-    imagen = "nico-assets/piensa.png";
+  chat.innerHTML = "Nico está pensando...";
+
+  try{
+    const respuesta = await pensar(msg);
+
+    chat.innerHTML = respuesta;
+
+    hablar(respuesta);
+
+  }catch(e){
+    chat.innerHTML = "Error hablando con Nico";
   }
 
-  mensajeInput.value = "";
-  responder(respuesta, imagen);
+  input.value = "";
 }
 
-function respuestaRapida(tipo) {
-  if (hablando) return;
+// ⚡ BOTONES RÁPIDOS
+function respuestaRapida(tipo){
 
-  if (tipo === "hola") {
-    responder("Ey Rodri, aquí estoy contigo bro. Qué hacemos hoy.", "nico-assets/saluda.png");
-  }
+  let texto = "";
 
-  if (tipo === "trabajo") {
-    responder("Vamos con Elite Cleaners bien organizado. Clientes claros, agenda clara y todo fino.", "nico-assets/celular.png");
-  }
+  if(tipo==="hola") texto = "Hola Nico";
+  if(tipo==="trabajo") texto = "Ayúdame a organizar el trabajo";
+  if(tipo==="animo") texto = "Necesito ánimo";
+  if(tipo==="musica") texto = "Hablemos de música";
 
-  if (tipo === "animo") {
-    responder("Paso a paso bro, tú puedes. Yo estoy contigo.", "nico-assets/alegre.png");
-  }
-
-  if (tipo === "musica") {
-    responder("Como los domingos con papá. Una musiquita y seguimos con toda.", "nico-assets/canta.png");
-  }
+  input.value = texto;
+  enviarMensaje();
 }
 
-mensajeInput.addEventListener("keydown", function(e) {
-  if (e.key === "Enter") {
-    enviarMensaje();
-  }
+// ENTER
+input.addEventListener("keydown", e=>{
+  if(e.key==="Enter") enviarMensaje();
 });
+
 </script>
 
 </body>
