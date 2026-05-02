@@ -1,93 +1,187 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nico Assistant</title>
+
   <style>
     body {
       background: #000;
       color: white;
-      font-family: sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
       text-align: center;
       padding: 20px;
+      margin: 0;
+    }
+
+    h2 {
+      margin-top: 30px;
     }
 
     #nico {
-      width: 250px;
+      width: 260px;
+      max-width: 80%;
       transition: 0.3s;
     }
 
-    button {
-      padding: 15px;
-      border-radius: 10px;
-      border: none;
-      background: #3b82f6;
-      color: white;
-      font-size: 16px;
-      margin-top: 20px;
-      cursor: pointer;
-    }
-
     #chat {
-      margin-top: 20px;
+      margin: 20px auto;
       background: #1c1c1e;
       padding: 15px;
       border-radius: 15px;
-      max-width: 300px;
-      margin-left: auto;
-      margin-right: auto;
+      max-width: 350px;
+      font-size: 16px;
       display: none;
+      line-height: 1.4;
+    }
+
+    .input-box {
+      max-width: 350px;
+      margin: 20px auto;
+      display: flex;
+      gap: 8px;
+    }
+
+    input {
+      flex: 1;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
       font-size: 15px;
+    }
+
+    button {
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      background: #3b82f6;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .quick-buttons {
+      max-width: 350px;
+      margin: 15px auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .quick-buttons button {
+      background: #1c1c1e;
+      border: 1px solid #3b82f6;
+      font-size: 13px;
     }
   </style>
 </head>
+
 <body>
 
-<h2>Nico - Assistant</h2>
+  <h2>Nico - Assistant</h2>
 
-<img id="nico" src="nico-assets/reposo.png">
+  <img id="nico" src="nico-assets/reposo.png" alt="Nico Assistant" />
 
-<br>
+  <div id="chat"></div>
 
-<button onclick="hablar()">Hablar con Nico</button>
+  <div class="input-box">
+    <input id="mensaje" type="text" placeholder="Escríbele a Nico..." />
+    <button onclick="enviarMensaje()">Enviar</button>
+  </div>
 
-<div id="chat"></div>
+  <div class="quick-buttons">
+    <button onclick="respuestaRapida('hola')">Saludar</button>
+    <button onclick="respuestaRapida('trabajo')">Trabajo</button>
+    <button onclick="respuestaRapida('animo')">Ánimo</button>
+    <button onclick="respuestaRapida('musica')">Música</button>
+  </div>
 
-<script>
-  const nico = document.getElementById("nico");
-  const chat = document.getElementById("chat");
+  <script>
+    const nico = document.getElementById("nico");
+    const chat = document.getElementById("chat");
+    const mensajeInput = document.getElementById("mensaje");
 
-  function hablarConVoz(texto) {
-    // Detiene cualquier voz anterior
-    window.speechSynthesis.cancel();
+    function hablarConVoz(texto) {
+      window.speechSynthesis.cancel();
 
-    const audio = new SpeechSynthesisUtterance(texto);
-    audio.lang = "es-ES";
-    audio.pitch = 1;
-    audio.rate = 1;
+      const audio = new SpeechSynthesisUtterance(texto);
+      audio.lang = "es-ES";
+      audio.pitch = 1.1;
+      audio.rate = 0.95;
 
-    window.speechSynthesis.speak(audio);
-  }
+      window.speechSynthesis.speak(audio);
+    }
 
-  function hablar() {
-    nico.src = "nico-assets/celular.png";
-    chat.style.display = "none";
-
-    setTimeout(() => {
+    function mostrarRespuesta(texto, imagen) {
       nico.src = "nico-assets/piensa.png";
-    }, 1500);
-
-    setTimeout(() => {
-      const respuesta = "¿Qué más pues Rodri? 😄 Estoy listo para ayudarte";
-
-      nico.src = "nico-assets/alegre.png";
       chat.style.display = "block";
-      chat.innerText = respuesta;
+      chat.innerText = "Nico está pensando...";
 
-      hablarConVoz(respuesta);
-    }, 3000);
-  }
-</script>
+      setTimeout(() => {
+        nico.src = imagen;
+        chat.innerText = texto;
+        hablarConVoz(texto);
+      }, 900);
+    }
+
+    function enviarMensaje() {
+      const mensaje = mensajeInput.value.trim().toLowerCase();
+      if (!mensaje) return;
+
+      let respuesta = "";
+      let imagen = "nico-assets/alegre.png";
+
+      if (mensaje.includes("hola") || mensaje.includes("nico")) {
+        respuesta = "¿Qué más pues Rodri? 😄 Aquí estoy contigo, bro.";
+        imagen = "nico-assets/saluda.png";
+      } 
+      else if (mensaje.includes("trabajo") || mensaje.includes("cliente") || mensaje.includes("limpieza")) {
+        respuesta = "Bro, vamos paso a paso. Revisa cliente, dirección, hora y equipo. Así no se nos escapa nada.";
+        imagen = "nico-assets/celular.png";
+      } 
+      else if (mensaje.includes("cansado") || mensaje.includes("triste") || mensaje.includes("difícil")) {
+        respuesta = "Ey bro, tranquilo. Yo sé que a veces pesa, pero tú has avanzado muchísimo. Vamos con calma, pero no paramos.";
+        imagen = "nico-assets/reposo.png";
+      } 
+      else if (mensaje.includes("música") || mensaje.includes("guitarra") || mensaje.includes("cantar")) {
+        respuesta = "Eso sí me gusta, bro. Una guitarra, una canción y seguimos con buena energía como los domingos.";
+        imagen = "nico-assets/canta.png";
+      } 
+      else {
+        respuesta = "Te escucho, Rodri. Cuéntame bien y lo resolvemos juntos.";
+        imagen = "nico-assets/piensa.png";
+      }
+
+      mensajeInput.value = "";
+      mostrarRespuesta(respuesta, imagen);
+    }
+
+    function respuestaRapida(tipo) {
+      if (tipo === "hola") {
+        mostrarRespuesta("¡Ey Rodri! 😄 Estoy aquí, bro. ¿Qué hacemos hoy?", "nico-assets/saluda.png");
+      }
+
+      if (tipo === "trabajo") {
+        mostrarRespuesta("Vamos con Elite Cleaners Company, bro. Clientes claros, agenda clara y todo organizado.", "nico-assets/celular.png");
+      }
+
+      if (tipo === "animo") {
+        mostrarRespuesta("Bro, acuérdate: paso a paso también se llega lejos. Yo estoy contigo.", "nico-assets/alegre.png");
+      }
+
+      if (tipo === "musica") {
+        mostrarRespuesta("Una musiquita y seguimos con toda, como cuando cantábamos en la casa de papá.", "nico-assets/canta.png");
+      }
+    }
+
+    mensajeInput.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        enviarMensaje();
+      }
+    });
+  </script>
 
 </body>
 </html>
