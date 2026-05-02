@@ -121,48 +121,79 @@ const mensajeInput = document.getElementById("mensaje");
 const btnEnviar = document.getElementById("btnEnviar");
 
 let audioActual = null;
-let desbloqueado = false;
+let audioHabilitado = false;
 
-// 🔥 DESBLOQUEO DE AUDIO PARA IPHONE
-document.body.addEventListener("click", () => {
-  if (!desbloqueado) {
-    const dummy = new Audio();
-    dummy.play().catch(()=>{});
-    desbloqueado = true;
-  }
-}, { once: true });
+// 🔥 DESBLOQUEO REAL DE AUDIO EN iPHONE
+function habilitarAudio() {
+  if (audioHabilitado) return;
+
+  const audio = new Audio();
+  audio.src = "";
+  audio.play().then(() => {
+    audioHabilitado = true;
+    console.log("Audio desbloqueado");
+  }).catch(() => {
+    console.log("Esperando interacción...");
+  });
+}
+
+// 👇 IMPORTANTE: activar en primer toque
+document.addEventListener("touchstart", habilitarAudio, { once: true });
+document.addEventListener("click", habilitarAudio, { once: true });
 
 function limpiarTexto(texto){
-  return texto.replace(/[^\p{L}\p{N}\p{P}\p{Z}]/gu,"");
+  return texto.replace(/[^\p{L}\p{N}\p{P}\p{Z}¿¡áéíóúÁÉÍÓÚñÑ]/gu,"");
 }
 
 async function hablar(texto){
 
-  if(audioActual){
-    audioActual.pause();
-  }
-
   try{
+    if(audioActual){
+      audioActual.pause();
+      audioActual.currentTime = 0;
+    }
+
     const res = await fetch(VOZ_NICO_URL,{
       method:"POST",
       headers:{ "Content-Type":"application/json"},
       body: JSON.stringify({ texto })
     });
 
+    if(!res.ok){
+      throw new Error("Error backend");
+    }
+
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
 
     audioActual = new Audio(url);
     audioActual.playsInline = true;
+    audioActual.muted = false;
 
-    await audioActual.play();
+    const playPromise = audioActual.play();
+
+    if(playPromise !== undefined){
+      playPromise.catch(() => {
+        console.log("iPhone bloqueó audio → fallback");
+        hablarFallback(texto);
+      });
+    }
 
   }catch(e){
-    console.log("fallback voz normal");
-    const speech = new SpeechSynthesisUtterance(texto);
-    speech.lang="es-US";
-    speechSynthesis.speak(speech);
+    console.log("Error voz:", e);
+    hablarFallback(texto);
   }
+}
+
+function hablarFallback(texto){
+  if (!("speechSynthesis" in window)) return;
+
+  const speech = new SpeechSynthesisUtterance(texto);
+  speech.lang="es-US";
+  speech.rate=0.9;
+  speech.pitch=0.9;
+
+  speechSynthesis.speak(speech);
 }
 
 function responder(texto, imagen){
@@ -200,6 +231,5 @@ function respuestaRapida(t){
   }
 }
 </script>
-
 </body>
 </html>
