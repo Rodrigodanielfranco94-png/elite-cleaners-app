@@ -51,7 +51,7 @@
         .btn-delete { background: #ef4444; }
         .btn-contract { background: #004a99; }
         .btn-review { background: #3b82f6; border: 1px solid #ffffff33; }
-        .btn-whatsapp { background: #25D366; } /* Verde WhatsApp */
+        .btn-whatsapp { background: #25D366; }
         
         .payroll-container { background: #1c1c1e; padding: 18px; border-radius: 20px; border: 1px solid #22c55e; margin-top: 30px; }
         .payroll-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
@@ -235,7 +235,6 @@
         let todosLosServicios = [];
         let vistaActual = "pendiente";
 
-        // FUNCION PARA CONVERTIR HORA 24H A AM/PM
         function formatAMPM(hora24) {
             if (!hora24 || hora24 === "--:--") return "--:--";
             let [horas, minutos] = hora24.split(':');
@@ -284,7 +283,7 @@
             const labelFirma = document.getElementById('modal-label-firma');
             const clienteLabel = document.getElementById('modal-cliente');
             const fechaLabel = document.getElementById('modal-fecha');
-            const cliente = clienteLabel.innerText.split(': ')[1];
+            const cliente = clienteLabel.innerText.split(': ')[1] || 'Customer';
             
             const originalMaxHeight = legal.style.maxHeight;
             const originalOverflow = legal.style.overflowY;
@@ -350,7 +349,7 @@
 
         db.collection("clientes").onSnapshot(snap => {
             todosLosClientes = [];
-            snap.forEach(doc => todosLosClientes.push(doc.data()));
+            snap.forEach(doc => todosLosClientes.push({ id: doc.id, ...doc.data() }));
         });
 
         function filtrarClientes() {
@@ -358,14 +357,16 @@
             const l = document.getElementById('suggestions-clientes');
             l.innerHTML = "";
             if (q.length < 1) { l.style.display = "none"; return; }
-            const f = todosLosClientes.filter(c => c.nombre.toLowerCase().includes(q));
+
+            const f = todosLosClientes.filter(c => (c.nombre || '').toLowerCase().includes(q));
             f.forEach(c => {
                 const d = document.createElement('div');
-                d.className = 'suggestion-item'; d.innerText = c.nombre;
+                d.className = 'suggestion-item';
+                d.innerText = c.nombre || c.id;
                 d.onclick = () => {
-                    document.getElementById('cliente').value = c.nombre;
-                    document.getElementById('direccion').value = c.direccion;
-                    document.getElementById('whatsapp').value = c.whatsapp;
+                    document.getElementById('cliente').value = c.nombre || c.id || '';
+                    document.getElementById('direccion').value = c.direccion || '';
+                    document.getElementById('whatsapp').value = c.whatsapp || c.telefono || '';
                     l.style.display = "none";
                 };
                 l.appendChild(d);
@@ -417,7 +418,7 @@
             const l = document.getElementById(suggestionsId);
             l.innerHTML = "";
             if (q.length < 1) { l.style.display = "none"; return; }
-            const f = todosLosEmpleados.filter(e => e.nombre.toLowerCase().includes(q));
+            const f = todosLosEmpleados.filter(e => (e.nombre || '').toLowerCase().includes(q));
             f.forEach(e => {
                 const d = document.createElement('div');
                 d.className = 'suggestion-item'; d.innerText = e.nombre;
@@ -464,7 +465,16 @@
                 data.hora_fin = "--:--";
                 data.firma_cliente = false;
             }
-            db.collection("clientes").doc(cli_nombre).set({ nombre: cli_nombre, direccion: data.direccion, whatsapp: data.whatsapp });
+
+            // Compatible con tu app Admin y con la nueva Cloud Function:
+            // se guarda whatsapp y telefono con el mismo número para evitar conflictos.
+            db.collection("clientes").doc(cli_nombre).set({
+                nombre: cli_nombre,
+                direccion: data.direccion,
+                whatsapp: data.whatsapp,
+                telefono: data.whatsapp
+            }, { merge: true });
+
             if (id) db.collection("servicios").doc(id).update(data).then(() => location.reload());
             else db.collection("servicios").add(data).then(() => location.reload());
         }
@@ -498,7 +508,6 @@
                     const card = document.createElement('div');
                     card.className = 'card-servicio';
                     
-                    // SE FORMATEA LA HORA PARA LA VISTA
                     const horaFormateada = formatAMPM(s.hora);
 
                     card.innerHTML = `
@@ -570,11 +579,11 @@
             document.getElementById('edit-id').value = id;
             document.getElementById('cliente').value = s.cliente;
             document.getElementById('direccion').value = s.direccion;
-            document.getElementById('whatsapp').value = s.whatsapp || "";
+            document.getElementById('whatsapp').value = s.whatsapp || s.telefono || "";
             document.getElementById('search-empleado').value = s.empleado_nombre;
-            document.getElementById('email-empleado').value = s.email_empleado || ""; 
+            document.getElementById('email-empleado').value = s.empleado_email || ""; 
             document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || "";
-            document.getElementById('email-empleado-2').value = s.email_empleado_2 || ""; 
+            document.getElementById('email-empleado-2').value = s.empleado_email_2 || ""; 
             document.getElementById('fecha').value = s.fecha;
             document.getElementById('hora').value = s.hora;
             document.getElementById('notas').value = s.notas;
@@ -605,7 +614,6 @@
                 staffNombres += ` and ${s.empleado_nombre_2}`;
             }
 
-            // SE FORMATEA LA HORA PARA EL MENSAJE DE WHATSAPP
             const horaAmPm = formatAMPM(s.hora);
 
             const mensaje = `Hello ${s.cliente}! 🌟 This is a friendly reminder from *Elite Cleaners Company* about your upcoming cleaning service:%0A%0A` +
