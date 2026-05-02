@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Nico Assistant</title>
 
   <style>
@@ -67,7 +67,6 @@
 
     button:disabled {
       opacity: 0.6;
-      cursor: not-allowed;
     }
 
     .quick-buttons {
@@ -81,7 +80,6 @@
     .quick-buttons button {
       background: #1c1c1e;
       border: 1px solid #3b82f6;
-      font-size: 15px;
     }
 
     .small-note {
@@ -94,201 +92,114 @@
 
 <body>
 
-  <h2>Nico - Assistant</h2>
+<h2>Nico - Assistant</h2>
 
-  <img id="nico" src="nico-assets/reposo.png" alt="Nico Assistant" />
+<img id="nico" src="nico-assets/reposo.png"/>
 
-  <div id="chat"></div>
+<div id="chat"></div>
 
-  <div class="input-box">
-    <input id="mensaje" type="text" placeholder="Escríbele a Nico..." />
-    <button id="btnEnviar" onclick="enviarMensaje()">Enviar</button>
-  </div>
+<div class="input-box">
+  <input id="mensaje" type="text" placeholder="Escríbele a Nico..." />
+  <button id="btnEnviar" onclick="enviarMensaje()">Enviar</button>
+</div>
 
-  <div class="quick-buttons">
-    <button onclick="respuestaRapida('hola')">Saludar</button>
-    <button onclick="respuestaRapida('trabajo')">Trabajo</button>
-    <button onclick="respuestaRapida('animo')">Ánimo</button>
-    <button onclick="respuestaRapida('musica')">Música</button>
-  </div>
+<div class="quick-buttons">
+  <button onclick="respuestaRapida('hola')">Saludar</button>
+  <button onclick="respuestaRapida('trabajo')">Trabajo</button>
+  <button onclick="respuestaRapida('animo')">Ánimo</button>
+  <button onclick="respuestaRapida('musica')">Música</button>
+</div>
 
-  <div class="small-note">Nico habla con voz real usando ElevenLabs.</div>
+<div class="small-note">Nico con voz real + IA 🔥</div>
 
-  <script>
-    const VOZ_NICO_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/vozNico";
+<script>
+const VOZ_NICO_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/vozNico";
 
-    const nico = document.getElementById("nico");
-    const chat = document.getElementById("chat");
-    const mensajeInput = document.getElementById("mensaje");
-    const btnEnviar = document.getElementById("btnEnviar");
+const nico = document.getElementById("nico");
+const chat = document.getElementById("chat");
+const mensajeInput = document.getElementById("mensaje");
+const btnEnviar = document.getElementById("btnEnviar");
 
-    let audioActual = null;
-    let hablando = false;
+let audioActual = null;
+let desbloqueado = false;
 
-    function limpiarTextoParaVoz(texto) {
-      return texto
-        .replace(/😄|🔥|💙|👌🏻|🤣|🙏|💪|🎙️|😎|🌟/g, "")
-        .replace(/[^\p{L}\p{N}\p{P}\p{Z}¿¡áéíóúÁÉÍÓÚñÑ]/gu, "")
-        .trim();
-    }
+// 🔥 DESBLOQUEO DE AUDIO PARA IPHONE
+document.body.addEventListener("click", () => {
+  if (!desbloqueado) {
+    const dummy = new Audio();
+    dummy.play().catch(()=>{});
+    desbloqueado = true;
+  }
+}, { once: true });
 
-    function bloquearBotones(bloquear) {
-      hablando = bloquear;
-      btnEnviar.disabled = bloquear;
-      document.querySelectorAll(".quick-buttons button").forEach(btn => {
-        btn.disabled = bloquear;
-      });
-    }
+function limpiarTexto(texto){
+  return texto.replace(/[^\p{L}\p{N}\p{P}\p{Z}]/gu,"");
+}
 
-    async function hablarConVoz(texto) {
-      try {
-        if (audioActual) {
-          audioActual.pause();
-          audioActual.currentTime = 0;
-        }
+async function hablar(texto){
 
-        const textoLimpio = limpiarTextoParaVoz(texto);
+  if(audioActual){
+    audioActual.pause();
+  }
 
-        const response = await fetch(VOZ_NICO_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            texto: textoLimpio
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error("No se pudo generar la voz de Nico");
-        }
-
-        const audioBlob = await response.blob();
-        const audioUrl = URL.createObjectURL(audioBlob);
-
-        audioActual = new Audio(audioUrl);
-
-        audioActual.onplay = () => {
-          nico.src = "nico-assets/alegre.png";
-        };
-
-        audioActual.onended = () => {
-          nico.src = "nico-assets/reposo.png";
-          bloquearBotones(false);
-          URL.revokeObjectURL(audioUrl);
-        };
-
-        audioActual.onerror = () => {
-          bloquearBotones(false);
-        };
-
-        await audioActual.play();
-
-      } catch (error) {
-        console.error("Error con voz real de Nico:", error);
-        bloquearBotones(false);
-        hablarConVozTemporal(texto);
-      }
-    }
-
-    function hablarConVozTemporal(texto) {
-      if (!("speechSynthesis" in window)) return;
-
-      window.speechSynthesis.cancel();
-
-      const audio = new SpeechSynthesisUtterance(limpiarTextoParaVoz(texto));
-      audio.lang = "es-US";
-      audio.pitch = 0.85;
-      audio.rate = 0.92;
-      audio.volume = 1;
-
-      window.speechSynthesis.speak(audio);
-    }
-
-    function mostrarRespuesta(texto, imagen) {
-      if (hablando) return;
-
-      bloquearBotones(true);
-
-      nico.src = "nico-assets/piensa.png";
-      chat.style.display = "block";
-      chat.innerText = "Nico está pensando...";
-
-      setTimeout(() => {
-        nico.src = imagen;
-        chat.innerText = texto;
-        hablarConVoz(texto);
-      }, 800);
-    }
-
-    function enviarMensaje() {
-      const mensajeOriginal = mensajeInput.value.trim();
-      const mensaje = mensajeOriginal.toLowerCase();
-
-      if (!mensaje || hablando) return;
-
-      let respuesta = "";
-      let imagen = "nico-assets/alegre.png";
-
-      if (mensaje.includes("hola") || mensaje.includes("nico") || mensaje.includes("qué tal") || mensaje.includes("que tal")) {
-        respuesta = "Ey Rodri, aquí estoy contigo, bro. Cuéntame, qué hacemos hoy.";
-        imagen = "nico-assets/saluda.png";
-      } 
-      else if (mensaje.includes("trabajo") || mensaje.includes("cliente") || mensaje.includes("limpieza") || mensaje.includes("elite")) {
-        respuesta = "Bro, vamos con orden. Primero cliente, dirección, hora, tipo de limpieza y equipo asignado. Así Elite Cleaners Company trabaja fino.";
-        imagen = "nico-assets/celular.png";
-      } 
-      else if (mensaje.includes("cansado") || mensaje.includes("triste") || mensaje.includes("difícil") || mensaje.includes("preocupado")) {
-        respuesta = "Ey bro, respira. Yo sé que a veces pesa, pero tú has levantado mucho. Vamos paso a paso, sin rendirnos.";
-        imagen = "nico-assets/reposo.png";
-      } 
-      else if (mensaje.includes("música") || mensaje.includes("musica") || mensaje.includes("guitarra") || mensaje.includes("cantar")) {
-        respuesta = "Eso sí me gusta, bro. Una guitarra, una canción y esa energía de los domingos en la casa de papá.";
-        imagen = "nico-assets/canta.png";
-      }
-      else if (mensaje.includes("gracias")) {
-        respuesta = "Siempre, Rodri. Para eso estoy, bro. Vamos con toda.";
-        imagen = "nico-assets/alegre.png";
-      }
-      else if (mensaje.includes("familia") || mensaje.includes("papá") || mensaje.includes("papa") || mensaje.includes("jorge") || mensaje.includes("dayana") || mensaje.includes("charlie")) {
-        respuesta = "La familia siempre va primero, bro. Papá Rodolfo, Jorge, Dayana, Charlie... todos son parte de esto también.";
-        imagen = "nico-assets/reposo.png";
-      }
-      else {
-        respuesta = "Te escucho, Rodri. Cuéntame bien y lo resolvemos juntos.";
-        imagen = "nico-assets/piensa.png";
-      }
-
-      mensajeInput.value = "";
-      mostrarRespuesta(respuesta, imagen);
-    }
-
-    function respuestaRapida(tipo) {
-      if (hablando) return;
-
-      if (tipo === "hola") {
-        mostrarRespuesta("Ey Rodri, aquí estoy contigo, bro. Qué hacemos hoy.", "nico-assets/saluda.png");
-      }
-
-      if (tipo === "trabajo") {
-        mostrarRespuesta("Vamos con Elite Cleaners Company. Clientes claros, agenda clara y todo bien organizado.", "nico-assets/celular.png");
-      }
-
-      if (tipo === "animo") {
-        mostrarRespuesta("Bro, acuérdate: paso a paso también se llega lejos. Yo estoy contigo.", "nico-assets/alegre.png");
-      }
-
-      if (tipo === "musica") {
-        mostrarRespuesta("Una musiquita y seguimos con toda, como cuando cantábamos en la casa de papá.", "nico-assets/canta.png");
-      }
-    }
-
-    mensajeInput.addEventListener("keydown", function(event) {
-      if (event.key === "Enter") {
-        enviarMensaje();
-      }
+  try{
+    const res = await fetch(VOZ_NICO_URL,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json"},
+      body: JSON.stringify({ texto })
     });
-  </script>
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+
+    audioActual = new Audio(url);
+    audioActual.playsInline = true;
+
+    await audioActual.play();
+
+  }catch(e){
+    console.log("fallback voz normal");
+    const speech = new SpeechSynthesisUtterance(texto);
+    speech.lang="es-US";
+    speechSynthesis.speak(speech);
+  }
+}
+
+function responder(texto, imagen){
+  nico.src="nico-assets/piensa.png";
+  chat.style.display="block";
+  chat.innerText="Nico está pensando...";
+
+  setTimeout(()=>{
+    nico.src=imagen;
+    chat.innerText=texto;
+    hablar(texto);
+  },700);
+}
+
+function enviarMensaje(){
+  const txt = mensajeInput.value.trim().toLowerCase();
+  if(!txt) return;
+
+  mensajeInput.value="";
+
+  let r="Te escucho bro";
+  let img="nico-assets/alegre.png";
+
+  if(txt.includes("hola")){
+    r="Ey Rodri, aquí estoy contigo bro 🔥";
+    img="nico-assets/saluda.png";
+  }
+
+  responder(r,img);
+}
+
+function respuestaRapida(t){
+  if(t==="hola"){
+    responder("Ey Rodri 🔥 aquí estoy bro","nico-assets/saluda.png");
+  }
+}
+</script>
 
 </body>
 </html>
