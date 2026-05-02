@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Nico Assistant</title>
+<title>Nico PRO Assistant</title>
 
 <style>
   body {
@@ -11,20 +11,20 @@
     color: white;
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     text-align: center;
-    padding: 20px;
+    padding: 18px;
     margin: 0;
   }
 
   h2 {
     margin-top: 35px;
     font-size: 32px;
-    font-weight: 800;
+    font-weight: 900;
   }
 
   #nico {
-    width: 320px;
-    max-width: 90%;
-    margin-top: 20px;
+    width: 330px;
+    max-width: 92%;
+    margin-top: 15px;
     transition: 0.3s ease;
   }
 
@@ -32,15 +32,16 @@
     margin: 22px auto;
     background: #1c1c1e;
     padding: 18px;
-    border-radius: 22px;
-    max-width: 380px;
+    border-radius: 24px;
+    max-width: 390px;
     font-size: 18px;
-    line-height: 1.4;
+    line-height: 1.45;
+    box-shadow: 0 0 20px rgba(59,130,246,0.18);
   }
 
   .input-box {
-    max-width: 380px;
-    margin: 20px auto;
+    max-width: 390px;
+    margin: 18px auto;
     display: flex;
     gap: 10px;
   }
@@ -48,7 +49,7 @@
   input {
     flex: 1;
     padding: 16px;
-    border-radius: 14px;
+    border-radius: 16px;
     border: none;
     font-size: 16px;
     outline: none;
@@ -56,7 +57,7 @@
 
   button {
     padding: 16px;
-    border-radius: 14px;
+    border-radius: 16px;
     border: none;
     background: #3b82f6;
     color: white;
@@ -65,8 +66,13 @@
     cursor: pointer;
   }
 
+  button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
   .quick-buttons {
-    max-width: 380px;
+    max-width: 390px;
     margin: 18px auto;
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -78,9 +84,25 @@
     border: 1px solid #3b82f6;
   }
 
-  audio {
-    width: 100%;
+  #audioBox {
     margin-top: 12px;
+  }
+
+  .listen-btn {
+    margin-top: 10px;
+    padding: 14px 18px;
+    border-radius: 16px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    font-weight: 800;
+    width: 100%;
+  }
+
+  .status {
+    color: #8e8e93;
+    font-size: 13px;
+    margin-top: 10px;
   }
 
   .note {
@@ -93,15 +115,18 @@
 
 <body>
 
-<h2>Nico - Assistant</h2>
+<h2>Nico - PRO</h2>
 
 <img id="nico" src="nico-assets/reposo.png" alt="Nico Assistant">
 
-<div id="chat">Ey Rodri, aquí estoy contigo bro.</div>
+<div id="chat">
+  Ey Rodri, aquí estoy contigo bro.
+  <div id="audioBox"></div>
+</div>
 
 <div class="input-box">
   <input id="mensaje" placeholder="Escríbele a Nico..." autocomplete="off">
-  <button onclick="enviarMensaje()">Enviar</button>
+  <button id="btnEnviar" onclick="enviarMensaje()">Enviar</button>
 </div>
 
 <div class="quick-buttons">
@@ -111,7 +136,7 @@
   <button onclick="respuestaRapida('musica')">Música</button>
 </div>
 
-<div class="note">Nico con voz real de ElevenLabs 🔥</div>
+<div class="note">Nico PRO con voz real de ElevenLabs 🔥</div>
 
 <script>
 const VOZ_NICO_URL = "https://voznico-cnnxm2vdja-uc.a.run.app";
@@ -119,6 +144,10 @@ const VOZ_NICO_URL = "https://voznico-cnnxm2vdja-uc.a.run.app";
 const nico = document.getElementById("nico");
 const chat = document.getElementById("chat");
 const mensajeInput = document.getElementById("mensaje");
+const btnEnviar = document.getElementById("btnEnviar");
+
+let audioActual = null;
+let hablando = false;
 
 function limpiarTexto(texto) {
   return texto
@@ -126,8 +155,26 @@ function limpiarTexto(texto) {
     .trim();
 }
 
+function bloquear(bloquearEstado) {
+  hablando = bloquearEstado;
+  btnEnviar.disabled = bloquearEstado;
+  document.querySelectorAll(".quick-buttons button").forEach(btn => {
+    btn.disabled = bloquearEstado;
+  });
+}
+
+function setChat(texto) {
+  chat.innerHTML = `
+    <div>${texto}</div>
+    <div id="audioBox"></div>
+  `;
+}
+
 async function hablarConVoz(texto) {
   try {
+    const audioBox = document.getElementById("audioBox");
+    audioBox.innerHTML = `<div class="status">Generando voz de Nico...</div>`;
+
     const res = await fetch(VOZ_NICO_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -141,26 +188,72 @@ async function hablarConVoz(texto) {
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
 
-    chat.innerHTML += `
-      <br>
-      <audio controls autoplay playsinline>
-        <source src="${url}" type="audio/mpeg">
-      </audio>
+    if (audioActual) {
+      audioActual.pause();
+      audioActual.currentTime = 0;
+    }
+
+    audioActual = new Audio(url);
+    audioActual.playsInline = true;
+    audioActual.setAttribute("playsinline", "");
+    audioActual.setAttribute("webkit-playsinline", "");
+
+    window.playAudioNico = async function() {
+      try {
+        nico.src = "nico-assets/alegre.png";
+        await audioActual.play();
+      } catch (e) {
+        console.log("iPhone bloqueó audio:", e);
+      }
+    };
+
+    audioActual.onended = function() {
+      nico.src = "nico-assets/reposo.png";
+      bloquear(false);
+    };
+
+    audioActual.onerror = function() {
+      nico.src = "nico-assets/reposo.png";
+      bloquear(false);
+    };
+
+    audioBox.innerHTML = `
+      <button class="listen-btn" onclick="window.playAudioNico()">
+        🔊 Escuchar a Nico
+      </button>
     `;
+
+    try {
+      await window.playAudioNico();
+    } catch (e) {
+      console.log("Autoplay bloqueado. Usa el botón.");
+    }
+
   } catch (e) {
     console.log("Error voz:", e);
+    const audioBox = document.getElementById("audioBox");
+    if (audioBox) {
+      audioBox.innerHTML = `<div class="status">No pude reproducir la voz ahora.</div>`;
+    }
+    bloquear(false);
   }
 }
 
 function responder(texto, imagen) {
-  chat.innerHTML = texto;
-  nico.src = imagen;
-  hablarConVoz(texto);
+  bloquear(true);
+  nico.src = "nico-assets/piensa.png";
+  setChat("Nico está pensando...");
+
+  setTimeout(() => {
+    nico.src = imagen;
+    setChat(texto);
+    hablarConVoz(texto);
+  }, 600);
 }
 
 function enviarMensaje() {
   const msg = mensajeInput.value.toLowerCase().trim();
-  if (!msg) return;
+  if (!msg || hablando) return;
 
   let respuesta = "";
   let imagen = "nico-assets/alegre.png";
@@ -195,6 +288,8 @@ function enviarMensaje() {
 }
 
 function respuestaRapida(tipo) {
+  if (hablando) return;
+
   if (tipo === "hola") {
     responder("Ey Rodri, aquí estoy contigo bro. Qué hacemos hoy.", "nico-assets/saluda.png");
   }
