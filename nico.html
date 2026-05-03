@@ -3,57 +3,60 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nico Dios</title>
+<title>Nico Emociones</title>
 
 <style>
-body {
+body{
   background:#000;
   color:white;
   font-family:-apple-system;
   text-align:center;
-  padding:16px;
+  padding:20px;
 }
 
-#nico { width:300px; }
+#nico{
+  width:280px;
+  transition:0.3s;
+}
 
-#chat {
+#chat{
   background:#1c1c1e;
-  padding:18px;
+  padding:15px;
   border-radius:20px;
-  margin-top:15px;
+  margin-top:20px;
 }
 
-input {
+input{
   width:65%;
-  padding:14px;
-  border-radius:12px;
+  padding:12px;
+  border-radius:10px;
   border:none;
 }
 
-button {
-  padding:14px;
-  border-radius:12px;
+button{
+  padding:12px;
+  border-radius:10px;
   border:none;
   background:#3b82f6;
   color:white;
   font-weight:bold;
 }
 
-.grid {
+.grid{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:10px;
   margin-top:15px;
 }
 
-.mic-btn { background:#16a34a; }
-.hidden { display:none; }
+.mic{background:#16a34a;}
+.hidden{display:none;}
 </style>
 </head>
 
 <body>
 
-<h2>Nico - DIOS</h2>
+<h2>Nico - HUMANO</h2>
 
 <img id="nico" src="nico-assets/reposo.png">
 
@@ -65,17 +68,15 @@ button {
 <button onclick="enviarMensaje()">Enviar</button>
 
 <div class="grid">
-  <button class="mic-btn" onclick="activarMicrofono()">🎙️ Hablar</button>
-  <button onclick="respuestaRapida('animo')">Ánimo</button>
-
-  <button onclick="respuestaRapida('hoy')">Hoy</button>
-  <button onclick="respuestaRapida('mañana')">Mañana</button>
-
-  <button onclick="respuestaRapida('trabajo')">Trabajo</button>
-  <button onclick="respuestaRapida('musica')">Música</button>
+  <button class="mic" onclick="activarMicrofono()">🎙️ Hablar</button>
+  <button onclick="quick('animo')">Ánimo</button>
+  <button onclick="quick('hoy')">Hoy</button>
+  <button onclick="quick('mañana')">Mañana</button>
+  <button onclick="quick('trabajo')">Trabajo</button>
+  <button onclick="quick('musica')">Música</button>
 </div>
 
-<button id="btnAudio" class="hidden">🔊 Escuchar a Nico</button>
+<button id="btnAudio" class="hidden">🔊 Escuchar</button>
 
 <script>
 
@@ -86,20 +87,40 @@ let audioActual = null;
 let audioHabilitado = false;
 
 const chat = document.getElementById("chat");
-const btnAudio = document.getElementById("btnAudio");
 const nico = document.getElementById("nico");
+const btnAudio = document.getElementById("btnAudio");
 
-function limpiarTexto(t){
-  return t.replace(/[^\p{L}\p{N}\p{P}\p{Z}]/gu,"");
+// ================= EMOCIONES =================
+function detectarEmocion(texto){
+  const t = texto.toLowerCase();
+
+  if(t.includes("cansado")||t.includes("triste")||t.includes("mal")) return "triste";
+  if(t.includes("feliz")||t.includes("bien")) return "feliz";
+  if(t.includes("trabajo")||t.includes("cliente")) return "trabajo";
+  if(t.includes("musica")||t.includes("cantar")) return "musica";
+  if(t.includes("hola")) return "saludo";
+
+  return "neutral";
 }
 
-// 🔥 VOZ
+function cambiarCara(texto){
+  const e = detectarEmocion(texto);
+
+  if(e==="triste") nico.src="nico-assets/reposo.png";
+  else if(e==="feliz") nico.src="nico-assets/alegre.png";
+  else if(e==="trabajo") nico.src="nico-assets/celular.png";
+  else if(e==="musica") nico.src="nico-assets/canta.png";
+  else if(e==="saludo") nico.src="nico-assets/saluda.png";
+  else nico.src="nico-assets/alegre.png";
+}
+
+// ================= VOZ =================
 async function hablar(texto){
 
   const res = await fetch(VOZ_URL,{
     method:"POST",
     headers:{ "Content-Type":"application/json"},
-    body: JSON.stringify({ texto: limpiarTexto(texto) })
+    body: JSON.stringify({ texto })
   });
 
   const blob = await res.blob();
@@ -107,25 +128,21 @@ async function hablar(texto){
 
   if(audioActual){
     audioActual.pause();
-    audioActual.currentTime = 0;
+    audioActual.currentTime=0;
   }
 
   audioActual = new Audio(url);
 
-  window.playAudioNico = async ()=>{
+  window.playAudio = async ()=>{
     try{
-      audioHabilitado = true;
-      nico.src = "nico-assets/alegre.png";
+      audioHabilitado=true;
       await audioActual.play();
-    }catch(e){
-      console.log("bloqueado");
-    }
+    }catch(e){}
   };
 
-  // 🔥 intento automático
   if(audioHabilitado){
     try{
-      await window.playAudioNico();
+      await window.playAudio();
     }catch{
       btnAudio.classList.remove("hidden");
     }
@@ -134,97 +151,71 @@ async function hablar(texto){
   }
 }
 
-// botón fallback
-btnAudio.onclick = ()=>{
-  if(audioActual){
-    window.playAudioNico();
-  }
-};
+btnAudio.onclick=()=>{ if(audioActual) window.playAudio(); };
 
-// 🔥 IA
-async function pensar(mensaje){
+// ================= IA =================
+async function pensar(msg){
 
-  chat.innerHTML = "Pensando...";
-  nico.src = "nico-assets/piensa.png";
+  chat.innerHTML="Pensando...";
+  nico.src="nico-assets/piensa.png";
 
   const res = await fetch(IA_URL,{
     method:"POST",
     headers:{ "Content-Type":"application/json"},
-    body: JSON.stringify({ mensaje })
+    body: JSON.stringify({ mensaje: msg })
   });
 
   const data = await res.json();
 
-  chat.innerHTML = data.respuesta;
+  chat.innerHTML=data.respuesta;
 
+  cambiarCara(msg+" "+data.respuesta);
   hablar(data.respuesta);
 }
 
-// enviar texto
+// ================= INPUT =================
 function enviarMensaje(){
-  const msg = document.getElementById("mensaje").value;
+  const msg=document.getElementById("mensaje").value;
   if(!msg) return;
 
   pensar(msg);
-  document.getElementById("mensaje").value = "";
+  document.getElementById("mensaje").value="";
 }
 
-// respuestas rápidas
-function respuestaRapida(tipo){
+// ================= BOTONES =================
+function quick(tipo){
 
-  if(tipo==="animo"){
-    pensar("Nico, dame ánimo como hermano.");
-  }
-
-  if(tipo==="trabajo"){
-    pensar("Nico, organiza mi trabajo.");
-  }
-
-  if(tipo==="musica"){
-    pensar("Nico, hablemos de música.");
-  }
-
-  if(tipo==="hoy"){
-    pensar("Nico, qué trabajos tengo hoy?");
-  }
-
-  if(tipo==="mañana"){
-    pensar("Nico, qué trabajos tengo mañana?");
-  }
+  if(tipo==="animo") pensar("Nico estoy cansado bro");
+  if(tipo==="trabajo") pensar("Nico organiza mi trabajo");
+  if(tipo==="musica") pensar("Nico hablemos de musica");
+  if(tipo==="hoy") pensar("Nico que tengo hoy?");
+  if(tipo==="mañana") pensar("Nico que tengo mañana?");
 }
 
-// 🎙️ MICRÓFONO (FIX REAL)
+// ================= MIC =================
 function activarMicrofono(){
 
-  audioHabilitado = true;
+  audioHabilitado=true;
 
-  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-  recognition.lang = "es-ES";
+  const rec = new (window.SpeechRecognition||window.webkitSpeechRecognition)();
+  rec.lang="es-ES";
 
-  recognition.start();
+  rec.start();
 
-  recognition.onresult = async (event)=>{
-
-    audioHabilitado = true;
-
-    const texto = event.results[0][0].transcript;
-
-    chat.innerHTML = "Tú: " + texto;
+  rec.onresult=(e)=>{
+    const texto=e.results[0][0].transcript;
+    chat.innerHTML="Tú: "+texto;
 
     setTimeout(()=>{
       pensar(texto);
-    },250);
+    },200);
   };
 
-  recognition.onerror = ()=>{
-    chat.innerHTML = "No te escuché bien bro.";
-  };
+  rec.onerror=()=> chat.innerHTML="No te escuché bien bro.";
 }
 
-document.getElementById("mensaje").addEventListener("keydown", e=>{
-  if(e.key==="Enter"){
-    enviarMensaje();
-  }
+document.getElementById("mensaje").addEventListener("keydown",e=>{
+  if(e.key==="Enter") enviarMensaje();
 });
 
 </script>
