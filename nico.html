@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Nico PRO Assistant</title>
+<title>Nico TOTAL</title>
 
 <style>
   body {
@@ -33,13 +33,13 @@
     background: #1c1c1e;
     padding: 18px;
     border-radius: 24px;
-    max-width: 390px;
+    max-width: 400px;
     font-size: 18px;
     line-height: 1.45;
   }
 
   .input-box {
-    max-width: 390px;
+    max-width: 400px;
     margin: 18px auto;
     display: flex;
     gap: 10px;
@@ -55,12 +55,12 @@
   }
 
   button {
-    padding: 16px;
+    padding: 14px;
     border-radius: 16px;
     border: none;
     background: #3b82f6;
     color: white;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: bold;
     cursor: pointer;
   }
@@ -71,7 +71,7 @@
   }
 
   .quick-buttons {
-    max-width: 390px;
+    max-width: 400px;
     margin: 18px auto;
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -94,6 +94,14 @@
     width: 100%;
   }
 
+  .mic-btn {
+    background: #16a34a;
+  }
+
+  .client-btn {
+    background: #9333ea;
+  }
+
   .status {
     color: #8e8e93;
     font-size: 13px;
@@ -110,7 +118,7 @@
 
 <body>
 
-<h2>Nico - PRO</h2>
+<h2>Nico - TOTAL</h2>
 
 <img id="nico" src="nico-assets/reposo.png" alt="Nico Assistant">
 
@@ -129,13 +137,16 @@
   <button onclick="respuestaRapida('trabajo')">Trabajo</button>
   <button onclick="respuestaRapida('animo')">Ánimo</button>
   <button onclick="respuestaRapida('musica')">Música</button>
+  <button class="client-btn" onclick="guardarClienteRapido()">Guardar cliente</button>
+  <button class="mic-btn" onclick="activarMicrofono()">🎙️ Hablar</button>
 </div>
 
-<div class="note">Nico PRO con IA + voz real 🔥</div>
+<div class="note">Nico TOTAL: IA + voz + memoria + clientes 🔥</div>
 
 <script>
 const VOZ_NICO_URL = "https://voznico-cnnxm2vdja-uc.a.run.app";
 const PENSAR_NICO_URL = "https://pensarnico-cnnxm2vdja-uc.a.run.app";
+const CREAR_CLIENTE_URL = "https://crearcliente-cnnxm2vdja-uc.a.run.app";
 
 const nico = document.getElementById("nico");
 const chat = document.getElementById("chat");
@@ -166,6 +177,28 @@ function setChat(texto) {
   `;
 }
 
+function imagenSegunTexto(texto) {
+  const t = texto.toLowerCase();
+
+  if (t.includes("trabajo") || t.includes("cliente") || t.includes("limpieza") || t.includes("elite")) {
+    return "nico-assets/celular.png";
+  }
+
+  if (t.includes("música") || t.includes("musica") || t.includes("guitarra") || t.includes("cantar")) {
+    return "nico-assets/canta.png";
+  }
+
+  if (t.includes("triste") || t.includes("cansado") || t.includes("preocupado") || t.includes("difícil")) {
+    return "nico-assets/reposo.png";
+  }
+
+  if (t.includes("hola") || t.includes("saluda")) {
+    return "nico-assets/saluda.png";
+  }
+
+  return "nico-assets/alegre.png";
+}
+
 async function pensarNico(mensaje) {
   const res = await fetch(PENSAR_NICO_URL, {
     method: "POST",
@@ -178,7 +211,7 @@ async function pensarNico(mensaje) {
   }
 
   const data = await res.json();
-  return data.respuesta || "Rodri, te escucho. Cuéntame un poquito más.";
+  return data.respuesta || "Rodri, aquí estoy contigo. Cuéntame un poquito más.";
 }
 
 async function hablarConVoz(texto) {
@@ -250,52 +283,19 @@ async function hablarConVoz(texto) {
   }
 }
 
-async function enviarMensaje() {
-  const msg = mensajeInput.value.trim();
-  if (!msg || ocupado) return;
+async function responderConIA(mensaje) {
+  if (!mensaje || ocupado) return;
 
   bloquear(true);
-  mensajeInput.value = "";
 
   nico.src = "nico-assets/piensa.png";
   setChat("Nico está pensando...");
 
   try {
-    const respuesta = await pensarNico(msg);
-
-    let imagen = "nico-assets/alegre.png";
-
-    const textoMinuscula = respuesta.toLowerCase();
-
-    if (
-      msg.toLowerCase().includes("trabajo") ||
-      msg.toLowerCase().includes("cliente") ||
-      msg.toLowerCase().includes("limpieza") ||
-      msg.toLowerCase().includes("elite")
-    ) {
-      imagen = "nico-assets/celular.png";
-    }
-
-    if (
-      msg.toLowerCase().includes("música") ||
-      msg.toLowerCase().includes("musica") ||
-      msg.toLowerCase().includes("guitarra") ||
-      msg.toLowerCase().includes("cantar")
-    ) {
-      imagen = "nico-assets/canta.png";
-    }
-
-    if (
-      msg.toLowerCase().includes("triste") ||
-      msg.toLowerCase().includes("cansado") ||
-      msg.toLowerCase().includes("preocupado") ||
-      msg.toLowerCase().includes("difícil")
-    ) {
-      imagen = "nico-assets/reposo.png";
-    }
+    const respuesta = await pensarNico(mensaje);
 
     setChat(respuesta);
-    nico.src = imagen;
+    nico.src = imagenSegunTexto(mensaje + " " + respuesta);
     hablarConVoz(respuesta);
 
   } catch (e) {
@@ -306,26 +306,132 @@ async function enviarMensaje() {
   }
 }
 
+async function enviarMensaje() {
+  const msg = mensajeInput.value.trim();
+  if (!msg || ocupado) return;
+
+  mensajeInput.value = "";
+
+  if (esMensajeDeCliente(msg)) {
+    await guardarClienteDesdeTexto(msg);
+    return;
+  }
+
+  responderConIA(msg);
+}
+
 function respuestaRapida(tipo) {
   if (ocupado) return;
 
   if (tipo === "hola") {
-    mensajeInput.value = "Hola Nico, salúdame como mi hermano.";
+    responderConIA("Hola Nico, salúdame como mi hermano.");
   }
 
   if (tipo === "trabajo") {
-    mensajeInput.value = "Nico, ayúdame a organizar el trabajo de Elite Cleaners.";
+    responderConIA("Nico, ayúdame a organizar el trabajo de Elite Cleaners.");
   }
 
   if (tipo === "animo") {
-    mensajeInput.value = "Nico, necesito ánimo.";
+    responderConIA("Nico, necesito ánimo.");
   }
 
   if (tipo === "musica") {
-    mensajeInput.value = "Nico, hablemos de música y guitarra.";
+    responderConIA("Nico, hablemos de música y guitarra.");
+  }
+}
+
+// ==========================
+// CLIENTES ELITE CLEANERS
+// ==========================
+function esMensajeDeCliente(texto) {
+  const t = texto.toLowerCase();
+  return (
+    t.includes("guardar cliente") ||
+    t.includes("nuevo cliente") ||
+    t.includes("cliente:")
+  );
+}
+
+function extraerDato(texto, etiqueta) {
+  const regex = new RegExp(etiqueta + "\\s*:\\s*([^,\\n]+)", "i");
+  const match = texto.match(regex);
+  return match ? match[1].trim() : "";
+}
+
+async function guardarClienteDesdeTexto(texto) {
+  bloquear(true);
+  nico.src = "nico-assets/celular.png";
+  setChat("Dale bro, estoy guardando ese cliente...");
+
+  const nombre = extraerDato(texto, "nombre") || "Cliente sin nombre";
+  const direccion = extraerDato(texto, "direccion") || extraerDato(texto, "dirección") || "";
+  const fecha = extraerDato(texto, "fecha") || extraerDato(texto, "hora") || "";
+
+  try {
+    const res = await fetch(CREAR_CLIENTE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nombre, direccion, fecha })
+    });
+
+    if (!res.ok) {
+      throw new Error("Error creando cliente");
+    }
+
+    const respuesta = `Listo Rodri, guardé el cliente ${nombre}.`;
+    setChat(respuesta);
+    hablarConVoz(respuesta);
+
+  } catch (e) {
+    console.log("Error cliente:", e);
+    const respuesta = "Rodri, no pude guardar ese cliente ahora. Revisemos el dato y probamos otra vez.";
+    setChat(respuesta);
+    hablarConVoz(respuesta);
+  }
+}
+
+function guardarClienteRapido() {
+  mensajeInput.value = "Guardar cliente: nombre: , dirección: , fecha: ";
+  mensajeInput.focus();
+}
+
+// ==========================
+// MICROFONO
+// ==========================
+function activarMicrofono() {
+  if (ocupado) return;
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    const respuesta = "Rodri, este navegador no me deja usar el micrófono. Probemos en Safari o Chrome actualizado.";
+    setChat(respuesta);
+    hablarConVoz(respuesta);
+    return;
   }
 
-  enviarMensaje();
+  const recognition = new SpeechRecognition();
+  recognition.lang = "es-US";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  nico.src = "nico-assets/piensa.png";
+  setChat("Te escucho, Rodri...");
+
+  recognition.start();
+
+  recognition.onresult = function(event) {
+    const texto = event.results[0][0].transcript;
+    mensajeInput.value = texto;
+    enviarMensaje();
+  };
+
+  recognition.onerror = function(event) {
+    console.log("Error mic:", event.error);
+    const respuesta = "No te escuché bien bro. Probemos otra vez.";
+    setChat(respuesta);
+    hablarConVoz(respuesta);
+  };
 }
 
 mensajeInput.addEventListener("keydown", function(e) {
