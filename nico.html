@@ -1,68 +1,128 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nico Assistant PRO</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nico PRO Assistant</title>
 
 <style>
-body {
-  background: #000;
-  color: white;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  text-align: center;
-  padding: 20px;
-}
+  body {
+    background: #000;
+    color: white;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    text-align: center;
+    padding: 18px;
+    margin: 0;
+  }
 
-#nico {
-  width: 280px;
-  margin-top: 20px;
-}
+  h2 {
+    margin-top: 35px;
+    font-size: 32px;
+    font-weight: 900;
+  }
 
-#chat {
-  margin: 20px auto;
-  background: #1c1c1e;
-  padding: 15px;
-  border-radius: 20px;
-  max-width: 350px;
-}
+  #nico {
+    width: 330px;
+    max-width: 92%;
+    margin-top: 15px;
+    transition: 0.3s ease;
+  }
 
-input {
-  width: 65%;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-}
+  #chat {
+    margin: 22px auto;
+    background: #1c1c1e;
+    padding: 18px;
+    border-radius: 24px;
+    max-width: 390px;
+    font-size: 18px;
+    line-height: 1.45;
+  }
 
-button {
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  background: #3b82f6;
-  color: white;
-  font-weight: bold;
-}
+  .input-box {
+    max-width: 390px;
+    margin: 18px auto;
+    display: flex;
+    gap: 10px;
+  }
 
-.quick-buttons button {
-  margin: 5px;
-  background: #111;
-  border: 1px solid #3b82f6;
-}
+  input {
+    flex: 1;
+    padding: 16px;
+    border-radius: 16px;
+    border: none;
+    font-size: 16px;
+    outline: none;
+  }
+
+  button {
+    padding: 16px;
+    border-radius: 16px;
+    border: none;
+    background: #3b82f6;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .quick-buttons {
+    max-width: 390px;
+    margin: 18px auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .quick-buttons button {
+    background: #1c1c1e;
+    border: 1px solid #3b82f6;
+  }
+
+  .listen-btn {
+    margin-top: 12px;
+    padding: 14px 18px;
+    border-radius: 16px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    font-weight: 800;
+    width: 100%;
+  }
+
+  .status {
+    color: #8e8e93;
+    font-size: 13px;
+    margin-top: 10px;
+  }
+
+  .note {
+    color: #8e8e93;
+    font-size: 12px;
+    margin-top: 18px;
+  }
 </style>
 </head>
 
 <body>
 
-<h2>Nico - Assistant</h2>
+<h2>Nico - PRO</h2>
 
-<img id="nico" src="nico-assets/reposo.png">
+<img id="nico" src="nico-assets/reposo.png" alt="Nico Assistant">
 
-<div id="chat">Hola Rodri 👋</div>
+<div id="chat">
+  Ey Rodri, aquí estoy contigo bro.
+  <div id="audioBox"></div>
+</div>
 
-<br>
-
-<input id="mensaje" placeholder="Escríbele a Nico...">
-<button onclick="enviarMensaje()">Enviar</button>
+<div class="input-box">
+  <input id="mensaje" placeholder="Escríbele a Nico..." autocomplete="off">
+  <button id="btnEnviar" onclick="enviarMensaje()">Enviar</button>
+</div>
 
 <div class="quick-buttons">
   <button onclick="respuestaRapida('hola')">Saludar</button>
@@ -71,92 +131,208 @@ button {
   <button onclick="respuestaRapida('musica')">Música</button>
 </div>
 
+<div class="note">Nico PRO con IA + voz real 🔥</div>
+
 <script>
+const VOZ_NICO_URL = "https://voznico-cnnxm2vdja-uc.a.run.app";
+const PENSAR_NICO_URL = "https://pensarnico-cnnxm2vdja-uc.a.run.app";
 
-const VOZ_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/vozNico";
-const IA_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/pensarNico";
-
+const nico = document.getElementById("nico");
 const chat = document.getElementById("chat");
-const input = document.getElementById("mensaje");
+const mensajeInput = document.getElementById("mensaje");
+const btnEnviar = document.getElementById("btnEnviar");
 
-// 🔊 VOZ
-async function hablar(texto){
-  try{
-    const res = await fetch(VOZ_URL,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json"},
-      body: JSON.stringify({ texto })
+let audioActual = null;
+let ocupado = false;
+
+function limpiarTexto(texto) {
+  return texto
+    .replace(/[^\p{L}\p{N}\p{P}\p{Z}¿¡áéíóúÁÉÍÓÚñÑ]/gu, "")
+    .trim();
+}
+
+function bloquear(estado) {
+  ocupado = estado;
+  btnEnviar.disabled = estado;
+  document.querySelectorAll(".quick-buttons button").forEach(btn => {
+    btn.disabled = estado;
+  });
+}
+
+function setChat(texto) {
+  chat.innerHTML = `
+    <div>${texto}</div>
+    <div id="audioBox"></div>
+  `;
+}
+
+async function pensarNico(mensaje) {
+  const res = await fetch(PENSAR_NICO_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mensaje })
+  });
+
+  if (!res.ok) {
+    throw new Error("Error en pensarNico");
+  }
+
+  const data = await res.json();
+  return data.respuesta || "Rodri, te escucho. Cuéntame un poquito más.";
+}
+
+async function hablarConVoz(texto) {
+  try {
+    const audioBox = document.getElementById("audioBox");
+    audioBox.innerHTML = `<div class="status">Generando voz de Nico...</div>`;
+
+    const res = await fetch(VOZ_NICO_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ texto: limpiarTexto(texto) })
     });
+
+    if (!res.ok) {
+      throw new Error("Error en vozNico");
+    }
 
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
 
-    chat.innerHTML += `
-      <br>
-      <audio controls autoplay style="width:100%">
-        <source src="${url}" type="audio/mpeg">
-      </audio>
+    if (audioActual) {
+      audioActual.pause();
+      audioActual.currentTime = 0;
+    }
+
+    audioActual = new Audio(url);
+    audioActual.playsInline = true;
+    audioActual.setAttribute("playsinline", "");
+    audioActual.setAttribute("webkit-playsinline", "");
+
+    window.playAudioNico = async function() {
+      try {
+        nico.src = "nico-assets/alegre.png";
+        await audioActual.play();
+      } catch (e) {
+        console.log("Audio bloqueado:", e);
+      }
+    };
+
+    audioActual.onended = function() {
+      nico.src = "nico-assets/reposo.png";
+      bloquear(false);
+    };
+
+    audioActual.onerror = function() {
+      nico.src = "nico-assets/reposo.png";
+      bloquear(false);
+    };
+
+    audioBox.innerHTML = `
+      <button class="listen-btn" onclick="window.playAudioNico()">
+        🔊 Escuchar a Nico
+      </button>
     `;
 
-  }catch(e){
+    try {
+      await window.playAudioNico();
+    } catch (e) {
+      console.log("Usa el botón Escuchar a Nico.");
+    }
+
+  } catch (e) {
     console.log("Error voz:", e);
+    const audioBox = document.getElementById("audioBox");
+    if (audioBox) {
+      audioBox.innerHTML = `<div class="status">No pude reproducir la voz ahora.</div>`;
+    }
+    bloquear(false);
   }
 }
 
-// 🧠 IA (OpenAI)
-async function pensar(mensaje){
+async function enviarMensaje() {
+  const msg = mensajeInput.value.trim();
+  if (!msg || ocupado) return;
 
-  const res = await fetch(IA_URL,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json"},
-    body: JSON.stringify({ mensaje })
-  });
+  bloquear(true);
+  mensajeInput.value = "";
 
-  const data = await res.json();
-  return data.respuesta;
+  nico.src = "nico-assets/piensa.png";
+  setChat("Nico está pensando...");
+
+  try {
+    const respuesta = await pensarNico(msg);
+
+    let imagen = "nico-assets/alegre.png";
+
+    const textoMinuscula = respuesta.toLowerCase();
+
+    if (
+      msg.toLowerCase().includes("trabajo") ||
+      msg.toLowerCase().includes("cliente") ||
+      msg.toLowerCase().includes("limpieza") ||
+      msg.toLowerCase().includes("elite")
+    ) {
+      imagen = "nico-assets/celular.png";
+    }
+
+    if (
+      msg.toLowerCase().includes("música") ||
+      msg.toLowerCase().includes("musica") ||
+      msg.toLowerCase().includes("guitarra") ||
+      msg.toLowerCase().includes("cantar")
+    ) {
+      imagen = "nico-assets/canta.png";
+    }
+
+    if (
+      msg.toLowerCase().includes("triste") ||
+      msg.toLowerCase().includes("cansado") ||
+      msg.toLowerCase().includes("preocupado") ||
+      msg.toLowerCase().includes("difícil")
+    ) {
+      imagen = "nico-assets/reposo.png";
+    }
+
+    setChat(respuesta);
+    nico.src = imagen;
+    hablarConVoz(respuesta);
+
+  } catch (e) {
+    console.log("Error IA:", e);
+    setChat("Rodri, tuve un problema pensando. Probemos otra vez.");
+    nico.src = "nico-assets/piensa.png";
+    bloquear(false);
+  }
 }
 
-// 💬 ENVÍO
-async function enviarMensaje(){
+function respuestaRapida(tipo) {
+  if (ocupado) return;
 
-  const msg = input.value.trim();
-  if(!msg) return;
-
-  chat.innerHTML = "Nico está pensando...";
-
-  try{
-    const respuesta = await pensar(msg);
-
-    chat.innerHTML = respuesta;
-
-    hablar(respuesta);
-
-  }catch(e){
-    chat.innerHTML = "Error hablando con Nico";
+  if (tipo === "hola") {
+    mensajeInput.value = "Hola Nico, salúdame como mi hermano.";
   }
 
-  input.value = "";
-}
+  if (tipo === "trabajo") {
+    mensajeInput.value = "Nico, ayúdame a organizar el trabajo de Elite Cleaners.";
+  }
 
-// ⚡ BOTONES RÁPIDOS
-function respuestaRapida(tipo){
+  if (tipo === "animo") {
+    mensajeInput.value = "Nico, necesito ánimo.";
+  }
 
-  let texto = "";
+  if (tipo === "musica") {
+    mensajeInput.value = "Nico, hablemos de música y guitarra.";
+  }
 
-  if(tipo==="hola") texto = "Hola Nico";
-  if(tipo==="trabajo") texto = "Ayúdame a organizar el trabajo";
-  if(tipo==="animo") texto = "Necesito ánimo";
-  if(tipo==="musica") texto = "Hablemos de música";
-
-  input.value = texto;
   enviarMensaje();
 }
 
-// ENTER
-input.addEventListener("keydown", e=>{
-  if(e.key==="Enter") enviarMensaje();
+mensajeInput.addEventListener("keydown", function(e) {
+  if (e.key === "Enter") {
+    enviarMensaje();
+  }
 });
-
 </script>
 
 </body>
