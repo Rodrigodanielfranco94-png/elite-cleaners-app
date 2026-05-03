@@ -3,127 +3,134 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Nico TOTAL</title>
+<title>Nico Dios</title>
 
 <style>
-  body {
-    background: #000;
-    color: white;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    text-align: center;
-    padding: 18px;
-    margin: 0;
-  }
+body {
+  background: #000;
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  text-align: center;
+  padding: 16px;
+  margin: 0;
+}
 
-  h2 {
-    margin-top: 35px;
-    font-size: 32px;
-    font-weight: 900;
-  }
+h2 {
+  margin-top: 28px;
+  font-size: 34px;
+  font-weight: 900;
+}
 
-  #nico {
-    width: 330px;
-    max-width: 92%;
-    margin-top: 15px;
-    transition: 0.3s ease;
-  }
+#nico {
+  width: 330px;
+  max-width: 94%;
+  margin-top: 10px;
+  transition: 0.25s ease;
+}
 
-  #chat {
-    margin: 22px auto;
-    background: #1c1c1e;
-    padding: 18px;
-    border-radius: 24px;
-    max-width: 400px;
-    font-size: 18px;
-    line-height: 1.45;
-  }
+#chat {
+  margin: 18px auto;
+  background: #1c1c1e;
+  padding: 18px;
+  border-radius: 24px;
+  max-width: 410px;
+  font-size: 18px;
+  line-height: 1.45;
+}
 
-  .input-box {
-    max-width: 400px;
-    margin: 18px auto;
-    display: flex;
-    gap: 10px;
-  }
+.input-box {
+  max-width: 410px;
+  margin: 16px auto;
+  display: flex;
+  gap: 10px;
+}
 
-  input {
-    flex: 1;
-    padding: 16px;
-    border-radius: 16px;
-    border: none;
-    font-size: 16px;
-    outline: none;
-  }
+input {
+  flex: 1;
+  padding: 16px;
+  border-radius: 16px;
+  border: none;
+  font-size: 16px;
+  outline: none;
+}
 
-  button {
-    padding: 14px;
-    border-radius: 16px;
-    border: none;
-    background: #3b82f6;
-    color: white;
-    font-size: 15px;
-    font-weight: bold;
-    cursor: pointer;
-  }
+button {
+  padding: 14px;
+  border-radius: 16px;
+  border: none;
+  background: #3b82f6;
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+}
 
-  button:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-  }
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
-  .quick-buttons {
-    max-width: 400px;
-    margin: 18px auto;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
+.grid {
+  max-width: 410px;
+  margin: 14px auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
 
-  .quick-buttons button {
-    background: #1c1c1e;
-    border: 1px solid #3b82f6;
-  }
+.grid button {
+  background: #1c1c1e;
+  border: 1px solid #3b82f6;
+}
 
-  .listen-btn {
-    margin-top: 12px;
-    padding: 14px 18px;
-    border-radius: 16px;
-    background: #2563eb;
-    color: white;
-    border: none;
-    font-weight: 800;
-    width: 100%;
-  }
+.listen-btn {
+  margin-top: 12px;
+  width: 100%;
+  background: #2563eb;
+}
 
-  .mic-btn {
-    background: #16a34a;
-  }
+.mic-btn {
+  background: #16a34a !important;
+}
 
-  .client-btn {
-    background: #9333ea;
-  }
+.client-btn {
+  background: #9333ea !important;
+}
 
-  .status {
-    color: #8e8e93;
-    font-size: 13px;
-    margin-top: 10px;
-  }
+.today-btn {
+  background: #0f766e !important;
+}
 
-  .note {
-    color: #8e8e93;
-    font-size: 12px;
-    margin-top: 18px;
-  }
+.tomorrow-btn {
+  background: #0369a1 !important;
+}
+
+.status {
+  color: #8e8e93;
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+.note {
+  color: #8e8e93;
+  font-size: 12px;
+  margin-top: 14px;
+}
+
+.hidden {
+  display: none;
+}
 </style>
 </head>
 
 <body>
 
-<h2>Nico - TOTAL</h2>
+<h2>Nico - DIOS</h2>
 
 <img id="nico" src="nico-assets/reposo.png" alt="Nico Assistant">
 
 <div id="chat">
-  Ey Rodri, aquí estoy contigo bro.
+  Ey Rodri... aquí estoy contigo.
   <div id="audioBox"></div>
 </div>
 
@@ -132,16 +139,21 @@
   <button id="btnEnviar" onclick="enviarMensaje()">Enviar</button>
 </div>
 
-<div class="quick-buttons">
-  <button onclick="respuestaRapida('hola')">Saludar</button>
-  <button onclick="respuestaRapida('trabajo')">Trabajo</button>
-  <button onclick="respuestaRapida('animo')">Ánimo</button>
-  <button onclick="respuestaRapida('musica')">Música</button>
-  <button class="client-btn" onclick="guardarClienteRapido()">Guardar cliente</button>
+<div class="grid">
   <button class="mic-btn" onclick="activarMicrofono()">🎙️ Hablar</button>
+  <button onclick="respuestaRapida('animo')">Ánimo</button>
+
+  <button class="today-btn" onclick="consultarHoy()">Hoy</button>
+  <button class="tomorrow-btn" onclick="consultarManana()">Mañana</button>
+
+  <button onclick="respuestaRapida('trabajo')">Trabajo</button>
+  <button onclick="respuestaRapida('musica')">Música</button>
+
+  <button class="client-btn" onclick="guardarClienteRapido()">Guardar cliente</button>
+  <button onclick="respuestaRapida('memoria')">Memoria</button>
 </div>
 
-<div class="note">Nico TOTAL: IA + voz + memoria + clientes 🔥</div>
+<div class="note">Nico Dios: IA + voz + memoria + Admin + micrófono 🔥</div>
 
 <script>
 const VOZ_NICO_URL = "https://voznico-cnnxm2vdja-uc.a.run.app";
@@ -155,6 +167,7 @@ const btnEnviar = document.getElementById("btnEnviar");
 
 let audioActual = null;
 let ocupado = false;
+let audioHabilitado = false;
 
 function limpiarTexto(texto) {
   return texto
@@ -165,7 +178,7 @@ function limpiarTexto(texto) {
 function bloquear(estado) {
   ocupado = estado;
   btnEnviar.disabled = estado;
-  document.querySelectorAll(".quick-buttons button").forEach(btn => {
+  document.querySelectorAll(".grid button").forEach(btn => {
     btn.disabled = estado;
   });
 }
@@ -180,7 +193,7 @@ function setChat(texto) {
 function imagenSegunTexto(texto) {
   const t = texto.toLowerCase();
 
-  if (t.includes("trabajo") || t.includes("cliente") || t.includes("limpieza") || t.includes("elite")) {
+  if (t.includes("trabajo") || t.includes("cliente") || t.includes("limpieza") || t.includes("elite") || t.includes("agenda")) {
     return "nico-assets/celular.png";
   }
 
@@ -206,17 +219,16 @@ async function pensarNico(mensaje) {
     body: JSON.stringify({ mensaje })
   });
 
-  if (!res.ok) {
-    throw new Error("Error en pensarNico");
-  }
+  if (!res.ok) throw new Error("Error en pensarNico");
 
   const data = await res.json();
-  return data.respuesta || "Rodri, aquí estoy contigo. Cuéntame un poquito más.";
+  return data.respuesta || "Rodri... aquí estoy contigo. Cuéntame un poquito más.";
 }
 
 async function hablarConVoz(texto) {
+  const audioBox = document.getElementById("audioBox");
+
   try {
-    const audioBox = document.getElementById("audioBox");
     audioBox.innerHTML = `<div class="status">Generando voz de Nico...</div>`;
 
     const res = await fetch(VOZ_NICO_URL, {
@@ -225,9 +237,7 @@ async function hablarConVoz(texto) {
       body: JSON.stringify({ texto: limpiarTexto(texto) })
     });
 
-    if (!res.ok) {
-      throw new Error("Error en vozNico");
-    }
+    if (!res.ok) throw new Error("Error en vozNico");
 
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
@@ -242,23 +252,28 @@ async function hablarConVoz(texto) {
     audioActual.setAttribute("playsinline", "");
     audioActual.setAttribute("webkit-playsinline", "");
 
-    window.playAudioNico = async function() {
-      try {
-        nico.src = "nico-assets/alegre.png";
-        await audioActual.play();
-      } catch (e) {
-        console.log("Audio bloqueado:", e);
-      }
+    audioActual.onplay = function() {
+      nico.src = "nico-assets/alegre.png";
     };
 
     audioActual.onended = function() {
       nico.src = "nico-assets/reposo.png";
       bloquear(false);
+      URL.revokeObjectURL(url);
     };
 
     audioActual.onerror = function() {
       nico.src = "nico-assets/reposo.png";
       bloquear(false);
+    };
+
+    window.playAudioNico = async function() {
+      try {
+        audioHabilitado = true;
+        await audioActual.play();
+      } catch (e) {
+        console.log("Audio bloqueado:", e);
+      }
     };
 
     audioBox.innerHTML = `
@@ -267,15 +282,16 @@ async function hablarConVoz(texto) {
       </button>
     `;
 
-    try {
-      await window.playAudioNico();
-    } catch (e) {
-      console.log("Usa el botón Escuchar a Nico.");
+    if (audioHabilitado) {
+      try {
+        await window.playAudioNico();
+      } catch (e) {
+        console.log("iPhone bloqueó autoplay. Usa el botón.");
+      }
     }
 
   } catch (e) {
     console.log("Error voz:", e);
-    const audioBox = document.getElementById("audioBox");
     if (audioBox) {
       audioBox.innerHTML = `<div class="status">No pude reproducir la voz ahora.</div>`;
     }
@@ -287,7 +303,6 @@ async function responderConIA(mensaje) {
   if (!mensaje || ocupado) return;
 
   bloquear(true);
-
   nico.src = "nico-assets/piensa.png";
   setChat("Nico está pensando...");
 
@@ -300,7 +315,7 @@ async function responderConIA(mensaje) {
 
   } catch (e) {
     console.log("Error IA:", e);
-    setChat("Rodri, tuve un problema pensando. Probemos otra vez.");
+    setChat("Uff... Rodri, tuve un problema pensando. Probemos otra vez.");
     nico.src = "nico-assets/piensa.png";
     bloquear(false);
   }
@@ -323,25 +338,33 @@ async function enviarMensaje() {
 function respuestaRapida(tipo) {
   if (ocupado) return;
 
-  if (tipo === "hola") {
-    responderConIA("Hola Nico, salúdame como mi hermano.");
+  if (tipo === "animo") {
+    responderConIA("Nico, necesito ánimo. Háblame como mi hermano.");
   }
 
   if (tipo === "trabajo") {
-    responderConIA("Nico, ayúdame a organizar el trabajo de Elite Cleaners.");
-  }
-
-  if (tipo === "animo") {
-    responderConIA("Nico, necesito ánimo.");
+    responderConIA("Nico, ayúdame a organizar Elite Cleaners.");
   }
 
   if (tipo === "musica") {
-    responderConIA("Nico, hablemos de música y guitarra.");
+    responderConIA("Nico, hablemos de música, guitarra y los domingos con papá.");
+  }
+
+  if (tipo === "memoria") {
+    responderConIA("Nico, qué recuerdas de lo que hablamos hace un rato?");
   }
 }
 
+function consultarHoy() {
+  responderConIA("Nico, qué trabajos tenemos hoy?");
+}
+
+function consultarManana() {
+  responderConIA("Nico, qué trabajos tenemos mañana?");
+}
+
 // ==========================
-// CLIENTES ELITE CLEANERS
+// CLIENTES
 // ==========================
 function esMensajeDeCliente(texto) {
   const t = texto.toLowerCase();
@@ -361,37 +384,36 @@ function extraerDato(texto, etiqueta) {
 async function guardarClienteDesdeTexto(texto) {
   bloquear(true);
   nico.src = "nico-assets/celular.png";
-  setChat("Dale bro, estoy guardando ese cliente...");
+  setChat("Dale Rodri... estoy guardando ese cliente.");
 
   const nombre = extraerDato(texto, "nombre") || "Cliente sin nombre";
   const direccion = extraerDato(texto, "direccion") || extraerDato(texto, "dirección") || "";
   const fecha = extraerDato(texto, "fecha") || extraerDato(texto, "hora") || "";
+  const telefono = extraerDato(texto, "telefono") || extraerDato(texto, "teléfono") || extraerDato(texto, "whatsapp") || "";
 
   try {
     const res = await fetch(CREAR_CLIENTE_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nombre, direccion, fecha })
+      body: JSON.stringify({ nombre, direccion, fecha, telefono, whatsapp: telefono })
     });
 
-    if (!res.ok) {
-      throw new Error("Error creando cliente");
-    }
+    if (!res.ok) throw new Error("Error creando cliente");
 
-    const respuesta = `Listo Rodri, guardé el cliente ${nombre}.`;
+    const respuesta = `Listo Rodri... guardé el cliente ${nombre}.`;
     setChat(respuesta);
     hablarConVoz(respuesta);
 
   } catch (e) {
     console.log("Error cliente:", e);
-    const respuesta = "Rodri, no pude guardar ese cliente ahora. Revisemos el dato y probamos otra vez.";
+    const respuesta = "Uff... no pude guardar ese cliente ahora. Revisemos los datos y probamos otra vez.";
     setChat(respuesta);
     hablarConVoz(respuesta);
   }
 }
 
 function guardarClienteRapido() {
-  mensajeInput.value = "Guardar cliente: nombre: , dirección: , fecha: ";
+  mensajeInput.value = "Guardar cliente: nombre: , dirección: , teléfono: , fecha: ";
   mensajeInput.focus();
 }
 
@@ -401,10 +423,12 @@ function guardarClienteRapido() {
 function activarMicrofono() {
   if (ocupado) return;
 
+  audioHabilitado = true;
+
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
   if (!SpeechRecognition) {
-    const respuesta = "Rodri, este navegador no me deja usar el micrófono. Probemos en Safari o Chrome actualizado.";
+    const respuesta = "Rodri... este navegador no me deja usar el micrófono. Probemos en Safari o Chrome actualizado.";
     setChat(respuesta);
     hablarConVoz(respuesta);
     return;
@@ -422,8 +446,8 @@ function activarMicrofono() {
 
   recognition.onresult = function(event) {
     const texto = event.results[0][0].transcript;
-    mensajeInput.value = texto;
-    enviarMensaje();
+    setChat("Tú: " + texto);
+    responderConIA(texto);
   };
 
   recognition.onerror = function(event) {
@@ -435,9 +459,7 @@ function activarMicrofono() {
 }
 
 mensajeInput.addEventListener("keydown", function(e) {
-  if (e.key === "Enter") {
-    enviarMensaje();
-  }
+  if (e.key === "Enter") enviarMensaje();
 });
 </script>
 
