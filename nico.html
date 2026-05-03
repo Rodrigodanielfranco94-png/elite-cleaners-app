@@ -6,149 +6,33 @@
 <title>Nico Animado</title>
 
 <style>
-body{
-  background:#000;
-  color:white;
-  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  text-align:center;
-  padding:16px;
-  margin:0;
-}
-
-h2{
-  font-size:32px;
-  margin-top:25px;
-}
-
-.avatar-wrap{
-  position:relative;
-  width:330px;
-  max-width:92%;
-  margin:0 auto;
-}
-
-#nico{
-  width:100%;
-  transition:0.25s ease;
-}
-
-.idle{
-  animation: respirar 3s ease-in-out infinite;
-}
-
-.thinking{
-  animation: pensar 1s ease-in-out infinite;
-}
-
-.speaking{
-  animation: hablar 0.35s ease-in-out infinite;
-}
-
-.listening{
-  animation: escuchar 1s ease-in-out infinite;
-}
-
-.blink{
-  filter:brightness(0.82);
-  transform:scaleY(0.985);
-}
-
-@keyframes respirar{
-  0%,100%{ transform:translateY(0) scale(1); }
-  50%{ transform:translateY(-4px) scale(1.01); }
-}
-
-@keyframes pensar{
-  0%,100%{ transform:rotate(0deg) scale(1); }
-  50%{ transform:rotate(1deg) scale(1.015); }
-}
-
-@keyframes hablar{
-  0%,100%{ transform:scale(1); }
-  50%{ transform:scale(1.025) translateY(-2px); }
-}
-
-@keyframes escuchar{
-  0%,100%{ transform:scale(1); filter:drop-shadow(0 0 0 #3b82f6); }
-  50%{ transform:scale(1.02); filter:drop-shadow(0 0 18px #3b82f6); }
-}
-
-#chat{
-  margin:18px auto;
-  background:#1c1c1e;
-  padding:18px;
-  border-radius:24px;
-  max-width:410px;
-  font-size:18px;
-  line-height:1.45;
-}
-
-.input-box{
-  max-width:410px;
-  margin:16px auto;
-  display:flex;
-  gap:10px;
-}
-
-input{
-  flex:1;
-  padding:16px;
-  border-radius:16px;
-  border:none;
-  font-size:16px;
-  outline:none;
-}
-
-button{
-  padding:14px;
-  border-radius:16px;
-  border:none;
-  background:#3b82f6;
-  color:white;
-  font-size:15px;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-button:disabled{
-  opacity:0.5;
-}
-
-.grid{
-  max-width:410px;
-  margin:14px auto;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-
-.grid button{
-  background:#1c1c1e;
-  border:1px solid #3b82f6;
-}
-
-.listen-btn{
-  margin-top:12px;
-  width:100%;
-  background:#2563eb;
-}
-
-.mic-btn{ background:#16a34a!important; }
-.today-btn{ background:#0f766e!important; }
-.tomorrow-btn{ background:#0369a1!important; }
-.client-btn{ background:#9333ea!important; }
-
-.status{
-  color:#8e8e93;
-  font-size:13px;
-  margin-top:10px;
-}
-
-.note{
-  color:#8e8e93;
-  font-size:12px;
-  margin-top:14px;
-}
+body{background:#000;color:white;font-family:-apple-system,BlinkMacSystemFont,sans-serif;text-align:center;padding:16px;margin:0}
+h2{font-size:32px;margin-top:25px}
+.avatar-wrap{position:relative;width:330px;max-width:92%;margin:0 auto}
+#nico{width:100%;transition:.25s ease}
+.idle{animation:respirar 3s ease-in-out infinite}
+.thinking{animation:pensar 1s ease-in-out infinite}
+.speaking{animation:hablar .35s ease-in-out infinite}
+.listening{animation:escuchar 1s ease-in-out infinite}
+.blink{filter:brightness(.82);transform:scaleY(.985)}
+@keyframes respirar{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.01)}}
+@keyframes pensar{0%,100%{transform:rotate(0deg) scale(1)}50%{transform:rotate(1deg) scale(1.015)}}
+@keyframes hablar{0%,100%{transform:scale(1)}50%{transform:scale(1.025) translateY(-2px)}}
+@keyframes escuchar{0%,100%{transform:scale(1);filter:drop-shadow(0 0 0 #3b82f6)}50%{transform:scale(1.02);filter:drop-shadow(0 0 18px #3b82f6)}}
+#chat{margin:18px auto;background:#1c1c1e;padding:18px;border-radius:24px;max-width:410px;font-size:18px;line-height:1.45}
+.input-box{max-width:410px;margin:16px auto;display:flex;gap:10px}
+input{flex:1;padding:16px;border-radius:16px;border:none;font-size:16px;outline:none}
+button{padding:14px;border-radius:16px;border:none;background:#3b82f6;color:white;font-size:15px;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.5}
+.grid{max-width:410px;margin:14px auto;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid button{background:#1c1c1e;border:1px solid #3b82f6}
+.listen-btn{margin-top:12px;width:100%;background:#2563eb}
+.mic-btn{background:#16a34a!important}
+.today-btn{background:#0f766e!important}
+.tomorrow-btn{background:#0369a1!important}
+.client-btn{background:#9333ea!important}
+.status{color:#8e8e93;font-size:13px;margin-top:10px}
+.note{color:#8e8e93;font-size:12px;margin-top:14px}
 </style>
 </head>
 
@@ -173,13 +57,10 @@ button:disabled{
 <div class="grid">
   <button class="mic-btn" onclick="activarMicrofono()">🎙️ Hablar</button>
   <button onclick="respuestaRapida('animo')">Ánimo</button>
-
   <button class="today-btn" onclick="consultarHoy()">Hoy</button>
   <button class="tomorrow-btn" onclick="consultarManana()">Mañana</button>
-
   <button onclick="respuestaRapida('trabajo')">Trabajo</button>
   <button onclick="respuestaRapida('musica')">Música</button>
-
   <button class="client-btn" onclick="guardarClienteRapido()">Guardar cliente</button>
   <button onclick="respuestaRapida('memoria')">Memoria</button>
 </div>
@@ -198,12 +79,11 @@ const btnEnviar = document.getElementById("btnEnviar");
 
 let audioActual = null;
 let ocupado = false;
-let audioHabilitado = false;
+let audioHabilitado = true;
 let blinkTimer = null;
 
 function setEstado(estado){
   nico.className = "";
-
   if(estado === "reposo") nico.classList.add("idle");
   if(estado === "escuchando") nico.classList.add("listening");
   if(estado === "pensando") nico.classList.add("thinking");
@@ -212,25 +92,23 @@ function setEstado(estado){
 
 function iniciarParpadeo(){
   clearInterval(blinkTimer);
-
   blinkTimer = setInterval(() => {
     if(nico.classList.contains("speaking")) return;
-
     nico.classList.add("blink");
-
-    setTimeout(() => {
-      nico.classList.remove("blink");
-    }, 130);
-
+    setTimeout(() => nico.classList.remove("blink"), 130);
   }, 4200);
 }
-
 iniciarParpadeo();
 
 function limpiarTexto(texto){
-  return texto
-    .replace(/[^\p{L}\p{N}\p{P}\p{Z}¿¡áéíóúÁÉÍÓÚñÑ]/gu, "")
-    .trim();
+  return texto.replace(/[^\p{L}\p{N}\p{P}\p{Z}¿¡áéíóúÁÉÍÓÚñÑ]/gu, "").trim();
+}
+
+function textoParaVoz(texto){
+  return limpiarTexto(texto)
+    .replace(/\bjeje\b/gi, "g.g.g.g...")
+    .replace(/\bje\b/gi, "g.g...")
+    .replace(/\bjaja\b/gi, "g.g.g.g...");
 }
 
 function bloquear(estado){
@@ -240,46 +118,25 @@ function bloquear(estado){
 }
 
 function setChat(texto){
-  chat.innerHTML = `
-    <div>${texto}</div>
-    <div id="audioBox"></div>
-  `;
+  chat.innerHTML = `<div>${texto}</div><div id="audioBox"></div>`;
 }
 
 function detectarEmocion(texto){
   const t = texto.toLowerCase();
-
-  if(t.includes("trabajo") || t.includes("cliente") || t.includes("limpieza") || t.includes("elite") || t.includes("agenda")){
-    return "trabajo";
-  }
-
-  if(t.includes("música") || t.includes("musica") || t.includes("guitarra") || t.includes("cantar")){
-    return "musica";
-  }
-
-  if(t.includes("triste") || t.includes("cansado") || t.includes("preocupado") || t.includes("difícil") || t.includes("mal")){
-    return "triste";
-  }
-
-  if(t.includes("hola") || t.includes("saluda")){
-    return "saludo";
-  }
-
-  if(t.includes("feliz") || t.includes("bien") || t.includes("contento")){
-    return "feliz";
-  }
-
+  if(t.includes("trabajo")||t.includes("cliente")||t.includes("limpieza")||t.includes("elite")||t.includes("agenda")) return "trabajo";
+  if(t.includes("música")||t.includes("musica")||t.includes("guitarra")||t.includes("cantar")) return "musica";
+  if(t.includes("triste")||t.includes("cansado")||t.includes("preocupado")||t.includes("difícil")||t.includes("mal")) return "triste";
+  if(t.includes("hola")||t.includes("saluda")) return "saludo";
+  if(t.includes("feliz")||t.includes("bien")||t.includes("contento")) return "feliz";
   return "neutral";
 }
 
 function cambiarCara(texto){
   const e = detectarEmocion(texto);
-
   if(e === "trabajo") nico.src = "nico-assets/celular.png";
   else if(e === "musica") nico.src = "nico-assets/canta.png";
   else if(e === "triste") nico.src = "nico-assets/reposo.png";
   else if(e === "saludo") nico.src = "nico-assets/saluda.png";
-  else if(e === "feliz") nico.src = "nico-assets/alegre.png";
   else nico.src = "nico-assets/alegre.png";
 }
 
@@ -289,9 +146,7 @@ async function pensarNico(mensaje){
     headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({ mensaje })
   });
-
   if(!res.ok) throw new Error("Error en pensarNico");
-
   const data = await res.json();
   return data.respuesta || "Mmm... Rodri, aquí estoy contigo.";
 }
@@ -305,7 +160,7 @@ async function hablarConVoz(texto){
     const res = await fetch(VOZ_NICO_URL,{
       method:"POST",
       headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ texto: limpiarTexto(texto) })
+      body: JSON.stringify({ texto: textoParaVoz(texto) })
     });
 
     if(!res.ok) throw new Error("Error vozNico");
@@ -325,6 +180,8 @@ async function hablarConVoz(texto){
 
     audioActual.onplay = function(){
       setEstado("hablando");
+      const boton = document.getElementById("botonEscuchar");
+      if(boton) boton.style.display = "none";
     };
 
     audioActual.onended = function(){
@@ -336,35 +193,36 @@ async function hablarConVoz(texto){
     audioActual.onerror = function(){
       setEstado("reposo");
       bloquear(false);
+      const boton = document.getElementById("botonEscuchar");
+      if(boton) boton.style.display = "block";
     };
 
     window.playAudioNico = async function(){
       try{
         audioHabilitado = true;
+        const boton = document.getElementById("botonEscuchar");
+        if(boton) boton.style.display = "none";
         await audioActual.play();
       }catch(e){
         console.log("Audio bloqueado:", e);
+        const boton = document.getElementById("botonEscuchar");
+        if(boton) boton.style.display = "block";
+        bloquear(false);
       }
     };
 
     audioBox.innerHTML = `
-      <button class="listen-btn" onclick="window.playAudioNico()">
+      <button id="botonEscuchar" class="listen-btn" onclick="window.playAudioNico()" style="display:none">
         🔊 Escuchar a Nico
       </button>
     `;
 
-    if(audioHabilitado){
-      try{
-        await window.playAudioNico();
-      }catch(e){
-        console.log("iPhone bloqueó autoplay.");
-      }
-    }
+    await window.playAudioNico();
 
   }catch(e){
     console.log("Error voz:", e);
     if(audioBox){
-      audioBox.innerHTML = `<div class="status">No pude reproducir la voz ahora.</div>`;
+      audioBox.innerHTML = `<button id="botonEscuchar" class="listen-btn" onclick="window.playAudioNico()">🔊 Escuchar a Nico</button>`;
     }
     setEstado("reposo");
     bloquear(false);
@@ -374,6 +232,7 @@ async function hablarConVoz(texto){
 async function responderConIA(mensaje){
   if(!mensaje || ocupado) return;
 
+  audioHabilitado = true;
   bloquear(true);
   setEstado("pensando");
   nico.src = "nico-assets/piensa.png";
@@ -381,15 +240,12 @@ async function responderConIA(mensaje){
 
   try{
     const respuesta = await pensarNico(mensaje);
-
     setChat(respuesta);
     cambiarCara(mensaje + " " + respuesta);
     await hablarConVoz(respuesta);
-
   }catch(e){
     console.log("Error IA:", e);
     setChat("Uff... Rodri, tuve un problema pensando. Probemos otra vez.");
-    nico.src = "nico-assets/piensa.png";
     setEstado("reposo");
     bloquear(false);
   }
@@ -398,7 +254,6 @@ async function responderConIA(mensaje){
 async function enviarMensaje(){
   const msg = mensajeInput.value.trim();
   if(!msg || ocupado) return;
-
   mensajeInput.value = "";
 
   if(esMensajeDeCliente(msg)){
@@ -411,28 +266,18 @@ async function enviarMensaje(){
 
 function respuestaRapida(tipo){
   if(ocupado) return;
-
   if(tipo === "animo") responderConIA("Nico, necesito ánimo. Háblame como mi hermano.");
   if(tipo === "trabajo") responderConIA("Nico, ayúdame a organizar Elite Cleaners.");
   if(tipo === "musica") responderConIA("Nico, hablemos de música, guitarra y los domingos con papá.");
   if(tipo === "memoria") responderConIA("Nico, qué recuerdas de lo que hablamos hace un rato?");
 }
 
-function consultarHoy(){
-  responderConIA("Nico, qué trabajos tenemos hoy?");
-}
-
-function consultarManana(){
-  responderConIA("Nico, qué trabajos tenemos mañana?");
-}
+function consultarHoy(){ responderConIA("Nico, qué trabajos tenemos hoy?"); }
+function consultarManana(){ responderConIA("Nico, qué trabajos tenemos mañana?"); }
 
 function esMensajeDeCliente(texto){
   const t = texto.toLowerCase();
-  return (
-    t.includes("guardar cliente") ||
-    t.includes("nuevo cliente") ||
-    t.includes("cliente:")
-  );
+  return t.includes("guardar cliente") || t.includes("nuevo cliente") || t.includes("cliente:");
 }
 
 function extraerDato(texto, etiqueta){
@@ -506,13 +351,9 @@ function activarMicrofono(){
 
   recognition.onresult = function(event){
     audioHabilitado = true;
-
     const texto = event.results[0][0].transcript;
     setChat("Tú: " + texto);
-
-    setTimeout(() => {
-      responderConIA(texto);
-    }, 250);
+    setTimeout(() => responderConIA(texto), 250);
   };
 
   recognition.onerror = function(event){
@@ -524,9 +365,7 @@ function activarMicrofono(){
   };
 
   recognition.onend = function(){
-    if(!ocupado){
-      setEstado("reposo");
-    }
+    if(!ocupado) setEstado("reposo");
   };
 }
 
