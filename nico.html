@@ -3,200 +3,433 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nico Real</title>
+<title>Nico Realtime Emociones</title>
 
 <style>
 body{
   background:#000;
   color:white;
-  font-family:-apple-system;
+  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
   text-align:center;
-  padding:20px;
+  padding:18px;
+  margin:0;
+}
+
+h1{
+  font-size:30px;
+  margin-top:26px;
 }
 
 .avatar-wrap{
   position:relative;
-  width:260px;
-  margin:auto;
+  width:310px;
+  max-width:90%;
+  margin:22px auto 10px;
 }
 
 #nicoAvatar{
   width:100%;
-  transition:0.3s;
+  transition:.25s ease;
+  animation:respirar 3s ease-in-out infinite;
 }
 
 #boca{
   position:absolute;
   left:50%;
-  top:36%;
-  width:28px;
-  height:8px;
-  background:#2a0a0a;
+  top:33%;
+  width:32px;
+  height:7px;
+  background:#2b0b0b;
   border-radius:50%;
-  transform:translateX(-50%) scaleY(0.4);
+  transform:translateX(-50%) scaleY(.35);
+  opacity:.85;
+  pointer-events:none;
 }
 
-.hablando{
-  filter:brightness(1.2);
+.hablando{ filter:brightness(1.12); }
+.escuchando{ filter:drop-shadow(0 0 18px #22c55e); }
+.pensando{ filter:drop-shadow(0 0 18px #3b82f6); }
+
+@keyframes respirar{
+  0%,100%{transform:translateY(0) scale(1)}
+  50%{transform:translateY(-4px) scale(1.01)}
 }
 
 .card{
+  max-width:430px;
+  margin:16px auto;
   background:#1c1c1e;
-  padding:15px;
-  border-radius:15px;
-  margin-top:20px;
+  padding:18px;
+  border-radius:22px;
+  font-size:18px;
+  line-height:1.4;
 }
 
 button{
   width:90%;
-  padding:15px;
+  max-width:430px;
+  padding:16px;
+  border-radius:16px;
   border:none;
-  border-radius:12px;
-  margin-top:15px;
+  margin:8px auto;
   font-weight:bold;
+  font-size:16px;
   color:white;
+  background:#2563eb;
+  display:block;
 }
 
-.green{background:#22c55e}
-.red{background:#ef4444}
-
+.green{background:#16a34a}
+.red{background:#dc2626}
+.small{
+  color:#8e8e93;
+  font-size:13px;
+  margin-top:10px;
+}
 </style>
 </head>
 
 <body>
 
-<h1>Nico 🔥 Real</h1>
+<h1>Nico 🔥 Realtime</h1>
 
 <div class="avatar-wrap">
-  <img id="nicoAvatar" src="nico-assets/reposo.png">
+  <img id="nicoAvatar" src="nico-assets/reposo.png" alt="Nico">
   <div id="boca"></div>
 </div>
 
 <div class="card" id="textoNico">
-  Actíname y habla conmigo bro…
+  Toca activar y habla conmigo, Rodri...
 </div>
 
-<button class="green" onclick="startNico()">🔥 Activar Nico</button>
-<button class="red" onclick="stopNico()">⛔ Detener</button>
+<button class="green" onclick="startNico()">🎙️ Activar Nico en vivo</button>
+<button class="red" onclick="stopNico()">⛔ Detener Nico</button>
+
+<div class="small">Nico con WebRTC + emociones automáticas + labios por audio</div>
 
 <script>
+const CREAR_SESION_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearSesionRealtime";
 
-let pc, audioContext, analyser, animationId;
+let pc = null;
+let dc = null;
+let audioElement = null;
+let audioContext = null;
+let analyser = null;
+let animationId = null;
+let conectado = false;
+let textoAcumulado = "";
 
 const avatar = document.getElementById("nicoAvatar");
 const boca = document.getElementById("boca");
+const textoNico = document.getElementById("textoNico");
 
-function cambiarEstado(tipo){
-  if(tipo === "hablando") avatar.src = "nico-assets/alegre.png";
-  if(tipo === "pensando") avatar.src = "nico-assets/piensa.png";
-  if(tipo === "riendo") avatar.src = "nico-assets/rie.png";
-  if(tipo === "reposo") avatar.src = "nico-assets/reposo.png";
+const imagenes = {
+  reposo: "nico-assets/reposo.png",
+  saluda: "nico-assets/saluda.png",
+  piensa: "nico-assets/piensa.png",
+  alegre: "nico-assets/alegre.png",
+  rie: "nico-assets/rie.png",
+  celular: "nico-assets/celular.png",
+  canta: "nico-assets/canta.png",
+  bien: "nico-assets/bien.png",
+  camina: "nico-assets/camina.png"
+};
+
+function cambiarImagen(tipo){
+  avatar.src = imagenes[tipo] || imagenes.reposo;
 }
 
-async function startNico(){
-
-  cambiarEstado("pensando");
-
-  const tokenRes = await fetch("https://us-central1-elite-cleaners-app.cloudfunctions.net/crearSesionRealtime");
-  const data = await tokenRes.json();
-
-  const key = data.client_secret.value;
-
-  pc = new RTCPeerConnection();
-
-  const audio = document.createElement("audio");
-  audio.autoplay = true;
-
-  pc.ontrack = e => {
-    audio.srcObject = e.streams[0];
-    iniciarLipSync(e.streams[0]);
-    cambiarEstado("hablando");
-  };
-
-  const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-  stream.getTracks().forEach(track => pc.addTrack(track, stream));
-
-  const dc = pc.createDataChannel("oai-events");
-
-  dc.onmessage = e => {
-    try{
-      const msg = JSON.parse(e.data);
-
-      if(msg.type === "response.audio.delta"){
-        cambiarEstado("hablando");
-      }
-
-      if(msg.type === "response.done"){
-        cambiarEstado("reposo");
-        cerrarBoca();
-      }
-
-    }catch{}
-  };
-
-  const offer = await pc.createOffer();
-  await pc.setLocalDescription(offer);
-
-  const res = await fetch("https://api.openai.com/v1/realtime?model=gpt-realtime", {
-    method:"POST",
-    body:offer.sdp,
-    headers:{
-      Authorization:`Bearer ${key}`,
-      "Content-Type":"application/sdp"
-    }
-  });
-
-  const answer = {
-    type:"answer",
-    sdp:await res.text()
-  };
-
-  await pc.setRemoteDescription(answer);
+function limpiarClases(){
+  avatar.classList.remove("hablando", "escuchando", "pensando");
 }
 
-function iniciarLipSync(stream){
+function detectarEmocion(texto){
+  const t = (texto || "").toLowerCase();
 
-  audioContext = new AudioContext();
-  const source = audioContext.createMediaStreamSource(stream);
+  if (
+    t.includes("g.g") ||
+    t.includes("risa") ||
+    t.includes("reír") ||
+    t.includes("reir") ||
+    t.includes("gracioso") ||
+    t.includes("chiste")
+  ) return "rie";
 
-  analyser = audioContext.createAnalyser();
-  source.connect(analyser);
+  if (
+    t.includes("trabajo") ||
+    t.includes("cliente") ||
+    t.includes("clientes") ||
+    t.includes("limpieza") ||
+    t.includes("elite") ||
+    t.includes("agenda") ||
+    t.includes("servicio")
+  ) return "celular";
 
-  const data = new Uint8Array(analyser.frequencyBinCount);
+  if (
+    t.includes("música") ||
+    t.includes("musica") ||
+    t.includes("guitarra") ||
+    t.includes("cantar") ||
+    t.includes("canción") ||
+    t.includes("cancion")
+  ) return "canta";
 
-  function animar(){
-    analyser.getByteFrequencyData(data);
+  if (
+    t.includes("bien") ||
+    t.includes("perfecto") ||
+    t.includes("listo") ||
+    t.includes("vamos") ||
+    t.includes("puedes")
+  ) return "bien";
 
-    let sum = 0;
-    for(let i=0;i<data.length;i++) sum += data[i];
+  if (
+    t.includes("cansado") ||
+    t.includes("triste") ||
+    t.includes("preocupado") ||
+    t.includes("difícil") ||
+    t.includes("dificil") ||
+    t.includes("mal")
+  ) return "reposo";
 
-    let volumen = sum / data.length;
-
-    let altura = Math.min(30, volumen / 3);
-
-    boca.style.height = altura + "px";
-    boca.style.transform = `translateX(-50%) scaleY(${altura/20})`;
-
-    animationId = requestAnimationFrame(animar);
-  }
-
-  animar();
+  return "alegre";
 }
 
-function cerrarBoca(){
-  boca.style.height = "8px";
-  boca.style.transform = "translateX(-50%) scaleY(0.4)";
-}
-
-function stopNico(){
-  if(animationId) cancelAnimationFrame(animationId);
-  if(audioContext) audioContext.close();
-  if(pc) pc.close();
-
-  cambiarEstado("reposo");
+function estadoEscuchando(){
+  limpiarClases();
+  avatar.classList.add("escuchando");
+  cambiarImagen("saluda");
   cerrarBoca();
 }
 
+function estadoPensando(){
+  limpiarClases();
+  avatar.classList.add("pensando");
+  cambiarImagen("piensa");
+  cerrarBoca();
+}
+
+function estadoHablando(texto){
+  limpiarClases();
+  avatar.classList.add("hablando");
+  cambiarImagen(detectarEmocion(texto));
+}
+
+function estadoReposo(){
+  limpiarClases();
+  cambiarImagen("reposo");
+  cerrarBoca();
+}
+
+async function startNico(){
+  if(conectado) return;
+
+  try{
+    textoNico.innerText = "Conectando con Nico...";
+    estadoPensando();
+
+    const tokenRes = await fetch(CREAR_SESION_URL);
+    const data = await tokenRes.json();
+
+    if(!data.client_secret || !data.client_secret.value){
+      throw new Error("No llegó client_secret desde Firebase");
+    }
+
+    const EPHEMERAL_KEY = data.client_secret.value;
+
+    pc = new RTCPeerConnection();
+
+    audioElement = document.createElement("audio");
+    audioElement.autoplay = true;
+    audioElement.playsInline = true;
+
+    pc.ontrack = async (event) => {
+      const remoteStream = event.streams[0];
+      audioElement.srcObject = remoteStream;
+
+      try{
+        await audioElement.play();
+      }catch(e){
+        console.log("iPhone puede pedir toque de pantalla para audio:", e);
+      }
+
+      iniciarLipSync(remoteStream);
+    };
+
+    const micStream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    micStream.getTracks().forEach(track => pc.addTrack(track, micStream));
+
+    dc = pc.createDataChannel("oai-events");
+
+    dc.onopen = () => {
+      conectado = true;
+      textoAcumulado = "";
+      textoNico.innerText = "Ey Rodri... te escucho.";
+      estadoEscuchando();
+
+      dc.send(JSON.stringify({
+        type: "session.update",
+        session: {
+          instructions: `
+Eres Nico, el hermano cercano de Rodri.
+Hablas español latino, natural, cálido y corto.
+No digas que eres inteligencia artificial.
+No uses listas.
+No uses "jajaja", "jeje" ni "je".
+Si te ríes, usa solamente "g.g.g.g..." como risa suave.
+Habla como si estuvieras conversando en vivo.
+Máximo 1 a 3 frases.
+Si hablan de trabajo o clientes, responde práctico.
+Si hablan de música, responde con cariño.
+Si Rodri está cansado o triste, dale calma primero.
+`
+        }
+      }));
+    };
+
+    dc.onmessage = (event) => {
+      try{
+        const msg = JSON.parse(event.data);
+
+        if(msg.type === "input_audio_buffer.speech_started"){
+          textoAcumulado = "";
+          textoNico.innerText = "Te escucho, Rodri...";
+          estadoEscuchando();
+        }
+
+        if(msg.type === "input_audio_buffer.speech_stopped"){
+          textoNico.innerText = "Nico está pensando...";
+          estadoPensando();
+        }
+
+        if(msg.type === "response.audio_transcript.delta"){
+          const delta = msg.delta || "";
+          textoAcumulado += delta;
+
+          textoNico.innerText = textoAcumulado || "Nico está respondiendo...";
+          estadoHablando(textoAcumulado);
+        }
+
+        if(msg.type === "response.audio.delta"){
+          estadoHablando(textoAcumulado);
+        }
+
+        if(msg.type === "response.done"){
+          if(textoAcumulado.trim()){
+            textoNico.innerText = textoAcumulado.trim();
+            cambiarImagen(detectarEmocion(textoAcumulado));
+          }else{
+            textoNico.innerText = "Te escucho, Rodri...";
+            estadoEscuchando();
+          }
+
+          setTimeout(() => {
+            if(conectado){
+              estadoEscuchando();
+              textoNico.innerText = "Te escucho, Rodri...";
+            }
+          }, 1200);
+
+          cerrarBoca();
+        }
+
+      }catch(e){
+        console.log("Evento no JSON:", event.data);
+      }
+    };
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    const sdpResponse = await fetch("https://api.openai.com/v1/realtime?model=gpt-realtime", {
+      method:"POST",
+      body:offer.sdp,
+      headers:{
+        Authorization:`Bearer ${EPHEMERAL_KEY}`,
+        "Content-Type":"application/sdp"
+      }
+    });
+
+    const answer = {
+      type:"answer",
+      sdp:await sdpResponse.text()
+    };
+
+    await pc.setRemoteDescription(answer);
+
+  }catch(error){
+    console.error("Error activando Nico:", error);
+    textoNico.innerText = "Uff... no pude activar a Nico. Revisa la conexión o el backend.";
+    estadoReposo();
+  }
+}
+
+function iniciarLipSync(stream){
+  try{
+    if(audioContext) audioContext.close();
+
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioContext.createMediaStreamSource(stream);
+
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 256;
+
+    source.connect(analyser);
+
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+    function animarBoca(){
+      analyser.getByteFrequencyData(dataArray);
+
+      let suma = 0;
+      for(let i = 0; i < dataArray.length; i++){
+        suma += dataArray[i];
+      }
+
+      const volumen = suma / dataArray.length;
+
+      const apertura = Math.min(34, Math.max(6, volumen / 3));
+      const escala = Math.min(1.8, Math.max(0.35, volumen / 30));
+
+      boca.style.height = apertura + "px";
+      boca.style.transform = `translateX(-50%) scaleY(${escala})`;
+
+      animationId = requestAnimationFrame(animarBoca);
+    }
+
+    animarBoca();
+
+  }catch(e){
+    console.log("Lip sync no disponible:", e);
+  }
+}
+
+function cerrarBoca(){
+  boca.style.height = "7px";
+  boca.style.transform = "translateX(-50%) scaleY(.35)";
+}
+
+function stopNico(){
+  conectado = false;
+
+  if(animationId) cancelAnimationFrame(animationId);
+  animationId = null;
+
+  if(audioContext) audioContext.close();
+  audioContext = null;
+
+  if(pc){
+    pc.getSenders().forEach(sender => {
+      if(sender.track) sender.track.stop();
+    });
+    pc.close();
+  }
+
+  pc = null;
+  dc = null;
+
+  estadoReposo();
+  textoNico.innerText = "Nico está en pausa, Rodri.";
+}
 </script>
 
 </body>
