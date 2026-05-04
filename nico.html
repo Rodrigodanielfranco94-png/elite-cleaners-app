@@ -3,291 +3,200 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nico Realtime Labios</title>
+<title>Nico Real</title>
 
 <style>
 body{
   background:#000;
   color:white;
-  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+  font-family:-apple-system;
   text-align:center;
-  padding:18px;
-  margin:0;
-}
-
-h1{
-  font-size:30px;
-  margin-top:25px;
+  padding:20px;
 }
 
 .avatar-wrap{
   position:relative;
-  width:310px;
-  max-width:90%;
-  margin:20px auto 10px;
+  width:260px;
+  margin:auto;
 }
 
 #nicoAvatar{
   width:100%;
-  transition:.25s ease;
-  animation:respirar 3s ease-in-out infinite;
+  transition:0.3s;
 }
 
 #boca{
   position:absolute;
   left:50%;
-  top:31%;
-  width:34px;
+  top:36%;
+  width:28px;
   height:8px;
-  background:#2b0b0b;
+  background:#2a0a0a;
   border-radius:50%;
-  transform:translateX(-50%) scaleY(0.35);
-  opacity:.85;
-  transition:height .06s linear, transform .06s linear;
-  pointer-events:none;
+  transform:translateX(-50%) scaleY(0.4);
 }
 
 .hablando{
-  filter:brightness(1.12);
-}
-
-.escuchando{
-  filter:drop-shadow(0 0 18px #22c55e);
-}
-
-@keyframes respirar{
-  0%,100%{transform:translateY(0) scale(1)}
-  50%{transform:translateY(-4px) scale(1.01)}
+  filter:brightness(1.2);
 }
 
 .card{
-  max-width:430px;
-  margin:16px auto;
   background:#1c1c1e;
-  padding:18px;
-  border-radius:22px;
-  font-size:18px;
-  line-height:1.4;
+  padding:15px;
+  border-radius:15px;
+  margin-top:20px;
 }
 
 button{
   width:90%;
-  max-width:430px;
-  padding:16px;
-  border-radius:16px;
+  padding:15px;
   border:none;
-  margin:8px auto;
+  border-radius:12px;
+  margin-top:15px;
   font-weight:bold;
-  font-size:16px;
   color:white;
-  background:#2563eb;
-  display:block;
 }
 
-.green{background:#16a34a}
-.red{background:#dc2626}
-.small{
-  color:#8e8e93;
-  font-size:13px;
-  margin-top:10px;
-}
+.green{background:#22c55e}
+.red{background:#ef4444}
+
 </style>
 </head>
 
 <body>
 
-<h1>Nico Realtime</h1>
+<h1>Nico 🔥 Real</h1>
 
 <div class="avatar-wrap">
-  <img id="nicoAvatar" src="nico-assets/alegre.png" alt="Nico">
+  <img id="nicoAvatar" src="nico-assets/reposo.png">
   <div id="boca"></div>
 </div>
 
 <div class="card" id="textoNico">
-  Toca activar y habla conmigo, Rodri...
+  Actíname y habla conmigo bro…
 </div>
 
-<button class="green" onclick="startNico()">🎙️ Activar Nico en vivo</button>
-<button class="red" onclick="stopNico()">⛔ Detener Nico</button>
-
-<div class="small">Nico con WebRTC + labios sincronizados por audio</div>
+<button class="green" onclick="startNico()">🔥 Activar Nico</button>
+<button class="red" onclick="stopNico()">⛔ Detener</button>
 
 <script>
-const CREAR_SESION_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearSesionRealtime";
 
-let pc = null;
-let dc = null;
-let audioElement = null;
-let audioContext = null;
-let analyser = null;
-let animationId = null;
-let conectado = false;
+let pc, audioContext, analyser, animationId;
 
 const avatar = document.getElementById("nicoAvatar");
 const boca = document.getElementById("boca");
-const textoNico = document.getElementById("textoNico");
+
+function cambiarEstado(tipo){
+  if(tipo === "hablando") avatar.src = "nico-assets/alegre.png";
+  if(tipo === "pensando") avatar.src = "nico-assets/piensa.png";
+  if(tipo === "riendo") avatar.src = "nico-assets/rie.png";
+  if(tipo === "reposo") avatar.src = "nico-assets/reposo.png";
+}
 
 async function startNico(){
-  if(conectado) return;
 
-  try{
-    textoNico.innerText = "Conectando con Nico...";
-    avatar.classList.add("escuchando");
+  cambiarEstado("pensando");
 
-    const tokenRes = await fetch(CREAR_SESION_URL);
-    const data = await tokenRes.json();
+  const tokenRes = await fetch("https://us-central1-elite-cleaners-app.cloudfunctions.net/crearSesionRealtime");
+  const data = await tokenRes.json();
 
-    const EPHEMERAL_KEY = data.client_secret.value;
+  const key = data.client_secret.value;
 
-    pc = new RTCPeerConnection();
+  pc = new RTCPeerConnection();
 
-    audioElement = document.createElement("audio");
-    audioElement.autoplay = true;
-    audioElement.playsInline = true;
+  const audio = document.createElement("audio");
+  audio.autoplay = true;
 
-    pc.ontrack = async (event) => {
-      const remoteStream = event.streams[0];
-      audioElement.srcObject = remoteStream;
+  pc.ontrack = e => {
+    audio.srcObject = e.streams[0];
+    iniciarLipSync(e.streams[0]);
+    cambiarEstado("hablando");
+  };
 
-      try{
-        await audioElement.play();
-      }catch(e){
-        console.log("iPhone bloqueó audio hasta tocar pantalla:", e);
+  const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+  stream.getTracks().forEach(track => pc.addTrack(track, stream));
+
+  const dc = pc.createDataChannel("oai-events");
+
+  dc.onmessage = e => {
+    try{
+      const msg = JSON.parse(e.data);
+
+      if(msg.type === "response.audio.delta"){
+        cambiarEstado("hablando");
       }
 
-      iniciarLipSync(remoteStream);
-    };
-
-    const micStream = await navigator.mediaDevices.getUserMedia({ audio:true });
-    micStream.getTracks().forEach(track => pc.addTrack(track, micStream));
-
-    dc = pc.createDataChannel("oai-events");
-
-    dc.onopen = () => {
-      conectado = true;
-      textoNico.innerText = "Ey Rodri... te escucho.";
-      avatar.classList.add("escuchando");
-    };
-
-    dc.onmessage = (event) => {
-      try{
-        const msg = JSON.parse(event.data);
-
-        if(msg.type === "response.audio_transcript.delta"){
-          if(textoNico.innerText === "Ey Rodri... te escucho.") textoNico.innerText = "";
-          textoNico.innerText += msg.delta || "";
-        }
-
-        if(msg.type === "response.audio.delta"){
-          avatar.classList.remove("escuchando");
-          avatar.classList.add("hablando");
-        }
-
-        if(msg.type === "response.done"){
-          avatar.classList.remove("hablando");
-          avatar.classList.add("escuchando");
-          cerrarBoca();
-        }
-
-      }catch(e){
-        console.log(event.data);
+      if(msg.type === "response.done"){
+        cambiarEstado("reposo");
+        cerrarBoca();
       }
-    };
 
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
+    }catch{}
+  };
 
-    const sdpResponse = await fetch("https://api.openai.com/v1/realtime?model=gpt-realtime", {
-      method:"POST",
-      body:offer.sdp,
-      headers:{
-        Authorization:`Bearer ${EPHEMERAL_KEY}`,
-        "Content-Type":"application/sdp"
-      }
-    });
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
 
-    const answer = {
-      type:"answer",
-      sdp:await sdpResponse.text()
-    };
+  const res = await fetch("https://api.openai.com/v1/realtime?model=gpt-realtime", {
+    method:"POST",
+    body:offer.sdp,
+    headers:{
+      Authorization:`Bearer ${key}`,
+      "Content-Type":"application/sdp"
+    }
+  });
 
-    await pc.setRemoteDescription(answer);
+  const answer = {
+    type:"answer",
+    sdp:await res.text()
+  };
 
-  }catch(error){
-    console.error("Error activando Nico:", error);
-    textoNico.innerText = "Uff... no pude activar a Nico. Revisa la conexión o el backend.";
-    cerrarBoca();
-    avatar.classList.remove("escuchando","hablando");
-  }
+  await pc.setRemoteDescription(answer);
 }
 
 function iniciarLipSync(stream){
-  try{
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const source = audioContext.createMediaStreamSource(stream);
 
-    analyser = audioContext.createAnalyser();
-    analyser.fftSize = 256;
+  audioContext = new AudioContext();
+  const source = audioContext.createMediaStreamSource(stream);
 
-    source.connect(analyser);
+  analyser = audioContext.createAnalyser();
+  source.connect(analyser);
 
-    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+  const data = new Uint8Array(analyser.frequencyBinCount);
 
-    function animarBoca(){
-      analyser.getByteFrequencyData(dataArray);
+  function animar(){
+    analyser.getByteFrequencyData(data);
 
-      let suma = 0;
-      for(let i = 0; i < dataArray.length; i++){
-        suma += dataArray[i];
-      }
+    let sum = 0;
+    for(let i=0;i<data.length;i++) sum += data[i];
 
-      const volumen = suma / dataArray.length;
+    let volumen = sum / data.length;
 
-      const apertura = Math.min(34, Math.max(6, volumen / 3));
-      const escala = Math.min(1.8, Math.max(0.35, volumen / 30));
+    let altura = Math.min(30, volumen / 3);
 
-      boca.style.height = apertura + "px";
-      boca.style.transform = `translateX(-50%) scaleY(${escala})`;
+    boca.style.height = altura + "px";
+    boca.style.transform = `translateX(-50%) scaleY(${altura/20})`;
 
-      animationId = requestAnimationFrame(animarBoca);
-    }
-
-    animarBoca();
-
-  }catch(e){
-    console.log("Lip sync no disponible:", e);
+    animationId = requestAnimationFrame(animar);
   }
+
+  animar();
 }
 
 function cerrarBoca(){
   boca.style.height = "8px";
-  boca.style.transform = "translateX(-50%) scaleY(0.35)";
+  boca.style.transform = "translateX(-50%) scaleY(0.4)";
 }
 
 function stopNico(){
-  conectado = false;
-
   if(animationId) cancelAnimationFrame(animationId);
-  animationId = null;
-
   if(audioContext) audioContext.close();
-  audioContext = null;
+  if(pc) pc.close();
 
-  if(pc){
-    pc.getSenders().forEach(sender => {
-      if(sender.track) sender.track.stop();
-    });
-    pc.close();
-  }
-
-  pc = null;
-  dc = null;
-
-  avatar.classList.remove("escuchando","hablando");
+  cambiarEstado("reposo");
   cerrarBoca();
-
-  textoNico.innerText = "Nico está en pausa, Rodri.";
 }
+
 </script>
 
 </body>
