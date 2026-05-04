@@ -3,123 +3,141 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nico 🔥 Realtime</title>
+<title>Nico Vivo</title>
 
 <style>
 body{
   background:#000;
   color:white;
-  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+  font-family:-apple-system;
   text-align:center;
-  padding:18px;
   margin:0;
 }
-h1{margin-top:25px}
 
-.avatar-wrap{
-  position:relative;
-  width:300px;
-  margin:20px auto;
-}
-
-#nicoAvatar{
+#textoNico{
+  position:fixed;
+  top:20px;
   width:100%;
-  animation:respirar 3s infinite;
+  text-align:center;
+  font-size:18px;
 }
 
-#boca{
-  position:absolute;
-  top:34%;
-  left:50%;
-  width:30px;
-  height:6px;
-  background:#2b0b0b;
-  border-radius:50%;
-  transform:translateX(-50%);
+/* Nico flotante */
+#nico-container{
+  position:fixed;
+  bottom:30px;
+  left:0;
+  width:180px;
+  transition:left 6s linear;
+  z-index:999;
 }
 
-@keyframes respirar{
-  0%,100%{transform:scale(1)}
-  50%{transform:scale(1.02)}
+#nico-avatar{
+  width:100%;
+  animation:pasos 0.6s infinite alternate ease-in-out;
 }
 
-.card{
-  background:#1c1c1e;
-  padding:16px;
-  border-radius:20px;
-  margin:15px auto;
-  max-width:420px;
+@keyframes pasos{
+  0%{transform:translateY(0px) rotate(-1deg);}
+  100%{transform:translateY(-6px) rotate(1deg);}
 }
 
-button{
-  width:90%;
-  padding:15px;
-  margin:6px;
-  border:none;
-  border-radius:15px;
-  color:white;
-  font-weight:bold;
+.parado{
+  animation:none !important;
 }
 
-.green{background:#16a34a}
-.red{background:#dc2626}
 </style>
 </head>
 
 <body>
 
-<h1>Nico 🔥 Realtime</h1>
+<div id="textoNico">Rodri... estoy contigo 👀</div>
 
-<div class="avatar-wrap">
-  <img id="nicoAvatar" src="nico-assets/reposo.png">
-  <div id="boca"></div>
+<div id="nico-container">
+  <img id="nico-avatar" src="nico-assets/reposo.png">
 </div>
-
-<div class="card" id="textoNico">
-  Toca activar y habla conmigo...
-</div>
-
-<button class="green" onclick="startNico()">🎙️ Activar Nico</button>
-<button class="red" onclick="stopNico()">⛔ Detener</button>
 
 <script>
-const URL_BACKEND = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearSesionRealtime";
 
-let pc, dc, audioEl, analyser, ctx;
-let conectado = false;
-let texto = "";
+const BACKEND = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearSesionRealtime";
 
-const avatar = document.getElementById("nicoAvatar");
-const boca = document.getElementById("boca");
-const textoNico = document.getElementById("textoNico");
+let pc, dc, audioEl;
+let caminando = true;
+let direccion = 1;
 
-const imgs = {
-  reposo:"nico-assets/reposo.png",
-  saluda:"nico-assets/saluda.png",
-  piensa:"nico-assets/piensa.png",
-  alegre:"nico-assets/alegre.png",
-  rie:"nico-assets/rie.png"
+const nico = document.getElementById("nico-container");
+const avatar = document.getElementById("nico-avatar");
+const texto = document.getElementById("textoNico");
+
+// ============================
+// 🧠 MOVIMIENTO AUTOMÁTICO
+// ============================
+
+function moverNico(){
+  if(!caminando) return;
+
+  let max = window.innerWidth - 180;
+
+  if(direccion === 1){
+    nico.style.left = max + "px";
+    avatar.style.transform = "scaleX(1)";
+  }else{
+    nico.style.left = "0px";
+    avatar.style.transform = "scaleX(-1)";
+  }
+
+  avatar.src = "nico-assets/camina.png";
+
+  direccion *= -1;
+}
+
+setInterval(moverNico, 6000);
+moverNico();
+
+// ============================
+// 🎭 ESTADOS DE NICO
+// ============================
+
+function estadoReposo(){
+  avatar.src = "nico-assets/reposo.png";
+  avatar.classList.remove("parado");
+  caminando = true;
+}
+
+function estadoEscucha(){
+  avatar.src = "nico-assets/saluda.png";
+  avatar.classList.add("parado");
+  caminando = false;
+}
+
+function estadoPensando(){
+  avatar.src = "nico-assets/piensa.png";
+}
+
+function estadoHablando(){
+  avatar.src = "nico-assets/alegre.png";
+}
+
+// ============================
+// 🎤 ACTIVAR NICO (TOCAR)
+// ============================
+
+nico.onclick = () => {
+  iniciarRealtime();
 };
 
-function setImg(tipo){
-  avatar.src = imgs[tipo] || imgs.reposo;
-}
+// ============================
+// 🔥 WEBRTC
+// ============================
 
-function detectar(texto){
-  let t = texto.toLowerCase();
-  if(t.includes("g.g")) return "rie";
-  if(t.includes("trabajo")||t.includes("cliente")) return "piensa";
-  return "alegre";
-}
-
-async function startNico(){
-  if(conectado) return;
+async function iniciarRealtime(){
 
   try{
-    textoNico.innerText = "Conectando...";
-    setImg("piensa");
 
-    const r = await fetch(URL_BACKEND);
+    estadoEscucha();
+    texto.innerText = "Te escucho bro...";
+
+    const r = await fetch(BACKEND);
     const data = await r.json();
 
     const KEY = data.client_secret?.value || data.value;
@@ -132,7 +150,7 @@ async function startNico(){
     pc.ontrack = e=>{
       audioEl.srcObject = e.streams[0];
       audioEl.play().catch(()=>{});
-      lipSync(e.streams[0]);
+      estadoHablando();
     };
 
     const mic = await navigator.mediaDevices.getUserMedia({audio:true});
@@ -140,24 +158,32 @@ async function startNico(){
 
     dc = pc.createDataChannel("oai");
 
-    dc.onopen=()=>{
-      conectado = true;
-      textoNico.innerText = "Te escucho Rodri...";
-      setImg("saluda");
-    };
-
     dc.onmessage = e=>{
-      let msg = JSON.parse(e.data);
+      try{
+        const msg = JSON.parse(e.data);
 
-      if(msg.type==="response.audio_transcript.delta"){
-        texto += msg.delta;
-        textoNico.innerText = texto;
-        setImg(detectar(texto));
-      }
+        if(msg.type==="input_audio_buffer.speech_started"){
+          estadoEscucha();
+          texto.innerText = "Te escucho...";
+        }
 
-      if(msg.type==="response.done"){
-        texto="";
-      }
+        if(msg.type==="input_audio_buffer.speech_stopped"){
+          estadoPensando();
+          texto.innerText = "Pensando...";
+        }
+
+        if(msg.type==="response.audio_transcript.delta"){
+          texto.innerText = msg.delta || "...";
+        }
+
+        if(msg.type==="response.done"){
+          setTimeout(()=>{
+            estadoReposo();
+            texto.innerText = "Aquí estoy contigo bro 👊";
+          },1500);
+        }
+
+      }catch{}
     };
 
     const offer = await pc.createOffer();
@@ -172,41 +198,20 @@ async function startNico(){
       }
     });
 
-    const answer = {type:"answer", sdp:await sdp.text()};
+    const answer = {
+      type:"answer",
+      sdp:await sdp.text()
+    };
+
     await pc.setRemoteDescription(answer);
 
-  }catch(e){
-    console.error(e);
-    textoNico.innerText = "Uff... no pude activar a Nico.";
-    setImg("reposo");
+  }catch(err){
+    console.error(err);
+    texto.innerText = "No pude activarme bro 😕";
+    estadoReposo();
   }
 }
 
-function lipSync(stream){
-  ctx = new AudioContext();
-  const src = ctx.createMediaStreamSource(stream);
-  analyser = ctx.createAnalyser();
-  src.connect(analyser);
-
-  const data = new Uint8Array(analyser.frequencyBinCount);
-
-  function anim(){
-    analyser.getByteFrequencyData(data);
-    let vol = data.reduce((a,b)=>a+b)/data.length;
-
-    boca.style.height = Math.max(6, vol/3)+"px";
-
-    requestAnimationFrame(anim);
-  }
-  anim();
-}
-
-function stopNico(){
-  conectado=false;
-  if(pc) pc.close();
-  textoNico.innerText="Nico en pausa";
-  setImg("reposo");
-}
 </script>
 
 </body>
