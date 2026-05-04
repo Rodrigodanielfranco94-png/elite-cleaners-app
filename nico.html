@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nico Realtime Emociones</title>
+<title>Nico Realtime</title>
 
 <style>
 body{
@@ -14,25 +14,9 @@ body{
   padding:18px;
   margin:0;
 }
-
-h1{
-  font-size:30px;
-  margin-top:26px;
-}
-
-.avatar-wrap{
-  position:relative;
-  width:310px;
-  max-width:90%;
-  margin:22px auto 10px;
-}
-
-#nicoAvatar{
-  width:100%;
-  transition:.25s ease;
-  animation:respirar 3s ease-in-out infinite;
-}
-
+h1{font-size:30px;margin-top:26px}
+.avatar-wrap{position:relative;width:310px;max-width:90%;margin:22px auto 10px}
+#nicoAvatar{width:100%;transition:.25s ease;animation:respirar 3s ease-in-out infinite}
 #boca{
   position:absolute;
   left:50%;
@@ -45,16 +29,13 @@ h1{
   opacity:.85;
   pointer-events:none;
 }
-
-.hablando{ filter:brightness(1.12); }
-.escuchando{ filter:drop-shadow(0 0 18px #22c55e); }
-.pensando{ filter:drop-shadow(0 0 18px #3b82f6); }
-
+.hablando{filter:brightness(1.12)}
+.escuchando{filter:drop-shadow(0 0 18px #22c55e)}
+.pensando{filter:drop-shadow(0 0 18px #3b82f6)}
 @keyframes respirar{
   0%,100%{transform:translateY(0) scale(1)}
   50%{transform:translateY(-4px) scale(1.01)}
 }
-
 .card{
   max-width:430px;
   margin:16px auto;
@@ -64,7 +45,6 @@ h1{
   font-size:18px;
   line-height:1.4;
 }
-
 button{
   width:90%;
   max-width:430px;
@@ -78,14 +58,9 @@ button{
   background:#2563eb;
   display:block;
 }
-
 .green{background:#16a34a}
 .red{background:#dc2626}
-.small{
-  color:#8e8e93;
-  font-size:13px;
-  margin-top:10px;
-}
+.small{color:#8e8e93;font-size:13px;margin-top:10px}
 </style>
 </head>
 
@@ -146,50 +121,11 @@ function limpiarClases(){
 function detectarEmocion(texto){
   const t = (texto || "").toLowerCase();
 
-  if (
-    t.includes("g.g") ||
-    t.includes("risa") ||
-    t.includes("reír") ||
-    t.includes("reir") ||
-    t.includes("gracioso") ||
-    t.includes("chiste")
-  ) return "rie";
-
-  if (
-    t.includes("trabajo") ||
-    t.includes("cliente") ||
-    t.includes("clientes") ||
-    t.includes("limpieza") ||
-    t.includes("elite") ||
-    t.includes("agenda") ||
-    t.includes("servicio")
-  ) return "celular";
-
-  if (
-    t.includes("música") ||
-    t.includes("musica") ||
-    t.includes("guitarra") ||
-    t.includes("cantar") ||
-    t.includes("canción") ||
-    t.includes("cancion")
-  ) return "canta";
-
-  if (
-    t.includes("bien") ||
-    t.includes("perfecto") ||
-    t.includes("listo") ||
-    t.includes("vamos") ||
-    t.includes("puedes")
-  ) return "bien";
-
-  if (
-    t.includes("cansado") ||
-    t.includes("triste") ||
-    t.includes("preocupado") ||
-    t.includes("difícil") ||
-    t.includes("dificil") ||
-    t.includes("mal")
-  ) return "reposo";
+  if(t.includes("g.g") || t.includes("risa") || t.includes("chiste")) return "rie";
+  if(t.includes("trabajo") || t.includes("cliente") || t.includes("limpieza") || t.includes("agenda") || t.includes("servicio")) return "celular";
+  if(t.includes("música") || t.includes("musica") || t.includes("guitarra") || t.includes("cantar")) return "canta";
+  if(t.includes("bien") || t.includes("perfecto") || t.includes("listo") || t.includes("vamos")) return "bien";
+  if(t.includes("cansado") || t.includes("triste") || t.includes("preocupado") || t.includes("mal")) return "reposo";
 
   return "alegre";
 }
@@ -230,11 +166,11 @@ async function startNico(){
     const tokenRes = await fetch(CREAR_SESION_URL);
     const data = await tokenRes.json();
 
-    if(!data.client_secret || !data.client_secret.value){
-      throw new Error("No llegó client_secret desde Firebase");
-    }
+    const EPHEMERAL_KEY = data.client_secret?.value || data.value;
 
-    const EPHEMERAL_KEY = data.client_secret.value;
+    if(!EPHEMERAL_KEY){
+      throw new Error("No llegó token realtime desde Firebase");
+    }
 
     pc = new RTCPeerConnection();
 
@@ -265,25 +201,6 @@ async function startNico(){
       textoAcumulado = "";
       textoNico.innerText = "Ey Rodri... te escucho.";
       estadoEscuchando();
-
-      dc.send(JSON.stringify({
-        type: "session.update",
-        session: {
-          instructions: `
-Eres Nico, el hermano cercano de Rodri.
-Hablas español latino, natural, cálido y corto.
-No digas que eres inteligencia artificial.
-No uses listas.
-No uses "jajaja", "jeje" ni "je".
-Si te ríes, usa solamente "g.g.g.g..." como risa suave.
-Habla como si estuvieras conversando en vivo.
-Máximo 1 a 3 frases.
-Si hablan de trabajo o clientes, responde práctico.
-Si hablan de música, responde con cariño.
-Si Rodri está cansado o triste, dale calma primero.
-`
-        }
-      }));
     };
 
     dc.onmessage = (event) => {
@@ -304,7 +221,6 @@ Si Rodri está cansado o triste, dale calma primero.
         if(msg.type === "response.audio_transcript.delta"){
           const delta = msg.delta || "";
           textoAcumulado += delta;
-
           textoNico.innerText = textoAcumulado || "Nico está respondiendo...";
           estadoHablando(textoAcumulado);
         }
@@ -348,6 +264,11 @@ Si Rodri está cansado o triste, dale calma primero.
         "Content-Type":"application/sdp"
       }
     });
+
+    if(!sdpResponse.ok){
+      const errorText = await sdpResponse.text();
+      throw new Error(errorText);
+    }
 
     const answer = {
       type:"answer",
