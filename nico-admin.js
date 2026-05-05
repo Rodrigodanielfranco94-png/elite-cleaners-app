@@ -1,137 +1,207 @@
-// ================= NICO ADMIN CON MEMORIA PERMANENTE =================
+// ===============================
+// 🧠 MEMORIA PERMANENTE
+// ===============================
+let memoria = JSON.parse(localStorage.getItem("nico_memoria") || "{}");
 
-const NICO_SESSION_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearSesionRealtime";
+function guardarMemoria(key, value){
+    memoria[key] = value;
+    localStorage.setItem("nico_memoria", JSON.stringify(memoria));
+}
 
-let nicoPC = null;
-let nicoDC = null;
-let nicoAudio = null;
-let nicoActivo = false;
-let nicoRespuesta = "";
+// ===============================
+// 🎤 VOZ CONFIG (MASCULINA)
+// ===============================
+const voz = new SpeechSynthesisUtterance();
+voz.lang = "es-US";
+voz.rate = 0.9;
+voz.pitch = 0.9;
 
-// 🔥 MEMORIA
-let ultimoTextoUsuario = "";
-
-// ================= UI =================
-
+// ===============================
+// 🧍 CREAR NICO UI
+// ===============================
 const nicoBox = document.createElement("div");
+nicoBox.id = "nicoBox";
+
 nicoBox.innerHTML = `
-<div id="nicoBubble">Toca el micrófono y dime: Hola Nico</div>
-<img id="nicoImg" src="nico-assets/saluda.png">
-<button id="nicoBtn">🎙️</button>
+    <img id="nicoAvatar" src="nico-avatar.png" />
+    <div id="nicoBubble">Toca el micrófono y dime: Hola Nico</div>
+    <button id="nicoBtn">🎤</button>
 `;
+
 document.body.appendChild(nicoBox);
 
+// ===============================
+// 🎨 ESTILO (FIJO A LA DERECHA)
+// ===============================
 const style = document.createElement("style");
 style.innerHTML = `
-#nicoBox{position:fixed;right:16px;bottom:18px;z-index:99999;display:flex;flex-direction:column;align-items:flex-end;}
-#nicoImg{width:90px;filter:drop-shadow(0 6px 12px rgba(0,0,0,.6));}
-#nicoBubble{background:white;color:black;padding:10px;border-radius:15px;margin-bottom:6px;font-weight:bold;font-size:14px;max-width:220px;}
-#nicoBtn{width:60px;height:60px;border-radius:50%;background:#3b82f6;color:white;font-size:24px;border:none;}
+#nicoBox{
+  position:fixed !important;
+  right:16px !important;
+  bottom:20px !important;
+  left:auto !important;
+  z-index:99999;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+}
+
+#nicoAvatar{
+  width:90px;
+  margin-bottom:5px;
+  pointer-events:none;
+}
+
+#nicoBubble{
+  background:white;
+  color:black;
+  padding:10px 14px;
+  border-radius:18px;
+  font-size:13px;
+  max-width:220px;
+  margin-bottom:8px;
+}
+
+#nicoBtn{
+  width:55px;
+  height:55px;
+  border-radius:50%;
+  border:none;
+  background:#3b82f6;
+  color:white;
+  font-size:20px;
+}
 `;
 document.head.appendChild(style);
 
-const nicoImg = document.getElementById("nicoImg");
-const nicoBubble = document.getElementById("nicoBubble");
-const nicoBtn = document.getElementById("nicoBtn");
+// ===============================
+// 🎧 RECONOCIMIENTO DE VOZ
+// ===============================
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
 
-// ================= BOTÓN =================
+recognition.lang = "es-US";
+recognition.continuous = false;
+recognition.interimResults = false;
 
-nicoBtn.onclick = () => {
-  if (nicoActivo) apagarNico();
-  else activarNico();
+let escuchando = false;
+
+document.getElementById("nicoBtn").onclick = () => {
+    if(!escuchando){
+        recognition.start();
+        escuchando = true;
+        document.getElementById("nicoBubble").innerText = "👂 Escuchando...";
+    }
 };
 
-// ================= MEMORIA =================
+// ===============================
+// 🧠 PERSONALIDAD DE NICO
+// ===============================
+const contexto = `
+Eres Nico, hermano de Rodrigo.
 
-async function guardarMemoria(user, nico) {
-  try {
-    await db.collection("memoria_nico").add({
-      user,
-      nico,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+Familia:
+- Rodrigo es tu hermano
+- Jorge también
+- Dayana es esposa de Rodrigo
+- Carol esposa de Jorge
+- Bastian hijo de Jorge
+- Julia mamá de Rodrigo y Jorge
+- Rodolfo es su papá
+- Charlie es su perro
+
+Viven:
+- Rodrigo en California
+- Jorge en Boston
+- Julia en NY
+- Papá en Paraguay
+
+Personalidad:
+- cariñoso
+- divertido
+- humano
+- cercano
+- inteligente
+- musical
+
+Habla como amigo cercano, natural, con pausas.
+`;
+
+// ===============================
+// 🤖 RESPUESTA INTELIGENTE
+// ===============================
+async function pensar(mensaje){
+
+    document.getElementById("nicoBubble").innerText = "💭 Pensando...";
+
+    const res = await fetch("https://api.openai.com/v1/chat/completions",{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json",
+            "Authorization":"Bearer TU_API_KEY_AQUI"
+        },
+        body: JSON.stringify({
+            model:"gpt-4o-mini",
+            messages:[
+                {role:"system", content: contexto},
+                {role:"user", content: mensaje}
+            ]
+        })
     });
-  } catch (e) {
-    console.log("Error guardando memoria:", e);
-  }
+
+    const data = await res.json();
+    const texto = data.choices[0].message.content;
+
+    hablar(texto);
 }
 
-// ================= ACTIVAR =================
+// ===============================
+// 🔊 HABLAR NATURAL
+// ===============================
+function hablar(texto){
+    document.getElementById("nicoBubble").innerText = texto;
 
-async function activarNico() {
-  nicoActivo = true;
-  nicoBtn.innerText = "⛔";
-  nicoBubble.innerText = "Conectando con Nico...";
-
-  const tokenRes = await fetch(NICO_SESSION_URL);
-  const data = await tokenRes.json();
-  const KEY = data.client_secret.value;
-
-  nicoPC = new RTCPeerConnection();
-
-  nicoAudio = document.createElement("audio");
-  nicoAudio.autoplay = true;
-
-  nicoPC.ontrack = e => nicoAudio.srcObject = e.streams[0];
-
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  stream.getTracks().forEach(t => nicoPC.addTrack(t, stream));
-
-  nicoDC = nicoPC.createDataChannel("oai-events");
-
-  nicoDC.onmessage = (event) => {
-    const msg = JSON.parse(event.data);
-
-    // 🧠 Lo que tú dices
-    if (msg.type === "conversation.item.input_audio_transcription.completed") {
-      ultimoTextoUsuario = msg.transcript || "";
-    }
-
-    // 🤖 Nico hablando
-    if (msg.type === "response.audio_transcript.delta") {
-      nicoRespuesta += msg.delta;
-      nicoBubble.innerText = nicoRespuesta;
-    }
-
-    // ✅ Fin de respuesta
-    if (msg.type === "response.done") {
-      if (ultimoTextoUsuario && nicoRespuesta) {
-        guardarMemoria(ultimoTextoUsuario, nicoRespuesta);
-      }
-      nicoRespuesta = "";
-      ultimoTextoUsuario = "";
-    }
-  };
-
-  const offer = await nicoPC.createOffer();
-  await nicoPC.setLocalDescription(offer);
-
-  const res = await fetch("https://api.openai.com/v1/realtime/calls", {
-    method: "POST",
-    body: offer.sdp,
-    headers: {
-      Authorization: `Bearer ${KEY}`,
-      "Content-Type": "application/sdp"
-    }
-  });
-
-  const answer = await res.text();
-  await nicoPC.setRemoteDescription({ type: "answer", sdp: answer });
+    voz.text = texto;
+    speechSynthesis.speak(voz);
 }
 
-// ================= APAGAR =================
-
-function apagarNico() {
-  nicoActivo = false;
-  nicoBtn.innerText = "🎙️";
-
-  if (nicoPC) {
-    nicoPC.getSenders().forEach(s => s.track && s.track.stop());
-    nicoPC.close();
-  }
-
-  nicoPC = null;
-  nicoDC = null;
-  nicoAudio = null;
-
-  nicoBubble.innerText = "Nico apagado";
+// ===============================
+// 🧠 GUARDAR MEMORIA
+// ===============================
+function analizarMemoria(texto){
+    if(texto.includes("me llamo")){
+        let nombre = texto.split("me llamo")[1];
+        guardarMemoria("nombre", nombre);
+    }
 }
+
+// ===============================
+// 🎤 RESULTADO DE VOZ
+// ===============================
+recognition.onresult = (event)=>{
+    escuchando = false;
+
+    const texto = event.results[0][0].transcript;
+
+    analizarMemoria(texto);
+    pensar(texto);
+};
+
+// ===============================
+// ❌ ERROR
+// ===============================
+recognition.onerror = ()=>{
+    escuchando = false;
+    document.getElementById("nicoBubble").innerText = "No te escuché bien...";
+};
+
+// ===============================
+// 👋 ANIMACIÓN INICIAL
+// ===============================
+window.onload = ()=>{
+    document.getElementById("nicoAvatar").src = "nico-assets/saluda.png";
+
+    setTimeout(()=>{
+        hablar("¿Qué onda Rodrigo? Aquí estoy contigo 👋");
+    },1000);
+};
