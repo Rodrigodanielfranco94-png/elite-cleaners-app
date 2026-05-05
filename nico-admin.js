@@ -1,4 +1,4 @@
-// ================= NICO ADMIN WEBRTC LIMPIO =================
+// ================= NICO ADMIN CON MEMORIA PERMANENTE =================
 
 const NICO_SESSION_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearSesionRealtime";
 
@@ -6,282 +6,126 @@ let nicoPC = null;
 let nicoDC = null;
 let nicoAudio = null;
 let nicoActivo = false;
-let nicoVisible = false;
 let nicoRespuesta = "";
 
-const nicoBox = document.createElement("div");
-nicoBox.id = "nicoBox";
-nicoBox.innerHTML = `
-  <div id="nicoBubble">Toca el micrófono y dime: “Hola Nico”.</div>
-  <img id="nicoImg" src="nico-assets/saluda.png" />
-  <button id="nicoMicBtn">🎙️</button>
-`;
+// 🔥 MEMORIA
+let ultimoTextoUsuario = "";
 
+// ================= UI =================
+
+const nicoBox = document.createElement("div");
+nicoBox.innerHTML = `
+<div id="nicoBubble">Toca el micrófono y dime: Hola Nico</div>
+<img id="nicoImg" src="nico-assets/saluda.png">
+<button id="nicoBtn">🎙️</button>
+`;
 document.body.appendChild(nicoBox);
 
 const style = document.createElement("style");
 style.innerHTML = `
-#nicoBox{
-  position:fixed;
-  right:16px;
-  bottom:18px;
-  z-index:99999;
-  display:flex;
-  flex-direction:column;
-  align-items:flex-end;
-  pointer-events:none;
-}
-
-#nicoImg{
-  width:92px;
-  height:auto;
-  object-fit:contain;
-  filter:drop-shadow(0 8px 14px rgba(0,0,0,.65));
-  display:none;
-  pointer-events:auto;
-}
-
-#nicoBubble{
-  display:none;
-  background:white;
-  color:#111;
-  border:2px solid #3b82f6;
-  border-radius:18px;
-  padding:10px 12px;
-  max-width:245px;
-  font-size:14px;
-  font-weight:800;
-  line-height:1.25;
-  margin-bottom:4px;
-  box-shadow:0 8px 22px rgba(0,0,0,.35);
-  pointer-events:auto;
-}
-
-#nicoMicBtn{
-  width:64px;
-  height:64px;
-  border-radius:50%;
-  border:none;
-  background:#3b82f6;
-  color:white;
-  font-size:28px;
-  font-weight:bold;
-  box-shadow:0 8px 22px rgba(0,0,0,.45);
-  pointer-events:auto;
-}
+#nicoBox{position:fixed;right:16px;bottom:18px;z-index:99999;display:flex;flex-direction:column;align-items:flex-end;}
+#nicoImg{width:90px;filter:drop-shadow(0 6px 12px rgba(0,0,0,.6));}
+#nicoBubble{background:white;color:black;padding:10px;border-radius:15px;margin-bottom:6px;font-weight:bold;font-size:14px;max-width:220px;}
+#nicoBtn{width:60px;height:60px;border-radius:50%;background:#3b82f6;color:white;font-size:24px;border:none;}
 `;
 document.head.appendChild(style);
 
 const nicoImg = document.getElementById("nicoImg");
 const nicoBubble = document.getElementById("nicoBubble");
-const nicoMicBtn = document.getElementById("nicoMicBtn");
+const nicoBtn = document.getElementById("nicoBtn");
 
-nicoMicBtn.onclick = () => {
-  if (nicoActivo) {
-    apagarNico();
-  } else {
-    activarNico();
-  }
+// ================= BOTÓN =================
+
+nicoBtn.onclick = () => {
+  if (nicoActivo) apagarNico();
+  else activarNico();
 };
 
-function mostrarNico(texto = "Aquí estoy, Rodri.") {
-  nicoVisible = true;
-  nicoImg.style.display = "block";
-  nicoBubble.style.display = "block";
-  nicoBubble.innerText = texto;
-}
+// ================= MEMORIA =================
 
-function ocultarNico() {
-  nicoVisible = false;
-  nicoImg.style.display = "none";
-  nicoBubble.style.display = "none";
-}
-
-function imagenNico(tipo) {
-  const imagenes = {
-    saluda: "nico-assets/saluda.png",
-    piensa: "nico-assets/piensa.png",
-    alegre: "nico-assets/alegre.png",
-    rie: "nico-assets/rie.png",
-    celular: "nico-assets/celular.png",
-    canta: "nico-assets/canta.png",
-    bien: "nico-assets/bien.png",
-    reposo: "nico-assets/reposo.png"
-  };
-  nicoImg.src = imagenes[tipo] || imagenes.saluda;
-}
-
-function debeApagarse(texto) {
-  const t = (texto || "").toLowerCase();
-  return (
-    t.includes("bye nico") ||
-    t.includes("bay nico") ||
-    t.includes("chao nico") ||
-    t.includes("nico desconéctate") ||
-    t.includes("nico desconectate")
-  );
-}
-
-function debeAparecer(texto) {
-  const t = (texto || "").toLowerCase();
-  return (
-    t.includes("hola nico") ||
-    t.includes("oye nico") ||
-    t.includes("hey nico")
-  );
-}
-
-function detectarImagen(texto) {
-  const t = (texto || "").toLowerCase();
-
-  if (t.includes("g.g") || t.includes("risa") || t.includes("chiste")) return "rie";
-  if (t.includes("trabajo") || t.includes("cliente") || t.includes("agenda") || t.includes("limpieza")) return "celular";
-  if (t.includes("música") || t.includes("musica") || t.includes("guitarra") || t.includes("cantar")) return "canta";
-  if (t.includes("bien") || t.includes("perfecto") || t.includes("listo")) return "bien";
-
-  return "alegre";
-}
-
-async function activarNico() {
+async function guardarMemoria(user, nico) {
   try {
-    nicoActivo = true;
-    nicoMicBtn.innerText = "⛔";
-    imagenNico("saluda");
-    mostrarNico("Conectando con Nico...");
-
-    const tokenRes = await fetch(NICO_SESSION_URL);
-    const tokenData = await tokenRes.json();
-    const KEY = tokenData.client_secret?.value || tokenData.value;
-
-    if (!KEY) throw new Error("No llegó token Realtime");
-
-    nicoPC = new RTCPeerConnection();
-
-    nicoAudio = document.createElement("audio");
-    nicoAudio.autoplay = true;
-    nicoAudio.playsInline = true;
-
-    nicoPC.ontrack = async (event) => {
-      nicoAudio.srcObject = event.streams[0];
-      try {
-        await nicoAudio.play();
-      } catch (e) {
-        console.log("Audio bloqueado:", e);
-      }
-    };
-
-    const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mic.getTracks().forEach(track => nicoPC.addTrack(track, mic));
-
-    nicoDC = nicoPC.createDataChannel("oai-events");
-
-    nicoDC.onopen = () => {
-      imagenNico("saluda");
-      mostrarNico("Listo, Rodri. Dime: “Hola Nico”.");
-    };
-
-    nicoDC.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-
-        if (msg.type === "input_audio_buffer.speech_started") {
-          nicoRespuesta = "";
-          if (nicoVisible) {
-            imagenNico("saluda");
-            mostrarNico("Te escucho...");
-          }
-        }
-
-        if (msg.type === "input_audio_buffer.speech_stopped") {
-          if (nicoVisible) {
-            imagenNico("piensa");
-            mostrarNico("Mmm... pensando.");
-          }
-        }
-
-        if (msg.type === "conversation.item.input_audio_transcription.completed") {
-          const userText = msg.transcript || "";
-
-          if (debeApagarse(userText)) {
-            imagenNico("bien");
-            mostrarNico("Listo, Rodri... me desconecto.");
-            setTimeout(apagarNico, 900);
-            return;
-          }
-
-          if (debeAparecer(userText)) {
-            imagenNico("saluda");
-            mostrarNico("Aquí estoy, Rodri. Te escucho.");
-          }
-        }
-
-        if (msg.type === "response.audio_transcript.delta") {
-          nicoRespuesta += msg.delta || "";
-          if (!nicoVisible) mostrarNico("");
-          imagenNico(detectarImagen(nicoRespuesta));
-          nicoBubble.innerText = nicoRespuesta || "Nico está hablando...";
-        }
-
-        if (msg.type === "response.done") {
-          if (nicoRespuesta.trim()) {
-            imagenNico(detectarImagen(nicoRespuesta));
-            nicoBubble.innerText = nicoRespuesta.trim();
-          }
-
-          setTimeout(() => {
-            if (nicoActivo && nicoVisible) {
-              imagenNico("saluda");
-              nicoBubble.innerText = "Te escucho, Rodri...";
-            }
-          }, 1200);
-
-          nicoRespuesta = "";
-        }
-
-      } catch (e) {
-        console.log("Evento Nico:", event.data);
-      }
-    };
-
-    const offer = await nicoPC.createOffer();
-    await nicoPC.setLocalDescription(offer);
-
-    const sdpResponse = await fetch("https://api.openai.com/v1/realtime/calls", {
-      method: "POST",
-      body: offer.sdp,
-      headers: {
-        Authorization: `Bearer ${KEY}`,
-        "Content-Type": "application/sdp"
-      }
+    await db.collection("memoria_nico").add({
+      user,
+      nico,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
-
-    if (!sdpResponse.ok) {
-      throw new Error(await sdpResponse.text());
-    }
-
-    await nicoPC.setRemoteDescription({
-      type: "answer",
-      sdp: await sdpResponse.text()
-    });
-
-  } catch (error) {
-    console.error("Error Nico:", error);
-    imagenNico("piensa");
-    mostrarNico("Uff... no pude conectarme, Rodri.");
-    nicoActivo = false;
-    nicoMicBtn.innerText = "🎙️";
+  } catch (e) {
+    console.log("Error guardando memoria:", e);
   }
 }
+
+// ================= ACTIVAR =================
+
+async function activarNico() {
+  nicoActivo = true;
+  nicoBtn.innerText = "⛔";
+  nicoBubble.innerText = "Conectando con Nico...";
+
+  const tokenRes = await fetch(NICO_SESSION_URL);
+  const data = await tokenRes.json();
+  const KEY = data.client_secret.value;
+
+  nicoPC = new RTCPeerConnection();
+
+  nicoAudio = document.createElement("audio");
+  nicoAudio.autoplay = true;
+
+  nicoPC.ontrack = e => nicoAudio.srcObject = e.streams[0];
+
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  stream.getTracks().forEach(t => nicoPC.addTrack(t, stream));
+
+  nicoDC = nicoPC.createDataChannel("oai-events");
+
+  nicoDC.onmessage = (event) => {
+    const msg = JSON.parse(event.data);
+
+    // 🧠 Lo que tú dices
+    if (msg.type === "conversation.item.input_audio_transcription.completed") {
+      ultimoTextoUsuario = msg.transcript || "";
+    }
+
+    // 🤖 Nico hablando
+    if (msg.type === "response.audio_transcript.delta") {
+      nicoRespuesta += msg.delta;
+      nicoBubble.innerText = nicoRespuesta;
+    }
+
+    // ✅ Fin de respuesta
+    if (msg.type === "response.done") {
+      if (ultimoTextoUsuario && nicoRespuesta) {
+        guardarMemoria(ultimoTextoUsuario, nicoRespuesta);
+      }
+      nicoRespuesta = "";
+      ultimoTextoUsuario = "";
+    }
+  };
+
+  const offer = await nicoPC.createOffer();
+  await nicoPC.setLocalDescription(offer);
+
+  const res = await fetch("https://api.openai.com/v1/realtime/calls", {
+    method: "POST",
+    body: offer.sdp,
+    headers: {
+      Authorization: `Bearer ${KEY}`,
+      "Content-Type": "application/sdp"
+    }
+  });
+
+  const answer = await res.text();
+  await nicoPC.setRemoteDescription({ type: "answer", sdp: answer });
+}
+
+// ================= APAGAR =================
 
 function apagarNico() {
   nicoActivo = false;
-  nicoRespuesta = "";
-  nicoMicBtn.innerText = "🎙️";
+  nicoBtn.innerText = "🎙️";
 
   if (nicoPC) {
-    nicoPC.getSenders().forEach(sender => {
-      if (sender.track) sender.track.stop();
-    });
+    nicoPC.getSenders().forEach(s => s.track && s.track.stop());
     nicoPC.close();
   }
 
@@ -289,5 +133,5 @@ function apagarNico() {
   nicoDC = null;
   nicoAudio = null;
 
-  ocultarNico();
+  nicoBubble.innerText = "Nico apagado";
 }
