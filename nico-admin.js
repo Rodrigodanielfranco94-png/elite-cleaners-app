@@ -1,4 +1,5 @@
-// ================= NICO ADMIN WEBRTC - ANTI ECO / ANTI REPETICIÓN =================
+// ================= NICO ADMIN - NIVEL JEFE UI =================
+// WebRTC + voz + texto + memoria + micrófono inteligente
 
 const NICO_SESSION_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearSesionRealtime";
 
@@ -7,11 +8,13 @@ let nicoDC = null;
 let nicoAudio = null;
 let nicoMicStream = null;
 let nicoActivo = false;
-
 let nicoRespuesta = "";
 let ultimoTextoUsuario = "";
 let nicoEstaHablando = false;
-let guardando = false;
+let nicoReadyResolve = null;
+let nicoReadyPromise = null;
+
+// ================= UI =================
 
 const nicoBox = document.createElement("div");
 nicoBox.id = "nicoBox";
@@ -19,7 +22,29 @@ nicoBox.innerHTML = `
   <img id="nicoImg" src="nico-assets/saluda.png" />
   <button id="nicoBtn">🎙️</button>
 `;
+
+const nicoChatBox = document.createElement("div");
+nicoChatBox.id = "nicoChatBox";
+nicoChatBox.innerHTML = `
+  <button id="nicoWriteBtn">✍️ Escribir con Nico</button>
+
+  <div id="nicoChatPanel">
+    <div id="nicoChatHeader">
+      <span>Nico Jefe</span>
+      <button id="nicoChatClose">×</button>
+    </div>
+
+    <div id="nicoChatMessages"></div>
+
+    <div id="nicoChatInputRow">
+      <textarea id="nicoChatInput" placeholder="Escríbele a Nico..."></textarea>
+      <button id="nicoChatSend">Enviar</button>
+    </div>
+  </div>
+`;
+
 document.body.appendChild(nicoBox);
+document.body.appendChild(nicoChatBox);
 
 const style = document.createElement("style");
 style.innerHTML = `
@@ -34,7 +59,9 @@ style.innerHTML = `
   align-items:flex-end;
   pointer-events:none;
 }
+
 #nicoBox *{ pointer-events:auto; }
+
 #nicoImg{
   width:92px;
   height:auto;
@@ -42,6 +69,7 @@ style.innerHTML = `
   filter:drop-shadow(0 8px 14px rgba(0,0,0,.65));
   margin-bottom:4px;
 }
+
 #nicoBtn{
   width:64px;
   height:64px;
@@ -53,16 +81,153 @@ style.innerHTML = `
   font-weight:bold;
   box-shadow:0 8px 22px rgba(0,0,0,.45);
 }
+
+#nicoChatBox{
+  position:fixed;
+  left:16px;
+  right:96px;
+  bottom:22px;
+  z-index:99998;
+  pointer-events:none;
+}
+
+#nicoChatBox *{ pointer-events:auto; }
+
+#nicoWriteBtn{
+  width:100%;
+  padding:14px 16px;
+  border:none;
+  border-radius:18px;
+  background:#1c1c1e;
+  color:white;
+  font-size:15px;
+  font-weight:900;
+  border:1px solid #3b82f6;
+  box-shadow:0 8px 22px rgba(0,0,0,.45);
+}
+
+#nicoChatPanel{
+  display:none;
+  margin-top:10px;
+  background:#111;
+  border:1px solid #3b82f6;
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 10px 30px rgba(0,0,0,.6);
+}
+
+#nicoChatHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 14px;
+  background:#1c1c1e;
+  color:white;
+  font-weight:900;
+}
+
+#nicoChatClose{
+  background:#ef4444;
+  color:white;
+  border:none;
+  border-radius:50%;
+  width:28px;
+  height:28px;
+  font-weight:bold;
+}
+
+#nicoChatMessages{
+  max-height:230px;
+  overflow-y:auto;
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.nicoMsg{
+  padding:10px 12px;
+  border-radius:15px;
+  font-size:14px;
+  line-height:1.3;
+  max-width:88%;
+}
+
+.nicoMsg.user{
+  align-self:flex-end;
+  background:#3b82f6;
+  color:white;
+}
+
+.nicoMsg.nico{
+  align-self:flex-start;
+  background:#2c2c2e;
+  color:white;
+}
+
+#nicoChatInputRow{
+  display:flex;
+  gap:8px;
+  padding:10px;
+  background:#1c1c1e;
+}
+
+#nicoChatInput{
+  flex:1;
+  min-height:44px;
+  max-height:90px;
+  resize:none;
+  border:none;
+  border-radius:14px;
+  padding:12px;
+  background:#2c2c2e;
+  color:white;
+  font-size:14px;
+}
+
+#nicoChatSend{
+  border:none;
+  border-radius:14px;
+  padding:0 14px;
+  background:#22c55e;
+  color:white;
+  font-weight:900;
+}
 `;
 document.head.appendChild(style);
 
 const nicoImg = document.getElementById("nicoImg");
 const nicoBtn = document.getElementById("nicoBtn");
+const nicoWriteBtn = document.getElementById("nicoWriteBtn");
+const nicoChatPanel = document.getElementById("nicoChatPanel");
+const nicoChatClose = document.getElementById("nicoChatClose");
+const nicoChatMessages = document.getElementById("nicoChatMessages");
+const nicoChatInput = document.getElementById("nicoChatInput");
+const nicoChatSend = document.getElementById("nicoChatSend");
 
 nicoBtn.onclick = () => {
   if (nicoActivo) apagarNico();
   else activarNico();
 };
+
+nicoWriteBtn.onclick = () => {
+  nicoChatPanel.style.display = nicoChatPanel.style.display === "block" ? "none" : "block";
+};
+
+nicoChatClose.onclick = () => {
+  nicoChatPanel.style.display = "none";
+};
+
+nicoChatSend.onclick = enviarTextoANico;
+
+nicoChatInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    enviarTextoANico();
+  }
+});
+
+// ================= IMÁGENES =================
 
 function imagenNico(tipo) {
   const imgs = {
@@ -87,6 +252,19 @@ function detectarImagen(texto) {
   return "alegre";
 }
 
+// ================= CHAT UI =================
+
+function agregarMensaje(tipo, texto) {
+  const div = document.createElement("div");
+  div.className = `nicoMsg ${tipo}`;
+  div.innerText = texto;
+  nicoChatMessages.appendChild(div);
+  nicoChatMessages.scrollTop = nicoChatMessages.scrollHeight;
+  return div;
+}
+
+// ================= MICRÓFONO =================
+
 function silenciarMicrofono() {
   if (!nicoMicStream) return;
   nicoMicStream.getAudioTracks().forEach(track => track.enabled = false);
@@ -110,10 +288,11 @@ function debeApagarse(texto) {
   );
 }
 
+// ================= MEMORIA =================
+
 async function guardarMemoria(user, nico) {
   try {
-    if (!user || !nico || guardando) return;
-    guardando = true;
+    if (!user || !nico) return;
 
     await db.collection("memoria_nico").add({
       user,
@@ -122,21 +301,34 @@ async function guardarMemoria(user, nico) {
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    guardando = false;
+    await db.collection("memoria_nico_completa").add({
+      role_user: "Rodri",
+      user,
+      role_nico: "Nico",
+      nico,
+      fecha_texto: new Date().toLocaleString(),
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
   } catch (e) {
-    guardando = false;
     console.log("No pude guardar memoria:", e);
   }
 }
 
+// ================= ACTIVAR WEBRTC =================
+
 async function activarNico() {
   try {
-    if (nicoActivo) return;
+    if (nicoActivo) return nicoReadyPromise;
 
     nicoActivo = true;
     nicoRespuesta = "";
     ultimoTextoUsuario = "";
     nicoEstaHablando = false;
+
+    nicoReadyPromise = new Promise(resolve => {
+      nicoReadyResolve = resolve;
+    });
 
     nicoBtn.innerText = "⛔";
     imagenNico("piensa");
@@ -155,12 +347,7 @@ async function activarNico() {
 
     nicoPC.ontrack = async (event) => {
       nicoAudio.srcObject = event.streams[0];
-
-      try {
-        await nicoAudio.play();
-      } catch (e) {
-        console.log("Audio bloqueado:", e);
-      }
+      try { await nicoAudio.play(); } catch (e) {}
     };
 
     nicoMicStream = await navigator.mediaDevices.getUserMedia({
@@ -178,6 +365,7 @@ async function activarNico() {
     nicoDC.onopen = () => {
       imagenNico("saluda");
       activarMicrofono();
+      if (nicoReadyResolve) nicoReadyResolve();
     };
 
     nicoDC.onmessage = async (event) => {
@@ -189,7 +377,6 @@ async function activarNico() {
             silenciarMicrofono();
             return;
           }
-
           nicoRespuesta = "";
           imagenNico("saluda");
         }
@@ -233,6 +420,11 @@ async function activarNico() {
           nicoRespuesta += delta;
 
           imagenNico(detectarImagen(nicoRespuesta));
+
+          if (window.nicoCurrentAssistantMsg) {
+            window.nicoCurrentAssistantMsg.innerText = nicoRespuesta;
+            nicoChatMessages.scrollTop = nicoChatMessages.scrollHeight;
+          }
         }
 
         if (msg.type === "response.done") {
@@ -246,10 +438,10 @@ async function activarNico() {
           nicoRespuesta = "";
           ultimoTextoUsuario = "";
           nicoEstaHablando = false;
+          window.nicoCurrentAssistantMsg = null;
 
           imagenNico("saluda");
 
-          // Espera para que Nico no se escuche al terminar
           setTimeout(() => {
             activarMicrofono();
           }, 1800);
@@ -279,25 +471,68 @@ async function activarNico() {
       sdp: await sdpResponse.text()
     });
 
+    return nicoReadyPromise;
+
   } catch (error) {
     console.error("Error Nico:", error);
     nicoActivo = false;
     nicoEstaHablando = false;
     nicoBtn.innerText = "🎙️";
     imagenNico("reposo");
-
-    if (nicoMicStream) {
-      nicoMicStream.getTracks().forEach(track => track.stop());
-      nicoMicStream = null;
-    }
   }
 }
+
+// ================= ENVIAR TEXTO A NICO =================
+
+async function enviarTextoANico() {
+  const mensaje = nicoChatInput.value.trim();
+  if (!mensaje) return;
+
+  nicoChatInput.value = "";
+  nicoChatPanel.style.display = "block";
+
+  agregarMensaje("user", mensaje);
+
+  if (debeApagarse(mensaje)) {
+    agregarMensaje("nico", "Listo Rodri... me desconecto.");
+    apagarNico();
+    return;
+  }
+
+  await activarNico();
+  silenciarMicrofono();
+
+  ultimoTextoUsuario = mensaje;
+  nicoRespuesta = "";
+  window.nicoCurrentAssistantMsg = agregarMensaje("nico", "Nico está pensando...");
+
+  nicoDC.send(JSON.stringify({
+    type: "conversation.item.create",
+    item: {
+      type: "message",
+      role: "user",
+      content: [
+        {
+          type: "input_text",
+          text: mensaje
+        }
+      ]
+    }
+  }));
+
+  nicoDC.send(JSON.stringify({
+    type: "response.create"
+  }));
+}
+
+// ================= APAGAR =================
 
 function apagarNico() {
   nicoActivo = false;
   nicoRespuesta = "";
   ultimoTextoUsuario = "";
   nicoEstaHablando = false;
+  window.nicoCurrentAssistantMsg = null;
 
   nicoBtn.innerText = "🎙️";
   imagenNico("reposo");
@@ -324,4 +559,6 @@ function apagarNico() {
   nicoDC = null;
   nicoAudio = null;
   nicoMicStream = null;
+  nicoReadyPromise = null;
+  nicoReadyResolve = null;
 }
