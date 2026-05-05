@@ -1,18 +1,30 @@
-// ================= NICO ADMIN - NIVEL JEFE UI =================
-// WebRTC + voz + texto + memoria + micrófono inteligente
+// ================= NICO ADMIN WEBRTC FINAL =================
+// Solo micrófono visible al inicio.
+// Nico aparece al tocar micrófono.
+// Chat escrito aparece SOLO si dices: "te voy a escribir".
+// WebRTC puro: sin speechSynthesis, sin API key en frontend.
 
 const NICO_SESSION_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearSesionRealtime";
+
+// Mata cualquier Nico viejo si quedó cargado
+if (window.NICO_STOP) {
+  try { window.NICO_STOP(); } catch (e) {}
+}
+
+document.getElementById("nicoBox")?.remove();
+document.getElementById("nicoChatPanel")?.remove();
 
 let nicoPC = null;
 let nicoDC = null;
 let nicoAudio = null;
 let nicoMicStream = null;
 let nicoActivo = false;
+let nicoEstaHablando = false;
 let nicoRespuesta = "";
 let ultimoTextoUsuario = "";
-let nicoEstaHablando = false;
 let nicoReadyResolve = null;
 let nicoReadyPromise = null;
+let currentAssistantMsg = null;
 
 // ================= UI =================
 
@@ -23,28 +35,22 @@ nicoBox.innerHTML = `
   <button id="nicoBtn">🎙️</button>
 `;
 
-const nicoChatBox = document.createElement("div");
-nicoChatBox.id = "nicoChatBox";
-nicoChatBox.innerHTML = `
-  <button id="nicoWriteBtn">✍️ Escribir con Nico</button>
-
-  <div id="nicoChatPanel">
-    <div id="nicoChatHeader">
-      <span>Nico Jefe</span>
-      <button id="nicoChatClose">×</button>
-    </div>
-
-    <div id="nicoChatMessages"></div>
-
-    <div id="nicoChatInputRow">
-      <textarea id="nicoChatInput" placeholder="Escríbele a Nico..."></textarea>
-      <button id="nicoChatSend">Enviar</button>
-    </div>
+const nicoChatPanel = document.createElement("div");
+nicoChatPanel.id = "nicoChatPanel";
+nicoChatPanel.innerHTML = `
+  <div id="nicoChatHeader">
+    <span>Chatear con Nico</span>
+    <button id="nicoChatClose">×</button>
+  </div>
+  <div id="nicoChatMessages"></div>
+  <div id="nicoChatInputRow">
+    <textarea id="nicoChatInput" placeholder="Escríbele a Nico..."></textarea>
+    <button id="nicoChatSend">Enviar</button>
   </div>
 `;
 
 document.body.appendChild(nicoBox);
-document.body.appendChild(nicoChatBox);
+document.body.appendChild(nicoChatPanel);
 
 const style = document.createElement("style");
 style.innerHTML = `
@@ -63,11 +69,18 @@ style.innerHTML = `
 #nicoBox *{ pointer-events:auto; }
 
 #nicoImg{
-  width:92px;
+  display:none;
+  width:95px;
   height:auto;
   object-fit:contain;
   filter:drop-shadow(0 8px 14px rgba(0,0,0,.65));
   margin-bottom:4px;
+  animation:nicoMagic .35s ease-out;
+}
+
+@keyframes nicoMagic{
+  from{ opacity:0; transform:scale(.7) translateY(15px); }
+  to{ opacity:1; transform:scale(1) translateY(0); }
 }
 
 #nicoBtn{
@@ -82,33 +95,13 @@ style.innerHTML = `
   box-shadow:0 8px 22px rgba(0,0,0,.45);
 }
 
-#nicoChatBox{
-  position:fixed;
-  left:16px;
-  right:96px;
-  bottom:22px;
-  z-index:99998;
-  pointer-events:none;
-}
-
-#nicoChatBox *{ pointer-events:auto; }
-
-#nicoWriteBtn{
-  width:100%;
-  padding:14px 16px;
-  border:none;
-  border-radius:18px;
-  background:#1c1c1e;
-  color:white;
-  font-size:15px;
-  font-weight:900;
-  border:1px solid #3b82f6;
-  box-shadow:0 8px 22px rgba(0,0,0,.45);
-}
-
 #nicoChatPanel{
   display:none;
-  margin-top:10px;
+  position:fixed !important;
+  left:16px !important;
+  right:96px !important;
+  bottom:22px !important;
+  z-index:99998;
   background:#111;
   border:1px solid #3b82f6;
   border-radius:20px;
@@ -151,6 +144,7 @@ style.innerHTML = `
   font-size:14px;
   line-height:1.3;
   max-width:88%;
+  word-break:break-word;
 }
 
 .nicoMsg.user{
@@ -198,29 +192,26 @@ document.head.appendChild(style);
 
 const nicoImg = document.getElementById("nicoImg");
 const nicoBtn = document.getElementById("nicoBtn");
-const nicoWriteBtn = document.getElementById("nicoWriteBtn");
-const nicoChatPanel = document.getElementById("nicoChatPanel");
-const nicoChatClose = document.getElementById("nicoChatClose");
-const nicoChatMessages = document.getElementById("nicoChatMessages");
-const nicoChatInput = document.getElementById("nicoChatInput");
-const nicoChatSend = document.getElementById("nicoChatSend");
+const chatPanel = document.getElementById("nicoChatPanel");
+const chatClose = document.getElementById("nicoChatClose");
+const chatMessages = document.getElementById("nicoChatMessages");
+const chatInput = document.getElementById("nicoChatInput");
+const chatSend = document.getElementById("nicoChatSend");
 
-nicoBtn.onclick = () => {
+// ================= BOTONES =================
+
+nicoBtn.onclick = async () => {
   if (nicoActivo) apagarNico();
-  else activarNico();
+  else await activarNico();
 };
 
-nicoWriteBtn.onclick = () => {
-  nicoChatPanel.style.display = nicoChatPanel.style.display === "block" ? "none" : "block";
+chatClose.onclick = () => {
+  chatPanel.style.display = "none";
 };
 
-nicoChatClose.onclick = () => {
-  nicoChatPanel.style.display = "none";
-};
+chatSend.onclick = enviarTextoANico;
 
-nicoChatSend.onclick = enviarTextoANico;
-
-nicoChatInput.addEventListener("keydown", (e) => {
+chatInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
     enviarTextoANico();
@@ -243,6 +234,14 @@ function imagenNico(tipo) {
   nicoImg.src = imgs[tipo] || imgs.saluda;
 }
 
+function mostrarNico() {
+  nicoImg.style.display = "block";
+}
+
+function ocultarNico() {
+  nicoImg.style.display = "none";
+}
+
 function detectarImagen(texto) {
   const t = (texto || "").toLowerCase();
   if (t.includes("g.g") || t.includes("risa") || t.includes("chiste")) return "rie";
@@ -252,27 +251,20 @@ function detectarImagen(texto) {
   return "alegre";
 }
 
-// ================= CHAT UI =================
-
-function agregarMensaje(tipo, texto) {
-  const div = document.createElement("div");
-  div.className = `nicoMsg ${tipo}`;
-  div.innerText = texto;
-  nicoChatMessages.appendChild(div);
-  nicoChatMessages.scrollTop = nicoChatMessages.scrollHeight;
-  return div;
-}
-
-// ================= MICRÓFONO =================
+// ================= MICRÓFONO INTELIGENTE =================
 
 function silenciarMicrofono() {
   if (!nicoMicStream) return;
-  nicoMicStream.getAudioTracks().forEach(track => track.enabled = false);
+  nicoMicStream.getAudioTracks().forEach(track => {
+    track.enabled = false;
+  });
 }
 
 function activarMicrofono() {
   if (!nicoMicStream || !nicoActivo || nicoEstaHablando) return;
-  nicoMicStream.getAudioTracks().forEach(track => track.enabled = true);
+  nicoMicStream.getAudioTracks().forEach(track => {
+    track.enabled = true;
+  });
 }
 
 function debeApagarse(texto) {
@@ -286,6 +278,33 @@ function debeApagarse(texto) {
     t.includes("nico desconéctate") ||
     t.includes("nico desconectate")
   );
+}
+
+function debeAbrirChat(texto) {
+  const t = (texto || "").toLowerCase();
+  return (
+    t.includes("te voy a escribir") ||
+    t.includes("voy a escribir") ||
+    t.includes("quiero escribirte") ||
+    t.includes("abrir chat") ||
+    t.includes("abre el chat")
+  );
+}
+
+// ================= CHAT =================
+
+function agregarMensaje(tipo, texto) {
+  const div = document.createElement("div");
+  div.className = `nicoMsg ${tipo}`;
+  div.innerText = texto;
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  return div;
+}
+
+function abrirChatNico() {
+  chatPanel.style.display = "block";
+  chatInput.focus();
 }
 
 // ================= MEMORIA =================
@@ -315,23 +334,24 @@ async function guardarMemoria(user, nico) {
   }
 }
 
-// ================= ACTIVAR WEBRTC =================
+// ================= ACTIVAR NICO =================
 
 async function activarNico() {
   try {
     if (nicoActivo) return nicoReadyPromise;
 
     nicoActivo = true;
+    nicoEstaHablando = false;
     nicoRespuesta = "";
     ultimoTextoUsuario = "";
-    nicoEstaHablando = false;
+
+    nicoBtn.innerText = "⛔";
+    imagenNico("saluda");
+    mostrarNico();
 
     nicoReadyPromise = new Promise(resolve => {
       nicoReadyResolve = resolve;
     });
-
-    nicoBtn.innerText = "⛔";
-    imagenNico("piensa");
 
     const tokenRes = await fetch(NICO_SESSION_URL);
     const tokenData = await tokenRes.json();
@@ -358,7 +378,9 @@ async function activarNico() {
       }
     });
 
-    nicoMicStream.getTracks().forEach(track => nicoPC.addTrack(track, nicoMicStream));
+    nicoMicStream.getTracks().forEach(track => {
+      nicoPC.addTrack(track, nicoMicStream);
+    });
 
     nicoDC = nicoPC.createDataChannel("oai-events");
 
@@ -366,6 +388,14 @@ async function activarNico() {
       imagenNico("saluda");
       activarMicrofono();
       if (nicoReadyResolve) nicoReadyResolve();
+
+      // Nico saluda como magia al encender
+      nicoDC.send(JSON.stringify({
+        type: "response.create",
+        response: {
+          instructions: "Saluda corto diciendo exactamente algo como: Hola hola, Rodri, en qué puedo ayudarte?"
+        }
+      }));
     };
 
     nicoDC.onmessage = async (event) => {
@@ -387,7 +417,6 @@ async function activarNico() {
 
         if (msg.type === "conversation.item.input_audio_transcription.completed") {
           const texto = msg.transcript || "";
-
           if (nicoEstaHablando) return;
 
           ultimoTextoUsuario = texto;
@@ -396,6 +425,10 @@ async function activarNico() {
             imagenNico("bien");
             setTimeout(apagarNico, 500);
             return;
+          }
+
+          if (debeAbrirChat(texto)) {
+            abrirChatNico();
           }
         }
 
@@ -421,9 +454,9 @@ async function activarNico() {
 
           imagenNico(detectarImagen(nicoRespuesta));
 
-          if (window.nicoCurrentAssistantMsg) {
-            window.nicoCurrentAssistantMsg.innerText = nicoRespuesta;
-            nicoChatMessages.scrollTop = nicoChatMessages.scrollHeight;
+          if (currentAssistantMsg) {
+            currentAssistantMsg.innerText = nicoRespuesta;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
           }
         }
 
@@ -437,12 +470,13 @@ async function activarNico() {
 
           nicoRespuesta = "";
           ultimoTextoUsuario = "";
-          nicoEstaHablando = false;
-          window.nicoCurrentAssistantMsg = null;
+          currentAssistantMsg = null;
 
           imagenNico("saluda");
 
+          // Regla: Nico termina -> espera 1.8s -> micrófono ON
           setTimeout(() => {
+            nicoEstaHablando = false;
             activarMicrofono();
           }, 1800);
         }
@@ -475,21 +509,18 @@ async function activarNico() {
 
   } catch (error) {
     console.error("Error Nico:", error);
-    nicoActivo = false;
-    nicoEstaHablando = false;
-    nicoBtn.innerText = "🎙️";
-    imagenNico("reposo");
+    apagarNico();
   }
 }
 
-// ================= ENVIAR TEXTO A NICO =================
+// ================= ENVIAR TEXTO =================
 
 async function enviarTextoANico() {
-  const mensaje = nicoChatInput.value.trim();
+  const mensaje = chatInput.value.trim();
   if (!mensaje) return;
 
-  nicoChatInput.value = "";
-  nicoChatPanel.style.display = "block";
+  chatInput.value = "";
+  chatPanel.style.display = "block";
 
   agregarMensaje("user", mensaje);
 
@@ -500,11 +531,12 @@ async function enviarTextoANico() {
   }
 
   await activarNico();
+
   silenciarMicrofono();
 
   ultimoTextoUsuario = mensaje;
   nicoRespuesta = "";
-  window.nicoCurrentAssistantMsg = agregarMensaje("nico", "Nico está pensando...");
+  currentAssistantMsg = agregarMensaje("nico", "Nico está pensando...");
 
   nicoDC.send(JSON.stringify({
     type: "conversation.item.create",
@@ -529,13 +561,14 @@ async function enviarTextoANico() {
 
 function apagarNico() {
   nicoActivo = false;
+  nicoEstaHablando = false;
   nicoRespuesta = "";
   ultimoTextoUsuario = "";
-  nicoEstaHablando = false;
-  window.nicoCurrentAssistantMsg = null;
+  currentAssistantMsg = null;
 
   nicoBtn.innerText = "🎙️";
   imagenNico("reposo");
+  ocultarNico();
 
   if (nicoAudio) {
     try {
@@ -562,3 +595,5 @@ function apagarNico() {
   nicoReadyPromise = null;
   nicoReadyResolve = null;
 }
+
+window.NICO_STOP = apagarNico;
