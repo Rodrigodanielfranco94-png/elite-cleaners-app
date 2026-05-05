@@ -1,6 +1,7 @@
 // ================= NICO ADMIN WEBRTC FINAL =================
-// Solo micrófono visible al inicio.
+// Micrófono visible al inicio.
 // Nico aparece al tocar micrófono.
+// Nico saluda UNA sola vez y se calla.
 // Chat escrito aparece SOLO si dices: "te voy a escribir".
 // WebRTC puro: sin speechSynthesis, sin API key en frontend.
 
@@ -13,6 +14,7 @@ if (window.NICO_STOP) {
 
 document.getElementById("nicoBox")?.remove();
 document.getElementById("nicoChatPanel")?.remove();
+document.getElementById("nicoFinalStyle")?.remove();
 
 let nicoPC = null;
 let nicoDC = null;
@@ -25,6 +27,7 @@ let ultimoTextoUsuario = "";
 let nicoReadyResolve = null;
 let nicoReadyPromise = null;
 let currentAssistantMsg = null;
+let saludoInicialHecho = false;
 
 // ================= UI =================
 
@@ -53,6 +56,7 @@ document.body.appendChild(nicoBox);
 document.body.appendChild(nicoChatPanel);
 
 const style = document.createElement("style");
+style.id = "nicoFinalStyle";
 style.innerHTML = `
 #nicoBox{
   position:fixed !important;
@@ -286,8 +290,10 @@ function debeAbrirChat(texto) {
     t.includes("te voy a escribir") ||
     t.includes("voy a escribir") ||
     t.includes("quiero escribirte") ||
+    t.includes("quiero escribir") ||
     t.includes("abrir chat") ||
-    t.includes("abre el chat")
+    t.includes("abre el chat") ||
+    t.includes("escribir con nico")
   );
 }
 
@@ -304,7 +310,7 @@ function agregarMensaje(tipo, texto) {
 
 function abrirChatNico() {
   chatPanel.style.display = "block";
-  chatInput.focus();
+  setTimeout(() => chatInput.focus(), 200);
 }
 
 // ================= MEMORIA =================
@@ -344,6 +350,7 @@ async function activarNico() {
     nicoEstaHablando = false;
     nicoRespuesta = "";
     ultimoTextoUsuario = "";
+    saludoInicialHecho = false;
 
     nicoBtn.innerText = "⛔";
     imagenNico("saluda");
@@ -386,16 +393,35 @@ async function activarNico() {
 
     nicoDC.onopen = () => {
       imagenNico("saluda");
-      activarMicrofono();
+
       if (nicoReadyResolve) nicoReadyResolve();
 
-      // Nico saluda como magia al encender
-      nicoDC.send(JSON.stringify({
-        type: "response.create",
-        response: {
-          instructions: "Saluda corto diciendo exactamente algo como: Hola hola, Rodri, en qué puedo ayudarte?"
-        }
-      }));
+      // Saludo inicial UNA sola vez.
+      if (!saludoInicialHecho) {
+        saludoInicialHecho = true;
+        silenciarMicrofono();
+
+        nicoDC.send(JSON.stringify({
+          type: "conversation.item.create",
+          item: {
+            type: "message",
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: "Nico, saluda una sola vez, muy corto, y después quédate callado esperando que Rodrigo hable."
+              }
+            ]
+          }
+        }));
+
+        nicoDC.send(JSON.stringify({
+          type: "response.create",
+          response: {
+            instructions: "Di exactamente: Hola hola, Rodri, ¿en qué puedo ayudarte? Después no digas nada más. Espera a que Rodrigo hable."
+          }
+        }));
+      }
     };
 
     nicoDC.onmessage = async (event) => {
@@ -464,7 +490,10 @@ async function activarNico() {
           const userFinal = (ultimoTextoUsuario || "").trim();
           const nicoFinal = (nicoRespuesta || "").trim();
 
-          if (userFinal && nicoFinal) {
+          // No guardamos el saludo automático como memoria.
+          const esSaludoAuto = nicoFinal.toLowerCase().includes("hola hola") && !userFinal;
+
+          if (userFinal && nicoFinal && !esSaludoAuto) {
             await guardarMemoria(userFinal, nicoFinal);
           }
 
@@ -474,11 +503,11 @@ async function activarNico() {
 
           imagenNico("saluda");
 
-          // Regla: Nico termina -> espera 1.8s -> micrófono ON
+          // Nico termina -> espera 2.2 segundos -> micrófono ON
           setTimeout(() => {
             nicoEstaHablando = false;
             activarMicrofono();
-          }, 1800);
+          }, 2200);
         }
 
       } catch (e) {
@@ -565,10 +594,12 @@ function apagarNico() {
   nicoRespuesta = "";
   ultimoTextoUsuario = "";
   currentAssistantMsg = null;
+  saludoInicialHecho = false;
 
   nicoBtn.innerText = "🎙️";
   imagenNico("reposo");
   ocultarNico();
+  chatPanel.style.display = "none";
 
   if (nicoAudio) {
     try {
