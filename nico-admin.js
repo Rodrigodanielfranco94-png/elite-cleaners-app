@@ -1,6 +1,4 @@
-// ================= NICO ADMIN WEBRTC
-// MEMORIA HUMANA PERMANENTE + MICRÓFONO INTELIGENTE
-// =================
+// ================= NICO ADMIN WEBRTC - ANTI ECO / ANTI REPETICIÓN =================
 
 const NICO_SESSION_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearSesionRealtime";
 
@@ -13,8 +11,7 @@ let nicoActivo = false;
 let nicoRespuesta = "";
 let ultimoTextoUsuario = "";
 let nicoEstaHablando = false;
-
-// ================= UI SIN CUADRO BLANCO =================
+let guardando = false;
 
 const nicoBox = document.createElement("div");
 nicoBox.id = "nicoBox";
@@ -37,11 +34,7 @@ style.innerHTML = `
   align-items:flex-end;
   pointer-events:none;
 }
-
-#nicoBox *{
-  pointer-events:auto;
-}
-
+#nicoBox *{ pointer-events:auto; }
 #nicoImg{
   width:92px;
   height:auto;
@@ -49,7 +42,6 @@ style.innerHTML = `
   filter:drop-shadow(0 8px 14px rgba(0,0,0,.65));
   margin-bottom:4px;
 }
-
 #nicoBtn{
   width:64px;
   height:64px;
@@ -72,8 +64,6 @@ nicoBtn.onclick = () => {
   else activarNico();
 };
 
-// ================= IMÁGENES =================
-
 function imagenNico(tipo) {
   const imgs = {
     saluda: "nico-assets/saluda.png",
@@ -85,42 +75,30 @@ function imagenNico(tipo) {
     bien: "nico-assets/bien.png",
     reposo: "nico-assets/reposo.png"
   };
-
   nicoImg.src = imgs[tipo] || imgs.saluda;
 }
 
 function detectarImagen(texto) {
   const t = (texto || "").toLowerCase();
-
   if (t.includes("g.g") || t.includes("risa") || t.includes("chiste")) return "rie";
   if (t.includes("trabajo") || t.includes("cliente") || t.includes("agenda") || t.includes("limpieza")) return "celular";
   if (t.includes("música") || t.includes("musica") || t.includes("guitarra") || t.includes("cantar")) return "canta";
   if (t.includes("bien") || t.includes("perfecto") || t.includes("listo")) return "bien";
-
   return "alegre";
 }
 
-// ================= MICRÓFONO INTELIGENTE =================
-
 function silenciarMicrofono() {
   if (!nicoMicStream) return;
-
-  nicoMicStream.getAudioTracks().forEach(track => {
-    track.enabled = false;
-  });
+  nicoMicStream.getAudioTracks().forEach(track => track.enabled = false);
 }
 
 function activarMicrofono() {
-  if (!nicoMicStream || !nicoActivo) return;
-
-  nicoMicStream.getAudioTracks().forEach(track => {
-    track.enabled = true;
-  });
+  if (!nicoMicStream || !nicoActivo || nicoEstaHablando) return;
+  nicoMicStream.getAudioTracks().forEach(track => track.enabled = true);
 }
 
 function debeApagarse(texto) {
   const t = (texto || "").toLowerCase();
-
   return (
     t.includes("bye nico") ||
     t.includes("bay nico") ||
@@ -132,34 +110,24 @@ function debeApagarse(texto) {
   );
 }
 
-// ================= MEMORIA HUMANA PERMANENTE =================
-
 async function guardarMemoria(user, nico) {
   try {
-    if (!user || !nico) return;
+    if (!user || !nico || guardando) return;
+    guardando = true;
 
     await db.collection("memoria_nico").add({
-      user: user,
-      nico: nico,
+      user,
+      nico,
       fecha_texto: new Date().toLocaleString(),
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    await db.collection("memoria_nico_completa").add({
-      role_user: "Rodri",
-      user: user,
-      role_nico: "Nico",
-      nico: nico,
-      fecha_texto: new Date().toLocaleString(),
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
+    guardando = false;
   } catch (e) {
+    guardando = false;
     console.log("No pude guardar memoria:", e);
   }
 }
-
-// ================= ACTIVAR NICO =================
 
 async function activarNico() {
   try {
@@ -188,20 +156,6 @@ async function activarNico() {
     nicoPC.ontrack = async (event) => {
       nicoAudio.srcObject = event.streams[0];
 
-      nicoAudio.onplay = () => {
-        nicoEstaHablando = true;
-        imagenNico("alegre");
-        silenciarMicrofono();
-      };
-
-      nicoAudio.onended = () => {
-        nicoEstaHablando = false;
-        imagenNico("saluda");
-        setTimeout(() => {
-          activarMicrofono();
-        }, 500);
-      };
-
       try {
         await nicoAudio.play();
       } catch (e) {
@@ -209,7 +163,14 @@ async function activarNico() {
       }
     };
 
-    nicoMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    nicoMicStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      }
+    });
+
     nicoMicStream.getTracks().forEach(track => nicoPC.addTrack(track, nicoMicStream));
 
     nicoDC = nicoPC.createDataChannel("oai-events");
@@ -234,32 +195,43 @@ async function activarNico() {
         }
 
         if (msg.type === "input_audio_buffer.speech_stopped") {
-          if (!nicoEstaHablando) {
-            imagenNico("piensa");
-          }
+          if (!nicoEstaHablando) imagenNico("piensa");
         }
 
         if (msg.type === "conversation.item.input_audio_transcription.completed") {
-          ultimoTextoUsuario = msg.transcript || "";
+          const texto = msg.transcript || "";
 
-          if (debeApagarse(ultimoTextoUsuario)) {
+          if (nicoEstaHablando) return;
+
+          ultimoTextoUsuario = texto;
+
+          if (debeApagarse(texto)) {
             imagenNico("bien");
             setTimeout(apagarNico, 500);
             return;
           }
         }
 
-        if (msg.type === "response.audio_transcript.delta") {
-          const delta = msg.delta || "";
-          nicoRespuesta += delta;
-
-          imagenNico(detectarImagen(nicoRespuesta));
+        if (msg.type === "response.created") {
+          nicoEstaHablando = true;
+          nicoRespuesta = "";
           silenciarMicrofono();
+          imagenNico("piensa");
         }
 
         if (msg.type === "response.audio.delta") {
           nicoEstaHablando = true;
           silenciarMicrofono();
+          imagenNico(detectarImagen(nicoRespuesta));
+        }
+
+        if (msg.type === "response.audio_transcript.delta") {
+          nicoEstaHablando = true;
+          silenciarMicrofono();
+
+          const delta = msg.delta || "";
+          nicoRespuesta += delta;
+
           imagenNico(detectarImagen(nicoRespuesta));
         }
 
@@ -277,9 +249,10 @@ async function activarNico() {
 
           imagenNico("saluda");
 
+          // Espera para que Nico no se escuche al terminar
           setTimeout(() => {
             activarMicrofono();
-          }, 700);
+          }, 1800);
         }
 
       } catch (e) {
@@ -299,9 +272,7 @@ async function activarNico() {
       }
     });
 
-    if (!sdpResponse.ok) {
-      throw new Error(await sdpResponse.text());
-    }
+    if (!sdpResponse.ok) throw new Error(await sdpResponse.text());
 
     await nicoPC.setRemoteDescription({
       type: "answer",
@@ -310,7 +281,6 @@ async function activarNico() {
 
   } catch (error) {
     console.error("Error Nico:", error);
-
     nicoActivo = false;
     nicoEstaHablando = false;
     nicoBtn.innerText = "🎙️";
@@ -322,8 +292,6 @@ async function activarNico() {
     }
   }
 }
-
-// ================= APAGAR NICO =================
 
 function apagarNico() {
   nicoActivo = false;
