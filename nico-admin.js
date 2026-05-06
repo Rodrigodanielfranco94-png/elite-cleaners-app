@@ -1,4 +1,4 @@
-// ================= NICO ADMIN WEBRTC FINAL + AGENDA AUTOMÁTICA =================
+// ================= NICO ADMIN WEBRTC FINAL + AGENDA AUTOMÁTICA CORREGIDA =================
 
 const NICO_SESSION_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearSesionRealtime";
 const CREAR_TRABAJO_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearTrabajoConfirmado";
@@ -23,7 +23,7 @@ let nicoReadyResolve = null;
 let nicoReadyPromise = null;
 let currentAssistantMsg = null;
 let saludoInicialHecho = false;
-let ultimoComandoAgenda = "";
+let ultimoTrabajoCreado = "";
 
 // ================= UI =================
 
@@ -250,20 +250,18 @@ function activarMicrofono() {
 }
 
 function debeApagarse(texto) {
-  const t = (texto || "").toLowerCase();
+  const t = normalizarTexto(texto);
   return (
     t.includes("bye nico") ||
     t.includes("bay nico") ||
     t.includes("chao nico") ||
-    t.includes("desconéctate nico") ||
     t.includes("desconectate nico") ||
-    t.includes("nico desconéctate") ||
     t.includes("nico desconectate")
   );
 }
 
 function debeAbrirChat(texto) {
-  const t = (texto || "").toLowerCase();
+  const t = normalizarTexto(texto);
   return (
     t.includes("te voy a escribir") ||
     t.includes("voy a escribir") ||
@@ -318,10 +316,10 @@ async function guardarMemoria(user, nico) {
   }
 }
 
-// ================= AGENDA AUTOMÁTICA =================
+// ================= AGENDA AUTOMÁTICA CORREGIDA =================
 
-function normalizarTexto(t) {
-  return (t || "")
+function normalizarTexto(texto) {
+  return (texto || "")
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -330,43 +328,74 @@ function normalizarTexto(t) {
     .trim();
 }
 
-function detectarTipoLimpieza(t) {
-  const x = normalizarTexto(t);
-  if (x.includes("profunda") || x.includes("deep")) return "PROFUNDA";
-  if (x.includes("move in") || x.includes("move-in")) return "MOVE-IN";
-  if (x.includes("move out") || x.includes("move-out")) return "MOVE-OUT";
-  if (x.includes("post construccion") || x.includes("post-construccion") || x.includes("construction")) return "POST-CONSTRUCCION";
-  if (x.includes("primera") || x.includes("first")) return "PRIMERA";
+function esComandoAgenda(texto) {
+  const t = normalizarTexto(texto);
+  return (
+    t.includes("agenda") ||
+    t.includes("agendar") ||
+    t.includes("programa") ||
+    t.includes("programar") ||
+    t.includes("crear limpieza") ||
+    t.includes("crea limpieza") ||
+    t.includes("crear trabajo") ||
+    t.includes("crea trabajo") ||
+    t.includes("pon una limpieza") ||
+    t.includes("ponme una limpieza")
+  );
+}
+
+function extraerTipo(texto) {
+  const t = normalizarTexto(texto);
+
+  if (t.includes("profunda") || t.includes("deep clean") || t.includes("deep")) return "PROFUNDA";
+  if (t.includes("move in") || t.includes("move-in")) return "MOVE-IN";
+  if (t.includes("move out") || t.includes("move-out")) return "MOVE-OUT";
+  if (t.includes("post construction") || t.includes("post-construction") || t.includes("post construccion")) return "POST-CONSTRUCCION";
+  if (t.includes("primera") || t.includes("first clean")) return "PRIMERA";
+
   return "ESTÁNDAR";
 }
 
 function extraerFecha(texto) {
   const t = normalizarTexto(texto);
+
   const meses = {
-    enero: "01", febrero: "02", marzo: "03", abril: "04", mayo: "05", junio: "06",
-    julio: "07", agosto: "08", septiembre: "09", setiembre: "09", octubre: "10",
-    noviembre: "11", diciembre: "12"
+    enero: "01",
+    febrero: "02",
+    marzo: "03",
+    abril: "04",
+    mayo: "05",
+    junio: "06",
+    julio: "07",
+    agosto: "08",
+    septiembre: "09",
+    setiembre: "09",
+    octubre: "10",
+    noviembre: "11",
+    diciembre: "12"
   };
 
   let year = new Date().getFullYear();
 
-  let m = t.match(/(\d{1,2})\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)(?:\s+de\s+(\d{4}))?/);
-  if (m) {
-    const dia = m[1].padStart(2, "0");
-    const mes = meses[m[2]];
-    if (m[3]) year = m[3];
+  let match = t.match(/(\d{1,2})\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)(?:\s+de\s+(\d{4}))?/i);
+
+  if (match) {
+    const dia = match[1].padStart(2, "0");
+    const mes = meses[match[2].toLowerCase()];
+    if (match[3]) year = match[3];
     return `${year}-${mes}-${dia}`;
   }
 
-  m = t.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
-  if (m) {
-    const mes = m[1].padStart(2, "0");
-    const dia = m[2].padStart(2, "0");
-    if (m[3]) year = m[3].length === 2 ? `20${m[3]}` : m[3];
+  match = t.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+
+  if (match) {
+    const mes = match[1].padStart(2, "0");
+    const dia = match[2].padStart(2, "0");
+    if (match[3]) year = match[3].length === 2 ? `20${match[3]}` : match[3];
     return `${year}-${mes}-${dia}`;
   }
 
-  if (t.includes("mañana") || t.includes("manana")) {
+  if (t.includes("manana")) {
     const d = new Date();
     d.setDate(d.getDate() + 1);
     return d.toISOString().slice(0, 10);
@@ -382,127 +411,174 @@ function extraerFecha(texto) {
 function extraerHora(texto) {
   const t = normalizarTexto(texto);
 
-  let m = t.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm|a m|p m|a\.m|p\.m)?/);
-  if (!m) return "";
+  let match = t.match(/(?:a\s+las\s+|alas\s+)?(\d{1,2})(?::(\d{2}))?\s*(a\s*m|p\s*m|am|pm)?/i);
+  if (!match) return "";
 
-  let h = parseInt(m[1], 10);
-  let min = m[2] || "00";
-  const mer = (m[3] || "").replace(/\s|\./g, "");
+  let hora = parseInt(match[1], 10);
+  const minutos = match[2] || "00";
+  const meridiano = (match[3] || "").replace(/\s/g, "");
 
-  if (mer === "pm" && h < 12) h += 12;
-  if (mer === "am" && h === 12) h = 0;
+  if (meridiano === "pm" && hora < 12) hora += 12;
+  if (meridiano === "am" && hora === 12) hora = 0;
 
-  return `${String(h).padStart(2, "0")}:${min}`;
+  return `${hora.toString().padStart(2, "0")}:${minutos}`;
 }
 
 function extraerCliente(texto) {
-  let t = texto
-    .replace(/agenda(?:r)?/i, "")
-    .replace(/programa(?:r)?/i, "")
-    .replace(/crea(?:r)?/i, "")
-    .replace(/un trabajo/i, "")
-    .replace(/una limpieza/i, "")
+  let limpio = texto;
+
+  limpio = limpio.replace(/agenda(r)?/gi, "");
+  limpio = limpio.replace(/programa(r)?/gi, "");
+  limpio = limpio.replace(/crea(r)?/gi, "");
+  limpio = limpio.replace(/ponme/gi, "");
+  limpio = limpio.replace(/pon/gi, "");
+  limpio = limpio.replace(/la limpieza de/gi, "");
+  limpio = limpio.replace(/limpieza de/gi, "");
+  limpio = limpio.replace(/una limpieza de/gi, "");
+  limpio = limpio.replace(/un trabajo para/gi, "");
+  limpio = limpio.replace(/trabajo para/gi, "");
+  limpio = limpio.replace(/^a\s+/i, "");
+  limpio = limpio.trim();
+
+  const corte = limpio.search(/(\d{1,2}\s+de\s+|hoy|mañana|manana|\d{1,2}\/\d{1,2}|a las|alas|limpieza|estandar|estándar|profunda|move|post|primera)/i);
+
+  if (corte > 0) limpio = limpio.substring(0, corte);
+
+  limpio = limpio
+    .replace(/\bel\b/gi, "")
+    .replace(/\bpara\b/gi, "")
+    .replace(/\s+/g, " ")
     .trim();
 
-  t = t.replace(/^a\s+/i, "");
-
-  const corte = t.search(/(\d{1,2}\s+de\s+|hoy|mañana|manana|\d{1,2}\/\d{1,2}| a las | limpieza | estandar| estándar| profunda| move)/i);
-  if (corte > 0) t = t.slice(0, corte);
-
-  return t.replace(/\s+/g, " ").trim();
+  return limpio;
 }
 
-function detectarComandoAgenda(texto) {
-  const t = normalizarTexto(texto);
-  return (
-    t.includes("agenda") ||
-    t.includes("agendar") ||
-    t.includes("programa") ||
-    t.includes("programar") ||
-    t.includes("crea un trabajo") ||
-    t.includes("crear un trabajo")
-  );
-}
+function construirTrabajoDesdeTexto(textoOriginal) {
+  const cliente = extraerCliente(textoOriginal);
+  const fecha = extraerFecha(textoOriginal);
+  const hora = extraerHora(textoOriginal);
+  const tipo = extraerTipo(textoOriginal);
 
-function construirTrabajoDesdeTexto(texto) {
-  const cliente = extraerCliente(texto);
-  const fecha = extraerFecha(texto);
-  const hora = extraerHora(texto);
-  const tipo = detectarTipoLimpieza(texto);
-
-  if (!cliente || !fecha || !hora) return null;
+  if (!cliente || !fecha || !hora) {
+    return {
+      ok: false,
+      error: "faltan_datos",
+      cliente,
+      fecha,
+      hora,
+      tipo
+    };
+  }
 
   return {
-    confirmado: true,
-    cliente,
-    direccion: "",
-    whatsapp: "",
-    empleado_nombre: "",
-    empleado_email: "",
-    empleado_nombre_2: "",
-    empleado_email_2: "",
-    fecha,
-    hora,
-    notas: `Creado por Nico desde voz/texto. Comando original: ${texto}`,
-    tipo
+    ok: true,
+    trabajo: {
+      confirmado: true,
+      cliente,
+      direccion: "",
+      whatsapp: "",
+      empleado_nombre: "",
+      empleado_email: "",
+      empleado_nombre_2: "",
+      empleado_email_2: "",
+      fecha,
+      hora,
+      notas: `Creado automáticamente por Nico. Comando original: ${textoOriginal}`,
+      tipo
+    }
   };
 }
 
-async function crearTrabajoAutomatico(texto) {
+async function decirPorWebRTC(texto) {
+  if (!nicoDC || nicoDC.readyState !== "open") return;
+
+  nicoDC.send(JSON.stringify({
+    type: "conversation.item.create",
+    item: {
+      type: "message",
+      role: "user",
+      content: [
+        {
+          type: "input_text",
+          text: texto
+        }
+      ]
+    }
+  }));
+
+  nicoDC.send(JSON.stringify({
+    type: "response.create"
+  }));
+}
+
+async function crearTrabajoAutomatico(textoOriginal) {
   try {
-    if (!detectarComandoAgenda(texto)) return false;
+    if (!esComandoAgenda(textoOriginal)) return false;
 
-    const trabajo = construirTrabajoDesdeTexto(texto);
-    if (!trabajo) return false;
+    const resultado = construirTrabajoDesdeTexto(textoOriginal);
 
+    if (!resultado.ok) {
+      let faltan = [];
+      if (!resultado.cliente) faltan.push("el nombre del cliente");
+      if (!resultado.fecha) faltan.push("la fecha");
+      if (!resultado.hora) faltan.push("la hora");
+
+      await decirPorWebRTC(`Dile a Rodri en una frase corta: No pude agendar todavía porque me falta ${faltan.join(", ")}.`);
+      return true;
+    }
+
+    const trabajo = resultado.trabajo;
     const firma = JSON.stringify(trabajo);
-    if (firma === ultimoComandoAgenda) return true;
-    ultimoComandoAgenda = firma;
+
+    if (firma === ultimoTrabajoCreado) return true;
+    ultimoTrabajoCreado = firma;
 
     imagenNico("celular");
 
     const res = await fetch(CREAR_TRABAJO_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify(trabajo)
     });
 
-    const data = await res.json();
+    let data = {};
+    try {
+      data = await res.json();
+    } catch (e) {
+      data = {};
+    }
 
-    if (!res.ok || !data.ok) {
+    if (!res.ok || data.ok !== true) {
       console.log("Error creando trabajo:", data);
-      return false;
+
+      await decirPorWebRTC(
+        `Dile a Rodri en una frase corta: Rodri, no pude guardarlo en la app. Firebase respondió error.`
+      );
+
+      return true;
     }
 
     await guardarMemoria(
-      texto,
+      textoOriginal,
       `Agendé el trabajo para ${trabajo.cliente} el ${trabajo.fecha} a las ${trabajo.hora}, tipo ${trabajo.tipo}.`
     );
 
-    // Nico dice confirmación por WebRTC
-    if (nicoDC && nicoDC.readyState === "open") {
-      nicoDC.send(JSON.stringify({
-        type: "conversation.item.create",
-        item: {
-          type: "message",
-          role: "user",
-          content: [
-            {
-              type: "input_text",
-              text: `Confirma en una frase corta que ya agendaste a ${trabajo.cliente} el ${trabajo.fecha} a las ${trabajo.hora} con limpieza ${trabajo.tipo}.`
-            }
-          ]
-        }
-      }));
-
-      nicoDC.send(JSON.stringify({ type: "response.create" }));
-    }
+    await decirPorWebRTC(
+      `Confirma en una frase corta y honesta: Listo Rodri, ya agendé a ${trabajo.cliente} el ${trabajo.fecha} a las ${trabajo.hora} con limpieza ${trabajo.tipo}. Ya debe aparecer en la app.`
+    );
 
     return true;
 
   } catch (e) {
     console.log("No pude crear trabajo automático:", e);
-    return false;
+
+    await decirPorWebRTC(
+      "Dile a Rodri en una frase corta: Rodri, hubo un error conectando con Firebase y no pude agendarlo."
+    );
+
+    return true;
   }
 }
 
@@ -620,9 +696,14 @@ async function activarNico() {
 
           if (debeAbrirChat(texto)) {
             abrirChatNico();
+            return;
           }
 
-          await crearTrabajoAutomatico(texto);
+          const ejecutado = await crearTrabajoAutomatico(texto);
+
+          if (ejecutado) {
+            ultimoTextoUsuario = "";
+          }
         }
 
         if (msg.type === "response.created") {
@@ -726,9 +807,10 @@ async function enviarTextoANico() {
 
   await activarNico();
 
-  const creado = await crearTrabajoAutomatico(mensaje);
-  if (creado) {
-    agregarMensaje("nico", "Listo, Rodri. Ya lo agendé y debe aparecer en la app.");
+  const ejecutado = await crearTrabajoAutomatico(mensaje);
+
+  if (ejecutado) {
+    agregarMensaje("nico", "Listo, Rodri. Si Firebase respondió bien, ya debe aparecer en la app.");
     return;
   }
 
