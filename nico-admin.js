@@ -1,4 +1,4 @@
-// ================= NICO ADMIN WEBRTC FINAL + AGENDA DIRECTA FIRESTORE =================
+// ================= NICO ADMIN WEBRTC FINAL + TORNADO + AGENDA DIRECTA FIRESTORE =================
 
 const NICO_SESSION_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearSesionRealtime";
 
@@ -64,31 +64,69 @@ style.innerHTML = `
   align-items:flex-end;
   pointer-events:none;
 }
+
 #nicoBox *{ pointer-events:auto; }
+
 #nicoImg{
   display:none;
   width:95px;
   height:auto;
   object-fit:contain;
-  filter:drop-shadow(0 8px 14px rgba(0,0,0,.65));
   margin-bottom:4px;
-  animation:nicoMagic .35s ease-out;
+  filter:
+    drop-shadow(0 0 12px rgba(59,130,246,.7))
+    drop-shadow(0 12px 22px rgba(0,0,0,.65));
+  animation:
+    nicoTornado .9s cubic-bezier(.19,1,.22,1),
+    nicoFloat 3s ease-in-out infinite;
 }
-@keyframes nicoMagic{
-  from{ opacity:0; transform:scale(.7) translateY(15px); }
-  to{ opacity:1; transform:scale(1) translateY(0); }
+
+@keyframes nicoTornado{
+  0%{
+    opacity:0;
+    transform:scale(.15) rotate(-720deg) translateY(120px);
+    filter:blur(18px);
+  }
+  40%{
+    opacity:1;
+    transform:scale(1.15) rotate(25deg) translateY(-8px);
+    filter:blur(2px);
+  }
+  70%{
+    transform:scale(.96) rotate(-8deg) translateY(4px);
+  }
+  100%{
+    opacity:1;
+    transform:scale(1) rotate(0deg) translateY(0);
+    filter:blur(0);
+  }
 }
+
+@keyframes nicoFloat{
+  0%{ transform:translateY(0px); }
+  50%{ transform:translateY(-4px); }
+  100%{ transform:translateY(0px); }
+}
+
 #nicoBtn{
-  width:64px;
-  height:64px;
+  width:68px;
+  height:68px;
   border-radius:50%;
   border:none;
-  background:#3b82f6;
+  background:linear-gradient(135deg,#3b82f6,#2563eb);
   color:white;
-  font-size:28px;
+  font-size:30px;
   font-weight:bold;
-  box-shadow:0 8px 22px rgba(0,0,0,.45);
+  box-shadow:
+    0 10px 28px rgba(0,0,0,.45),
+    0 0 18px rgba(59,130,246,.5);
+  transition:.25s;
 }
+
+#nicoBtn:active{
+  transform:scale(.92);
+}
+
 #nicoChatPanel{
   display:none;
   position:fixed !important;
@@ -101,7 +139,14 @@ style.innerHTML = `
   border-radius:20px;
   overflow:hidden;
   box-shadow:0 10px 30px rgba(0,0,0,.6);
+  animation:nicoChatOpen .25s ease-out;
 }
+
+@keyframes nicoChatOpen{
+  from{ opacity:0; transform:translateY(15px) scale(.96); }
+  to{ opacity:1; transform:translateY(0) scale(1); }
+}
+
 #nicoChatHeader{
   display:flex;
   justify-content:space-between;
@@ -111,6 +156,7 @@ style.innerHTML = `
   color:white;
   font-weight:900;
 }
+
 #nicoChatClose{
   background:#ef4444;
   color:white;
@@ -120,6 +166,7 @@ style.innerHTML = `
   height:28px;
   font-weight:bold;
 }
+
 #nicoChatMessages{
   max-height:230px;
   overflow-y:auto;
@@ -128,6 +175,7 @@ style.innerHTML = `
   flex-direction:column;
   gap:8px;
 }
+
 .nicoMsg{
   padding:10px 12px;
   border-radius:15px;
@@ -136,22 +184,26 @@ style.innerHTML = `
   max-width:88%;
   word-break:break-word;
 }
+
 .nicoMsg.user{
   align-self:flex-end;
   background:#3b82f6;
   color:white;
 }
+
 .nicoMsg.nico{
   align-self:flex-start;
   background:#2c2c2e;
   color:white;
 }
+
 #nicoChatInputRow{
   display:flex;
   gap:8px;
   padding:10px;
   background:#1c1c1e;
 }
+
 #nicoChatInput{
   flex:1;
   min-height:44px;
@@ -164,6 +216,7 @@ style.innerHTML = `
   color:white;
   font-size:14px;
 }
+
 #nicoChatSend{
   border:none;
   border-radius:14px;
@@ -221,6 +274,9 @@ function imagenNico(tipo) {
 
 function mostrarNico() {
   nicoImg.style.display = "block";
+  nicoImg.style.animation = "none";
+  void nicoImg.offsetWidth;
+  nicoImg.style.animation = "nicoTornado .9s cubic-bezier(.19,1,.22,1), nicoFloat 3s ease-in-out infinite";
 }
 
 function ocultarNico() {
@@ -248,6 +304,16 @@ function activarMicrofono() {
   nicoMicStream.getAudioTracks().forEach(track => track.enabled = true);
 }
 
+function normalizarTexto(texto) {
+  return (texto || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[.,]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function debeApagarse(texto) {
   const t = normalizarTexto(texto);
   return (
@@ -262,6 +328,7 @@ function debeApagarse(texto) {
 function debeAbrirChat(texto) {
   const t = normalizarTexto(texto);
   return (
+    t.includes("te quiero escribir") ||
     t.includes("te voy a escribir") ||
     t.includes("voy a escribir") ||
     t.includes("quiero escribirte") ||
@@ -316,16 +383,6 @@ async function guardarMemoria(user, nico) {
 }
 
 // ================= AGENDA DIRECTA FIRESTORE =================
-
-function normalizarTexto(texto) {
-  return (texto || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[.,]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
 
 function esComandoAgenda(texto) {
   const t = normalizarTexto(texto);
@@ -461,7 +518,6 @@ function construirTrabajoDesdeTexto(textoOriginal) {
   if (!cliente || !fecha || !hora) {
     return {
       ok: false,
-      error: "faltan_datos",
       cliente,
       fecha,
       hora,
@@ -509,9 +565,7 @@ async function decirPorWebRTC(texto) {
     }
   }));
 
-  nicoDC.send(JSON.stringify({
-    type: "response.create"
-  }));
+  nicoDC.send(JSON.stringify({ type: "response.create" }));
 }
 
 async function crearTrabajoDirectoFirestore(textoOriginal) {
@@ -643,7 +697,7 @@ async function activarNico() {
             content: [
               {
                 type: "input_text",
-                text: "Nico, saluda una sola vez, muy corto, y después quédate callado esperando que Rodrigo hable."
+                text: "Nico, saluda exactamente diciendo: Hola hola, ¿en qué puedo ayudarte? Después quédate completamente callado esperando que Rodrigo hable."
               }
             ]
           }
@@ -652,7 +706,7 @@ async function activarNico() {
         nicoDC.send(JSON.stringify({
           type: "response.create",
           response: {
-            instructions: "Di exactamente: Hola hola, Rodri, ¿en qué puedo ayudarte? Después no digas nada más. Espera a que Rodrigo hable."
+            instructions: "Di exactamente: Hola hola, ¿en qué puedo ayudarte? Después guarda silencio total esperando que Rodrigo hable."
           }
         }));
       }
@@ -688,7 +742,9 @@ async function activarNico() {
           }
 
           if (debeAbrirChat(texto)) {
-            abrirChatNico();
+            await decirPorWebRTC("Responde solamente: Ok.");
+            setTimeout(() => abrirChatNico(), 900);
+            ultimoTextoUsuario = "";
             return;
           }
 
@@ -827,9 +883,7 @@ async function enviarTextoANico() {
     }
   }));
 
-  nicoDC.send(JSON.stringify({
-    type: "response.create"
-  }));
+  nicoDC.send(JSON.stringify({ type: "response.create" }));
 }
 
 // ================= APAGAR =================
