@@ -1,4 +1,4 @@
-// ================= NICO ADMIN WEBRTC FINAL + TORNADO + AGENDA DIRECTA FIRESTORE =================
+// ================= NICO ADMIN WEBRTC FINAL + TORNADO + CHAT POR VOZ + AGENDA FIRESTORE =================
 
 const NICO_SESSION_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearSesionRealtime";
 
@@ -64,7 +64,6 @@ style.innerHTML = `
   align-items:flex-end;
   pointer-events:none;
 }
-
 #nicoBox *{ pointer-events:auto; }
 
 #nicoImg{
@@ -82,24 +81,10 @@ style.innerHTML = `
 }
 
 @keyframes nicoTornado{
-  0%{
-    opacity:0;
-    transform:scale(.15) rotate(-720deg) translateY(120px);
-    filter:blur(18px);
-  }
-  40%{
-    opacity:1;
-    transform:scale(1.15) rotate(25deg) translateY(-8px);
-    filter:blur(2px);
-  }
-  70%{
-    transform:scale(.96) rotate(-8deg) translateY(4px);
-  }
-  100%{
-    opacity:1;
-    transform:scale(1) rotate(0deg) translateY(0);
-    filter:blur(0);
-  }
+  0%{ opacity:0; transform:scale(.15) rotate(-720deg) translateY(120px); filter:blur(18px); }
+  40%{ opacity:1; transform:scale(1.15) rotate(25deg) translateY(-8px); filter:blur(2px); }
+  70%{ transform:scale(.96) rotate(-8deg) translateY(4px); }
+  100%{ opacity:1; transform:scale(1) rotate(0deg) translateY(0); filter:blur(0); }
 }
 
 @keyframes nicoFloat{
@@ -117,14 +102,7 @@ style.innerHTML = `
   color:white;
   font-size:30px;
   font-weight:bold;
-  box-shadow:
-    0 10px 28px rgba(0,0,0,.45),
-    0 0 18px rgba(59,130,246,.5);
-  transition:.25s;
-}
-
-#nicoBtn:active{
-  transform:scale(.92);
+  box-shadow:0 10px 28px rgba(0,0,0,.45), 0 0 18px rgba(59,130,246,.5);
 }
 
 #nicoChatPanel{
@@ -139,12 +117,6 @@ style.innerHTML = `
   border-radius:20px;
   overflow:hidden;
   box-shadow:0 10px 30px rgba(0,0,0,.6);
-  animation:nicoChatOpen .25s ease-out;
-}
-
-@keyframes nicoChatOpen{
-  from{ opacity:0; transform:translateY(15px) scale(.96); }
-  to{ opacity:1; transform:translateY(0) scale(1); }
 }
 
 #nicoChatHeader{
@@ -256,7 +228,7 @@ chatInput.addEventListener("keydown", (e) => {
   }
 });
 
-// ================= IMÁGENES =================
+// ================= FUNCIONES =================
 
 function imagenNico(tipo) {
   const imgs = {
@@ -283,16 +255,24 @@ function ocultarNico() {
   nicoImg.style.display = "none";
 }
 
+function normalizarTexto(texto) {
+  return (texto || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[.,]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function detectarImagen(texto) {
-  const t = (texto || "").toLowerCase();
-  if (t.includes("g.g") || t.includes("risa") || t.includes("chiste")) return "rie";
+  const t = normalizarTexto(texto);
+  if (t.includes("g g") || t.includes("risa") || t.includes("chiste")) return "rie";
   if (t.includes("trabajo") || t.includes("cliente") || t.includes("agenda") || t.includes("limpieza")) return "celular";
-  if (t.includes("música") || t.includes("musica") || t.includes("guitarra") || t.includes("cantar")) return "canta";
+  if (t.includes("musica") || t.includes("guitarra") || t.includes("cantar")) return "canta";
   if (t.includes("bien") || t.includes("perfecto") || t.includes("listo")) return "bien";
   return "alegre";
 }
-
-// ================= MICRÓFONO =================
 
 function silenciarMicrofono() {
   if (!nicoMicStream) return;
@@ -302,16 +282,6 @@ function silenciarMicrofono() {
 function activarMicrofono() {
   if (!nicoMicStream || !nicoActivo || nicoEstaHablando) return;
   nicoMicStream.getAudioTracks().forEach(track => track.enabled = true);
-}
-
-function normalizarTexto(texto) {
-  return (texto || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[.,]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
 }
 
 function debeApagarse(texto) {
@@ -339,8 +309,6 @@ function debeAbrirChat(texto) {
   );
 }
 
-// ================= CHAT =================
-
 function agregarMensaje(tipo, texto) {
   const div = document.createElement("div");
   div.className = `nicoMsg ${tipo}`;
@@ -354,8 +322,6 @@ function abrirChatNico() {
   chatPanel.style.display = "block";
   setTimeout(() => chatInput.focus(), 200);
 }
-
-// ================= MEMORIA =================
 
 async function guardarMemoria(user, nico) {
   try {
@@ -376,7 +342,6 @@ async function guardarMemoria(user, nico) {
       fecha_texto: new Date().toLocaleString(),
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
-
   } catch (e) {
     console.log("No pude guardar memoria:", e);
   }
@@ -402,13 +367,11 @@ function esComandoAgenda(texto) {
 
 function extraerTipo(texto) {
   const t = normalizarTexto(texto);
-
-  if (t.includes("profunda") || t.includes("deep clean") || t.includes("deep")) return "PROFUNDA";
-  if (t.includes("move in") || t.includes("move-in")) return "MOVE-IN";
-  if (t.includes("move out") || t.includes("move-out")) return "MOVE-OUT";
-  if (t.includes("post construction") || t.includes("post-construction") || t.includes("post construccion")) return "POST-CONSTRUCCION";
+  if (t.includes("profunda") || t.includes("deep")) return "PROFUNDA";
+  if (t.includes("move in")) return "MOVE-IN";
+  if (t.includes("move out")) return "MOVE-OUT";
+  if (t.includes("post construction") || t.includes("post construccion")) return "POST-CONSTRUCCION";
   if (t.includes("primera") || t.includes("first clean")) return "PRIMERA";
-
   return "ESTÁNDAR";
 }
 
@@ -416,19 +379,9 @@ function extraerFecha(texto) {
   const t = normalizarTexto(texto);
 
   const meses = {
-    enero: "01",
-    febrero: "02",
-    marzo: "03",
-    abril: "04",
-    mayo: "05",
-    junio: "06",
-    julio: "07",
-    agosto: "08",
-    septiembre: "09",
-    setiembre: "09",
-    octubre: "10",
-    noviembre: "11",
-    diciembre: "12"
+    enero: "01", febrero: "02", marzo: "03", abril: "04", mayo: "05", junio: "06",
+    julio: "07", agosto: "08", septiembre: "09", setiembre: "09", octubre: "10",
+    noviembre: "11", diciembre: "12"
   };
 
   let year = new Date().getFullYear();
@@ -466,7 +419,6 @@ function extraerFecha(texto) {
 
 function extraerHora(texto) {
   const t = normalizarTexto(texto);
-
   let match = t.match(/(?:a\s+las\s+|alas\s+)?(\d{1,2})(?::(\d{2}))?\s*(a\s*m|p\s*m|am|pm)?/i);
   if (!match) return "";
 
@@ -497,7 +449,6 @@ function extraerCliente(texto) {
   limpio = limpio.trim();
 
   const corte = limpio.search(/(\d{1,2}\s+de\s+|hoy|mañana|manana|\d{1,2}\/\d{1,2}|a las|alas|limpieza|estandar|estándar|profunda|move|post|primera)/i);
-
   if (corte > 0) limpio = limpio.substring(0, corte);
 
   limpio = limpio
@@ -516,13 +467,7 @@ function construirTrabajoDesdeTexto(textoOriginal) {
   const tipo = extraerTipo(textoOriginal);
 
   if (!cliente || !fecha || !hora) {
-    return {
-      ok: false,
-      cliente,
-      fecha,
-      hora,
-      tipo
-    };
+    return { ok: false, cliente, fecha, hora, tipo };
   }
 
   return {
@@ -556,12 +501,7 @@ async function decirPorWebRTC(texto) {
     item: {
       type: "message",
       role: "user",
-      content: [
-        {
-          type: "input_text",
-          text: texto
-        }
-      ]
+      content: [{ type: "input_text", text: texto }]
     }
   }));
 
@@ -620,11 +560,7 @@ async function crearTrabajoDirectoFirestore(textoOriginal) {
 
   } catch (e) {
     console.log("No pude crear trabajo directo:", e);
-
-    await decirPorWebRTC(
-      "Dile a Rodri en una frase corta: Rodri, hubo un error guardando directo en Firestore y no pude agendarlo."
-    );
-
+    await decirPorWebRTC("Dile a Rodri en una frase corta: Rodri, hubo un error guardando directo en Firestore y no pude agendarlo.");
     return true;
   }
 }
@@ -694,12 +630,10 @@ async function activarNico() {
           item: {
             type: "message",
             role: "user",
-            content: [
-              {
-                type: "input_text",
-                text: "Nico, saluda exactamente diciendo: Hola hola, ¿en qué puedo ayudarte? Después quédate completamente callado esperando que Rodrigo hable."
-              }
-            ]
+            content: [{
+              type: "input_text",
+              text: "Nico, saluda exactamente diciendo: Hola hola, ¿en qué puedo ayudarte? Después quédate completamente callado esperando que Rodrigo hable."
+            }]
           }
         }));
 
@@ -731,6 +665,14 @@ async function activarNico() {
 
         if (msg.type === "conversation.item.input_audio_transcription.completed") {
           const texto = msg.transcript || "";
+
+          if (debeAbrirChat(texto)) {
+            abrirChatNico();
+            await decirPorWebRTC("Responde solamente: Ok.");
+            ultimoTextoUsuario = "";
+            return;
+          }
+
           if (nicoEstaHablando) return;
 
           ultimoTextoUsuario = texto;
@@ -738,13 +680,6 @@ async function activarNico() {
           if (debeApagarse(texto)) {
             imagenNico("bien");
             setTimeout(apagarNico, 500);
-            return;
-          }
-
-          if (debeAbrirChat(texto)) {
-            await decirPorWebRTC("Responde solamente: Ok.");
-            setTimeout(() => abrirChatNico(), 900);
-            ultimoTextoUsuario = "";
             return;
           }
 
@@ -874,12 +809,7 @@ async function enviarTextoANico() {
     item: {
       type: "message",
       role: "user",
-      content: [
-        {
-          type: "input_text",
-          text: mensaje
-        }
-      ]
+      content: [{ type: "input_text", text: mensaje }]
     }
   }));
 
