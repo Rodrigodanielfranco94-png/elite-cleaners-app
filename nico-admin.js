@@ -479,7 +479,6 @@ async function crearTrabajoAutomatico(texto) {
       `Agendé el trabajo para ${trabajo.cliente} el ${trabajo.fecha} a las ${trabajo.hora}, tipo ${trabajo.tipo}.`
     );
 
-    // Nico dice confirmación por WebRTC
     if (nicoDC && nicoDC.readyState === "open") {
       nicoDC.send(JSON.stringify({
         type: "conversation.item.create",
@@ -495,7 +494,12 @@ async function crearTrabajoAutomatico(texto) {
         }
       }));
 
-      nicoDC.send(JSON.stringify({ type: "response.create" }));
+      nicoDC.send(JSON.stringify({
+        type: "response.create",
+        response: {
+          modalities: ["audio", "text"]
+        }
+      }));
     }
 
     return true;
@@ -528,7 +532,8 @@ async function activarNico() {
 
     const tokenRes = await fetch(NICO_SESSION_URL);
     const tokenData = await tokenRes.json();
-    const KEY = tokenData.client_secret?.value || tokenData.value;
+
+    const KEY = tokenData.client_secret?.value || tokenData.client_secret || tokenData.value;
 
     if (!KEY) throw new Error("No llegó token Realtime");
 
@@ -583,7 +588,8 @@ async function activarNico() {
         nicoDC.send(JSON.stringify({
           type: "response.create",
           response: {
-            instructions: "Di exactamente: Hola hola, Rodri, ¿en qué puedo ayudarte? Después no digas nada más. Espera a que Rodrigo hable."
+            modalities: ["audio", "text"],
+            instructions: "Di exactamente: Hola hola, ¿en qué puedo ayudarte? Después guarda silencio."
           }
         }));
       }
@@ -753,7 +759,10 @@ async function enviarTextoANico() {
   }));
 
   nicoDC.send(JSON.stringify({
-    type: "response.create"
+    type: "response.create",
+    response: {
+      modalities: ["audio", "text"]
+    }
   }));
 }
 
