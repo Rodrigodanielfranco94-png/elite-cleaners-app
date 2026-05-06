@@ -1,6 +1,7 @@
-// ================= NICO ADMIN WEBRTC FINAL + TORNADO + AGENDA DIRECTA FIRESTORE =================
+// ================= NICO ADMIN WEBRTC FINAL + AGENDA AUTOMÁTICA CORREGIDA =================
 
 const NICO_SESSION_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearSesionRealtime";
+const CREAR_TRABAJO_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearTrabajoConfirmado";
 
 if (window.NICO_STOP) {
   try { window.NICO_STOP(); } catch (e) {}
@@ -64,69 +65,31 @@ style.innerHTML = `
   align-items:flex-end;
   pointer-events:none;
 }
-
 #nicoBox *{ pointer-events:auto; }
-
 #nicoImg{
   display:none;
   width:95px;
   height:auto;
   object-fit:contain;
+  filter:drop-shadow(0 8px 14px rgba(0,0,0,.65));
   margin-bottom:4px;
-  filter:
-    drop-shadow(0 0 12px rgba(59,130,246,.7))
-    drop-shadow(0 12px 22px rgba(0,0,0,.65));
-  animation:
-    nicoTornado .9s cubic-bezier(.19,1,.22,1),
-    nicoFloat 3s ease-in-out infinite;
+  animation:nicoMagic .35s ease-out;
 }
-
-@keyframes nicoTornado{
-  0%{
-    opacity:0;
-    transform:scale(.15) rotate(-720deg) translateY(120px);
-    filter:blur(18px);
-  }
-  40%{
-    opacity:1;
-    transform:scale(1.15) rotate(25deg) translateY(-8px);
-    filter:blur(2px);
-  }
-  70%{
-    transform:scale(.96) rotate(-8deg) translateY(4px);
-  }
-  100%{
-    opacity:1;
-    transform:scale(1) rotate(0deg) translateY(0);
-    filter:blur(0);
-  }
+@keyframes nicoMagic{
+  from{ opacity:0; transform:scale(.7) translateY(15px); }
+  to{ opacity:1; transform:scale(1) translateY(0); }
 }
-
-@keyframes nicoFloat{
-  0%{ transform:translateY(0px); }
-  50%{ transform:translateY(-4px); }
-  100%{ transform:translateY(0px); }
-}
-
 #nicoBtn{
-  width:68px;
-  height:68px;
+  width:64px;
+  height:64px;
   border-radius:50%;
   border:none;
-  background:linear-gradient(135deg,#3b82f6,#2563eb);
+  background:#3b82f6;
   color:white;
-  font-size:30px;
+  font-size:28px;
   font-weight:bold;
-  box-shadow:
-    0 10px 28px rgba(0,0,0,.45),
-    0 0 18px rgba(59,130,246,.5);
-  transition:.25s;
+  box-shadow:0 8px 22px rgba(0,0,0,.45);
 }
-
-#nicoBtn:active{
-  transform:scale(.92);
-}
-
 #nicoChatPanel{
   display:none;
   position:fixed !important;
@@ -139,14 +102,7 @@ style.innerHTML = `
   border-radius:20px;
   overflow:hidden;
   box-shadow:0 10px 30px rgba(0,0,0,.6);
-  animation:nicoChatOpen .25s ease-out;
 }
-
-@keyframes nicoChatOpen{
-  from{ opacity:0; transform:translateY(15px) scale(.96); }
-  to{ opacity:1; transform:translateY(0) scale(1); }
-}
-
 #nicoChatHeader{
   display:flex;
   justify-content:space-between;
@@ -156,7 +112,6 @@ style.innerHTML = `
   color:white;
   font-weight:900;
 }
-
 #nicoChatClose{
   background:#ef4444;
   color:white;
@@ -166,7 +121,6 @@ style.innerHTML = `
   height:28px;
   font-weight:bold;
 }
-
 #nicoChatMessages{
   max-height:230px;
   overflow-y:auto;
@@ -175,7 +129,6 @@ style.innerHTML = `
   flex-direction:column;
   gap:8px;
 }
-
 .nicoMsg{
   padding:10px 12px;
   border-radius:15px;
@@ -184,26 +137,22 @@ style.innerHTML = `
   max-width:88%;
   word-break:break-word;
 }
-
 .nicoMsg.user{
   align-self:flex-end;
   background:#3b82f6;
   color:white;
 }
-
 .nicoMsg.nico{
   align-self:flex-start;
   background:#2c2c2e;
   color:white;
 }
-
 #nicoChatInputRow{
   display:flex;
   gap:8px;
   padding:10px;
   background:#1c1c1e;
 }
-
 #nicoChatInput{
   flex:1;
   min-height:44px;
@@ -216,7 +165,6 @@ style.innerHTML = `
   color:white;
   font-size:14px;
 }
-
 #nicoChatSend{
   border:none;
   border-radius:14px;
@@ -274,9 +222,6 @@ function imagenNico(tipo) {
 
 function mostrarNico() {
   nicoImg.style.display = "block";
-  nicoImg.style.animation = "none";
-  void nicoImg.offsetWidth;
-  nicoImg.style.animation = "nicoTornado .9s cubic-bezier(.19,1,.22,1), nicoFloat 3s ease-in-out infinite";
 }
 
 function ocultarNico() {
@@ -304,16 +249,6 @@ function activarMicrofono() {
   nicoMicStream.getAudioTracks().forEach(track => track.enabled = true);
 }
 
-function normalizarTexto(texto) {
-  return (texto || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[.,]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 function debeApagarse(texto) {
   const t = normalizarTexto(texto);
   return (
@@ -328,7 +263,6 @@ function debeApagarse(texto) {
 function debeAbrirChat(texto) {
   const t = normalizarTexto(texto);
   return (
-    t.includes("te quiero escribir") ||
     t.includes("te voy a escribir") ||
     t.includes("voy a escribir") ||
     t.includes("quiero escribirte") ||
@@ -382,7 +316,17 @@ async function guardarMemoria(user, nico) {
   }
 }
 
-// ================= AGENDA DIRECTA FIRESTORE =================
+// ================= AGENDA AUTOMÁTICA CORREGIDA =================
+
+function normalizarTexto(texto) {
+  return (texto || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[.,]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 function esComandoAgenda(texto) {
   const t = normalizarTexto(texto);
@@ -518,6 +462,7 @@ function construirTrabajoDesdeTexto(textoOriginal) {
   if (!cliente || !fecha || !hora) {
     return {
       ok: false,
+      error: "faltan_datos",
       cliente,
       fecha,
       hora,
@@ -528,6 +473,7 @@ function construirTrabajoDesdeTexto(textoOriginal) {
   return {
     ok: true,
     trabajo: {
+      confirmado: true,
       cliente,
       direccion: "",
       whatsapp: "",
@@ -538,12 +484,7 @@ function construirTrabajoDesdeTexto(textoOriginal) {
       fecha,
       hora,
       notas: `Creado automáticamente por Nico. Comando original: ${textoOriginal}`,
-      tipo,
-      estado: "pendiente",
-      hora_inicio: "--:--",
-      hora_fin: "--:--",
-      firma_cliente: false,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      tipo
     }
   };
 }
@@ -565,10 +506,12 @@ async function decirPorWebRTC(texto) {
     }
   }));
 
-  nicoDC.send(JSON.stringify({ type: "response.create" }));
+  nicoDC.send(JSON.stringify({
+    type: "response.create"
+  }));
 }
 
-async function crearTrabajoDirectoFirestore(textoOriginal) {
+async function crearTrabajoAutomatico(textoOriginal) {
   try {
     if (!esComandoAgenda(textoOriginal)) return false;
 
@@ -585,31 +528,41 @@ async function crearTrabajoDirectoFirestore(textoOriginal) {
     }
 
     const trabajo = resultado.trabajo;
-    const firma = JSON.stringify({
-      cliente: trabajo.cliente,
-      fecha: trabajo.fecha,
-      hora: trabajo.hora,
-      tipo: trabajo.tipo
-    });
+    const firma = JSON.stringify(trabajo);
 
     if (firma === ultimoTrabajoCreado) return true;
     ultimoTrabajoCreado = firma;
 
     imagenNico("celular");
 
-    const docRef = await db.collection("servicios").add(trabajo);
+    const res = await fetch(CREAR_TRABAJO_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(trabajo)
+    });
 
-    await db.collection("clientes").doc(trabajo.cliente).set({
-      nombre: trabajo.cliente,
-      direccion: "",
-      whatsapp: "",
-      telefono: "",
-      actualizado: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+    let data = {};
+    try {
+      data = await res.json();
+    } catch (e) {
+      data = {};
+    }
+
+    if (!res.ok || data.ok !== true) {
+      console.log("Error creando trabajo:", data);
+
+      await decirPorWebRTC(
+        `Dile a Rodri en una frase corta: Rodri, no pude guardarlo en la app. Firebase respondió error.`
+      );
+
+      return true;
+    }
 
     await guardarMemoria(
       textoOriginal,
-      `Agendé el trabajo para ${trabajo.cliente} el ${trabajo.fecha} a las ${trabajo.hora}, tipo ${trabajo.tipo}. ID: ${docRef.id}`
+      `Agendé el trabajo para ${trabajo.cliente} el ${trabajo.fecha} a las ${trabajo.hora}, tipo ${trabajo.tipo}.`
     );
 
     await decirPorWebRTC(
@@ -619,10 +572,10 @@ async function crearTrabajoDirectoFirestore(textoOriginal) {
     return true;
 
   } catch (e) {
-    console.log("No pude crear trabajo directo:", e);
+    console.log("No pude crear trabajo automático:", e);
 
     await decirPorWebRTC(
-      "Dile a Rodri en una frase corta: Rodri, hubo un error guardando directo en Firestore y no pude agendarlo."
+      "Dile a Rodri en una frase corta: Rodri, hubo un error conectando con Firebase y no pude agendarlo."
     );
 
     return true;
@@ -651,7 +604,7 @@ async function activarNico() {
 
     const tokenRes = await fetch(NICO_SESSION_URL);
     const tokenData = await tokenRes.json();
-    const KEY = tokenData.client_secret?.value || tokenData.client_secret || tokenData.value;
+    const KEY = tokenData.client_secret?.value || tokenData.value;
 
     if (!KEY) throw new Error("No llegó token Realtime");
 
@@ -681,8 +634,6 @@ async function activarNico() {
     nicoDC = nicoPC.createDataChannel("oai-events");
 
     nicoDC.onopen = () => {
-      console.log("NICO DATA CHANNEL ABIERTO");
-alert("Nico conectado");
       imagenNico("saluda");
 
       if (nicoReadyResolve) nicoReadyResolve();
@@ -699,7 +650,7 @@ alert("Nico conectado");
             content: [
               {
                 type: "input_text",
-                text: "Nico, saluda exactamente diciendo: Hola hola, ¿en qué puedo ayudarte? Después quédate completamente callado esperando que Rodrigo hable."
+                text: "Nico, saluda una sola vez, muy corto, y después quédate callado esperando que Rodrigo hable."
               }
             ]
           }
@@ -708,7 +659,7 @@ alert("Nico conectado");
         nicoDC.send(JSON.stringify({
           type: "response.create",
           response: {
-            instructions: "Di exactamente: Hola hola, ¿en qué puedo ayudarte? Después guarda silencio total esperando que Rodrigo hable."
+            instructions: "Di exactamente: Hola hola, Rodri, ¿en qué puedo ayudarte? Después no digas nada más. Espera a que Rodrigo hable."
           }
         }));
       }
@@ -732,8 +683,6 @@ alert("Nico conectado");
         }
 
         if (msg.type === "conversation.item.input_audio_transcription.completed") {
-          console.log("Nico escuchó:", msg.transcript);
-alert("Escuché: " + msg.transcript);
           const texto = msg.transcript || "";
           if (nicoEstaHablando) return;
 
@@ -746,13 +695,11 @@ alert("Escuché: " + msg.transcript);
           }
 
           if (debeAbrirChat(texto)) {
-            await decirPorWebRTC("Responde solamente: Ok.");
-            setTimeout(() => abrirChatNico(), 900);
-            ultimoTextoUsuario = "";
+            abrirChatNico();
             return;
           }
 
-          const ejecutado = await crearTrabajoDirectoFirestore(texto);
+          const ejecutado = await crearTrabajoAutomatico(texto);
 
           if (ejecutado) {
             ultimoTextoUsuario = "";
@@ -806,7 +753,7 @@ alert("Escuché: " + msg.transcript);
           setTimeout(() => {
             nicoEstaHablando = false;
             activarMicrofono();
-          }, 1800);
+          }, 2200);
         }
 
       } catch (e) {
@@ -860,10 +807,10 @@ async function enviarTextoANico() {
 
   await activarNico();
 
-  const ejecutado = await crearTrabajoDirectoFirestore(mensaje);
+  const ejecutado = await crearTrabajoAutomatico(mensaje);
 
   if (ejecutado) {
-    agregarMensaje("nico", "Listo, Rodri. Ya lo guardé directo en Firestore y debe aparecer en la app.");
+    agregarMensaje("nico", "Listo, Rodri. Si Firebase respondió bien, ya debe aparecer en la app.");
     return;
   }
 
@@ -887,7 +834,9 @@ async function enviarTextoANico() {
     }
   }));
 
-  nicoDC.send(JSON.stringify({ type: "response.create" }));
+  nicoDC.send(JSON.stringify({
+    type: "response.create"
+  }));
 }
 
 // ================= APAGAR =================
