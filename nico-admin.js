@@ -681,6 +681,8 @@ async function activarNico() {
     nicoDC = nicoPC.createDataChannel("oai-events");
 
     nicoDC.onopen = () => {
+      console.log("NICO DATA CHANNEL ABIERTO");
+alert("Nico conectado");
       imagenNico("saluda");
 
       if (nicoReadyResolve) nicoReadyResolve();
