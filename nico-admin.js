@@ -732,6 +732,8 @@ alert("Nico conectado");
         }
 
         if (msg.type === "conversation.item.input_audio_transcription.completed") {
+          console.log("Nico escuchó:", msg.transcript);
+alert("Escuché: " + msg.transcript);
           const texto = msg.transcript || "";
           if (nicoEstaHablando) return;
 
