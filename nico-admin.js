@@ -1,7 +1,6 @@
-// ================= NICO ADMIN WEBRTC FINAL + AGENDA AUTOMÁTICA CORREGIDA =================
+// ================= NICO ADMIN WEBRTC FINAL + AGENDA DIRECTA FIRESTORE =================
 
 const NICO_SESSION_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearSesionRealtime";
-const CREAR_TRABAJO_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearTrabajoConfirmado";
 
 if (window.NICO_STOP) {
   try { window.NICO_STOP(); } catch (e) {}
@@ -316,7 +315,7 @@ async function guardarMemoria(user, nico) {
   }
 }
 
-// ================= AGENDA AUTOMÁTICA CORREGIDA =================
+// ================= AGENDA DIRECTA FIRESTORE =================
 
 function normalizarTexto(texto) {
   return (texto || "")
@@ -473,7 +472,6 @@ function construirTrabajoDesdeTexto(textoOriginal) {
   return {
     ok: true,
     trabajo: {
-      confirmado: true,
       cliente,
       direccion: "",
       whatsapp: "",
@@ -484,7 +482,12 @@ function construirTrabajoDesdeTexto(textoOriginal) {
       fecha,
       hora,
       notas: `Creado automáticamente por Nico. Comando original: ${textoOriginal}`,
-      tipo
+      tipo,
+      estado: "pendiente",
+      hora_inicio: "--:--",
+      hora_fin: "--:--",
+      firma_cliente: false,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
     }
   };
 }
@@ -511,7 +514,7 @@ async function decirPorWebRTC(texto) {
   }));
 }
 
-async function crearTrabajoAutomatico(textoOriginal) {
+async function crearTrabajoDirectoFirestore(textoOriginal) {
   try {
     if (!esComandoAgenda(textoOriginal)) return false;
 
@@ -528,41 +531,31 @@ async function crearTrabajoAutomatico(textoOriginal) {
     }
 
     const trabajo = resultado.trabajo;
-    const firma = JSON.stringify(trabajo);
+    const firma = JSON.stringify({
+      cliente: trabajo.cliente,
+      fecha: trabajo.fecha,
+      hora: trabajo.hora,
+      tipo: trabajo.tipo
+    });
 
     if (firma === ultimoTrabajoCreado) return true;
     ultimoTrabajoCreado = firma;
 
     imagenNico("celular");
 
-    const res = await fetch(CREAR_TRABAJO_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(trabajo)
-    });
+    const docRef = await db.collection("servicios").add(trabajo);
 
-    let data = {};
-    try {
-      data = await res.json();
-    } catch (e) {
-      data = {};
-    }
-
-    if (!res.ok || data.ok !== true) {
-      console.log("Error creando trabajo:", data);
-
-      await decirPorWebRTC(
-        `Dile a Rodri en una frase corta: Rodri, no pude guardarlo en la app. Firebase respondió error.`
-      );
-
-      return true;
-    }
+    await db.collection("clientes").doc(trabajo.cliente).set({
+      nombre: trabajo.cliente,
+      direccion: "",
+      whatsapp: "",
+      telefono: "",
+      actualizado: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
 
     await guardarMemoria(
       textoOriginal,
-      `Agendé el trabajo para ${trabajo.cliente} el ${trabajo.fecha} a las ${trabajo.hora}, tipo ${trabajo.tipo}.`
+      `Agendé el trabajo para ${trabajo.cliente} el ${trabajo.fecha} a las ${trabajo.hora}, tipo ${trabajo.tipo}. ID: ${docRef.id}`
     );
 
     await decirPorWebRTC(
@@ -572,10 +565,10 @@ async function crearTrabajoAutomatico(textoOriginal) {
     return true;
 
   } catch (e) {
-    console.log("No pude crear trabajo automático:", e);
+    console.log("No pude crear trabajo directo:", e);
 
     await decirPorWebRTC(
-      "Dile a Rodri en una frase corta: Rodri, hubo un error conectando con Firebase y no pude agendarlo."
+      "Dile a Rodri en una frase corta: Rodri, hubo un error guardando directo en Firestore y no pude agendarlo."
     );
 
     return true;
@@ -699,7 +692,7 @@ async function activarNico() {
             return;
           }
 
-          const ejecutado = await crearTrabajoAutomatico(texto);
+          const ejecutado = await crearTrabajoDirectoFirestore(texto);
 
           if (ejecutado) {
             ultimoTextoUsuario = "";
@@ -753,7 +746,7 @@ async function activarNico() {
           setTimeout(() => {
             nicoEstaHablando = false;
             activarMicrofono();
-          }, 2200);
+          }, 1800);
         }
 
       } catch (e) {
@@ -807,10 +800,10 @@ async function enviarTextoANico() {
 
   await activarNico();
 
-  const ejecutado = await crearTrabajoAutomatico(mensaje);
+  const ejecutado = await crearTrabajoDirectoFirestore(mensaje);
 
   if (ejecutado) {
-    agregarMensaje("nico", "Listo, Rodri. Si Firebase respondió bien, ya debe aparecer en la app.");
+    agregarMensaje("nico", "Listo, Rodri. Ya lo guardé directo en Firestore y debe aparecer en la app.");
     return;
   }
 
