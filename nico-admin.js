@@ -1,13 +1,8 @@
-// ================= NICO ADMIN WEBRTC FINAL =================
-// Micrófono visible al inicio.
-// Nico aparece al tocar micrófono.
-// Nico saluda UNA sola vez y se calla.
-// Chat escrito aparece SOLO si dices: "te voy a escribir".
-// WebRTC puro: sin speechSynthesis, sin API key en frontend.
+// ================= NICO ADMIN WEBRTC FINAL + AGENDA AUTOMÁTICA =================
 
 const NICO_SESSION_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearSesionRealtime";
+const CREAR_TRABAJO_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearTrabajoConfirmado";
 
-// Mata cualquier Nico viejo si quedó cargado
 if (window.NICO_STOP) {
   try { window.NICO_STOP(); } catch (e) {}
 }
@@ -28,6 +23,7 @@ let nicoReadyResolve = null;
 let nicoReadyPromise = null;
 let currentAssistantMsg = null;
 let saludoInicialHecho = false;
+let ultimoComandoAgenda = "";
 
 // ================= UI =================
 
@@ -69,9 +65,7 @@ style.innerHTML = `
   align-items:flex-end;
   pointer-events:none;
 }
-
 #nicoBox *{ pointer-events:auto; }
-
 #nicoImg{
   display:none;
   width:95px;
@@ -81,12 +75,10 @@ style.innerHTML = `
   margin-bottom:4px;
   animation:nicoMagic .35s ease-out;
 }
-
 @keyframes nicoMagic{
   from{ opacity:0; transform:scale(.7) translateY(15px); }
   to{ opacity:1; transform:scale(1) translateY(0); }
 }
-
 #nicoBtn{
   width:64px;
   height:64px;
@@ -98,7 +90,6 @@ style.innerHTML = `
   font-weight:bold;
   box-shadow:0 8px 22px rgba(0,0,0,.45);
 }
-
 #nicoChatPanel{
   display:none;
   position:fixed !important;
@@ -112,7 +103,6 @@ style.innerHTML = `
   overflow:hidden;
   box-shadow:0 10px 30px rgba(0,0,0,.6);
 }
-
 #nicoChatHeader{
   display:flex;
   justify-content:space-between;
@@ -122,7 +112,6 @@ style.innerHTML = `
   color:white;
   font-weight:900;
 }
-
 #nicoChatClose{
   background:#ef4444;
   color:white;
@@ -132,7 +121,6 @@ style.innerHTML = `
   height:28px;
   font-weight:bold;
 }
-
 #nicoChatMessages{
   max-height:230px;
   overflow-y:auto;
@@ -141,7 +129,6 @@ style.innerHTML = `
   flex-direction:column;
   gap:8px;
 }
-
 .nicoMsg{
   padding:10px 12px;
   border-radius:15px;
@@ -150,26 +137,22 @@ style.innerHTML = `
   max-width:88%;
   word-break:break-word;
 }
-
 .nicoMsg.user{
   align-self:flex-end;
   background:#3b82f6;
   color:white;
 }
-
 .nicoMsg.nico{
   align-self:flex-start;
   background:#2c2c2e;
   color:white;
 }
-
 #nicoChatInputRow{
   display:flex;
   gap:8px;
   padding:10px;
   background:#1c1c1e;
 }
-
 #nicoChatInput{
   flex:1;
   min-height:44px;
@@ -182,7 +165,6 @@ style.innerHTML = `
   color:white;
   font-size:14px;
 }
-
 #nicoChatSend{
   border:none;
   border-radius:14px;
@@ -255,20 +237,16 @@ function detectarImagen(texto) {
   return "alegre";
 }
 
-// ================= MICRÓFONO INTELIGENTE =================
+// ================= MICRÓFONO =================
 
 function silenciarMicrofono() {
   if (!nicoMicStream) return;
-  nicoMicStream.getAudioTracks().forEach(track => {
-    track.enabled = false;
-  });
+  nicoMicStream.getAudioTracks().forEach(track => track.enabled = false);
 }
 
 function activarMicrofono() {
   if (!nicoMicStream || !nicoActivo || nicoEstaHablando) return;
-  nicoMicStream.getAudioTracks().forEach(track => {
-    track.enabled = true;
-  });
+  nicoMicStream.getAudioTracks().forEach(track => track.enabled = true);
 }
 
 function debeApagarse(texto) {
@@ -340,6 +318,194 @@ async function guardarMemoria(user, nico) {
   }
 }
 
+// ================= AGENDA AUTOMÁTICA =================
+
+function normalizarTexto(t) {
+  return (t || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[.,]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function detectarTipoLimpieza(t) {
+  const x = normalizarTexto(t);
+  if (x.includes("profunda") || x.includes("deep")) return "PROFUNDA";
+  if (x.includes("move in") || x.includes("move-in")) return "MOVE-IN";
+  if (x.includes("move out") || x.includes("move-out")) return "MOVE-OUT";
+  if (x.includes("post construccion") || x.includes("post-construccion") || x.includes("construction")) return "POST-CONSTRUCCION";
+  if (x.includes("primera") || x.includes("first")) return "PRIMERA";
+  return "ESTÁNDAR";
+}
+
+function extraerFecha(texto) {
+  const t = normalizarTexto(texto);
+  const meses = {
+    enero: "01", febrero: "02", marzo: "03", abril: "04", mayo: "05", junio: "06",
+    julio: "07", agosto: "08", septiembre: "09", setiembre: "09", octubre: "10",
+    noviembre: "11", diciembre: "12"
+  };
+
+  let year = new Date().getFullYear();
+
+  let m = t.match(/(\d{1,2})\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)(?:\s+de\s+(\d{4}))?/);
+  if (m) {
+    const dia = m[1].padStart(2, "0");
+    const mes = meses[m[2]];
+    if (m[3]) year = m[3];
+    return `${year}-${mes}-${dia}`;
+  }
+
+  m = t.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+  if (m) {
+    const mes = m[1].padStart(2, "0");
+    const dia = m[2].padStart(2, "0");
+    if (m[3]) year = m[3].length === 2 ? `20${m[3]}` : m[3];
+    return `${year}-${mes}-${dia}`;
+  }
+
+  if (t.includes("mañana") || t.includes("manana")) {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().slice(0, 10);
+  }
+
+  if (t.includes("hoy")) {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  return "";
+}
+
+function extraerHora(texto) {
+  const t = normalizarTexto(texto);
+
+  let m = t.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm|a m|p m|a\.m|p\.m)?/);
+  if (!m) return "";
+
+  let h = parseInt(m[1], 10);
+  let min = m[2] || "00";
+  const mer = (m[3] || "").replace(/\s|\./g, "");
+
+  if (mer === "pm" && h < 12) h += 12;
+  if (mer === "am" && h === 12) h = 0;
+
+  return `${String(h).padStart(2, "0")}:${min}`;
+}
+
+function extraerCliente(texto) {
+  let t = texto
+    .replace(/agenda(?:r)?/i, "")
+    .replace(/programa(?:r)?/i, "")
+    .replace(/crea(?:r)?/i, "")
+    .replace(/un trabajo/i, "")
+    .replace(/una limpieza/i, "")
+    .trim();
+
+  t = t.replace(/^a\s+/i, "");
+
+  const corte = t.search(/(\d{1,2}\s+de\s+|hoy|mañana|manana|\d{1,2}\/\d{1,2}| a las | limpieza | estandar| estándar| profunda| move)/i);
+  if (corte > 0) t = t.slice(0, corte);
+
+  return t.replace(/\s+/g, " ").trim();
+}
+
+function detectarComandoAgenda(texto) {
+  const t = normalizarTexto(texto);
+  return (
+    t.includes("agenda") ||
+    t.includes("agendar") ||
+    t.includes("programa") ||
+    t.includes("programar") ||
+    t.includes("crea un trabajo") ||
+    t.includes("crear un trabajo")
+  );
+}
+
+function construirTrabajoDesdeTexto(texto) {
+  const cliente = extraerCliente(texto);
+  const fecha = extraerFecha(texto);
+  const hora = extraerHora(texto);
+  const tipo = detectarTipoLimpieza(texto);
+
+  if (!cliente || !fecha || !hora) return null;
+
+  return {
+    confirmado: true,
+    cliente,
+    direccion: "",
+    whatsapp: "",
+    empleado_nombre: "",
+    empleado_email: "",
+    empleado_nombre_2: "",
+    empleado_email_2: "",
+    fecha,
+    hora,
+    notas: `Creado por Nico desde voz/texto. Comando original: ${texto}`,
+    tipo
+  };
+}
+
+async function crearTrabajoAutomatico(texto) {
+  try {
+    if (!detectarComandoAgenda(texto)) return false;
+
+    const trabajo = construirTrabajoDesdeTexto(texto);
+    if (!trabajo) return false;
+
+    const firma = JSON.stringify(trabajo);
+    if (firma === ultimoComandoAgenda) return true;
+    ultimoComandoAgenda = firma;
+
+    imagenNico("celular");
+
+    const res = await fetch(CREAR_TRABAJO_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(trabajo)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.ok) {
+      console.log("Error creando trabajo:", data);
+      return false;
+    }
+
+    await guardarMemoria(
+      texto,
+      `Agendé el trabajo para ${trabajo.cliente} el ${trabajo.fecha} a las ${trabajo.hora}, tipo ${trabajo.tipo}.`
+    );
+
+    // Nico dice confirmación por WebRTC
+    if (nicoDC && nicoDC.readyState === "open") {
+      nicoDC.send(JSON.stringify({
+        type: "conversation.item.create",
+        item: {
+          type: "message",
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text: `Confirma en una frase corta que ya agendaste a ${trabajo.cliente} el ${trabajo.fecha} a las ${trabajo.hora} con limpieza ${trabajo.tipo}.`
+            }
+          ]
+        }
+      }));
+
+      nicoDC.send(JSON.stringify({ type: "response.create" }));
+    }
+
+    return true;
+
+  } catch (e) {
+    console.log("No pude crear trabajo automático:", e);
+    return false;
+  }
+}
+
 // ================= ACTIVAR NICO =================
 
 async function activarNico() {
@@ -396,7 +562,6 @@ async function activarNico() {
 
       if (nicoReadyResolve) nicoReadyResolve();
 
-      // Saludo inicial UNA sola vez.
       if (!saludoInicialHecho) {
         saludoInicialHecho = true;
         silenciarMicrofono();
@@ -456,6 +621,8 @@ async function activarNico() {
           if (debeAbrirChat(texto)) {
             abrirChatNico();
           }
+
+          await crearTrabajoAutomatico(texto);
         }
 
         if (msg.type === "response.created") {
@@ -490,7 +657,6 @@ async function activarNico() {
           const userFinal = (ultimoTextoUsuario || "").trim();
           const nicoFinal = (nicoRespuesta || "").trim();
 
-          // No guardamos el saludo automático como memoria.
           const esSaludoAuto = nicoFinal.toLowerCase().includes("hola hola") && !userFinal;
 
           if (userFinal && nicoFinal && !esSaludoAuto) {
@@ -503,7 +669,6 @@ async function activarNico() {
 
           imagenNico("saluda");
 
-          // Nico termina -> espera 2.2 segundos -> micrófono ON
           setTimeout(() => {
             nicoEstaHablando = false;
             activarMicrofono();
@@ -560,6 +725,12 @@ async function enviarTextoANico() {
   }
 
   await activarNico();
+
+  const creado = await crearTrabajoAutomatico(mensaje);
+  if (creado) {
+    agregarMensaje("nico", "Listo, Rodri. Ya lo agendé y debe aparecer en la app.");
+    return;
+  }
 
   silenciarMicrofono();
 
