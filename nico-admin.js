@@ -651,7 +651,7 @@ async function activarNico() {
 
     const tokenRes = await fetch(NICO_SESSION_URL);
     const tokenData = await tokenRes.json();
-    const KEY = tokenData.client_secret?.value || tokenData.value;
+    const KEY = tokenData.client_secret?.value || tokenData.client_secret || tokenData.value;
 
     if (!KEY) throw new Error("No llegó token Realtime");
 
