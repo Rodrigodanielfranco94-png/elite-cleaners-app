@@ -494,12 +494,14 @@ async function crearTrabajoAutomatico(texto) {
         }
       }));
 
-      nicoDC.send(JSON.stringify({
-        type: "response.create",
-        response: {
-          modalities: ["audio", "text"]
-        }
-      }));
+      setTimeout(() => {
+        nicoDC.send(JSON.stringify({
+          type: "response.create",
+          response: {
+            instructions: "Confirma en una frase corta que el trabajo fue agendado."
+          }
+        }));
+      }, 300);
     }
 
     return true;
@@ -585,13 +587,14 @@ async function activarNico() {
           }
         }));
 
-        nicoDC.send(JSON.stringify({
-          type: "response.create",
-          response: {
-            modalities: ["audio", "text"],
-            instructions: "Di exactamente: Hola hola, ¿en qué puedo ayudarte? Después guarda silencio."
-          }
-        }));
+        setTimeout(() => {
+          nicoDC.send(JSON.stringify({
+            type: "response.create",
+            response: {
+              instructions: "Di exactamente: Hola hola, ¿en qué puedo ayudarte? Después guarda silencio."
+            }
+          }));
+        }, 800);
       }
     };
 
@@ -758,12 +761,11 @@ async function enviarTextoANico() {
     }
   }));
 
-  nicoDC.send(JSON.stringify({
-    type: "response.create",
-    response: {
-      modalities: ["audio", "text"]
-    }
-  }));
+  setTimeout(() => {
+    nicoDC.send(JSON.stringify({
+      type: "response.create"
+    }));
+  }, 300);
 }
 
 // ================= APAGAR =================
