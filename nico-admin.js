@@ -5,6 +5,7 @@ const CREAR_TRABAJO_URL = "https://us-central1-elite-cleaners-app.cloudfunctions
 const CONSULTAR_HOY_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/consultarTrabajosHoy";
 const CONSULTAR_PENDIENTES_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/consultarPendientes";
 const CONSULTAR_CLIENTES_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/consultarClientes";
+const GUARDAR_MEMORIA_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/guardarMemoria";
 
 const GOOGLE_REVIEW_LINK = "https://share.google/zJY5nmJjhgUWoz0IX";
 const ELITE_PHONE = "+1 (925) 336-2884";
@@ -287,29 +288,14 @@ async function guardarMemoria(user, nico) {
   try {
     if (!user || !nico) return;
 
-    if (typeof db === "undefined" || typeof firebase === "undefined") {
-      console.warn("Firebase/db no está disponible para guardar memoria.");
-      return;
-    }
-
-    await db.collection("memoria_nico").add({
-      user,
-      nico,
-      fecha_texto: new Date().toLocaleString(),
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    await db.collection("memoria_nico_completa").add({
-      role_user: "Rodri",
-      user,
-      role_nico: "Nico",
-      nico,
-      fecha_texto: new Date().toLocaleString(),
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    await fetch(GUARDAR_MEMORIA_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user, nico })
     });
 
   } catch (e) {
-    console.log("No pude guardar memoria:", e);
+    console.log("No pude guardar memoria desde frontend:", e);
   }
 }
 
@@ -485,8 +471,6 @@ async function crearTrabajoAutomatico(texto) {
     const respuesta = `Listo, Rodri. Ya agendé a ${trabajo.cliente} para el ${trabajo.fecha} a las ${trabajo.hora}. Tipo de limpieza: ${trabajo.tipo}.`;
 
     agregarMensaje("nico", respuesta);
-    await guardarMemoria(texto, respuesta);
-
     return true;
 
   } catch (e) {
@@ -663,37 +647,27 @@ async function ejecutarFuncionLocal(texto) {
   if (funcion === "pendientes") return await consultarPendientes();
 
   if (funcion === "resena") {
-    const r = mensajeResena();
-    agregarMensaje("nico", r);
-    await guardarMemoria(texto, "Preparé un mensaje para pedir reseña de Google.");
+    agregarMensaje("nico", mensajeResena());
     return true;
   }
 
   if (funcion === "contrato") {
-    const r = mensajeContrato();
-    agregarMensaje("nico", r);
-    await guardarMemoria(texto, "Preparé un mensaje para enviar contrato.");
+    agregarMensaje("nico", mensajeContrato());
     return true;
   }
 
   if (funcion === "aviso") {
-    const r = mensajeAviso();
-    agregarMensaje("nico", r);
-    await guardarMemoria(texto, "Preparé un aviso para cliente.");
+    agregarMensaje("nico", mensajeAviso());
     return true;
   }
 
   if (funcion === "confirmacion") {
-    const r = mensajeConfirmacion();
-    agregarMensaje("nico", r);
-    await guardarMemoria(texto, "Preparé un mensaje de confirmación.");
+    agregarMensaje("nico", mensajeConfirmacion());
     return true;
   }
 
   if (funcion === "cobro") {
-    const r = mensajeCobro();
-    agregarMensaje("nico", r);
-    await guardarMemoria(texto, "Preparé un mensaje de cobro.");
+    agregarMensaje("nico", mensajeCobro());
     return true;
   }
 
@@ -712,14 +686,21 @@ async function pensarConNico(mensaje) {
       body: JSON.stringify({ mensaje })
     });
 
-    const data = await res.json();
+    let data = {};
+    try {
+      data = await res.json();
+    } catch (e) {
+      console.log("No pude leer JSON pensarNico:", e);
+    }
 
     if (!res.ok) {
       console.log("Error pensarNico:", data);
       return "Rodri, ahora mismo no pude pensar la respuesta. Revisa si la API tiene crédito o si la función pensarNico está funcionando.";
     }
 
-    return (data.respuesta || data.output_text || "Aquí estoy, Rodri.").trim();
+    const respuesta = data.respuesta || data.output_text || data.text || "";
+
+    return (respuesta || "Aquí estoy, Rodri. Dime qué necesitas y lo resolvemos.").trim();
 
   } catch (e) {
     console.log("Error llamando pensarNico:", e);
@@ -765,8 +746,6 @@ async function enviarTextoANico() {
     const respuesta = await pensarConNico(mensaje);
     pensando.innerText = respuesta;
     imagenNico(detectarImagen(respuesta));
-
-    await guardarMemoria(mensaje, respuesta);
 
   } catch (e) {
     console.log("Error general Nico:", e);
