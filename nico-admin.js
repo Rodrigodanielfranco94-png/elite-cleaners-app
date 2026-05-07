@@ -40,13 +40,6 @@ nicoChatPanel.innerHTML = `
     <span>Nico</span>
     <button id="nicoChatClose">×</button>
   </div>
-  <div id="nicoQuickActions">
-    <button data-action="hoy">Hoy</button>
-    <button data-action="pendientes">Pendientes</button>
-    <button data-action="resena">Reseña</button>
-    <button data-action="contrato">Contrato</button>
-    <button data-action="aviso">Aviso</button>
-  </div>
   <div id="nicoChatMessages"></div>
   <div id="nicoChatInputRow">
     <textarea id="nicoChatInput" placeholder="Escríbele a Nico..."></textarea>
@@ -72,6 +65,7 @@ style.innerHTML = `
   pointer-events:none;
 }
 #nicoBox *{ pointer-events:auto; }
+
 #nicoImg{
   display:none;
   width:95px;
@@ -81,10 +75,12 @@ style.innerHTML = `
   margin-bottom:4px;
   animation:nicoMagic .35s ease-out;
 }
+
 @keyframes nicoMagic{
   from{ opacity:0; transform:scale(.7) translateY(15px); }
   to{ opacity:1; transform:scale(1) translateY(0); }
 }
+
 #nicoBtn{
   width:64px;
   height:64px;
@@ -96,6 +92,7 @@ style.innerHTML = `
   font-weight:bold;
   box-shadow:0 8px 22px rgba(0,0,0,.45);
 }
+
 #nicoChatPanel{
   display:none;
   position:fixed !important;
@@ -109,6 +106,7 @@ style.innerHTML = `
   overflow:hidden;
   box-shadow:0 10px 30px rgba(0,0,0,.6);
 }
+
 #nicoChatHeader{
   display:flex;
   justify-content:space-between;
@@ -118,6 +116,7 @@ style.innerHTML = `
   color:white;
   font-weight:900;
 }
+
 #nicoChatClose{
   background:#ef4444;
   color:white;
@@ -127,32 +126,16 @@ style.innerHTML = `
   height:28px;
   font-weight:bold;
 }
-#nicoQuickActions{
-  display:flex;
-  gap:6px;
-  overflow-x:auto;
-  padding:8px 10px;
-  background:#18181b;
-  border-bottom:1px solid #2c2c2e;
-}
-#nicoQuickActions button{
-  white-space:nowrap;
-  border:none;
-  border-radius:14px;
-  padding:8px 10px;
-  background:#2c2c2e;
-  color:white;
-  font-size:12px;
-  font-weight:800;
-}
+
 #nicoChatMessages{
-  max-height:260px;
+  max-height:300px;
   overflow-y:auto;
   padding:12px;
   display:flex;
   flex-direction:column;
   gap:8px;
 }
+
 .nicoMsg{
   padding:10px 12px;
   border-radius:15px;
@@ -162,29 +145,26 @@ style.innerHTML = `
   word-break:break-word;
   white-space:pre-wrap;
 }
+
 .nicoMsg.user{
   align-self:flex-end;
   background:#3b82f6;
   color:white;
 }
+
 .nicoMsg.nico{
   align-self:flex-start;
   background:#2c2c2e;
   color:white;
 }
-.nicoMsg.system{
-  align-self:center;
-  background:#202020;
-  color:#d4d4d8;
-  font-size:12px;
-  text-align:center;
-}
+
 #nicoChatInputRow{
   display:flex;
   gap:8px;
   padding:10px;
   background:#1c1c1e;
 }
+
 #nicoChatInput{
   flex:1;
   min-height:44px;
@@ -197,6 +177,7 @@ style.innerHTML = `
   color:white;
   font-size:14px;
 }
+
 #nicoChatSend{
   border:none;
   border-radius:14px;
@@ -215,7 +196,6 @@ const chatClose = document.getElementById("nicoChatClose");
 const chatMessages = document.getElementById("nicoChatMessages");
 const chatInput = document.getElementById("nicoChatInput");
 const chatSend = document.getElementById("nicoChatSend");
-const quickActions = document.getElementById("nicoQuickActions");
 
 // ================= BOTONES =================
 
@@ -232,24 +212,6 @@ chatInput.addEventListener("keydown", (e) => {
     e.preventDefault();
     enviarTextoANico();
   }
-});
-
-quickActions.addEventListener("click", (e) => {
-  const btn = e.target.closest("button");
-  if (!btn) return;
-
-  const action = btn.dataset.action;
-
-  const textos = {
-    hoy: "Nico, muéstrame los trabajos de hoy.",
-    pendientes: "Nico, muéstrame los trabajos pendientes.",
-    resena: "Nico, prepara un mensaje para pedirle una reseña de Google a un cliente.",
-    contrato: "Nico, prepara un mensaje para enviar contrato de limpieza a un cliente.",
-    aviso: "Nico, prepara un aviso profesional para recordarle a un cliente su limpieza."
-  };
-
-  chatInput.value = textos[action] || "";
-  enviarTextoANico();
 });
 
 // ================= IMÁGENES =================
@@ -351,7 +313,7 @@ async function guardarMemoria(user, nico) {
   }
 }
 
-// ================= TEXTO / NORMALIZACIÓN =================
+// ================= TEXTO =================
 
 function normalizarTexto(t) {
   return (t || "")
@@ -361,6 +323,16 @@ function normalizarTexto(t) {
     .replace(/[.,]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function debeApagarse(texto) {
+  const t = normalizarTexto(texto);
+  return (
+    t.includes("bye nico") ||
+    t.includes("chao nico") ||
+    t.includes("desconectate nico") ||
+    t.includes("nico desconectate")
+  );
 }
 
 function detectarTipoLimpieza(t) {
@@ -512,8 +484,8 @@ async function crearTrabajoAutomatico(texto) {
 
     const respuesta = `Listo, Rodri. Ya agendé a ${trabajo.cliente} para el ${trabajo.fecha} a las ${trabajo.hora}. Tipo de limpieza: ${trabajo.tipo}.`;
 
-    await guardarMemoria(texto, respuesta);
     agregarMensaje("nico", respuesta);
+    await guardarMemoria(texto, respuesta);
 
     return true;
 
@@ -691,31 +663,36 @@ async function ejecutarFuncionLocal(texto) {
   if (funcion === "pendientes") return await consultarPendientes();
 
   if (funcion === "resena") {
-    agregarMensaje("nico", mensajeResena());
+    const r = mensajeResena();
+    agregarMensaje("nico", r);
     await guardarMemoria(texto, "Preparé un mensaje para pedir reseña de Google.");
     return true;
   }
 
   if (funcion === "contrato") {
-    agregarMensaje("nico", mensajeContrato());
+    const r = mensajeContrato();
+    agregarMensaje("nico", r);
     await guardarMemoria(texto, "Preparé un mensaje para enviar contrato.");
     return true;
   }
 
   if (funcion === "aviso") {
-    agregarMensaje("nico", mensajeAviso());
+    const r = mensajeAviso();
+    agregarMensaje("nico", r);
     await guardarMemoria(texto, "Preparé un aviso para cliente.");
     return true;
   }
 
   if (funcion === "confirmacion") {
-    agregarMensaje("nico", mensajeConfirmacion());
+    const r = mensajeConfirmacion();
+    agregarMensaje("nico", r);
     await guardarMemoria(texto, "Preparé un mensaje de confirmación.");
     return true;
   }
 
   if (funcion === "cobro") {
-    agregarMensaje("nico", mensajeCobro());
+    const r = mensajeCobro();
+    agregarMensaje("nico", r);
     await guardarMemoria(texto, "Preparé un mensaje de cobro.");
     return true;
   }
@@ -742,7 +719,7 @@ async function pensarConNico(mensaje) {
       return "Rodri, ahora mismo no pude pensar la respuesta. Revisa si la API tiene crédito o si la función pensarNico está funcionando.";
     }
 
-    return (data.respuesta || "Aquí estoy, Rodri.").trim();
+    return (data.respuesta || data.output_text || "Aquí estoy, Rodri.").trim();
 
   } catch (e) {
     console.log("Error llamando pensarNico:", e);
@@ -770,21 +747,30 @@ async function enviarTextoANico() {
   nicoPensando = true;
   nicoBtn.innerText = "…";
 
+  const pensando = agregarMensaje("nico", "Nico está pensando...");
+
   try {
     const agendado = await crearTrabajoAutomatico(mensaje);
-    if (agendado) return;
+    if (agendado) {
+      pensando.remove();
+      return;
+    }
 
     const local = await ejecutarFuncionLocal(mensaje);
-    if (local) return;
+    if (local) {
+      pensando.remove();
+      return;
+    }
 
-    const pensando = agregarMensaje("nico", "Nico está pensando...");
     const respuesta = await pensarConNico(mensaje);
-
     pensando.innerText = respuesta;
     imagenNico(detectarImagen(respuesta));
 
     await guardarMemoria(mensaje, respuesta);
 
+  } catch (e) {
+    console.log("Error general Nico:", e);
+    pensando.innerText = "Rodri, tuve un problema respondiendo. Abre la consola para revisar el error.";
   } finally {
     nicoPensando = false;
     nicoBtn.innerText = nicoActivo ? "×" : "💬";
