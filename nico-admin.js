@@ -690,26 +690,41 @@ async function activarNico() {
           imagenNico("piensa");
         }
 
-        if (msg.type === "response.audio.delta") {
+        if (
+  msg.type === "response.output_audio_transcript.delta" ||
+  msg.type === "response.audio_transcript.delta"
+) {
           nicoEstaHablando = true;
           silenciarMicrofono();
           imagenNico(detectarImagen(nicoRespuesta));
         }
 
-        if (msg.type === "response.audio_transcript.delta") {
-          nicoEstaHablando = true;
-          silenciarMicrofono();
+      if (
+  msg.type === "response.output_audio.delta" ||
+  msg.type === "response.audio.delta"
+) {
+  nicoEstaHablando = true;
+  silenciarMicrofono();
+  imagenNico(detectarImagen(nicoRespuesta));
+}
 
-          const delta = msg.delta || "";
-          nicoRespuesta += delta;
+if (
+  msg.type === "response.output_audio_transcript.delta" ||
+  msg.type === "response.audio_transcript.delta"
+) {
+  nicoEstaHablando = true;
+  silenciarMicrofono();
 
-          imagenNico(detectarImagen(nicoRespuesta));
+  const delta = msg.delta || "";
+  nicoRespuesta += delta;
 
-          if (currentAssistantMsg) {
-            currentAssistantMsg.innerText = nicoRespuesta;
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-          }
-        }
+  imagenNico(detectarImagen(nicoRespuesta));
+
+  if (currentAssistantMsg) {
+    currentAssistantMsg.innerText = nicoRespuesta;
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+}
 
         if (msg.type === "response.done") {
           const userFinal = (ultimoTextoUsuario || "").trim();
