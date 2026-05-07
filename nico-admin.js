@@ -1,7 +1,15 @@
-// ================= NICO ADMIN WEBRTC FINAL + AUDIO FIX IPHONE + EVENTOS REALTIME ACTUALIZADOS + AGENDA AUTOMÁTICA =================
+// ================= NICO ADMIN TEXTO + MEMORIA + AGENDA + MENSAJES EMPRESA =================
 
-const NICO_SESSION_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearSesionRealtime";
+const PENSAR_NICO_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/pensarNico";
 const CREAR_TRABAJO_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearTrabajoConfirmado";
+const CONSULTAR_HOY_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/consultarTrabajosHoy";
+const CONSULTAR_PENDIENTES_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/consultarPendientes";
+const CONSULTAR_CLIENTES_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/consultarClientes";
+
+const GOOGLE_REVIEW_LINK = "https://share.google/zJY5nmJjhgUWoz0IX";
+const ELITE_PHONE = "+1 (925) 336-2884";
+const ELITE_EMAIL = "elitecleanerscompany@gmail.com";
+const ELITE_WEBSITE = "https://elitecleanerscompany.com";
 
 if (window.NICO_STOP) {
   try { window.NICO_STOP(); } catch (e) {}
@@ -12,18 +20,8 @@ document.getElementById("nicoChatPanel")?.remove();
 document.getElementById("nicoFinalStyle")?.remove();
 document.getElementById("nicoRealtimeAudio")?.remove();
 
-let nicoPC = null;
-let nicoDC = null;
-let nicoAudio = null;
-let nicoMicStream = null;
 let nicoActivo = false;
-let nicoEstaHablando = false;
-let nicoRespuesta = "";
-let ultimoTextoUsuario = "";
-let nicoReadyResolve = null;
-let nicoReadyPromise = null;
-let currentAssistantMsg = null;
-let saludoInicialHecho = false;
+let nicoPensando = false;
 let ultimoComandoAgenda = "";
 
 // ================= UI =================
@@ -32,15 +30,22 @@ const nicoBox = document.createElement("div");
 nicoBox.id = "nicoBox";
 nicoBox.innerHTML = `
   <img id="nicoImg" src="nico-assets/saluda.png" />
-  <button id="nicoBtn">🎙️</button>
+  <button id="nicoBtn">💬</button>
 `;
 
 const nicoChatPanel = document.createElement("div");
 nicoChatPanel.id = "nicoChatPanel";
 nicoChatPanel.innerHTML = `
   <div id="nicoChatHeader">
-    <span>Chatear con Nico</span>
+    <span>Nico</span>
     <button id="nicoChatClose">×</button>
+  </div>
+  <div id="nicoQuickActions">
+    <button data-action="hoy">Hoy</button>
+    <button data-action="pendientes">Pendientes</button>
+    <button data-action="resena">Reseña</button>
+    <button data-action="contrato">Contrato</button>
+    <button data-action="aviso">Aviso</button>
   </div>
   <div id="nicoChatMessages"></div>
   <div id="nicoChatInputRow">
@@ -122,8 +127,26 @@ style.innerHTML = `
   height:28px;
   font-weight:bold;
 }
+#nicoQuickActions{
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  padding:8px 10px;
+  background:#18181b;
+  border-bottom:1px solid #2c2c2e;
+}
+#nicoQuickActions button{
+  white-space:nowrap;
+  border:none;
+  border-radius:14px;
+  padding:8px 10px;
+  background:#2c2c2e;
+  color:white;
+  font-size:12px;
+  font-weight:800;
+}
 #nicoChatMessages{
-  max-height:230px;
+  max-height:260px;
   overflow-y:auto;
   padding:12px;
   display:flex;
@@ -134,9 +157,10 @@ style.innerHTML = `
   padding:10px 12px;
   border-radius:15px;
   font-size:14px;
-  line-height:1.3;
-  max-width:88%;
+  line-height:1.35;
+  max-width:90%;
   word-break:break-word;
+  white-space:pre-wrap;
 }
 .nicoMsg.user{
   align-self:flex-end;
@@ -148,6 +172,13 @@ style.innerHTML = `
   background:#2c2c2e;
   color:white;
 }
+.nicoMsg.system{
+  align-self:center;
+  background:#202020;
+  color:#d4d4d8;
+  font-size:12px;
+  text-align:center;
+}
 #nicoChatInputRow{
   display:flex;
   gap:8px;
@@ -157,7 +188,7 @@ style.innerHTML = `
 #nicoChatInput{
   flex:1;
   min-height:44px;
-  max-height:90px;
+  max-height:100px;
   resize:none;
   border:none;
   border-radius:14px;
@@ -184,18 +215,16 @@ const chatClose = document.getElementById("nicoChatClose");
 const chatMessages = document.getElementById("nicoChatMessages");
 const chatInput = document.getElementById("nicoChatInput");
 const chatSend = document.getElementById("nicoChatSend");
+const quickActions = document.getElementById("nicoQuickActions");
 
 // ================= BOTONES =================
 
-nicoBtn.onclick = async () => {
-  if (nicoActivo) apagarNico();
-  else await activarNico();
+nicoBtn.onclick = () => {
+  if (nicoActivo) cerrarNico();
+  else abrirNico();
 };
 
-chatClose.onclick = () => {
-  chatPanel.style.display = "none";
-};
-
+chatClose.onclick = cerrarNico;
 chatSend.onclick = enviarTextoANico;
 
 chatInput.addEventListener("keydown", (e) => {
@@ -203,6 +232,24 @@ chatInput.addEventListener("keydown", (e) => {
     e.preventDefault();
     enviarTextoANico();
   }
+});
+
+quickActions.addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+
+  const action = btn.dataset.action;
+
+  const textos = {
+    hoy: "Nico, muéstrame los trabajos de hoy.",
+    pendientes: "Nico, muéstrame los trabajos pendientes.",
+    resena: "Nico, prepara un mensaje para pedirle una reseña de Google a un cliente.",
+    contrato: "Nico, prepara un mensaje para enviar contrato de limpieza a un cliente.",
+    aviso: "Nico, prepara un aviso profesional para recordarle a un cliente su limpieza."
+  };
+
+  chatInput.value = textos[action] || "";
+  enviarTextoANico();
 });
 
 // ================= IMÁGENES =================
@@ -238,44 +285,6 @@ function detectarImagen(texto) {
   return "alegre";
 }
 
-// ================= MICRÓFONO =================
-
-function silenciarMicrofono() {
-  if (!nicoMicStream) return;
-  nicoMicStream.getAudioTracks().forEach(track => track.enabled = false);
-}
-
-function activarMicrofono() {
-  if (!nicoMicStream || !nicoActivo || nicoEstaHablando) return;
-  nicoMicStream.getAudioTracks().forEach(track => track.enabled = true);
-}
-
-function debeApagarse(texto) {
-  const t = (texto || "").toLowerCase();
-  return (
-    t.includes("bye nico") ||
-    t.includes("bay nico") ||
-    t.includes("chao nico") ||
-    t.includes("desconéctate nico") ||
-    t.includes("desconectate nico") ||
-    t.includes("nico desconéctate") ||
-    t.includes("nico desconectate")
-  );
-}
-
-function debeAbrirChat(texto) {
-  const t = (texto || "").toLowerCase();
-  return (
-    t.includes("te voy a escribir") ||
-    t.includes("voy a escribir") ||
-    t.includes("quiero escribirte") ||
-    t.includes("quiero escribir") ||
-    t.includes("abrir chat") ||
-    t.includes("abre el chat") ||
-    t.includes("escribir con nico")
-  );
-}
-
 // ================= CHAT =================
 
 function agregarMensaje(tipo, texto) {
@@ -287,9 +296,27 @@ function agregarMensaje(tipo, texto) {
   return div;
 }
 
-function abrirChatNico() {
+function abrirNico() {
+  nicoActivo = true;
+  nicoBtn.innerText = "×";
+  imagenNico("saluda");
+  mostrarNico();
   chatPanel.style.display = "block";
-  setTimeout(() => chatInput.focus(), 200);
+
+  if (!chatMessages.dataset.saludo) {
+    agregarMensaje("nico", "Hola hola, ¿en qué puedo ayudarte?");
+    chatMessages.dataset.saludo = "true";
+  }
+
+  setTimeout(() => chatInput.focus(), 150);
+}
+
+function cerrarNico() {
+  nicoActivo = false;
+  nicoBtn.innerText = "💬";
+  imagenNico("reposo");
+  ocultarNico();
+  chatPanel.style.display = "none";
 }
 
 // ================= MEMORIA =================
@@ -324,7 +351,7 @@ async function guardarMemoria(user, nico) {
   }
 }
 
-// ================= AGENDA AUTOMÁTICA =================
+// ================= TEXTO / NORMALIZACIÓN =================
 
 function normalizarTexto(t) {
   return (t || "")
@@ -387,13 +414,14 @@ function extraerFecha(texto) {
 
 function extraerHora(texto) {
   const t = normalizarTexto(texto);
+  const horas = [...t.matchAll(/(\d{1,2})(?::(\d{2}))?\s*(am|pm|a m|p m|a\.m|p\.m)?/g)];
 
-  let m = t.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm|a m|p m|a\.m|p\.m)?/);
-  if (!m) return "";
+  if (!horas.length) return "";
 
-  let h = parseInt(m[1], 10);
-  let min = m[2] || "00";
-  const mer = (m[3] || "").replace(/\s|\./g, "");
+  let mejor = horas[horas.length - 1];
+  let h = parseInt(mejor[1], 10);
+  let min = mejor[2] || "00";
+  const mer = (mejor[3] || "").replace(/\s|\./g, "");
 
   if (mer === "pm" && h < 12) h += 12;
   if (mer === "am" && h === 12) h = 0;
@@ -449,10 +477,12 @@ function construirTrabajoDesdeTexto(texto) {
     empleado_email_2: "",
     fecha,
     hora,
-    notas: `Creado por Nico desde voz/texto. Comando original: ${texto}`,
+    notas: `Creado por Nico desde texto. Comando original: ${texto}`,
     tipo
   };
 }
+
+// ================= FUNCIONES EMPRESA =================
 
 async function crearTrabajoAutomatico(texto) {
   try {
@@ -480,37 +510,10 @@ async function crearTrabajoAutomatico(texto) {
       return false;
     }
 
-    await guardarMemoria(
-      texto,
-      `Agendé el trabajo para ${trabajo.cliente} el ${trabajo.fecha} a las ${trabajo.hora}, tipo ${trabajo.tipo}.`
-    );
+    const respuesta = `Listo, Rodri. Ya agendé a ${trabajo.cliente} para el ${trabajo.fecha} a las ${trabajo.hora}. Tipo de limpieza: ${trabajo.tipo}.`;
 
-    if (nicoDC && nicoDC.readyState === "open") {
-      nicoDC.send(JSON.stringify({
-        type: "conversation.item.create",
-        item: {
-          type: "message",
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: `Confirma en una frase corta que ya agendaste a ${trabajo.cliente} el ${trabajo.fecha} a las ${trabajo.hora} con limpieza ${trabajo.tipo}.`
-            }
-          ]
-        }
-      }));
-
-      setTimeout(() => {
-        if (nicoDC && nicoDC.readyState === "open") {
-          nicoDC.send(JSON.stringify({
-            type: "response.create",
-            response: {
-              instructions: "Confirma en una frase corta que el trabajo fue agendado."
-            }
-          }));
-        }
-      }, 300);
-    }
+    await guardarMemoria(texto, respuesta);
+    agregarMensaje("nico", respuesta);
 
     return true;
 
@@ -520,265 +523,230 @@ async function crearTrabajoAutomatico(texto) {
   }
 }
 
-// ================= ACTIVAR NICO =================
+function mensajeResena() {
+  return `Claro, Rodri. Puedes enviarle esto al cliente:
 
-async function activarNico() {
+Hola, muchas gracias por confiar en Elite Cleaners Company. Fue un gusto ayudarle con su limpieza.
+
+Si quedó satisfecho/a con nuestro servicio, nos ayudaría muchísimo dejándonos una reseña en Google. Su opinión nos ayuda a seguir creciendo y a que más familias y empresas confíen en nuestro trabajo.
+
+Puede dejar su reseña aquí:
+${GOOGLE_REVIEW_LINK}
+
+Muchas gracias por su apoyo.
+Elite Cleaners Company
+${ELITE_PHONE}`;
+}
+
+function mensajeContrato() {
+  return `Claro, Rodri. Puedes enviarle esto al cliente:
+
+Hola, muchas gracias por elegir Elite Cleaners Company.
+
+Antes de realizar el servicio, le enviaremos nuestro acuerdo de servicios de limpieza para confirmar los detalles, condiciones del trabajo, responsabilidades y protección de ambas partes.
+
+Por favor revise el contrato con calma y fírmelo antes de la fecha programada.
+
+Si tiene alguna pregunta, con gusto podemos ayudarle.
+
+Elite Cleaners Company
+${ELITE_PHONE}
+${ELITE_EMAIL}`;
+}
+
+function mensajeAviso() {
+  return `Claro, Rodri. Puedes enviarle este aviso al cliente:
+
+Hola, le saluda Elite Cleaners Company.
+
+Queremos recordarle que su limpieza está programada próximamente. Por favor asegúrese de que tengamos acceso a la propiedad, agua y electricidad disponibles, y que cualquier área especial sea indicada antes de iniciar el servicio.
+
+Si necesita hacer algún cambio en el horario o en los detalles de la limpieza, por favor avísenos con anticipación.
+
+Muchas gracias.
+Elite Cleaners Company
+${ELITE_PHONE}`;
+}
+
+function mensajeConfirmacion() {
+  return `Claro, Rodri. Puedes enviarle esto al cliente:
+
+Hola, queremos confirmar su servicio de limpieza con Elite Cleaners Company.
+
+Por favor confírmenos que la fecha, hora y dirección están correctas. También puede enviarnos cualquier instrucción especial antes de la limpieza.
+
+Muchas gracias por confiar en nosotros.
+Elite Cleaners Company
+${ELITE_PHONE}`;
+}
+
+function mensajeCobro() {
+  return `Claro, Rodri. Puedes enviarle esto al cliente:
+
+Hola, muchas gracias por confiar en Elite Cleaners Company.
+
+Le compartimos este mensaje como recordatorio amable del pago correspondiente al servicio de limpieza realizado. Puede realizar el pago por el método acordado.
+
+Quedamos atentos. Muchas gracias.
+Elite Cleaners Company
+${ELITE_PHONE}`;
+}
+
+async function consultarTrabajosHoy() {
   try {
-    if (nicoActivo && nicoReadyPromise) return nicoReadyPromise;
+    imagenNico("celular");
 
-    nicoActivo = true;
-    nicoEstaHablando = false;
-    nicoRespuesta = "";
-    ultimoTextoUsuario = "";
-    saludoInicialHecho = false;
+    const res = await fetch(CONSULTAR_HOY_URL);
+    const data = await res.json();
 
-    nicoBtn.innerText = "⛔";
-    imagenNico("saluda");
-    mostrarNico();
-
-    nicoReadyPromise = new Promise(resolve => {
-      nicoReadyResolve = resolve;
-    });
-
-    console.log("🚀 Activando Nico...");
-
-    const tokenRes = await fetch(NICO_SESSION_URL);
-    const tokenData = await tokenRes.json();
-
-    console.log("🔑 Respuesta token Nico:", tokenData);
-
-    const KEY = tokenData.client_secret?.value || tokenData.client_secret || tokenData.value;
-
-    if (!KEY) throw new Error("No llegó token Realtime");
-
-    nicoPC = new RTCPeerConnection();
-
-    nicoPC.onconnectionstatechange = () => {
-      console.log("🔌 Nico connectionState:", nicoPC.connectionState);
-    };
-
-    nicoPC.oniceconnectionstatechange = () => {
-      console.log("🧊 Nico iceConnectionState:", nicoPC.iceConnectionState);
-    };
-
-    document.getElementById("nicoRealtimeAudio")?.remove();
-
-    nicoAudio = document.createElement("audio");
-    nicoAudio.id = "nicoRealtimeAudio";
-    nicoAudio.autoplay = true;
-    nicoAudio.playsInline = true;
-    nicoAudio.muted = false;
-    nicoAudio.volume = 1;
-
-    document.body.appendChild(nicoAudio);
-
-    nicoPC.ontrack = async (event) => {
-      console.log("🎧 Nico recibió audio remoto:", event.streams[0]);
-
-      nicoAudio.srcObject = event.streams[0];
-
-      try {
-        await nicoAudio.play();
-        console.log("✅ Audio de Nico reproduciendo");
-      } catch (e) {
-        console.warn("⚠️ El navegador bloqueó el audio hasta tocar pantalla:", e);
-      }
-    };
-
-    nicoMicStream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true
-      }
-    });
-
-    nicoMicStream.getTracks().forEach(track => {
-      nicoPC.addTrack(track, nicoMicStream);
-    });
-
-    nicoDC = nicoPC.createDataChannel("oai-events");
-
-    nicoDC.onopen = () => {
-      console.log("✅ DataChannel Nico abierto");
-      imagenNico("saluda");
-
-      if (nicoReadyResolve) nicoReadyResolve();
-
-      if (!saludoInicialHecho) {
-        saludoInicialHecho = true;
-        silenciarMicrofono();
-
-        nicoDC.send(JSON.stringify({
-          type: "conversation.item.create",
-          item: {
-            type: "message",
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Nico, saluda una sola vez, muy corto, y después quédate callado esperando que Rodrigo hable."
-              }
-            ]
-          }
-        }));
-
-        setTimeout(() => {
-          if (nicoDC && nicoDC.readyState === "open") {
-            nicoDC.send(JSON.stringify({
-              type: "response.create",
-              response: {
-                instructions: "Di exactamente: Hola hola, ¿en qué puedo ayudarte? Después guarda silencio."
-              }
-            }));
-          }
-        }, 800);
-      }
-    };
-
-    nicoDC.onerror = (e) => {
-      console.error("❌ Error DataChannel Nico:", e);
-    };
-
-    nicoDC.onclose = () => {
-      console.warn("⚠️ DataChannel Nico cerrado");
-    };
-
-    nicoDC.onmessage = async (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-        console.log("📩 Evento Nico:", msg.type, msg);
-
-        if (msg.type === "input_audio_buffer.speech_started") {
-          if (nicoEstaHablando) {
-            silenciarMicrofono();
-            return;
-          }
-          nicoRespuesta = "";
-          imagenNico("saluda");
-        }
-
-        if (msg.type === "input_audio_buffer.speech_stopped") {
-          if (!nicoEstaHablando) imagenNico("piensa");
-        }
-
-        if (msg.type === "conversation.item.input_audio_transcription.completed") {
-          const texto = msg.transcript || "";
-          if (nicoEstaHablando) return;
-
-          ultimoTextoUsuario = texto;
-
-          if (debeApagarse(texto)) {
-            imagenNico("bien");
-            setTimeout(apagarNico, 500);
-            return;
-          }
-
-          if (debeAbrirChat(texto)) {
-            abrirChatNico();
-          }
-
-          await crearTrabajoAutomatico(texto);
-        }
-
-        if (msg.type === "response.created") {
-          nicoEstaHablando = true;
-          nicoRespuesta = "";
-          silenciarMicrofono();
-          imagenNico("piensa");
-        }
-
-        if (
-          msg.type === "response.output_audio.delta" ||
-          msg.type === "response.audio.delta"
-        ) {
-          nicoEstaHablando = true;
-          silenciarMicrofono();
-          imagenNico(detectarImagen(nicoRespuesta));
-        }
-
-        if (
-          msg.type === "response.output_audio_transcript.delta" ||
-          msg.type === "response.audio_transcript.delta"
-        ) {
-          nicoEstaHablando = true;
-          silenciarMicrofono();
-
-          const delta = msg.delta || "";
-          nicoRespuesta += delta;
-
-          imagenNico(detectarImagen(nicoRespuesta));
-
-          if (currentAssistantMsg) {
-            currentAssistantMsg.innerText = nicoRespuesta;
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-          }
-        }
-
-        if (msg.type === "response.done") {
-          const userFinal = (ultimoTextoUsuario || "").trim();
-          const nicoFinal = (nicoRespuesta || "").trim();
-
-          const esSaludoAuto = nicoFinal.toLowerCase().includes("hola hola") && !userFinal;
-
-          if (userFinal && nicoFinal && !esSaludoAuto) {
-            await guardarMemoria(userFinal, nicoFinal);
-          }
-
-          nicoRespuesta = "";
-          ultimoTextoUsuario = "";
-          currentAssistantMsg = null;
-
-          imagenNico("saluda");
-
-          setTimeout(() => {
-            nicoEstaHablando = false;
-            activarMicrofono();
-          }, 2200);
-        }
-
-        if (msg.type === "error") {
-          console.error("❌ Error Realtime Nico:", msg);
-        }
-
-      } catch (e) {
-        console.log("Evento Nico sin JSON:", event.data);
-      }
-    };
-
-    const offer = await nicoPC.createOffer();
-    await nicoPC.setLocalDescription(offer);
-
-    console.log("📡 Enviando SDP offer a OpenAI...");
-
-    const sdpResponse = await fetch("https://api.openai.com/v1/realtime/calls", {
-      method: "POST",
-      body: offer.sdp,
-      headers: {
-        Authorization: `Bearer ${KEY}`,
-        "Content-Type": "application/sdp"
-      }
-    });
-
-    if (!sdpResponse.ok) {
-      const errorText = await sdpResponse.text();
-      throw new Error(errorText);
+    if (!res.ok || !data.ok) {
+      agregarMensaje("nico", "Rodri, no pude consultar los trabajos de hoy en este momento.");
+      return true;
     }
 
-    const answerSdp = await sdpResponse.text();
+    const trabajos = data.trabajos || [];
 
-    await nicoPC.setRemoteDescription({
-      type: "answer",
-      sdp: answerSdp
+    if (!trabajos.length) {
+      agregarMensaje("nico", "Rodri, hoy no aparecen trabajos agendados.");
+      return true;
+    }
+
+    let texto = `Rodri, estos son los trabajos de hoy (${data.fecha}):\n\n`;
+
+    trabajos.forEach((t, i) => {
+      texto += `${i + 1}. ${t.cliente || "Cliente sin nombre"}\n`;
+      texto += `Hora: ${t.hora || "--:--"}\n`;
+      texto += `Dirección: ${t.direccion || "Sin dirección"}\n`;
+      texto += `Tipo: ${t.tipo || "Sin tipo"}\n`;
+      texto += `Estado: ${t.estado || "pendiente"}\n\n`;
     });
 
-    console.log("✅ Nico WebRTC conectado");
+    agregarMensaje("nico", texto.trim());
+    return true;
 
-    return nicoReadyPromise;
+  } catch (e) {
+    console.log("Error consultando hoy:", e);
+    agregarMensaje("nico", "Rodri, hubo un error consultando los trabajos de hoy.");
+    return true;
+  }
+}
 
-  } catch (error) {
-    console.error("Error Nico:", error);
-    apagarNico();
+async function consultarPendientes() {
+  try {
+    imagenNico("celular");
+
+    const res = await fetch(CONSULTAR_PENDIENTES_URL);
+    const data = await res.json();
+
+    if (!res.ok || !data.ok) {
+      agregarMensaje("nico", "Rodri, no pude consultar los pendientes en este momento.");
+      return true;
+    }
+
+    const pendientes = data.pendientes || [];
+
+    if (!pendientes.length) {
+      agregarMensaje("nico", "Rodri, no hay trabajos pendientes.");
+      return true;
+    }
+
+    let texto = `Rodri, tienes ${pendientes.length} trabajos pendientes:\n\n`;
+
+    pendientes.slice(0, 10).forEach((t, i) => {
+      texto += `${i + 1}. ${t.cliente || "Cliente sin nombre"}\n`;
+      texto += `Fecha: ${t.fecha || "Sin fecha"}\n`;
+      texto += `Hora: ${t.hora || "--:--"}\n`;
+      texto += `Tipo: ${t.tipo || "Sin tipo"}\n`;
+      texto += `Estado: ${t.estado || "pendiente"}\n\n`;
+    });
+
+    agregarMensaje("nico", texto.trim());
+    return true;
+
+  } catch (e) {
+    console.log("Error consultando pendientes:", e);
+    agregarMensaje("nico", "Rodri, hubo un error consultando los pendientes.");
+    return true;
+  }
+}
+
+function detectarFuncionLocal(texto) {
+  const t = normalizarTexto(texto);
+
+  if (t.includes("trabajos de hoy") || t.includes("limpiezas de hoy") || t.includes("que tengo hoy")) return "hoy";
+  if (t.includes("pendientes") || t.includes("trabajos pendientes")) return "pendientes";
+  if (t.includes("reseña") || t.includes("resena") || t.includes("review")) return "resena";
+  if (t.includes("contrato")) return "contrato";
+  if (t.includes("aviso") || t.includes("recordatorio")) return "aviso";
+  if (t.includes("confirmacion") || t.includes("confirmación") || t.includes("confirmar servicio")) return "confirmacion";
+  if (t.includes("cobro") || t.includes("pago") || t.includes("payment")) return "cobro";
+
+  return "";
+}
+
+async function ejecutarFuncionLocal(texto) {
+  const funcion = detectarFuncionLocal(texto);
+
+  if (funcion === "hoy") return await consultarTrabajosHoy();
+  if (funcion === "pendientes") return await consultarPendientes();
+
+  if (funcion === "resena") {
+    agregarMensaje("nico", mensajeResena());
+    await guardarMemoria(texto, "Preparé un mensaje para pedir reseña de Google.");
+    return true;
+  }
+
+  if (funcion === "contrato") {
+    agregarMensaje("nico", mensajeContrato());
+    await guardarMemoria(texto, "Preparé un mensaje para enviar contrato.");
+    return true;
+  }
+
+  if (funcion === "aviso") {
+    agregarMensaje("nico", mensajeAviso());
+    await guardarMemoria(texto, "Preparé un aviso para cliente.");
+    return true;
+  }
+
+  if (funcion === "confirmacion") {
+    agregarMensaje("nico", mensajeConfirmacion());
+    await guardarMemoria(texto, "Preparé un mensaje de confirmación.");
+    return true;
+  }
+
+  if (funcion === "cobro") {
+    agregarMensaje("nico", mensajeCobro());
+    await guardarMemoria(texto, "Preparé un mensaje de cobro.");
+    return true;
+  }
+
+  return false;
+}
+
+// ================= NICO IA TEXTO =================
+
+async function pensarConNico(mensaje) {
+  try {
+    imagenNico("piensa");
+
+    const res = await fetch(PENSAR_NICO_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mensaje })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      console.log("Error pensarNico:", data);
+      return "Rodri, ahora mismo no pude pensar la respuesta. Revisa si la API tiene crédito o si la función pensarNico está funcionando.";
+    }
+
+    return (data.respuesta || "Aquí estoy, Rodri.").trim();
+
+  } catch (e) {
+    console.log("Error llamando pensarNico:", e);
+    return "Rodri, no pude conectarme con Nico ahora mismo. Revisa internet, Firebase Functions o el crédito de OpenAI API.";
   }
 }
 
@@ -786,7 +754,7 @@ async function activarNico() {
 
 async function enviarTextoANico() {
   const mensaje = chatInput.value.trim();
-  if (!mensaje) return;
+  if (!mensaje || nicoPensando) return;
 
   chatInput.value = "";
   chatPanel.style.display = "block";
@@ -794,101 +762,47 @@ async function enviarTextoANico() {
   agregarMensaje("user", mensaje);
 
   if (debeApagarse(mensaje)) {
-    agregarMensaje("nico", "Listo Rodri... me desconecto.");
-    apagarNico();
+    agregarMensaje("nico", "Listo, Rodri. Me quedo quieto por ahora. Cuando me necesites, toca mi botón.");
+    cerrarNico();
     return;
   }
 
-  await activarNico();
+  nicoPensando = true;
+  nicoBtn.innerText = "…";
 
-  if (!nicoDC || nicoDC.readyState !== "open") {
-    agregarMensaje("nico", "Rodri, todavía no estoy conectado. Toca el micrófono otra vez e intenta de nuevo.");
-    return;
+  try {
+    const agendado = await crearTrabajoAutomatico(mensaje);
+    if (agendado) return;
+
+    const local = await ejecutarFuncionLocal(mensaje);
+    if (local) return;
+
+    const pensando = agregarMensaje("nico", "Nico está pensando...");
+    const respuesta = await pensarConNico(mensaje);
+
+    pensando.innerText = respuesta;
+    imagenNico(detectarImagen(respuesta));
+
+    await guardarMemoria(mensaje, respuesta);
+
+  } finally {
+    nicoPensando = false;
+    nicoBtn.innerText = nicoActivo ? "×" : "💬";
+    chatMessages.scrollTop = chatMessages.scrollHeight;
   }
-
-  const creado = await crearTrabajoAutomatico(mensaje);
-  if (creado) {
-    agregarMensaje("nico", "Listo, Rodri. Ya lo agendé y debe aparecer en la app.");
-    return;
-  }
-
-  silenciarMicrofono();
-
-  ultimoTextoUsuario = mensaje;
-  nicoRespuesta = "";
-  currentAssistantMsg = agregarMensaje("nico", "Nico está pensando...");
-
-  nicoDC.send(JSON.stringify({
-    type: "conversation.item.create",
-    item: {
-      type: "message",
-      role: "user",
-      content: [
-        {
-          type: "text",
-          text: mensaje
-        }
-      ]
-    }
-  }));
-
-  setTimeout(() => {
-    if (nicoDC && nicoDC.readyState === "open") {
-      nicoDC.send(JSON.stringify({
-        type: "response.create"
-      }));
-    }
-  }, 300);
 }
 
 // ================= APAGAR =================
 
 function apagarNico() {
-  console.log("🛑 Apagando Nico...");
-
   nicoActivo = false;
-  nicoEstaHablando = false;
-  nicoRespuesta = "";
-  ultimoTextoUsuario = "";
-  currentAssistantMsg = null;
-  saludoInicialHecho = false;
+  nicoPensando = false;
+  ultimoComandoAgenda = "";
 
-  if (nicoBtn) nicoBtn.innerText = "🎙️";
+  if (nicoBtn) nicoBtn.innerText = "💬";
   imagenNico("reposo");
   ocultarNico();
   chatPanel.style.display = "none";
-
-  if (nicoAudio) {
-    try {
-      nicoAudio.pause();
-      nicoAudio.srcObject = null;
-      nicoAudio.remove();
-    } catch (e) {}
-  }
-
-  document.getElementById("nicoRealtimeAudio")?.remove();
-
-  if (nicoMicStream) {
-    try {
-      nicoMicStream.getTracks().forEach(track => track.stop());
-    } catch (e) {}
-  }
-
-  if (nicoPC) {
-    try {
-      nicoPC.getSenders().forEach(sender => {
-        if (sender.track) sender.track.stop();
-      });
-      nicoPC.close();
-    } catch (e) {}
-  }
-
-  nicoPC = null;
-  nicoDC = null;
-  nicoAudio = null;
-  nicoMicStream = null;
-  nicoReadyPromise = null;
-  nicoReadyResolve = null;
 }
 
 window.NICO_STOP = apagarNico;
