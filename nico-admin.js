@@ -1,4 +1,4 @@
-// ================= NICO ADMIN WEBRTC FINAL + AUDIO FIX IPHONE + AGENDA AUTOMÁTICA =================
+// ================= NICO ADMIN WEBRTC FINAL + AUDIO FIX IPHONE + EVENTOS REALTIME ACTUALIZADOS + AGENDA AUTOMÁTICA =================
 
 const NICO_SESSION_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearSesionRealtime";
 const CREAR_TRABAJO_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearTrabajoConfirmado";
@@ -493,7 +493,7 @@ async function crearTrabajoAutomatico(texto) {
           role: "user",
           content: [
             {
-              type: "input_text",
+              type: "text",
               text: `Confirma en una frase corta que ya agendaste a ${trabajo.cliente} el ${trabajo.fecha} a las ${trabajo.hora} con limpieza ${trabajo.tipo}.`
             }
           ]
@@ -561,8 +561,6 @@ async function activarNico() {
       console.log("🧊 Nico iceConnectionState:", nicoPC.iceConnectionState);
     };
 
-    // FIX IMPORTANTE PARA IPHONE/SAFARI:
-    // El audio debe existir en el DOM para reproducirse correctamente.
     document.getElementById("nicoRealtimeAudio")?.remove();
 
     nicoAudio = document.createElement("audio");
@@ -618,7 +616,7 @@ async function activarNico() {
             role: "user",
             content: [
               {
-                type: "input_text",
+                type: "text",
                 text: "Nico, saluda una sola vez, muy corto, y después quédate callado esperando que Rodrigo hable."
               }
             ]
@@ -691,40 +689,31 @@ async function activarNico() {
         }
 
         if (
-  msg.type === "response.output_audio_transcript.delta" ||
-  msg.type === "response.audio_transcript.delta"
-) {
+          msg.type === "response.output_audio.delta" ||
+          msg.type === "response.audio.delta"
+        ) {
           nicoEstaHablando = true;
           silenciarMicrofono();
           imagenNico(detectarImagen(nicoRespuesta));
         }
 
-      if (
-  msg.type === "response.output_audio.delta" ||
-  msg.type === "response.audio.delta"
-) {
-  nicoEstaHablando = true;
-  silenciarMicrofono();
-  imagenNico(detectarImagen(nicoRespuesta));
-}
+        if (
+          msg.type === "response.output_audio_transcript.delta" ||
+          msg.type === "response.audio_transcript.delta"
+        ) {
+          nicoEstaHablando = true;
+          silenciarMicrofono();
 
-if (
-  msg.type === "response.output_audio_transcript.delta" ||
-  msg.type === "response.audio_transcript.delta"
-) {
-  nicoEstaHablando = true;
-  silenciarMicrofono();
+          const delta = msg.delta || "";
+          nicoRespuesta += delta;
 
-  const delta = msg.delta || "";
-  nicoRespuesta += delta;
+          imagenNico(detectarImagen(nicoRespuesta));
 
-  imagenNico(detectarImagen(nicoRespuesta));
-
-  if (currentAssistantMsg) {
-    currentAssistantMsg.innerText = nicoRespuesta;
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-}
+          if (currentAssistantMsg) {
+            currentAssistantMsg.innerText = nicoRespuesta;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+          }
+        }
 
         if (msg.type === "response.done") {
           const userFinal = (ultimoTextoUsuario || "").trim();
@@ -836,7 +825,7 @@ async function enviarTextoANico() {
       role: "user",
       content: [
         {
-          type: "input_text",
+          type: "text",
           text: mensaje
         }
       ]
