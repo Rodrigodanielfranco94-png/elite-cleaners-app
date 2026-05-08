@@ -1,7 +1,6 @@
-// ================= NICO ADMIN FINAL LEFT PANEL =================
+// ================= NICO ADMIN FINAL LEFT PANEL + ESTIMATES =================
 
 const PENSAR_NICO_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/pensarNico";
-// ================= ESTIMATES =================
 
 const CREAR_ESTIMATE_URL =
 "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearEstimateNico";
@@ -9,18 +8,15 @@ const CREAR_ESTIMATE_URL =
 const CONSULTAR_ESTIMATES_URL =
 "https://us-central1-elite-cleaners-app.cloudfunctions.net/consultarEstimates";
 
-// ================= INVOICES =================
-
 const CREAR_INVOICE_URL =
 "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearInvoiceNico";
 
 const CONSULTAR_INVOICES_URL =
 "https://us-central1-elite-cleaners-app.cloudfunctions.net/consultarInvoices";
 
-// ================= RECEIPTS =================
-
 const CREAR_RECEIPT_URL =
 "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearReceiptNico";
+
 if (window.NICO_STOP) {
   try { window.NICO_STOP(); } catch (e) {}
 }
@@ -31,7 +27,6 @@ document.getElementById("nicoFinalStyle")?.remove();
 
 let nicoActivo = false;
 let nicoPensando = false;
-let nicoModoEstimate = false;
 
 // ================= UI =================
 
@@ -49,41 +44,24 @@ nicoChatPanel.id = "nicoChatPanel";
 
 nicoChatPanel.innerHTML = `
   <div id="nicoHeader">
-
     <div id="nicoHeaderLeft">
       <div id="nicoTitleRow">
         <span id="nicoTitle">Nico</span>
-
         <span id="nicoOnlineDot"></span>
-
         <span id="nicoOnlineText">ONLINE</span>
       </div>
-
-      <div id="nicoSubtitle">
-        Asistente IA de Elite Cleaners
-      </div>
+      <div id="nicoSubtitle">Asistente IA de Elite Cleaners</div>
     </div>
-
     <button id="nicoClose">×</button>
   </div>
 
   <div id="nicoBody">
-
     <div id="nicoChatMessages"></div>
 
     <div id="nicoInputRow">
-
-      <textarea
-        id="nicoChatInput"
-        placeholder="Escríbele a Nico..."
-      ></textarea>
-
-      <button id="nicoSend">
-        Enviar
-      </button>
-
+      <textarea id="nicoChatInput" placeholder="Escríbele a Nico..."></textarea>
+      <button id="nicoSend">Enviar</button>
     </div>
-
   </div>
 `;
 
@@ -96,7 +74,6 @@ const style = document.createElement("style");
 style.id = "nicoFinalStyle";
 
 style.innerHTML = `
-
 #nicoBox{
   position:fixed !important;
   right:18px !important;
@@ -122,46 +99,24 @@ style.innerHTML = `
 }
 
 @keyframes nicoFloat{
-  0%,100%{
-    transform:translateY(0px);
-  }
-
-  50%{
-    transform:translateY(-6px);
-  }
+  0%,100%{ transform:translateY(0px); }
+  50%{ transform:translateY(-6px); }
 }
 
 #nicoChatPanel{
   display:none;
-
   position:fixed !important;
-
   left:10px !important;
   right:auto !important;
-
   bottom:20px !important;
-
   width:320px !important;
   max-width:92vw !important;
-
   z-index:999998 !important;
-
-  background:linear-gradient(
-    180deg,
-    #071226,
-    #020617
-  );
-
+  background:linear-gradient(180deg,#071226,#020617);
   border-radius:24px;
-
   border:1px solid rgba(59,130,246,.45);
-
   overflow:hidden;
-
-  box-shadow:
-    0 0 24px rgba(37,99,235,.25),
-    0 12px 40px rgba(0,0,0,.75);
-
+  box-shadow:0 0 24px rgba(37,99,235,.25),0 12px 40px rgba(0,0,0,.75);
   backdrop-filter:blur(12px);
 }
 
@@ -169,9 +124,7 @@ style.innerHTML = `
   display:flex;
   justify-content:space-between;
   align-items:flex-start;
-
   padding:14px;
-
   border-bottom:1px solid rgba(59,130,246,.2);
 }
 
@@ -210,16 +163,12 @@ style.innerHTML = `
 #nicoClose{
   width:44px;
   height:44px;
-
   border:none;
   border-radius:50%;
-
   background:#ef4444;
   color:white;
-
   font-size:24px;
   font-weight:900;
-
   box-shadow:0 0 16px rgba(239,68,68,.45);
 }
 
@@ -231,42 +180,29 @@ style.innerHTML = `
   display:flex;
   flex-direction:column;
   gap:8px;
-
   max-height:260px;
   overflow-y:auto;
-
   margin-bottom:10px;
 }
 
 .nicoMsg{
   padding:11px 13px;
-
   border-radius:15px;
-
   font-size:14px;
   line-height:1.4;
-
   white-space:pre-wrap;
   word-break:break-word;
 }
 
 .nicoMsg.user{
   align-self:flex-end;
-
-  background:linear-gradient(
-    135deg,
-    #3b82f6,
-    #2563eb
-  );
-
+  background:linear-gradient(135deg,#3b82f6,#2563eb);
   color:white;
 }
 
 .nicoMsg.nico{
   align-self:flex-start;
-
   background:rgba(39,39,42,.95);
-
   color:white;
 }
 
@@ -278,24 +214,15 @@ style.innerHTML = `
 
 #nicoChatInput{
   flex:1;
-
   min-height:58px;
   max-height:85px;
-
   resize:none;
-
   border-radius:16px;
-
   border:1px solid rgba(59,130,246,.5);
-
   background:#0b1120;
-
   color:white;
-
   padding:12px;
-
   font-size:14px;
-
   outline:none;
 }
 
@@ -305,35 +232,22 @@ style.innerHTML = `
 
 #nicoChatInput:focus{
   border-color:#3b82f6;
-
-  box-shadow:
-    0 0 0 2px rgba(59,130,246,.15);
+  box-shadow:0 0 0 2px rgba(59,130,246,.15);
 }
 
 #nicoSend{
   width:82px;
   min-height:58px;
-
   border:none;
   border-radius:16px;
-
-  background:linear-gradient(
-    135deg,
-    #22c55e,
-    #16a34a
-  );
-
+  background:linear-gradient(135deg,#22c55e,#16a34a);
   color:white;
-
   font-size:15px;
   font-weight:900;
-
-  box-shadow:
-    0 0 18px rgba(34,197,94,.3);
+  box-shadow:0 0 18px rgba(34,197,94,.3);
 }
 
 @media(max-width:600px){
-
   #nicoChatPanel{
     width:320px !important;
     left:10px !important;
@@ -344,9 +258,7 @@ style.innerHTML = `
     width:100px;
     height:145px;
   }
-
 }
-
 `;
 
 document.head.appendChild(style);
@@ -364,7 +276,6 @@ const nicoFloatingAvatar = document.getElementById("nicoFloatingAvatar");
 // ================= IMAGES =================
 
 function imagenNico(tipo){
-
   const imgs = {
     saluda: "nico-assets/saluda.png",
     piensa: "nico-assets/piensa.png",
@@ -376,45 +287,29 @@ function imagenNico(tipo){
     reposo: "nico-assets/reposo.png"
   };
 
-  nicoFloatingAvatar.src =
-    imgs[tipo] || imgs.saluda;
+  nicoFloatingAvatar.src = imgs[tipo] || imgs.saluda;
 }
 
 // ================= CHAT =================
 
 function agregarMensaje(tipo, texto){
-
   const div = document.createElement("div");
-
   div.className = `nicoMsg ${tipo}`;
-
   div.innerText = texto;
-
   nicoChatMessages.appendChild(div);
-
-  nicoChatMessages.scrollTop =
-    nicoChatMessages.scrollHeight;
-
+  nicoChatMessages.scrollTop = nicoChatMessages.scrollHeight;
   return div;
 }
 
 // ================= OPEN / CLOSE =================
 
 function abrirNico(){
-
   nicoActivo = true;
-
   imagenNico("saluda");
-
   nicoChatPanelEl.style.display = "block";
 
   if(!nicoChatMessages.dataset.saludo){
-
-    agregarMensaje(
-      "nico",
-      "Hola hola, ¿en qué puedo ayudarte?"
-    );
-
+    agregarMensaje("nico", "Hola hola, ¿en qué puedo ayudarte?");
     nicoChatMessages.dataset.saludo = "true";
   }
 
@@ -424,54 +319,206 @@ function abrirNico(){
 }
 
 function cerrarNico(){
-
   nicoActivo = false;
-
   nicoChatPanelEl.style.display = "none";
-
   imagenNico("saluda");
 }
 
 nicoBtn.onclick = () => {
-
-  if(nicoActivo){
-    cerrarNico();
-  }else{
-    abrirNico();
-  }
+  if(nicoActivo) cerrarNico();
+  else abrirNico();
 };
 
 nicoClose.onclick = cerrarNico;
 
+// ================= HELPERS =================
+
+function normalizarTexto(t){
+  return (t || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+function dinero(valor){
+  const n = Number(valor || 0);
+  return n.toFixed(2);
+}
+
+function obtenerValor(id){
+  return document.getElementById(id)?.value?.trim() || "";
+}
+
+function obtenerDatosFormularioActual(){
+  return {
+    cliente_nombre: obtenerValor("cliente"),
+    cliente_email: obtenerValor("email_cliente"),
+    cliente_telefono: obtenerValor("whatsapp").replace(/\D/g, ""),
+    cliente_direccion: obtenerValor("direccion"),
+    tipo_limpieza: typeof tipoSeleccionado !== "undefined" ? tipoSeleccionado : "",
+    notes: obtenerValor("notas"),
+    total: Number(obtenerValor("precio_total") || 0),
+    fecha: obtenerValor("fecha"),
+    hora: obtenerValor("hora")
+  };
+}
+
+function extraerNombreDesdeComando(texto){
+  let t = texto.trim();
+
+  t = t
+    .replace(/nico/ig, "")
+    .replace(/crea/ig, "")
+    .replace(/crear/ig, "")
+    .replace(/estimate/ig, "")
+    .replace(/estimado/ig, "")
+    .replace(/cotizacion/ig, "")
+    .replace(/cotización/ig, "")
+    .replace(/de /ig, "")
+    .trim();
+
+  return t;
+}
+
+function buscarDatosCliente(nombre){
+  const nombreNorm = normalizarTexto(nombre);
+
+  let cliente = null;
+  let servicio = null;
+
+  if (typeof todosLosClientes !== "undefined") {
+    cliente = todosLosClientes.find(c =>
+      normalizarTexto(c.nombre || c.id || "").includes(nombreNorm) ||
+      nombreNorm.includes(normalizarTexto(c.nombre || c.id || ""))
+    );
+  }
+
+  if (typeof todosLosServicios !== "undefined") {
+    servicio = [...todosLosServicios].reverse().find(s =>
+      normalizarTexto(s.cliente || "").includes(nombreNorm) ||
+      nombreNorm.includes(normalizarTexto(s.cliente || ""))
+    );
+  }
+
+  return { cliente, servicio };
+}
+
+function construirPayloadEstimateDesdeDatos(datos){
+  return {
+    cliente_nombre: datos.cliente_nombre || "",
+    cliente_email: datos.cliente_email || "",
+    cliente_telefono: (datos.cliente_telefono || "").replace(/\D/g, ""),
+    cliente_direccion: datos.cliente_direccion || "",
+    tipo_limpieza: datos.tipo_limpieza || "",
+    notes: datos.notes || "",
+    total: Number(datos.total || 0),
+    subtotal: Number(datos.total || 0),
+    items: [
+      {
+        description: datos.tipo_limpieza || "Cleaning Service",
+        price: Number(datos.total || 0),
+        quantity: 1,
+        total: Number(datos.total || 0)
+      }
+    ],
+    status: "Draft"
+  };
+}
+
+async function crearEstimateConDatos(datos){
+  if(!datos.cliente_nombre){
+    agregarMensaje("nico", "Rodri, falta el nombre del cliente para crear el estimate.");
+    return;
+  }
+
+  if(!datos.total || Number(datos.total) <= 0){
+    agregarMensaje("nico", "Rodri, falta el precio total. Escríbelo en el campo Precio Total del Servicio para poder crear el estimate.");
+    return;
+  }
+
+  imagenNico("celular");
+
+  const payload = construirPayloadEstimateDesdeDatos(datos);
+
+  const res = await fetch(CREAR_ESTIMATE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await res.json();
+
+  if(!res.ok || !data.ok){
+    console.log(data);
+    agregarMensaje("nico", "Rodri, no pude crear el estimate. Revisa la consola por si Firebase devolvió un error.");
+    return;
+  }
+
+  imagenNico("bien");
+
+  agregarMensaje(
+    "nico",
+`✅ Estimate creado correctamente
+
+👤 Cliente: ${payload.cliente_nombre}
+🧼 Tipo: ${payload.tipo_limpieza || "Sin tipo"}
+💵 Total: $${dinero(payload.total)}
+📍 Dirección: ${payload.cliente_direccion || "Sin dirección"}
+
+📄 Estimate:
+${data.estimate.numero}`
+  );
+}
+
+async function mostrarEstimates(){
+  try{
+    imagenNico("celular");
+
+    const res = await fetch(CONSULTAR_ESTIMATES_URL);
+    const data = await res.json();
+
+    const estimates = data.estimates || [];
+
+    if(!estimates.length){
+      agregarMensaje("nico", "Rodri, todavía no encontré estimates guardados.");
+      return;
+    }
+
+    let texto = "📋 Últimos estimates:\n\n";
+
+    estimates.slice(0,10).forEach((e, i) => {
+      texto += `${i + 1}. ${e.cliente_nombre || "Sin cliente"}\n`;
+      texto += `Tipo: ${e.tipo_limpieza || "Sin tipo"}\n`;
+      texto += `Total: $${dinero(e.total)}\n`;
+      texto += `Estimate: ${e.numero || "Sin número"}\n\n`;
+    });
+
+    agregarMensaje("nico", texto.trim());
+    imagenNico("bien");
+
+  }catch(e){
+    console.log(e);
+    agregarMensaje("nico", "Rodri, hubo un error consultando los estimates.");
+  }
+}
+
 // ================= THINK =================
 
 async function pensarConNico(mensaje){
-
   try{
-
     imagenNico("piensa");
 
-    const res = await fetch(
-      PENSAR_NICO_URL,
-      {
-        method:"POST",
-
-        headers:{
-          "Content-Type":"application/json"
-        },
-
-        body:JSON.stringify({
-          mensaje
-        })
-      }
-    );
+    const res = await fetch(PENSAR_NICO_URL, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ mensaje })
+    });
 
     const data = await res.json();
 
     if(!res.ok){
-
       console.log(data);
-
       return "Rodri, no pude responder ahora mismo.";
     }
 
@@ -482,9 +529,7 @@ async function pensarConNico(mensaje){
     ).trim();
 
   }catch(e){
-
     console.log(e);
-
     return "Rodri, hubo un problema conectando con Nico.";
   }
 }
@@ -492,247 +537,143 @@ async function pensarConNico(mensaje){
 // ================= SEND =================
 
 async function enviarTextoANico(){
-
-  const mensaje =
-    nicoChatInput.value.trim();
+  const mensaje = nicoChatInput.value.trim();
 
   if(!mensaje || nicoPensando) return;
 
   nicoChatInput.value = "";
-
   agregarMensaje("user", mensaje);
 
-  // ================= CREAR ESTIMATE =================
-
-  if(
-    mensaje.toLowerCase().includes("crear estimate") ||
-    mensaje.toLowerCase().includes("create estimate")
-  ){
-
-    agregarMensaje(
-      "nico",
-`🧾 Claro Rodri.
-
-Envíame así:
-
-Cliente, Tipo, Precio, Detalles
-
-Ejemplo:
-
-Amanda, Deep Clean, 450, Cocina y baños`
-    );
-
-    nicoModoEstimate = true;
-    return;
-  }
-
-  // ================= GUARDAR ESTIMATE =================
-
-  if(nicoModoEstimate){
-
-    try{
-
-      const partes =
-        mensaje.split(",");
-
-      const cliente =
-        partes[0]?.trim() || "";
-
-      const tipo =
-        partes[1]?.trim() || "";
-
-      const total =
-        partes[2]?.trim() || "";
-
-      const detalles =
-        partes[3]?.trim() || "";
-
-      const payload = {
-
-        cliente_nombre: cliente,
-        tipo_limpieza: tipo,
-        total: Number(total),
-        notes: detalles
-
-      };
-
-      const res = await fetch(
-        CREAR_ESTIMATE_URL,
-        {
-          method:"POST",
-
-          headers:{
-            "Content-Type":"application/json"
-          },
-
-          body:JSON.stringify(payload)
-        }
-      );
-
-      const data = await res.json();
-
-      if(!res.ok){
-
-        console.log(data);
-
-        agregarMensaje(
-          "nico",
-          "❌ No pude crear el estimate."
-        );
-
-        nicoModoEstimate = false;
-        return;
-      }
-
-      agregarMensaje(
-        "nico",
-`✅ Estimate creado correctamente
-
-👤 Cliente: ${cliente}
-🧼 Tipo: ${tipo}
-💵 Total: $${total}
-
-📄 Estimate:
-${data.estimate.numero}`
-      );
-
-      imagenNico("bien");
-
-      nicoModoEstimate = false;
-
-      return;
-
-    }catch(e){
-
-      console.log(e);
-
-      agregarMensaje(
-        "nico",
-        "❌ Error creando estimate."
-      );
-
-      nicoModoEstimate = false;
-
-      return;
-    }
-  }
+  const t = normalizarTexto(mensaje);
 
   // ================= MOSTRAR ESTIMATES =================
 
   if(
-    mensaje.toLowerCase().includes("mostrar estimates") ||
-    mensaje.toLowerCase().includes("ver estimates")
+    t.includes("mostrar estimates") ||
+    t.includes("ver estimates") ||
+    t.includes("muestrame estimates") ||
+    t.includes("muéstrame estimates")
   ){
+    await mostrarEstimates();
+    return;
+  }
 
-    try{
+  // ================= CREAR ESTIMATE DESDE FORMULARIO ACTUAL =================
 
-      const res =
-        await fetch(CONSULTAR_ESTIMATES_URL);
+  if(
+    t.includes("crear estimate") ||
+    t.includes("crea estimate") ||
+    t.includes("hacer estimate") ||
+    t.includes("haz estimate") ||
+    t.includes("crear estimado") ||
+    t.includes("crea estimado")
+  ){
+    const datosFormulario = obtenerDatosFormularioActual();
+    const nombreExtraido = extraerNombreDesdeComando(mensaje);
 
-      const data =
-        await res.json();
-
-      const estimates =
-        data.estimates || [];
-
-      if(!estimates.length){
-
-        agregarMensaje(
-          "nico",
-          "No encontré estimates."
-        );
-
-        return;
-      }
-
-      let texto =
-        "📋 ESTIMATES:\n\n";
-
-      estimates
-      .slice(0,10)
-      .forEach((e)=>{
-
-        texto +=
-`👤 ${e.cliente_nombre}
-🧼 ${e.tipo_limpieza}
-💵 $${e.total}
-📄 ${e.numero}
-
-`;
-
-      });
-
-      agregarMensaje(
-        "nico",
-        texto
-      );
-
-      return;
-
-    }catch(e){
-
-      console.log(e);
-
-      agregarMensaje(
-        "nico",
-        "❌ Error consultando estimates."
-      );
-
+    // Caso 1: si el formulario tiene cliente y precio, usa el formulario actual.
+    if(datosFormulario.cliente_nombre && datosFormulario.total > 0){
+      await crearEstimateConDatos(datosFormulario);
       return;
     }
+
+    // Caso 2: si pidió estimate de alguien específico, busca en clientes/servicios.
+    if(nombreExtraido){
+      const { cliente, servicio } = buscarDatosCliente(nombreExtraido);
+
+      const datosEncontrados = {
+        cliente_nombre:
+          servicio?.cliente ||
+          cliente?.nombre ||
+          cliente?.id ||
+          nombreExtraido,
+
+        cliente_email:
+          servicio?.email_cliente ||
+          cliente?.email ||
+          "",
+
+        cliente_telefono:
+          servicio?.whatsapp ||
+          cliente?.whatsapp ||
+          cliente?.telefono ||
+          "",
+
+        cliente_direccion:
+          servicio?.direccion ||
+          cliente?.direccion ||
+          "",
+
+        tipo_limpieza:
+          servicio?.tipo ||
+          datosFormulario.tipo_limpieza ||
+          "",
+
+        notes:
+          servicio?.notas ||
+          datosFormulario.notes ||
+          "",
+
+        total:
+          Number(servicio?.precio_total || datosFormulario.total || 0)
+      };
+
+      await crearEstimateConDatos(datosEncontrados);
+      return;
+    }
+
+    // Caso 3: faltan datos.
+    agregarMensaje(
+      "nico",
+`Rodri, para crear el estimate necesito que el formulario tenga:
+
+• Cliente
+• Precio Total del Servicio
+• Tipo de limpieza
+• Dirección si aplica
+
+Luego dime: "Nico, crea estimate".`
+    );
+
+    return;
   }
 
   // ================= IA NORMAL =================
 
   nicoPensando = true;
 
-  const thinking =
-    agregarMensaje(
-      "nico",
-      "Nico está pensando..."
-    );
+  const thinking = agregarMensaje("nico", "Nico está pensando...");
 
   try{
-
-    const respuesta =
-      await pensarConNico(mensaje);
-
+    const respuesta = await pensarConNico(mensaje);
     thinking.innerText = respuesta;
-
     imagenNico("alegre");
 
   }catch(e){
-
     console.log(e);
-
-    thinking.innerText =
-      "Rodri, tuve un problema respondiendo.";
+    thinking.innerText = "Rodri, tuve un problema respondiendo.";
 
   }finally{
-
     nicoPensando = false;
-
-    nicoChatMessages.scrollTop =
-      nicoChatMessages.scrollHeight;
+    nicoChatMessages.scrollTop = nicoChatMessages.scrollHeight;
   }
 }
+
 nicoSend.onclick = enviarTextoANico;
 
 nicoChatInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) {
+  if(e.key === "Enter" && !e.shiftKey){
     e.preventDefault();
     enviarTextoANico();
   }
 });
+
 // ================= STOP =================
 
 function apagarNico(){
-
   nicoActivo = false;
   nicoPensando = false;
-
   nicoChatPanelEl.style.display = "none";
-
   imagenNico("saluda");
 }
 
