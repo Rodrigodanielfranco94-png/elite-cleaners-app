@@ -52,7 +52,7 @@
         .btn-delete { background: #ef4444; }
         .btn-contract { background: #004a99; }
         .btn-review { background: #3b82f6; border: 1px solid #ffffff33; }
-        .btn-whatsapp { background: #25D366; }
+        .btn-whatsapp { background: #007aff; }
         
         .payroll-container { background: #1c1c1e; padding: 18px; border-radius: 20px; border: 1px solid #22c55e; margin-top: 30px; }
         .payroll-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
@@ -250,6 +250,23 @@
             return `${horas.toString().padStart(2, '0')}:${minutos} ${ampm}`;
         }
 
+        function limpiarTelefonoSMS(telefono) {
+            return (telefono || "").replace(/\D/g, "");
+        }
+
+        function abrirSMS(telefono, mensaje = "") {
+            const numero = limpiarTelefonoSMS(telefono);
+            if (!numero) return alert("El cliente no tiene un teléfono registrado.");
+
+            const body = encodeURIComponent(mensaje || "");
+
+            if (body) {
+                window.location.href = `sms:${numero}&body=${body}`;
+            } else {
+                window.location.href = `sms:${numero}`;
+            }
+        }
+
         function cambiarVista(v) {
             vistaActual = v;
             document.getElementById('btn-pendientes').classList.remove('active');
@@ -263,8 +280,14 @@
             if (!telefono) return alert("El cliente no tiene un teléfono registrado.");
             const urlBase = 'https://rodrigodanielfranco94-png.github.io/elite-cleaners-app'; 
             const urlFirma = `${urlBase}/firmar.html?id=${id}&cliente=${encodeURIComponent(cliente)}`;
-            const mensaje = `Hello ${cliente}, it's a pleasure to greet you from *Elite Cleaners Company*. 🌟%0A%0ATo confirm your service, please review and sign our service agreement at the following link:%0A%0A${urlFirma}`;
-            window.location.href = `https://wa.me/${telefono}?text=${mensaje}`;
+
+            const mensaje = `Hello ${cliente}, it's a pleasure to greet you from Elite Cleaners Company. 🌟
+
+To confirm your service, please review and sign our service agreement at the following link:
+
+${urlFirma}`;
+
+            abrirSMS(telefono, mensaje);
         }
 
         function verFirma(id) {
@@ -570,7 +593,10 @@
             await batch.commit();
         }
 
-        function abrirChat(num) { if(num) window.location.href = `sms:${num}`; }
+        function abrirChat(num) {
+            abrirSMS(num);
+        }
+
         function marcar(id, est) { db.collection("servicios").doc(id).update({ estado: est }); }
         function borrar(id) { if(confirm("¿Seguro que quieres borrarlo?")) db.collection("servicios").doc(id).delete(); }
         
@@ -581,6 +607,7 @@
             document.getElementById('reg-pago').value = p;
             document.getElementById('btn-staff-main').innerText = "ACTUALIZAR PERSONAL";
         }
+
         function borrarStaff(id, n) { if(confirm("¿Borrar a este empleado?")) db.collection("usuarios").doc(id).delete(); }
         
         function editar(id, s) {
@@ -608,10 +635,17 @@
 
         function solicitarResenaGoogle(nombre, telefono) {
             if(!telefono) return alert("El cliente no tiene teléfono.");
+
             const empresa = "Elite Cleaners Company";
             const linkGoogle = "https://maps.app.goo.gl/VZjAsLsYbKYhszx27?g_st=ic";
-            const mensaje = `Hello ${nombre}, thank you for choosing ${empresa}. 🌟 It was a pleasure serving you! We would greatly appreciate it if you could leave us a review on Google here: ${linkGoogle}`;
-            window.location.href = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
+
+            const mensaje = `Hello ${nombre}, thank you for choosing ${empresa}. 🌟
+
+It was a pleasure serving you! We would greatly appreciate it if you could leave us a review on Google here:
+
+${linkGoogle}`;
+
+            abrirSMS(telefono, mensaje);
         }
 
         function enviarRecordatorio(id) {
@@ -619,20 +653,22 @@
             if (!s) return;
             if (!s.whatsapp) return alert("El cliente no tiene un teléfono registrado.");
 
-            let staffNombres = s.empleado_nombre;
+            let staffNombres = s.empleado_nombre || "";
             if (s.empleado_nombre_2) {
                 staffNombres += ` and ${s.empleado_nombre_2}`;
             }
 
             const horaAmPm = formatAMPM(s.hora);
 
-            const mensaje = `Hello ${s.cliente}! 🌟 This is a friendly reminder from *Elite Cleaners Company* about your upcoming cleaning service:%0A%0A` +
-                `📅 *Date:* ${s.fecha}%0A` +
-                `⏰ *Time:* ${horaAmPm}%0A` +
-                `👤 *Staff:* ${staffNombres}%0A%0A` +
-                `We look forward to seeing you! Please let us know if you have any questions.`;
+            const mensaje = `Hello ${s.cliente}! 🌟 This is a friendly reminder from Elite Cleaners Company about your upcoming cleaning service:
 
-            window.location.href = `https://wa.me/${s.whatsapp}?text=${mensaje}`;
+📅 Date: ${s.fecha}
+⏰ Time: ${horaAmPm}
+👤 Staff: ${staffNombres}
+
+We look forward to seeing you! Please let us know if you have any questions.`;
+
+            abrirSMS(s.whatsapp, mensaje);
         }
     </script>
     <script src="nico-admin.js"></script>
