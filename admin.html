@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -80,89 +80,89 @@
     <div class="stats-grid">
         <div class="stat-card active" id="btn-pendientes" onclick="cambiarVista('pendiente')">
             <h2 id="count-pendientes">0</h2>
-            <p>Pending</p>
+            <p>Pendientes</p>
         </div>
         <div class="stat-card" id="btn-completados" onclick="cambiarVista('completado')">
             <h2 id="count-completados">0</h2>
-            <p>Completed</p>
+            <p>Completados</p>
         </div>
     </div>
 
     <div class="form-container section-staff">
-        <span class="label-text">Staff Management</span>
+        <span class="label-text">Gestión de Personal (Staff)</span>
         <input type="hidden" id="edit-staff-id">
-        <input type="text" id="reg-nombre" placeholder="Full Name">
-        <input type="email" id="reg-email" placeholder="Email Address">
-        <input type="number" id="reg-pago" placeholder="Hourly Pay ($)">
-        <button class="reg-btn" id="btn-staff-main" onclick="registrarStaff()">SAVE STAFF</button>
+        <input type="text" id="reg-nombre" placeholder="Nombre Completo">
+        <input type="email" id="reg-email" placeholder="Correo Electrónico">
+        <input type="number" id="reg-pago" placeholder="Pago por Hora ($)">
+        <button class="reg-btn" id="btn-staff-main" onclick="registrarStaff()">GUARDAR PERSONAL</button>
         <div class="staff-list" id="lista-visual-staff"></div>
     </div>
 
     <div class="form-container" id="main-form">
         <input type="hidden" id="edit-id">
-        <span class="label-text">Customer</span>
+        <span class="label-text">Cliente</span>
         <div class="search-container">
-            <input type="text" id="cliente" placeholder="Full Name" oninput="filtrarClientes()" autocomplete="off">
+            <input type="text" id="cliente" placeholder="Nombre del Cliente" oninput="filtrarClientes()" autocomplete="off">
             <div id="suggestions-clientes" class="suggestions-list"></div>
         </div>
-        <input type="text" id="direccion" placeholder="Service Address">
-        <input type="tel" id="whatsapp" placeholder="Customer Phone">
+        <input type="text" id="direccion" placeholder="Dirección del Servicio">
+        <input type="tel" id="whatsapp" placeholder="Teléfono del Cliente">
         
-        <span class="label-text">Staff 1</span>
+        <span class="label-text">Personal 1 (Staff 1)</span>
         <div class="search-container">
-            <input type="text" id="search-empleado" placeholder="Search staff 1..." oninput="filtrarEmpleados(1)" autocomplete="off">
+            <input type="text" id="search-empleado" placeholder="Buscar personal 1..." oninput="filtrarEmpleados(1)" autocomplete="off">
             <div id="suggestions-1" class="suggestions-list"></div>
         </div>
         <input type="hidden" id="email-empleado">
 
-        <span class="label-text">Staff 2 (Optional)</span>
+        <span class="label-text">Personal 2 (Opcional)</span>
         <div class="search-container">
-            <input type="text" id="search-empleado-2" placeholder="Search staff 2..." oninput="filtrarEmpleados(2)" autocomplete="off">
+            <input type="text" id="search-empleado-2" placeholder="Buscar personal 2..." oninput="filtrarEmpleados(2)" autocomplete="off">
             <div id="suggestions-2" class="suggestions-list"></div>
         </div>
         <input type="hidden" id="email-empleado-2">
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <div><span class="label-text">Date</span><input type="date" id="fecha"></div>
-            <div><span class="label-text">Time</span><input type="time" id="hora"></div>
+            <div><span class="label-text">Fecha</span><input type="date" id="fecha"></div>
+            <div><span class="label-text">Hora Estimada</span><input type="time" id="hora"></div>
         </div>
 
-        <span class="label-text">Notes</span>
-        <textarea id="notas" placeholder="Instructions..." rows="2"></textarea>
+        <span class="label-text">Notas / Instrucciones</span>
+        <textarea id="notas" placeholder="Instrucciones especiales..." rows="2"></textarea>
 
         <div id="admin-correction" style="display: none;">
-            <span class="label-text" style="color: #f59e0b;">Real Hours Correction</span>
+            <span class="label-text" style="color: #f59e0b;">Corrección de Horas Reales</span>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <input type="text" id="hora_inicio_real" placeholder="Start (Ex: 10:30 am)">
-                <input type="text" id="hora_fin_real" placeholder="End (Ex: 2:45 pm)">
+                <input type="text" id="hora_inicio_real" placeholder="Inicio (Ej: 10:30 am)">
+                <input type="text" id="hora_fin_real" placeholder="Fin (Ej: 2:45 pm)">
             </div>
         </div>
 
-        <span class="label-text">Cleaning Type</span>
+        <span class="label-text">Tipo de Limpieza</span>
         <div class="type-grid">
-            <button class="type-btn active" id="btn-ESTÁNDAR" onclick="selectType('ESTÁNDAR')">STANDARD</button>
-            <button class="type-btn" id="btn-PROFUNDA" onclick="selectType('PROFUNDA')">DEEP CLEAN</button>
+            <button class="type-btn active" id="btn-ESTÁNDAR" onclick="selectType('ESTÁNDAR')">ESTÁNDAR</button>
+            <button class="type-btn" id="btn-PROFUNDA" onclick="selectType('PROFUNDA')">PROFUNDA</button>
             <button class="type-btn" id="btn-MOVE-IN" onclick="selectType('MOVE-IN')">MOVE-IN</button>
             <button class="type-btn" id="btn-MOVE-OUT" onclick="selectType('MOVE-OUT')">MOVE-OUT</button>
-            <button class="type-btn" id="btn-PRIMERA" onclick="selectType('PRIMERA')">FIRST CLEAN</button>
-            <button class="type-btn" id="btn-POST-CONSTRUCCION" onclick="selectType('POST-CONSTRUCCION')">POST-CONSTRUCTION</button>
+            <button class="type-btn" id="btn-PRIMERA" onclick="selectType('PRIMERA')">PRIMERA VEZ</button>
+            <button class="type-btn" id="btn-POST-CONSTRUCCION" onclick="selectType('POST-CONSTRUCCION')">POST-CONSTRUCCIÓN</button>
         </div>
 
-        <button class="save-btn" id="main-button" onclick="asignarTrabajo()">ASSIGN JOB</button>
-        <button id="cancel-edit" style="display:none; background:none; border:none; color:#ef4444; width:100%; margin-top:10px; font-weight:bold; cursor:pointer;" onclick="location.reload()">CANCEL EDIT</button>
+        <button class="save-btn" id="main-button" onclick="asignarTrabajo()">ASIGNAR TRABAJO</button>
+        <button id="cancel-edit" style="display:none; background:none; border:none; color:#ef4444; width:100%; margin-top:10px; font-weight:bold; cursor:pointer;" onclick="location.reload()">CANCELAR EDICIÓN</button>
     </div>
 
     <div id="historial"></div>
 
     <div class="payroll-container">
-        <span class="label-text" style="color: #22c55e;">Payroll Summary</span>
+        <span class="label-text" style="color: #22c55e;">Resumen de Nómina (Payroll)</span>
         <table class="payroll-table">
             <thead>
-                <tr><th>Staff</th><th>Hours</th><th>Total</th></tr>
+                <tr><th>Staff</th><th>Horas</th><th>Total</th></tr>
             </thead>
             <tbody id="lista-nomina"></tbody>
         </table>
-        <button class="btn-reset" onclick="reiniciarHorasMes()">Reset Month & Download Excel</button>
+        <button class="btn-reset" onclick="reiniciarHorasMes()">Cerrar Mes y Descargar Excel</button>
     </div>
 
     <div id="modal-firma">
@@ -212,8 +212,8 @@
         </div>
         
         <div class="modal-footer" style="max-width:500px; margin: 0 auto;">
-            <button class="btn-modal btn-descargar" onclick="descargarComprobante()">Download</button>
-            <button class="btn-modal btn-cerrar" onclick="document.getElementById('modal-firma').style.display='none'">Close</button>
+            <button class="btn-modal btn-descargar" onclick="descargarComprobante()">Descargar</button>
+            <button class="btn-modal btn-cerrar" onclick="document.getElementById('modal-firma').style.display='none'">Cerrar</button>
         </div>
     </div>
 
@@ -255,7 +255,7 @@
         }
 
         function enviarContrato(id, telefono, cliente) {
-            if (!telefono) return alert("The customer has no registered phone number.");
+            if (!telefono) return alert("El cliente no tiene un teléfono registrado.");
             const urlBase = 'https://rodrigodanielfranco94-png.github.io/elite-cleaners-app'; 
             const urlFirma = `${urlBase}/firmar.html?id=${id}&cliente=${encodeURIComponent(cliente)}`;
             const mensaje = `Hello ${cliente}, it's a pleasure to greet you from *Elite Cleaners Company*. 🌟%0A%0ATo confirm your service, please review and sign our service agreement at the following link:%0A%0A${urlFirma}`;
@@ -265,11 +265,11 @@
         function verFirma(id) {
             const servicio = todosLosServicios.find(s => s.id === id);
             if(!servicio) return;
-            document.getElementById('modal-cliente').innerText = "CUSTOMER: " + servicio.cliente;
-            let fechaTexto = "No date";
+            document.getElementById('modal-cliente').innerText = "CLIENTE: " + servicio.cliente;
+            let fechaTexto = "Sin fecha";
             if (servicio.fecha_firma) {
                 const f = new Date(servicio.fecha_firma);
-                fechaTexto = "Digitally signed on: " + f.toLocaleDateString() + " " + f.toLocaleTimeString();
+                fechaTexto = "Firmado digitalmente el: " + f.toLocaleDateString() + " " + f.toLocaleTimeString();
             }
             document.getElementById('modal-fecha').innerText = fechaTexto;
             document.getElementById('modal-img-firma').src = servicio.firma_imagen || "";
@@ -283,7 +283,7 @@
             const labelFirma = document.getElementById('modal-label-firma');
             const clienteLabel = document.getElementById('modal-cliente');
             const fechaLabel = document.getElementById('modal-fecha');
-            const cliente = clienteLabel.innerText.split(': ')[1] || 'Customer';
+            const cliente = clienteLabel.innerText.split(': ')[1] || 'Cliente';
             
             const originalMaxHeight = legal.style.maxHeight;
             const originalOverflow = legal.style.overflowY;
@@ -328,7 +328,7 @@
         }
 
         function calcularTiempoTrabajado(inicio, fin) {
-            if (!inicio || !fin || inicio === "--:--" || fin === "--:--") return { texto: "In progress...", minutos: 0 };
+            if (!inicio || !fin || inicio === "--:--" || fin === "--:--") return { texto: "En progreso...", minutos: 0 };
             const aMinutos = (horaStr) => {
                 let hLimpia = horaStr.toLowerCase().trim();
                 let meridiano = hLimpia.includes('p') ? 'pm' : hLimpia.includes('a') ? 'am' : null;
@@ -379,7 +379,7 @@
             const n = document.getElementById('reg-nombre').value;
             const e = document.getElementById('reg-email').value.toLowerCase().trim();
             const p = document.getElementById('reg-pago').value || 0;
-            if(!n || !e) return alert("Missing data");
+            if(!n || !e) return alert("Faltan datos por completar");
             if(id) db.collection("usuarios").doc(id).update({ nombre: n, email: e, pago_hora: p }).then(resetStaffForm);
             else db.collection("usuarios").add({ nombre: n, email: e, rol: "empleado", pago_hora: p }).then(resetStaffForm);
         }
@@ -389,7 +389,7 @@
             document.getElementById('reg-nombre').value = "";
             document.getElementById('reg-email').value = "";
             document.getElementById('reg-pago').value = "";
-            document.getElementById('btn-staff-main').innerText = "SAVE STAFF";
+            document.getElementById('btn-staff-main').innerText = "GUARDAR PERSONAL";
         }
 
         db.collection("usuarios").where("rol", "==", "empleado").onSnapshot(snap => {
@@ -402,8 +402,8 @@
                 lv.innerHTML += `<div class="staff-item">
                     <div class="staff-info"><b>${e.nombre}</b><span>$${e.pago_hora || 0}/hr</span></div>
                     <div class="staff-actions">
-                        <button class="btn-mini" style="background:#6366f1" onclick="editarStaff('${id}','${e.nombre}','${e.email}','${e.pago_hora||0}')">Edit</button>
-                        <button class="btn-mini" style="background:#ef4444" onclick="borrarStaff('${id}','${e.nombre}')">Delete</button>
+                        <button class="btn-mini" style="background:#6366f1" onclick="editarStaff('${id}','${e.nombre}','${e.email}','${e.pago_hora||0}')">Editar</button>
+                        <button class="btn-mini" style="background:#ef4444" onclick="borrarStaff('${id}','${e.nombre}')">Borrar</button>
                     </div>
                 </div>`;
             });
@@ -441,7 +441,7 @@
         function asignarTrabajo() {
             const id = document.getElementById('edit-id').value;
             const cli_nombre = document.getElementById('cliente').value;
-            if(!cli_nombre) return alert("Customer is missing");
+            if(!cli_nombre) return alert("Falta el nombre del cliente");
             const data = {
                 cliente: cli_nombre, 
                 direccion: document.getElementById('direccion').value,
@@ -466,8 +466,6 @@
                 data.firma_cliente = false;
             }
 
-            // Compatible con tu app Admin y con la nueva Cloud Function:
-            // se guarda whatsapp y telefono con el mismo número para evitar conflictos.
             db.collection("clientes").doc(cli_nombre).set({
                 nombre: cli_nombre,
                 direccion: data.direccion,
@@ -504,7 +502,7 @@
             todosLosServicios.forEach(s => {
                 if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
                     const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
-                    const btnFirma = s.firma_cliente ? `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">View Signature</button>` : `<button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Agreement</button>`;
+                    const btnFirma = s.firma_cliente ? `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">Ver Firma</button>` : `<button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Acuerdo</button>`;
                     const card = document.createElement('div');
                     card.className = 'card-servicio';
                     
@@ -518,17 +516,17 @@
                         <p>📍 ${s.direccion}</p>
                         <p>👤 ${s.empleado_nombre_2 ? s.empleado_nombre+' & '+s.empleado_nombre_2 : s.empleado_nombre}</p>
                         <div class="time-box">
-                            <div class="time-row"><b>Start:</b> ${s.hora_inicio}</div>
-                            <div class="time-row"><b>End:</b> ${s.hora_fin}</div>
-                            <div class="time-row total-time-row"><b>Time:</b> ${infoTiempo.texto}</div>
+                            <div class="time-row"><b>Inicio:</b> ${s.hora_inicio}</div>
+                            <div class="time-row"><b>Fin:</b> ${s.hora_fin}</div>
+                            <div class="time-row total-time-row"><b>Tiempo:</b> ${infoTiempo.texto}</div>
                         </div>
                         <div class="action-buttons">
-                            <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">${s.estado === 'completado' ? 'Reopen' : 'Finish'}</button>
+                            <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">${s.estado === 'completado' ? 'Reabrir' : 'Terminar'}</button>
                             ${btnFirma}
-                            <button class="btn-action btn-whatsapp" onclick="enviarRecordatorio('${s.id}')">Reminder 📱</button>
-                            <button class="btn-action btn-review" onclick="solicitarResenaGoogle('${s.cliente}', '${s.whatsapp}')">Review ⭐️</button>
-                            <button class="btn-action btn-edit" id="edit-btn-${s.id}">Edit</button>
-                            <button class="btn-action btn-review" style="background:#ef4444" onclick="borrar('${s.id}')">Delete</button>
+                            <button class="btn-action btn-whatsapp" onclick="enviarRecordatorio('${s.id}')">Recordatorio 📱</button>
+                            <button class="btn-action btn-review" onclick="solicitarResenaGoogle('${s.cliente}', '${s.whatsapp}')">Reseña ⭐️</button>
+                            <button class="btn-action btn-edit" id="edit-btn-${s.id}">Editar</button>
+                            <button class="btn-action btn-review" style="background:#ef4444" onclick="borrar('${s.id}')">Borrar</button>
                         </div>`;
                     h.appendChild(card);
                     
@@ -551,7 +549,7 @@
 
         async function reiniciarHorasMes() {
             const completados = todosLosServicios.filter(s => s.estado === "completado");
-            if (completados.length === 0 || !confirm("Close month?")) return;
+            if (completados.length === 0 || !confirm("¿Deseas cerrar el mes actual?")) return;
             const data = completados.map(s => ({ Customer: s.cliente, Date: s.fecha, Time: calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).texto }));
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
@@ -564,16 +562,16 @@
 
         function abrirChat(num) { if(num) window.location.href = `sms:${num}`; }
         function marcar(id, est) { db.collection("servicios").doc(id).update({ estado: est }); }
-        function borrar(id) { if(confirm("Delete?")) db.collection("servicios").doc(id).delete(); }
+        function borrar(id) { if(confirm("¿Seguro que quieres borrarlo?")) db.collection("servicios").doc(id).delete(); }
         
         function editarStaff(id, n, e, p) {
             document.getElementById('edit-staff-id').value = id;
             document.getElementById('reg-nombre').value = n;
             document.getElementById('reg-email').value = e;
             document.getElementById('reg-pago').value = p;
-            document.getElementById('btn-staff-main').innerText = "UPDATE STAFF";
+            document.getElementById('btn-staff-main').innerText = "ACTUALIZAR PERSONAL";
         }
-        function borrarStaff(id, n) { if(confirm("Delete?")) db.collection("usuarios").doc(id).delete(); }
+        function borrarStaff(id, n) { if(confirm("¿Borrar a este empleado?")) db.collection("usuarios").doc(id).delete(); }
         
         function editar(id, s) {
             document.getElementById('edit-id').value = id;
@@ -591,13 +589,13 @@
             document.getElementById('hora_inicio_real').value = s.hora_inicio;
             document.getElementById('hora_fin_real').value = s.hora_fin;
             selectType(s.tipo);
-            document.getElementById('main-button').innerText = "SAVE CHANGES";
+            document.getElementById('main-button').innerText = "GUARDAR CAMBIOS";
             document.getElementById('cancel-edit').style.display = "block";
             window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
         function solicitarResenaGoogle(nombre, telefono) {
-            if(!telefono) return alert("The customer has no phone number.");
+            if(!telefono) return alert("El cliente no tiene teléfono.");
             const empresa = "Elite Cleaners Company";
             const linkGoogle = "https://maps.app.goo.gl/VZjAsLsYbKYhszx27?g_st=ic";
             const mensaje = `Hello ${nombre}, thank you for choosing ${empresa}. 🌟 It was a pleasure serving you! We would greatly appreciate it if you could leave us a review on Google here: ${linkGoogle}`;
@@ -607,7 +605,7 @@
         function enviarRecordatorio(id) {
             const s = todosLosServicios.find(serv => serv.id === id);
             if (!s) return;
-            if (!s.whatsapp) return alert("The customer has no registered phone number.");
+            if (!s.whatsapp) return alert("El cliente no tiene un teléfono registrado.");
 
             let staffNombres = s.empleado_nombre;
             if (s.empleado_nombre_2) {
