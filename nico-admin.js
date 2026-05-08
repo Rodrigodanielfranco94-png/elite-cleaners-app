@@ -1,4 +1,4 @@
-// ================= NICO ADMIN TEXTO + AVATAR PRO + MEMORIA + AGENDA =================
+// ================= NICO ADMIN TEXTO + AVATAR PREMIUM + MEMORIA + AGENDA =================
 
 const PENSAR_NICO_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/pensarNico";
 const CREAR_TRABAJO_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearTrabajoConfirmado";
@@ -76,10 +76,9 @@ style.innerHTML = `
   bottom:18px !important;
   z-index:99999;
 }
-
 #nicoBtn{
-  width:82px;
-  height:82px;
+  width:76px;
+  height:76px;
   border-radius:50%;
   border:2px solid #3b82f6;
   background:radial-gradient(circle at 35% 25%, #2563eb, #020617 70%);
@@ -87,20 +86,18 @@ style.innerHTML = `
   overflow:hidden;
   padding:0;
 }
-
 #nicoBtnImg{
-  width:90px;
-  height:90px;
+  width:88px;
+  height:88px;
   object-fit:contain;
   transform:translateY(8px);
 }
-
 #nicoChatPanel{
   display:none;
   position:fixed !important;
-  left:18px !important;
-  right:18px !important;
-  bottom:18px !important;
+  left:12px !important;
+  right:12px !important;
+  bottom:106px !important;
   z-index:99998;
   background:linear-gradient(145deg, rgba(5,12,28,.98), rgba(11,18,32,.97));
   border:1px solid rgba(59,130,246,.8);
@@ -110,7 +107,6 @@ style.innerHTML = `
   max-width:760px;
   margin:0 auto;
 }
-
 #nicoChatHeader{
   display:flex;
   justify-content:space-between;
@@ -120,19 +116,16 @@ style.innerHTML = `
   color:white;
   border-bottom:1px solid rgba(59,130,246,.28);
 }
-
 #nicoTitleRow{
   display:flex;
   align-items:center;
   gap:9px;
 }
-
 #nicoTitle{
   font-size:28px;
   font-weight:1000;
   letter-spacing:.5px;
 }
-
 #nicoStatusDot{
   width:10px;
   height:10px;
@@ -140,19 +133,16 @@ style.innerHTML = `
   border-radius:50%;
   box-shadow:0 0 12px rgba(34,197,94,.9);
 }
-
 #nicoStatusText{
   color:#22c55e;
   font-size:13px;
   font-weight:900;
 }
-
 #nicoSubtitle{
   margin-top:4px;
   font-size:14px;
   color:#cbd5e1;
 }
-
 #nicoChatClose{
   background:#ef4444;
   color:white;
@@ -164,66 +154,58 @@ style.innerHTML = `
   font-weight:bold;
   box-shadow:0 8px 22px rgba(239,68,68,.35);
 }
-
 #nicoBody{
   display:grid;
-  grid-template-columns:1fr 220px;
-  gap:10px;
-  padding:16px 18px 18px;
-  min-height:360px;
+  grid-template-columns:1fr 160px;
+  gap:8px;
+  padding:14px 14px 16px;
+  min-height:330px;
 }
-
 #nicoLeft{
   display:flex;
   flex-direction:column;
   min-width:0;
 }
-
 #nicoChatMessages{
-  height:250px;
+  height:235px;
   overflow-y:auto;
   padding:4px 4px 12px;
   display:flex;
   flex-direction:column;
   gap:10px;
 }
-
 .nicoMsg{
   padding:13px 15px;
   border-radius:18px;
   font-size:15px;
   line-height:1.42;
-  max-width:92%;
+  max-width:96%;
   word-break:break-word;
   white-space:pre-wrap;
 }
-
 .nicoMsg.user{
   align-self:flex-end;
   background:linear-gradient(135deg, #3b82f6, #2563eb);
   color:white;
   box-shadow:0 8px 20px rgba(37,99,235,.25);
 }
-
 .nicoMsg.nico{
   align-self:flex-start;
   background:rgba(39,39,42,.9);
   color:white;
   border:1px solid rgba(255,255,255,.04);
 }
-
 #nicoChatInputRow{
   display:flex;
   gap:10px;
   padding-top:10px;
 }
-
 #nicoChatInput{
   flex:1;
   min-height:56px;
   max-height:110px;
   resize:none;
-  border:1px solid rgba(59,130,246,.25);
+  border:1px solid rgba(59,130,246,.35);
   border-radius:18px;
   padding:16px;
   background:rgba(15,23,42,.95);
@@ -231,12 +213,10 @@ style.innerHTML = `
   font-size:16px;
   outline:none;
 }
-
 #nicoChatInput:focus{
   border-color:#3b82f6;
   box-shadow:0 0 0 2px rgba(59,130,246,.18);
 }
-
 #nicoChatSend{
   width:64px;
   border:none;
@@ -247,92 +227,74 @@ style.innerHTML = `
   font-weight:900;
   box-shadow:0 10px 22px rgba(34,197,94,.35);
 }
-
 #nicoRight{
   position:relative;
   display:flex;
   align-items:flex-end;
   justify-content:center;
-  min-height:310px;
+  min-height:300px;
 }
-
 #nicoGlow{
   position:absolute;
-  width:210px;
-  height:210px;
+  width:150px;
+  height:150px;
   border-radius:50%;
   background:radial-gradient(circle, rgba(37,99,235,.55), rgba(37,99,235,.12), transparent 70%);
   filter:blur(2px);
-  bottom:12px;
+  bottom:26px;
   animation:nicoPulse 2.4s infinite ease-in-out;
 }
-
 #nicoAvatar{
   position:relative;
   z-index:2;
-  width:230px;
-  max-height:330px;
+  width:170px;
+  max-height:300px;
   object-fit:contain;
   filter:drop-shadow(0 18px 28px rgba(0,0,0,.75));
   animation:nicoFloat 3.2s infinite ease-in-out;
 }
-
 @keyframes nicoPulse{
   0%,100%{ transform:scale(.95); opacity:.75; }
   50%{ transform:scale(1.08); opacity:1; }
 }
-
 @keyframes nicoFloat{
   0%,100%{ transform:translateY(0); }
-  50%{ transform:translateY(-8px); }
+  50%{ transform:translateY(-7px); }
 }
-
 @media (max-width:700px){
   #nicoChatPanel{
     left:10px !important;
     right:10px !important;
-    bottom:12px !important;
+    bottom:104px !important;
     border-radius:24px;
   }
-
   #nicoBody{
-    grid-template-columns:1fr 132px;
+    grid-template-columns:1fr 118px;
     padding:14px;
-    min-height:350px;
+    min-height:330px;
   }
-
   #nicoChatMessages{
-    height:250px;
+    height:238px;
   }
-
-  #nicoRight{
-    min-height:300px;
-    align-items:flex-end;
-  }
-
   #nicoGlow{
-    width:140px;
-    height:140px;
-    bottom:42px;
+    width:115px;
+    height:115px;
+    bottom:54px;
   }
-
   #nicoAvatar{
-    width:150px;
-    transform:translateX(8px);
+    width:128px;
+    transform:translateX(5px);
   }
-
   #nicoTitle{
     font-size:24px;
   }
-
   .nicoMsg{
     font-size:14px;
-    max-width:96%;
+    max-width:98%;
   }
-
   #nicoBtn{
-    width:78px;
-    height:78px;
+    width:74px;
+    height:74px;
   }
 }
 `;
@@ -379,8 +341,8 @@ function imagenNico(tipo) {
   };
 
   const src = imgs[tipo] || imgs.saluda;
-  nicoAvatar.src = src;
-  nicoBtnImg.src = src;
+  if (nicoAvatar) nicoAvatar.src = src;
+  if (nicoBtnImg) nicoBtnImg.src = src;
 }
 
 function detectarImagen(texto) {
@@ -433,7 +395,6 @@ async function guardarMemoria(user, nico) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user, nico })
     });
-
   } catch (e) {
     console.log("No pude guardar memoria desde frontend:", e);
   }
