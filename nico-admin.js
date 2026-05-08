@@ -1,4 +1,4 @@
-// ================= NICO ADMIN FINAL LEFT PANEL + ESTIMATES + PDF =================
+// ================= NICO ADMIN FINAL LEFT PANEL + ESTIMATES + PDF BUTTON =================
 
 const PENSAR_NICO_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/pensarNico";
 
@@ -208,6 +208,20 @@ style.innerHTML = `
   color:white;
 }
 
+.nicoPdfBtn{
+  margin-top:10px;
+  width:100%;
+  border:none;
+  border-radius:14px;
+  padding:13px;
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  color:white;
+  font-weight:900;
+  font-size:14px;
+  cursor:pointer;
+  box-shadow:0 0 16px rgba(37,99,235,.35);
+}
+
 #nicoInputRow{
   display:flex;
   gap:8px;
@@ -300,6 +314,23 @@ function agregarMensaje(tipo, texto){
   div.innerText = texto;
   nicoChatMessages.appendChild(div);
   nicoChatMessages.scrollTop = nicoChatMessages.scrollHeight;
+  return div;
+}
+
+function agregarMensajeConBotonPDF(texto, numeroEstimate){
+  const div = document.createElement("div");
+  div.className = "nicoMsg nico";
+  div.innerText = texto;
+
+  const btn = document.createElement("button");
+  btn.className = "nicoPdfBtn";
+  btn.innerText = "📄 Ver / Descargar PDF";
+  btn.onclick = () => abrirEstimatePDF(numeroEstimate);
+
+  div.appendChild(btn);
+  nicoChatMessages.appendChild(div);
+  nicoChatMessages.scrollTop = nicoChatMessages.scrollHeight;
+
   return div;
 }
 
@@ -428,6 +459,8 @@ function construirPayloadEstimateDesdeDatos(datos){
   };
 }
 
+// ================= ESTIMATE CREATE =================
+
 async function crearEstimateConDatos(datos){
   if(!datos.cliente_nombre){
     agregarMensaje("nico", "Rodri, falta el nombre del cliente para crear el estimate.");
@@ -459,8 +492,9 @@ async function crearEstimateConDatos(datos){
 
   imagenNico("bien");
 
-  agregarMensaje(
-    "nico",
+  const numero = data.estimate.numero;
+
+  agregarMensajeConBotonPDF(
 `✅ Estimate creado correctamente
 
 👤 Cliente: ${payload.cliente_nombre}
@@ -469,12 +503,12 @@ async function crearEstimateConDatos(datos){
 📍 Dirección: ${payload.cliente_direccion || "Sin dirección"}
 
 📄 Estimate:
-${data.estimate.numero}
-
-🔎 Escribe:
-ver estimate ${data.estimate.numero}`
+${numero}`,
+    numero
   );
 }
+
+// ================= ESTIMATE LIST =================
 
 async function mostrarEstimates(){
   try{
@@ -508,6 +542,8 @@ async function mostrarEstimates(){
     agregarMensaje("nico", "Rodri, hubo un error consultando los estimates.");
   }
 }
+
+// ================= ESTIMATE PDF =================
 
 async function abrirEstimatePDF(numeroEstimate){
   try{
