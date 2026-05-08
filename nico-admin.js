@@ -1,7 +1,26 @@
 // ================= NICO ADMIN FINAL LEFT PANEL =================
 
 const PENSAR_NICO_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/pensarNico";
+// ================= ESTIMATES =================
 
+const CREAR_ESTIMATE_URL =
+"https://us-central1-elite-cleaners-app.cloudfunctions.net/crearEstimateNico";
+
+const CONSULTAR_ESTIMATES_URL =
+"https://us-central1-elite-cleaners-app.cloudfunctions.net/consultarEstimates";
+
+// ================= INVOICES =================
+
+const CREAR_INVOICE_URL =
+"https://us-central1-elite-cleaners-app.cloudfunctions.net/crearInvoiceNico";
+
+const CONSULTAR_INVOICES_URL =
+"https://us-central1-elite-cleaners-app.cloudfunctions.net/consultarInvoices";
+
+// ================= RECEIPTS =================
+
+const CREAR_RECEIPT_URL =
+"https://us-central1-elite-cleaners-app.cloudfunctions.net/crearReceiptNico";
 if (window.NICO_STOP) {
   try { window.NICO_STOP(); } catch (e) {}
 }
@@ -12,6 +31,7 @@ document.getElementById("nicoFinalStyle")?.remove();
 
 let nicoActivo = false;
 let nicoPensando = false;
+let nicoModoEstimate = false;
 
 // ================= UI =================
 
@@ -482,6 +502,188 @@ async function enviarTextoANico(){
 
   agregarMensaje("user", mensaje);
 
+  // ================= CREAR ESTIMATE =================
+
+  if(
+    mensaje.toLowerCase().includes("crear estimate") ||
+    mensaje.toLowerCase().includes("create estimate")
+  ){
+
+    agregarMensaje(
+      "nico",
+`🧾 Claro Rodri.
+
+Envíame así:
+
+Cliente, Tipo, Precio, Detalles
+
+Ejemplo:
+
+Amanda, Deep Clean, 450, Cocina y baños`
+    );
+
+    nicoModoEstimate = true;
+    return;
+  }
+
+  // ================= GUARDAR ESTIMATE =================
+
+  if(nicoModoEstimate){
+
+    try{
+
+      const partes =
+        mensaje.split(",");
+
+      const cliente =
+        partes[0]?.trim() || "";
+
+      const tipo =
+        partes[1]?.trim() || "";
+
+      const total =
+        partes[2]?.trim() || "";
+
+      const detalles =
+        partes[3]?.trim() || "";
+
+      const payload = {
+
+        cliente_nombre: cliente,
+        tipo_limpieza: tipo,
+        total: Number(total),
+        notes: detalles
+
+      };
+
+      const res = await fetch(
+        CREAR_ESTIMATE_URL,
+        {
+          method:"POST",
+
+          headers:{
+            "Content-Type":"application/json"
+          },
+
+          body:JSON.stringify(payload)
+        }
+      );
+
+      const data = await res.json();
+
+      if(!res.ok){
+
+        console.log(data);
+
+        agregarMensaje(
+          "nico",
+          "❌ No pude crear el estimate."
+        );
+
+        nicoModoEstimate = false;
+        return;
+      }
+
+      agregarMensaje(
+        "nico",
+`✅ Estimate creado correctamente
+
+👤 Cliente: ${cliente}
+🧼 Tipo: ${tipo}
+💵 Total: $${total}
+
+📄 Estimate:
+${data.estimate.numero}`
+      );
+
+      imagenNico("bien");
+
+      nicoModoEstimate = false;
+
+      return;
+
+    }catch(e){
+
+      console.log(e);
+
+      agregarMensaje(
+        "nico",
+        "❌ Error creando estimate."
+      );
+
+      nicoModoEstimate = false;
+
+      return;
+    }
+  }
+
+  // ================= MOSTRAR ESTIMATES =================
+
+  if(
+    mensaje.toLowerCase().includes("mostrar estimates") ||
+    mensaje.toLowerCase().includes("ver estimates")
+  ){
+
+    try{
+
+      const res =
+        await fetch(CONSULTAR_ESTIMATES_URL);
+
+      const data =
+        await res.json();
+
+      const estimates =
+        data.estimates || [];
+
+      if(!estimates.length){
+
+        agregarMensaje(
+          "nico",
+          "No encontré estimates."
+        );
+
+        return;
+      }
+
+      let texto =
+        "📋 ESTIMATES:\n\n";
+
+      estimates
+      .slice(0,10)
+      .forEach((e)=>{
+
+        texto +=
+`👤 ${e.cliente_nombre}
+🧼 ${e.tipo_limpieza}
+💵 $${e.total}
+📄 ${e.numero}
+
+`;
+
+      });
+
+      agregarMensaje(
+        "nico",
+        texto
+      );
+
+      return;
+
+    }catch(e){
+
+      console.log(e);
+
+      agregarMensaje(
+        "nico",
+        "❌ Error consultando estimates."
+      );
+
+      return;
+    }
+  }
+
+  // ================= IA NORMAL =================
+
   nicoPensando = true;
 
   const thinking =
@@ -514,23 +716,14 @@ async function enviarTextoANico(){
       nicoChatMessages.scrollHeight;
   }
 }
-
 nicoSend.onclick = enviarTextoANico;
 
-nicoChatInput.addEventListener(
-  "keydown",
-  (e) => {
-
-    if(
-      e.key === "Enter" &&
-      !e.shiftKey
-    ){
-      e.preventDefault();
-      enviarTextoANico();
-    }
+nicoChatInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    enviarTextoANico();
   }
-);
-
+});
 // ================= STOP =================
 
 function apagarNico(){
