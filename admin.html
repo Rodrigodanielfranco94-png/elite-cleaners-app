@@ -40,6 +40,7 @@
         .chat-btn { position: absolute; right: 15px; top: 15px; width: 45px; height: 45px; background: #007aff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; text-decoration: none; border: none; cursor: pointer; color: white; }
         .card-servicio h3 { margin: 0 0 5px 0; color: #3b82f6; font-size: 20px; max-width: 80%; }
         .card-servicio p { margin: 4px 0; font-size: 13px; color: #d1d5db; }
+        .price-tag { font-size: 16px; color: #22c55e; font-weight: bold; margin-top: 5px; display: block; }
         .time-box { background: #000; padding: 12px; border-radius: 15px; margin-top: 15px; border: 1px solid #3b82f633; }
         .time-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
         .time-row b { color: #3b82f6; font-size: 10px; text-transform: uppercase; }
@@ -109,6 +110,9 @@
         <input type="tel" id="whatsapp" placeholder="Teléfono del Cliente">
         <input type="email" id="email_cliente" placeholder="Correo del Cliente">
         
+        <span class="label-text">Información de Venta</span>
+        <input type="number" id="precio_total" placeholder="Precio Total del Servicio ($)">
+
         <span class="label-text">Personal 1 (Staff 1)</span>
         <div class="search-container">
             <input type="text" id="search-empleado" placeholder="Buscar personal 1..." oninput="filtrarEmpleados(1)" autocomplete="off">
@@ -449,6 +453,7 @@
                 direccion: document.getElementById('direccion').value,
                 whatsapp: document.getElementById('whatsapp').value.replace(/\D/g,''),
                 email_cliente: document.getElementById('email_cliente').value || "",
+                precio_total: document.getElementById('precio_total').value || 0,
                 empleado_nombre: document.getElementById('search-empleado').value,
                 empleado_email: document.getElementById('email-empleado').value,
                 empleado_nombre_2: document.getElementById('search-empleado-2').value || "",
@@ -516,6 +521,7 @@
                         <button class="chat-btn" onclick="abrirChat('${s.whatsapp}')">💬</button>
                         <div style="font-size:10px; color:#3b82f6; font-weight:bold;">${s.tipo}</div>
                         <h3>${s.cliente}</h3>
+                        <span class="price-tag">$${s.precio_total || 0}</span>
                         <p>📅 ${s.fecha} | ⏰ ${horaFormateada}</p>
                         <p>📍 ${s.direccion}</p>
                         <p>👤 ${s.empleado_nombre_2 ? s.empleado_nombre+' & '+s.empleado_nombre_2 : s.empleado_nombre}</p>
@@ -554,7 +560,7 @@
         async function reiniciarHorasMes() {
             const completados = todosLosServicios.filter(s => s.estado === "completado");
             if (completados.length === 0 || !confirm("¿Deseas cerrar el mes actual?")) return;
-            const data = completados.map(s => ({ Customer: s.cliente, Date: s.fecha, Time: calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).texto }));
+            const data = completados.map(s => ({ Customer: s.cliente, Date: s.fecha, Price: s.precio_total || 0, Time: calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).texto }));
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Closing");
@@ -583,6 +589,7 @@
             document.getElementById('direccion').value = s.direccion;
             document.getElementById('whatsapp').value = s.whatsapp || s.telefono || "";
             document.getElementById('email_cliente').value = s.email_cliente || "";
+            document.getElementById('precio_total').value = s.precio_total || 0;
             document.getElementById('search-empleado').value = s.empleado_nombre;
             document.getElementById('email-empleado').value = s.empleado_email || ""; 
             document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || "";
