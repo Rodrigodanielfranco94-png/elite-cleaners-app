@@ -1,4 +1,4 @@
-// ================= NICO ADMIN FINAL LEFT PANEL + ESTIMATES + PDF BUTTON =================
+// ================= NICO ADMIN FINAL LEFT PANEL + ESTIMATES + INVOICES + PDF BUTTON =================
 
 const PENSAR_NICO_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/pensarNico";
 
@@ -317,7 +317,7 @@ function agregarMensaje(tipo, texto){
   return div;
 }
 
-function agregarMensajeConBotonPDF(texto, numeroEstimate){
+function agregarMensajeConBotonPDF(texto, tipoDocumento, numeroDocumento){
   const div = document.createElement("div");
   div.className = "nicoMsg nico";
   div.innerText = texto;
@@ -325,7 +325,12 @@ function agregarMensajeConBotonPDF(texto, numeroEstimate){
   const btn = document.createElement("button");
   btn.className = "nicoPdfBtn";
   btn.innerText = "📄 Ver / Descargar PDF";
-  btn.onclick = () => abrirEstimatePDF(numeroEstimate);
+
+  if(tipoDocumento === "invoice"){
+    btn.onclick = () => abrirInvoicePDF(numeroDocumento);
+  }else{
+    btn.onclick = () => abrirEstimatePDF(numeroDocumento);
+  }
 
   div.appendChild(btn);
   nicoChatMessages.appendChild(div);
@@ -383,6 +388,16 @@ function obtenerValor(id){
   return document.getElementById(id)?.value?.trim() || "";
 }
 
+function hoyISO(){
+  return new Date().toISOString().slice(0, 10);
+}
+
+function sumarDiasISO(dias){
+  const d = new Date();
+  d.setDate(d.getDate() + dias);
+  return d.toISOString().slice(0, 10);
+}
+
 function obtenerDatosFormularioActual(){
   return {
     cliente_nombre: obtenerValor("cliente"),
@@ -412,6 +427,11 @@ function extraerNombreDesdeComando(texto){
     .trim();
 
   return t;
+}
+
+function extraerNumeroDocumento(texto){
+  const match = texto.match(/(EST|INV|REC)-[A-Z0-9-]+/i);
+  return match ? match[0].toUpperCase() : "";
 }
 
 function buscarDatosCliente(nombre){
@@ -456,6 +476,34 @@ function construirPayloadEstimateDesdeDatos(datos){
       }
     ],
     status: "Draft"
+  };
+}
+
+function construirPayloadInvoiceDesdeEstimate(estimate){
+  return {
+    estimate_numero: estimate.numero || "",
+    cliente_nombre: estimate.cliente_nombre || "",
+    cliente_email: estimate.cliente_email || "",
+    cliente_telefono: estimate.cliente_telefono || "",
+    cliente_direccion: estimate.cliente_direccion || "",
+    tipo_limpieza: estimate.tipo_limpieza || "",
+    notes: estimate.notes || "",
+    total: Number(estimate.total || 0),
+    subtotal: Number(estimate.subtotal || estimate.total || 0),
+    amount_due: Number(estimate.total || 0),
+    paid: 0,
+    balance_due: Number(estimate.total || 0),
+    items: estimate.items && estimate.items.length ? estimate.items : [
+      {
+        description: estimate.tipo_limpieza || "Cleaning Service",
+        price: Number(estimate.total || 0),
+        quantity: 1,
+        total: Number(estimate.total || 0)
+      }
+    ],
+    status: "Unpaid",
+    fecha: hoyISO(),
+    due_date: sumarDiasISO(7)
   };
 }
 
@@ -504,20 +552,24 @@ async function crearEstimateConDatos(datos){
 
 📄 Estimate:
 ${numero}`,
+    "estimate",
     numero
   );
 }
 
 // ================= ESTIMATE LIST =================
 
+async function obtenerEstimates(){
+  const res = await fetch(CONSULTAR_ESTIMATES_URL);
+  const data = await res.json();
+  return data.estimates || [];
+}
+
 async function mostrarEstimates(){
   try{
     imagenNico("celular");
 
-    const res = await fetch(CONSULTAR_ESTIMATES_URL);
-    const data = await res.json();
-
-    const estimates = data.estimates || [];
+    const estimates = await obtenerEstimates();
 
     if(!estimates.length){
       agregarMensaje("nico", "Rodri, todavía no encontré estimates guardados.");
@@ -543,42 +595,121 @@ async function mostrarEstimates(){
   }
 }
 
-// ================= ESTIMATE PDF =================
+// ================= INVOICE CREATE FROM ESTIMATE =================
 
-async function abrirEstimatePDF(numeroEstimate){
+async function convertirEstimateAInvoice(numeroEstimate){
   try{
     imagenNico("celular");
 
-    const res = await fetch(CONSULTAR_ESTIMATES_URL);
-    const data = await res.json();
-
-    const estimates = data.estimates || [];
+    const estimates = await obtenerEstimates();
 
     const estimate = estimates.find(e =>
       normalizarTexto(e.numero || "").includes(normalizarTexto(numeroEstimate || ""))
     );
 
     if(!estimate){
-      agregarMensaje("nico", "Rodri, no encontré ese estimate.");
+      agregarMensaje("nico", "Rodri, no encontré ese estimate para convertirlo a invoice.");
       return;
     }
 
-    const logoUrl = ELITE_LOGO_URL;
-    const total = dinero(estimate.total);
-
-    const nuevaVentana = window.open("", "_blank");
-
-    if(!nuevaVentana){
-      agregarMensaje("nico", "Rodri, el navegador bloqueó la ventana. Permite pop-ups para abrir el PDF.");
+    if(!estimate.total || Number(estimate.total) <= 0){
+      agregarMensaje("nico", "Rodri, ese estimate tiene total $0. No conviene convertirlo a invoice.");
       return;
     }
 
-    nuevaVentana.document.write(`
+    const payload = construirPayloadInvoiceDesdeEstimate(estimate);
+
+    const res = await fetch(CREAR_INVOICE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if(!res.ok || !data.ok){
+      console.log(data);
+      agregarMensaje("nico", "Rodri, no pude convertir ese estimate a invoice. Revisa la consola.");
+      return;
+    }
+
+    const invoice = data.invoice || {};
+    const numeroInvoice = invoice.numero || invoice.invoice_numero || data.numero || "INV-SIN-NUMERO";
+
+    imagenNico("bien");
+
+    agregarMensajeConBotonPDF(
+`✅ Invoice creado desde estimate
+
+📄 Estimate: ${estimate.numero}
+🧾 Invoice: ${numeroInvoice}
+
+👤 Cliente: ${payload.cliente_nombre}
+🧼 Tipo: ${payload.tipo_limpieza || "Sin tipo"}
+💵 Total: $${dinero(payload.total)}
+📍 Dirección: ${payload.cliente_direccion || "Sin dirección"}`,
+      "invoice",
+      numeroInvoice
+    );
+
+  }catch(e){
+    console.log(e);
+    agregarMensaje("nico", "Rodri, hubo un error convirtiendo el estimate a invoice.");
+  }
+}
+
+// ================= INVOICE LIST =================
+
+async function obtenerInvoices(){
+  const res = await fetch(CONSULTAR_INVOICES_URL);
+  const data = await res.json();
+  return data.invoices || [];
+}
+
+async function mostrarInvoices(){
+  try{
+    imagenNico("celular");
+
+    const invoices = await obtenerInvoices();
+
+    if(!invoices.length){
+      agregarMensaje("nico", "Rodri, todavía no encontré invoices guardados.");
+      return;
+    }
+
+    let texto = "🧾 Últimos invoices:\n\n";
+
+    invoices.slice(0,10).forEach((inv, i) => {
+      texto += `${i + 1}. ${inv.cliente_nombre || "Sin cliente"}\n`;
+      texto += `Total: $${dinero(inv.total || inv.amount_due || inv.balance_due)}\n`;
+      texto += `Invoice: ${inv.numero || inv.invoice_numero || "Sin número"}\n`;
+      texto += `Para verlo: ver invoice ${inv.numero || inv.invoice_numero || ""}\n\n`;
+    });
+
+    agregarMensaje("nico", texto.trim());
+    imagenNico("bien");
+
+  }catch(e){
+    console.log(e);
+    agregarMensaje("nico", "Rodri, hubo un error consultando los invoices.");
+  }
+}
+
+// ================= DOCUMENT PDF =================
+
+function escribirDocumentoPDF(nuevaVentana, tipo, doc){
+  const isInvoice = tipo === "invoice";
+  const titulo = isInvoice ? "INVOICE" : "ESTIMATE";
+  const numero = doc.numero || doc.invoice_numero || "";
+  const total = dinero(doc.total || doc.amount_due || doc.balance_due || 0);
+  const status = doc.status || (isInvoice ? "Unpaid" : "Draft");
+
+  nuevaVentana.document.write(`
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<title>${estimate.numero}</title>
+<title>${numero}</title>
 <style>
   body{
     font-family: Arial, Helvetica, sans-serif;
@@ -622,7 +753,7 @@ async function abrirEstimatePDF(numeroEstimate){
     letter-spacing:1px;
   }
 
-  .estimate-number{
+  .doc-number{
     margin-top:8px;
     color:#6b7280;
     font-size:14px;
@@ -766,7 +897,7 @@ async function abrirEstimatePDF(numeroEstimate){
   <div class="page">
     <div class="top">
       <div>
-        <img class="logo" src="${logoUrl}" />
+        <img class="logo" src="${ELITE_LOGO_URL}" />
         <div class="info" style="margin-top:12px;">
           <strong>Elite Cleaners Company</strong><br>
           Pleasanton, CA 94566<br>
@@ -776,10 +907,11 @@ async function abrirEstimatePDF(numeroEstimate){
       </div>
 
       <div class="title">
-        <h1>ESTIMATE</h1>
-        <div class="estimate-number">${estimate.numero || ""}</div>
-        <div class="estimate-number">Date: ${estimate.fecha || ""}</div>
-        <div class="estimate-number">Status: ${estimate.status || "Draft"}</div>
+        <h1>${titulo}</h1>
+        <div class="doc-number">${numero}</div>
+        <div class="doc-number">Date: ${doc.fecha || hoyISO()}</div>
+        ${isInvoice ? `<div class="doc-number">Due Date: ${doc.due_date || ""}</div>` : `<div class="doc-number">Valid Until: ${doc.valid_until || doc.fecha || ""}</div>`}
+        <div class="doc-number">Status: ${status}</div>
       </div>
     </div>
 
@@ -787,18 +919,18 @@ async function abrirEstimatePDF(numeroEstimate){
       <div>
         <div class="section-title">Bill To</div>
         <div class="info">
-          <strong>${estimate.cliente_nombre || ""}</strong><br>
-          ${estimate.cliente_email || ""}<br>
-          ${estimate.cliente_telefono || ""}<br>
-          ${estimate.cliente_direccion || ""}
+          <strong>${doc.cliente_nombre || ""}</strong><br>
+          ${doc.cliente_email || ""}<br>
+          ${doc.cliente_telefono || ""}<br>
+          ${doc.cliente_direccion || ""}
         </div>
       </div>
 
       <div>
         <div class="section-title">Service Details</div>
         <div class="info">
-          <strong>Cleaning Type:</strong> ${estimate.tipo_limpieza || ""}<br>
-          <strong>Valid Until:</strong> ${estimate.valid_until || estimate.fecha || ""}<br>
+          <strong>Cleaning Type:</strong> ${doc.tipo_limpieza || ""}<br>
+          ${doc.estimate_numero ? `<strong>From Estimate:</strong> ${doc.estimate_numero}<br>` : ""}
           <strong>Created By:</strong> Nico
         </div>
       </div>
@@ -815,18 +947,18 @@ async function abrirEstimatePDF(numeroEstimate){
       </thead>
       <tbody>
         ${
-          (estimate.items && estimate.items.length)
-          ? estimate.items.map(item => `
+          (doc.items && doc.items.length)
+          ? doc.items.map(item => `
             <tr>
-              <td>${item.description || estimate.tipo_limpieza || "Cleaning Service"}</td>
-              <td class="right">$${dinero(item.price || estimate.total)}</td>
+              <td>${item.description || doc.tipo_limpieza || "Cleaning Service"}</td>
+              <td class="right">$${dinero(item.price || doc.total)}</td>
               <td class="right">${item.quantity || 1}</td>
-              <td class="right">$${dinero(item.total || estimate.total)}</td>
+              <td class="right">$${dinero(item.total || doc.total)}</td>
             </tr>
           `).join("")
           : `
             <tr>
-              <td>${estimate.tipo_limpieza || "Cleaning Service"}</td>
+              <td>${doc.tipo_limpieza || "Cleaning Service"}</td>
               <td class="right">$${total}</td>
               <td class="right">1</td>
               <td class="right">$${total}</td>
@@ -838,13 +970,13 @@ async function abrirEstimatePDF(numeroEstimate){
 
     <div class="notes">
       <strong>Notes:</strong><br>
-      ${estimate.notes || "Includes supplies, equipment, and all work materials. This estimate does not include additional services not requested in the initial inquiry."}
+      ${doc.notes || "Includes supplies, equipment, and all work materials. This document does not include additional services not requested in the initial inquiry."}
     </div>
 
     <div class="total-box">
       <div class="total-inner">
         <div class="total-row">
-          <span>Estimate Total</span>
+          <span>${isInvoice ? "Balance Due" : "Estimate Total"}</span>
           <span class="total-price">$${total}</span>
         </div>
       </div>
@@ -852,7 +984,7 @@ async function abrirEstimatePDF(numeroEstimate){
 
     <div class="footer">
       Thank you for choosing Elite Cleaners Company.<br>
-      This is an estimate and may be adjusted if additional services are requested.
+      ${isInvoice ? "Payment is due according to the agreed terms." : "This is an estimate and may be adjusted if additional services are requested."}
     </div>
   </div>
 
@@ -862,9 +994,34 @@ async function abrirEstimatePDF(numeroEstimate){
   </div>
 </body>
 </html>
-    `);
+  `);
 
-    nuevaVentana.document.close();
+  nuevaVentana.document.close();
+}
+
+async function abrirEstimatePDF(numeroEstimate){
+  try{
+    imagenNico("celular");
+
+    const estimates = await obtenerEstimates();
+
+    const estimate = estimates.find(e =>
+      normalizarTexto(e.numero || "").includes(normalizarTexto(numeroEstimate || ""))
+    );
+
+    if(!estimate){
+      agregarMensaje("nico", "Rodri, no encontré ese estimate.");
+      return;
+    }
+
+    const nuevaVentana = window.open("", "_blank");
+
+    if(!nuevaVentana){
+      agregarMensaje("nico", "Rodri, el navegador bloqueó la ventana. Permite pop-ups para abrir el PDF.");
+      return;
+    }
+
+    escribirDocumentoPDF(nuevaVentana, "estimate", estimate);
 
     agregarMensaje("nico", "✅ Estimate abierto correctamente. Desde ahí puedes descargarlo o imprimirlo como PDF.");
     imagenNico("bien");
@@ -872,6 +1029,39 @@ async function abrirEstimatePDF(numeroEstimate){
   }catch(e){
     console.log(e);
     agregarMensaje("nico", "❌ Error abriendo estimate.");
+  }
+}
+
+async function abrirInvoicePDF(numeroInvoice){
+  try{
+    imagenNico("celular");
+
+    const invoices = await obtenerInvoices();
+
+    const invoice = invoices.find(inv =>
+      normalizarTexto(inv.numero || inv.invoice_numero || "").includes(normalizarTexto(numeroInvoice || ""))
+    );
+
+    if(!invoice){
+      agregarMensaje("nico", "Rodri, no encontré ese invoice.");
+      return;
+    }
+
+    const nuevaVentana = window.open("", "_blank");
+
+    if(!nuevaVentana){
+      agregarMensaje("nico", "Rodri, el navegador bloqueó la ventana. Permite pop-ups para abrir el PDF.");
+      return;
+    }
+
+    escribirDocumentoPDF(nuevaVentana, "invoice", invoice);
+
+    agregarMensaje("nico", "✅ Invoice abierto correctamente. Desde ahí puedes descargarlo o imprimirlo como PDF.");
+    imagenNico("bien");
+
+  }catch(e){
+    console.log(e);
+    agregarMensaje("nico", "❌ Error abriendo invoice.");
   }
 }
 
@@ -918,6 +1108,50 @@ async function enviarTextoANico(){
 
   const t = normalizarTexto(mensaje);
 
+  // ================= CONVERTIR ESTIMATE A INVOICE =================
+
+  if(
+    (t.includes("convertir") || t.includes("convierte") || t.includes("pasar") || t.includes("pasa")) &&
+    t.includes("estimate") &&
+    t.includes("invoice")
+  ){
+    const numeroEstimate = extraerNumeroDocumento(mensaje);
+
+    if(!numeroEstimate){
+      agregarMensaje("nico", "Rodri, dime cuál estimate quieres convertir. Ejemplo: convierte estimate EST-20260508-8759 a invoice.");
+      return;
+    }
+
+    await convertirEstimateAInvoice(numeroEstimate);
+    return;
+  }
+
+  // ================= MOSTRAR INVOICES =================
+
+  if(
+    t.includes("mostrar invoices") ||
+    t.includes("ver invoices") ||
+    t.includes("muestrame invoices") ||
+    t.includes("muéstrame invoices")
+  ){
+    await mostrarInvoices();
+    return;
+  }
+
+  // ================= VER INVOICE PDF =================
+
+  if(t.includes("ver invoice")){
+    const numero = extraerNumeroDocumento(mensaje);
+
+    if(!numero){
+      agregarMensaje("nico", "Rodri, dime cuál invoice quieres ver. Ejemplo: ver invoice INV-20260508-1293");
+      return;
+    }
+
+    await abrirInvoicePDF(numero);
+    return;
+  }
+
   // ================= MOSTRAR ESTIMATES =================
 
   if(
@@ -933,7 +1167,7 @@ async function enviarTextoANico(){
   // ================= VER ESTIMATE PDF =================
 
   if(t.includes("ver estimate")){
-    const numero = mensaje.replace(/ver estimate/ig, "").trim();
+    const numero = extraerNumeroDocumento(mensaje);
 
     if(!numero){
       agregarMensaje("nico", "Rodri, dime cuál estimate quieres ver. Ejemplo: ver estimate EST-20260508-1293");
