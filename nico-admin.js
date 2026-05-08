@@ -1,4 +1,4 @@
-// ================= NICO ADMIN FINAL LEFT PANEL + ESTIMATES + INVOICES + PDF BUTTON =================
+// ================= NICO ADMIN FINAL LEFT PANEL + ESTIMATES + INVOICES + JOBS + PDF BUTTON =================
 
 const PENSAR_NICO_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/pensarNico";
 
@@ -29,6 +29,7 @@ document.getElementById("nicoFinalStyle")?.remove();
 
 let nicoActivo = false;
 let nicoPensando = false;
+let nicoTrabajoPendiente = null;
 
 // ================= UI =================
 
@@ -434,6 +435,16 @@ function extraerNumeroDocumento(texto){
   return match ? match[0].toUpperCase() : "";
 }
 
+function extraerFechaHora(texto){
+  const fechaMatch = texto.match(/\d{4}-\d{2}-\d{2}/);
+  const horaMatch = texto.match(/\d{1,2}:\d{2}/);
+
+  return {
+    fecha: fechaMatch ? fechaMatch[0] : "",
+    hora: horaMatch ? horaMatch[0] : ""
+  };
+}
+
 function buscarDatosCliente(nombre){
   const nombreNorm = normalizarTexto(nombre);
 
@@ -504,6 +515,32 @@ function construirPayloadInvoiceDesdeEstimate(estimate){
     status: "Unpaid",
     fecha: hoyISO(),
     due_date: sumarDiasISO(7)
+  };
+}
+
+function construirTrabajoDesdeEstimate(estimate, fecha, hora){
+  return {
+    cliente: estimate.cliente_nombre || "",
+    direccion: estimate.cliente_direccion || "",
+    whatsapp: (estimate.cliente_telefono || "").replace(/\D/g, ""),
+    telefono: (estimate.cliente_telefono || "").replace(/\D/g, ""),
+    email_cliente: estimate.cliente_email || "",
+    precio_total: Number(estimate.total || 0),
+    empleado_nombre: obtenerValor("search-empleado"),
+    empleado_email: obtenerValor("email-empleado"),
+    empleado_nombre_2: obtenerValor("search-empleado-2"),
+    empleado_email_2: obtenerValor("email-empleado-2"),
+    fecha,
+    hora,
+    notas: estimate.notes || "",
+    tipo: estimate.tipo_limpieza || "ESTÁNDAR",
+    estado: "pendiente",
+    hora_inicio: "--:--",
+    hora_fin: "--:--",
+    firma_cliente: false,
+    estimate_numero: estimate.numero || "",
+    creado_por: "Nico",
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
   };
 }
 
@@ -658,6 +695,125 @@ async function convertirEstimateAInvoice(numeroEstimate){
   }
 }
 
+// ================= JOB CREATE FROM ESTIMATE =================
+
+async function convertirEstimateATrabajo(numeroEstimate){
+  try{
+    imagenNico("celular");
+
+    const estimates = await obtenerEstimates();
+
+    const estimate = estimates.find(e =>
+      normalizarTexto(e.numero || "").includes(normalizarTexto(numeroEstimate || ""))
+    );
+
+    if(!estimate){
+      agregarMensaje("nico", "Rodri, no encontré ese estimate para convertirlo a trabajo.");
+      return;
+    }
+
+    const datosFormulario = obtenerDatosFormularioActual();
+
+    const fecha = datosFormulario.fecha || "";
+    const hora = datosFormulario.hora || "";
+
+    if(!fecha || !hora){
+      nicoTrabajoPendiente = estimate;
+
+      agregarMensaje(
+        "nico",
+`Rodri, ya encontré el estimate, pero falta fecha y hora para crear el trabajo.
+
+Envíamelo así:
+
+2026-05-12, 09:00`
+      );
+
+      return;
+    }
+
+    await crearTrabajoRealDesdeEstimate(estimate, fecha, hora);
+
+  }catch(e){
+    console.log(e);
+    agregarMensaje("nico", "Rodri, hubo un error convirtiendo el estimate a trabajo.");
+  }
+}
+
+async function crearTrabajoRealDesdeEstimate(estimate, fecha, hora){
+  try{
+    imagenNico("celular");
+
+    const payload = construirTrabajoDesdeEstimate(estimate, fecha, hora);
+
+    if(!payload.cliente){
+      agregarMensaje("nico", "Rodri, falta el nombre del cliente para crear el trabajo.");
+      return;
+    }
+
+    if(!payload.direccion){
+      agregarMensaje("nico", "Rodri, falta la dirección del servicio para crear el trabajo.");
+      return;
+    }
+
+    await db.collection("clientes").doc(payload.cliente).set({
+      nombre: payload.cliente,
+      direccion: payload.direccion,
+      whatsapp: payload.whatsapp,
+      telefono: payload.whatsapp,
+      email: payload.email_cliente
+    }, { merge: true });
+
+    const docRef = await db.collection("servicios").add(payload);
+
+    imagenNico("bien");
+
+    agregarMensaje(
+      "nico",
+`✅ Trabajo real creado correctamente
+
+📄 Estimate: ${payload.estimate_numero}
+🧼 Tipo: ${payload.tipo}
+👤 Cliente: ${payload.cliente}
+💵 Precio: $${dinero(payload.precio_total)}
+📍 Dirección: ${payload.direccion}
+📅 Fecha: ${payload.fecha}
+⏰ Hora: ${payload.hora}
+
+🆔 Trabajo ID:
+${docRef.id}
+
+Ya debe aparecer en tu Admin como pendiente.`
+    );
+
+    nicoTrabajoPendiente = null;
+
+  }catch(e){
+    console.log(e);
+    agregarMensaje("nico", "Rodri, no pude crear el trabajo en Firebase.");
+  }
+}
+
+async function completarTrabajoPendienteConFechaHora(mensaje){
+  const datos = extraerFechaHora(mensaje);
+
+  if(!datos.fecha || !datos.hora){
+    agregarMensaje(
+      "nico",
+`Rodri, necesito fecha y hora en este formato:
+
+2026-05-12, 09:00`
+    );
+    return;
+  }
+
+  await crearTrabajoRealDesdeEstimate(
+    nicoTrabajoPendiente,
+    datos.fecha,
+    datos.hora
+  );
+}
+
 // ================= INVOICE LIST =================
 
 async function obtenerInvoices(){
@@ -711,185 +867,31 @@ function escribirDocumentoPDF(nuevaVentana, tipo, doc){
 <meta charset="UTF-8">
 <title>${numero}</title>
 <style>
-  body{
-    font-family: Arial, Helvetica, sans-serif;
-    background:#f3f4f6;
-    margin:0;
-    padding:30px;
-    color:#111827;
-  }
-
-  .page{
-    max-width:800px;
-    margin:0 auto;
-    background:white;
-    padding:45px;
-    border-radius:8px;
-    box-shadow:0 10px 30px rgba(0,0,0,.12);
-  }
-
-  .top{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    border-bottom:2px solid #e5e7eb;
-    padding-bottom:25px;
-    margin-bottom:30px;
-  }
-
-  .logo{
-    width:190px;
-    height:auto;
-  }
-
-  .title{
-    text-align:right;
-  }
-
-  .title h1{
-    margin:0;
-    font-size:38px;
-    color:#1f2937;
-    letter-spacing:1px;
-  }
-
-  .doc-number{
-    margin-top:8px;
-    color:#6b7280;
-    font-size:14px;
-  }
-
-  .grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:30px;
-    margin-bottom:30px;
-  }
-
-  .section-title{
-    font-size:13px;
-    color:#2563eb;
-    font-weight:bold;
-    text-transform:uppercase;
-    margin-bottom:8px;
-  }
-
-  .info{
-    font-size:15px;
-    line-height:1.55;
-  }
-
-  table{
-    width:100%;
-    border-collapse:collapse;
-    margin-top:25px;
-  }
-
-  th{
-    background:#1f2937;
-    color:white;
-    text-align:left;
-    padding:12px;
-    font-size:13px;
-    text-transform:uppercase;
-  }
-
-  td{
-    border-bottom:1px solid #e5e7eb;
-    padding:14px 12px;
-    font-size:14px;
-    vertical-align:top;
-  }
-
-  .right{
-    text-align:right;
-  }
-
-  .notes{
-    margin-top:30px;
-    padding:18px;
-    background:#f9fafb;
-    border-left:4px solid #2563eb;
-    font-size:14px;
-    line-height:1.5;
-  }
-
-  .total-box{
-    margin-top:30px;
-    display:flex;
-    justify-content:flex-end;
-  }
-
-  .total-inner{
-    width:300px;
-    border-top:2px solid #111827;
-    padding-top:15px;
-  }
-
-  .total-row{
-    display:flex;
-    justify-content:space-between;
-    font-size:18px;
-    font-weight:bold;
-  }
-
-  .total-price{
-    color:#16a34a;
-    font-size:28px;
-  }
-
-  .footer{
-    margin-top:45px;
-    color:#6b7280;
-    font-size:12px;
-    text-align:center;
-    border-top:1px solid #e5e7eb;
-    padding-top:18px;
-  }
-
-  .btns{
-    max-width:800px;
-    margin:20px auto;
-    display:flex;
-    gap:10px;
-    justify-content:center;
-  }
-
-  button{
-    border:none;
-    border-radius:10px;
-    padding:14px 22px;
-    font-size:15px;
-    font-weight:bold;
-    cursor:pointer;
-  }
-
-  .download{
-    background:#2563eb;
-    color:white;
-  }
-
-  .close{
-    background:#111827;
-    color:white;
-  }
-
-  @media print{
-    body{
-      background:white;
-      padding:0;
-    }
-
-    .page{
-      box-shadow:none;
-      border-radius:0;
-      max-width:none;
-    }
-
-    .btns{
-      display:none;
-    }
-  }
+  body{font-family:Arial,Helvetica,sans-serif;background:#f3f4f6;margin:0;padding:30px;color:#111827;}
+  .page{max-width:800px;margin:0 auto;background:white;padding:45px;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #e5e7eb;padding-bottom:25px;margin-bottom:30px;}
+  .logo{width:190px;height:auto;}
+  .title{text-align:right;}
+  .title h1{margin:0;font-size:38px;color:#1f2937;letter-spacing:1px;}
+  .doc-number{margin-top:8px;color:#6b7280;font-size:14px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-bottom:30px;}
+  .section-title{font-size:13px;color:#2563eb;font-weight:bold;text-transform:uppercase;margin-bottom:8px;}
+  .info{font-size:15px;line-height:1.55;}
+  table{width:100%;border-collapse:collapse;margin-top:25px;}
+  th{background:#1f2937;color:white;text-align:left;padding:12px;font-size:13px;text-transform:uppercase;}
+  td{border-bottom:1px solid #e5e7eb;padding:14px 12px;font-size:14px;vertical-align:top;}
+  .right{text-align:right;}
+  .notes{margin-top:30px;padding:18px;background:#f9fafb;border-left:4px solid #2563eb;font-size:14px;line-height:1.5;}
+  .total-box{margin-top:30px;display:flex;justify-content:flex-end;}
+  .total-inner{width:300px;border-top:2px solid #111827;padding-top:15px;}
+  .total-row{display:flex;justify-content:space-between;font-size:18px;font-weight:bold;}
+  .total-price{color:#16a34a;font-size:28px;}
+  .footer{margin-top:45px;color:#6b7280;font-size:12px;text-align:center;border-top:1px solid #e5e7eb;padding-top:18px;}
+  .btns{max-width:800px;margin:20px auto;display:flex;gap:10px;justify-content:center;}
+  button{border:none;border-radius:10px;padding:14px 22px;font-size:15px;font-weight:bold;cursor:pointer;}
+  .download{background:#2563eb;color:white;}
+  .close{background:#111827;color:white;}
+  @media print{body{background:white;padding:0;}.page{box-shadow:none;border-radius:0;max-width:none;}.btns{display:none;}}
 </style>
 </head>
 
@@ -1108,8 +1110,39 @@ async function enviarTextoANico(){
 
   const t = normalizarTexto(mensaje);
 
+  // ================= COMPLETAR TRABAJO PENDIENTE =================
+
+  if(nicoTrabajoPendiente){
+    await completarTrabajoPendienteConFechaHora(mensaje);
+    return;
+  }
+
+  // ================= CONVERTIR ESTIMATE A TRABAJO =================
+
+  if(
+    (t.includes("convierte") ||
+     t.includes("convertir") ||
+     t.includes("pasa") ||
+     t.includes("pasar")) &&
+    t.includes("estimate") &&
+    (
+      t.includes("trabajo") ||
+      t.includes("servicio") ||
+      t.includes("job")
+    )
+  ){
+    const numeroEstimate = extraerNumeroDocumento(mensaje);
+
+    if(!numeroEstimate){
+      agregarMensaje("nico", "Rodri, dime cuál estimate quieres convertir. Ejemplo: convierte estimate EST-20260508-4507 a trabajo.");
+      return;
+    }
+
+    await convertirEstimateATrabajo(numeroEstimate);
+    return;
+  }
+
   // ================= CONVERTIR ESTIMATE A INVOICE =================
-  // IMPORTANTE: este bloque va primero para que Nico no lo confunda con crear estimate.
 
   if(
     (t.includes("convierte") ||
@@ -1297,6 +1330,7 @@ nicoChatInput.addEventListener("keydown", (e) => {
 function apagarNico(){
   nicoActivo = false;
   nicoPensando = false;
+  nicoTrabajoPendiente = null;
   nicoChatPanelEl.style.display = "none";
   imagenNico("saluda");
 }
