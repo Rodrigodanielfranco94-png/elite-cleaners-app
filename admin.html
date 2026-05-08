@@ -53,21 +53,17 @@
         .btn-contract { background: #004a99; }
         .btn-review { background: #3b82f6; border: 1px solid #ffffff33; }
         .btn-whatsapp { background: #007aff; }
-        
         .payroll-container { background: #1c1c1e; padding: 18px; border-radius: 20px; border: 1px solid #22c55e; margin-top: 30px; }
         .payroll-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
         .payroll-table th { text-align: left; color: #22c55e; padding: 8px; border-bottom: 1px solid #2c2c2e; text-transform: uppercase; font-size: 10px; }
         .payroll-table td { padding: 10px 8px; border-bottom: 1px solid #2c2c2e; }
         .pay-amount { color: #22c55e; font-weight: bold; font-size: 14px; }
         .btn-reset { width: 100%; padding: 15px; background: transparent; border: 1px solid #ef4444; color: #ef4444; border-radius: 12px; font-weight: bold; font-size: 11px; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
-        
         #modal-firma { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:1000; overflow-y:auto; padding:15px; box-sizing:border-box; }
         .modal-content { background:#1c1c1e; padding:20px; border-radius:20px; border:1px solid #3b82f6; max-width: 500px; margin: 0 auto; position: relative; }
-        
         .legal-view { background: #000; padding: 15px; border-radius: 12px; font-size: 11px; line-height: 1.5; color: #d1d5db; margin: 15px 0; border: 1px solid #2c2c2e; text-align: left; max-height: 400px; overflow-y: auto; }
         .legal-view b { color: #fff; display: block; margin-top: 12px; }
         .legal-view span.title-contract { color: #3b82f6; font-weight: bold; font-size: 12px; display: block; text-align: center; margin-bottom: 10px; text-transform: uppercase; }
-        
         .modal-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
         .btn-modal { padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; font-size: 11px; }
         .btn-descargar { background: #22c55e; color: white; }
@@ -278,14 +274,18 @@
 
         function enviarContrato(id, telefono, cliente) {
             if (!telefono) return alert("El cliente no tiene un teléfono registrado.");
+
             const urlBase = 'https://rodrigodanielfranco94-png.github.io/elite-cleaners-app'; 
             const urlFirma = `${urlBase}/firmar.html?id=${id}&cliente=${encodeURIComponent(cliente)}`;
 
-            const mensaje = `Hello ${cliente}, it's a pleasure to greet you from Elite Cleaners Company. 🌟
+            const mensaje =
+`Hello ${cliente}, it's a pleasure to greet you from Elite Cleaners Company. 🌟
 
-To confirm your service, please review and sign our service agreement at the following link:
+To confirm your cleaning service, please tap the secure link below to review and sign your agreement:
 
-${urlFirma}`;
+${urlFirma}
+
+Thank you for choosing Elite Cleaners Company.`;
 
             abrirSMS(telefono, mensaje);
         }
@@ -637,13 +637,22 @@ ${urlFirma}`;
             if(!telefono) return alert("El cliente no tiene teléfono.");
 
             const empresa = "Elite Cleaners Company";
-            const linkGoogle = "https://maps.app.goo.gl/VZjAsLsYbKYhszx27?g_st=ic";
+            const linkGoogle = "https://share.google/zJY5nmJjhgUWoz0IX";
 
-            const mensaje = `Hello ${nombre}, thank you for choosing ${empresa}. 🌟
+            const mensaje =
+`Hello ${nombre},
 
-It was a pleasure serving you! We would greatly appreciate it if you could leave us a review on Google here:
+Thank you for choosing ${empresa}. 🌟
 
-${linkGoogle}`;
+It was a pleasure serving you.
+
+We would truly appreciate your feedback.
+
+Please tap the secure link below to leave us a Google review:
+
+${linkGoogle}
+
+Thank you again for trusting Elite Cleaners Company.`;
 
             abrirSMS(telefono, mensaje);
         }
@@ -660,13 +669,18 @@ ${linkGoogle}`;
 
             const horaAmPm = formatAMPM(s.hora);
 
-            const mensaje = `Hello ${s.cliente}! 🌟 This is a friendly reminder from Elite Cleaners Company about your upcoming cleaning service:
+            const mensaje =
+`Hello ${s.cliente}! 🌟
+
+This is a friendly reminder from Elite Cleaners Company about your upcoming cleaning service:
 
 📅 Date: ${s.fecha}
 ⏰ Time: ${horaAmPm}
 👤 Staff: ${staffNombres}
 
-We look forward to seeing you! Please let us know if you have any questions.`;
+We look forward to seeing you.
+
+Please let us know if you have any questions.`;
 
             abrirSMS(s.whatsapp, mensaje);
         }
