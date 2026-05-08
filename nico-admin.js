@@ -1109,16 +1109,20 @@ async function enviarTextoANico(){
   const t = normalizarTexto(mensaje);
 
   // ================= CONVERTIR ESTIMATE A INVOICE =================
+  // IMPORTANTE: este bloque va primero para que Nico no lo confunda con crear estimate.
 
   if(
-    (t.includes("convertir") || t.includes("convierte") || t.includes("pasar") || t.includes("pasa")) &&
+    (t.includes("convierte") ||
+     t.includes("convertir") ||
+     t.includes("pasa") ||
+     t.includes("pasar")) &&
     t.includes("estimate") &&
     t.includes("invoice")
   ){
     const numeroEstimate = extraerNumeroDocumento(mensaje);
 
     if(!numeroEstimate){
-      agregarMensaje("nico", "Rodri, dime cuál estimate quieres convertir. Ejemplo: convierte estimate EST-20260508-8759 a invoice.");
+      agregarMensaje("nico", "Rodri, dime cuál estimate quieres convertir. Ejemplo: convierte estimate EST-20260508-4507 a invoice.");
       return;
     }
 
@@ -1186,7 +1190,6 @@ async function enviarTextoANico(){
     t.includes("create estimate") ||
     t.includes("hacer estimate") ||
     t.includes("haz estimate") ||
-    t.includes("estimate") ||
     t.includes("crear estimado") ||
     t.includes("crea estimado") ||
     t.includes("cotizacion") ||
