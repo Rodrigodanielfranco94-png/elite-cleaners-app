@@ -1569,6 +1569,7 @@ async function enviarTextoANico(){
     prepararMensajeVenta();
     return;
   }
+  
   // ================= COMPLETAR TRABAJO PENDIENTE =================
 
   if(nicoTrabajoPendiente){
