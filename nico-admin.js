@@ -1537,9 +1537,6 @@ async function obtenerMemoriasNico(){
 // ================= THINK =================
 
 async function pensarConNico(mensaje){
-
-  async function pensarConNico(mensaje){
-
   try{
     imagenNico("piensa");
 
