@@ -766,9 +766,24 @@ Please let us know if you have any questions.`;
 
 // ================= SALES MESSAGE =================
 
-function prepararMensajeVenta(){
+function prepararMensajeVenta(nombreCliente = ""){
 
-  const datos = obtenerDatosFormularioActual();
+  let datos = obtenerDatosFormularioActual();
+  if(nombreCliente){
+  const { cliente, servicio } = buscarDatosCliente(nombreCliente);
+
+  datos.cliente_nombre =
+    servicio?.cliente ||
+    cliente?.nombre ||
+    cliente?.id ||
+    nombreCliente;
+
+  datos.cliente_telefono =
+    servicio?.whatsapp ||
+    cliente?.whatsapp ||
+    cliente?.telefono ||
+    "";
+}
 
   if(!datos.cliente_nombre){
     agregarMensaje(
@@ -1561,22 +1576,28 @@ async function enviarTextoANico(){
     // ================= MENSAJE DE VENTA =================
 
   if(
-    t.includes("mensaje de venta") ||
-    t.includes("vender") ||
-    t.includes("venta") ||
-    t.includes("deep clean")
-  ){
-    prepararMensajeVenta();
-    return;
-  }
+  t.includes("mensaje de venta") ||
+  t.includes("vender") ||
+  t.includes("venta") ||
+  t.includes("deep clean")
+){
+  let nombreCliente = mensaje
+    .replace(/nico/ig,"")
+    .replace(/crea/ig,"")
+    .replace(/crear/ig,"")
+    .replace(/un mensaje/ig,"")
+    .replace(/mensaje de venta/ig,"")
+    .replace(/mensaje para vender/ig,"")
+    .replace(/vender/ig,"")
+    .replace(/deep clean/ig,"")
+    .replace(/clientes recurrentes/ig,"")
+    .replace(/\ba\b/ig,"")
+    .trim();
+
+  prepararMensajeVenta(nombreCliente);
+  return;
+}
   
-  // ================= COMPLETAR TRABAJO PENDIENTE =================
-
-  if(nicoTrabajoPendiente){
-    await completarTrabajoPendienteConFechaHora(mensaje);
-    return;
-  }
-
   // ================= CONVERTIR ESTIMATE A TRABAJO =================
 
   if(
