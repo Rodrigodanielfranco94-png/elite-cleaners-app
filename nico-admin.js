@@ -1469,6 +1469,71 @@ async function abrirInvoicePDF(numeroInvoice){
   }
 }
 
+// ================= MEMORIA NICO =================
+
+async function guardarMemoriaNico({
+  tipo = "general",
+  titulo = "",
+  contenido = "",
+  prioridad = "normal"
+}){
+
+  try{
+
+    await db.collection("memoria_nico").add({
+
+      tipo,
+      titulo,
+      contenido,
+      prioridad,
+
+      creado_por: "Nico",
+
+      fecha_creacion:
+        firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    agregarMensaje(
+      "nico",
+      `🧠 Perfecto Rodri. Ya guardé este recuerdo en mi memoria permanente.\n\n${contenido}`
+    );
+
+    imagenNico("bien");
+
+  }catch(e){
+
+    console.log(e);
+
+    agregarMensaje(
+      "nico",
+      "Rodri, hubo un problema guardando la memoria."
+    );
+  }
+}
+
+async function obtenerMemoriasNico(){
+
+  try{
+
+    const snapshot =
+      await db.collection("memoria_nico")
+      .orderBy("fecha_creacion", "desc")
+      .limit(50)
+      .get();
+
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+  }catch(e){
+
+    console.log(e);
+
+    return [];
+  }
+}
+
 // ================= THINK =================
 
 async function pensarConNico(mensaje){
