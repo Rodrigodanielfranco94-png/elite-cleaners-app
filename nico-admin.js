@@ -1538,8 +1538,23 @@ async function obtenerMemoriasNico(){
 
 async function pensarConNico(mensaje){
 
+  async function pensarConNico(mensaje){
+
   try{
     imagenNico("piensa");
+
+    const memorias = await obtenerMemoriasNico();
+
+    const contextoMemoria = memorias
+      .map(m => `- ${m.contenido}`)
+      .join("\n");
+
+    const mensajeConMemoria =
+`MEMORIA PERMANENTE DE NICO:
+${contextoMemoria || "Sin memorias guardadas todavía."}
+
+MENSAJE DEL USUARIO:
+${mensaje}`;
 
     const res = await fetch(PENSAR_NICO_URL, {
       method:"POST",
@@ -1547,7 +1562,7 @@ async function pensarConNico(mensaje){
         "Content-Type":"application/json"
       },
       body:JSON.stringify({
-        mensaje
+        mensaje: mensajeConMemoria
       })
     });
 
