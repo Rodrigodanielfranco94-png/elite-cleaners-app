@@ -1583,6 +1583,36 @@ async function enviarTextoANico(){
   agregarMensaje("user", mensaje);
 
   const t = normalizarTexto(mensaje);
+  
+  // ================= GUARDAR MEMORIA =================
+
+if(
+  t.includes("recuerda que") ||
+  t.includes("remember that")
+){
+  const contenido = mensaje
+    .replace(/nico/ig,"")
+    .replace(/recuerda que/ig,"")
+    .replace(/remember that/ig,"")
+    .trim();
+
+  if(!contenido){
+    agregarMensaje(
+      "nico",
+      "Rodri, dime qué quieres que recuerde. Ejemplo: Nico, recuerda que los clientes solo hablan inglés."
+    );
+    return;
+  }
+
+  await guardarMemoriaNico({
+    tipo: "general",
+    titulo: "Memoria guardada por Rodrigo",
+    contenido,
+    prioridad: "normal"
+  });
+
+  return;
+}
 
   // ================= APROBAR MENSAJE =================
 
