@@ -1,4 +1,4 @@
-// ================= NICO ADMIN FINAL LEFT PANEL + ESTIMATES + INVOICES + JOBS + PDF BUTTON + CLIENT APPROVAL =================
+// ================= NICO ADMIN FINAL LEFT PANEL + ESTIMATES + INVOICES + JOBS + PDF BUTTON + CLIENT APPROVAL + SALES MESSAGES + MEMORY =================
 
 const PENSAR_NICO_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/pensarNico";
 
@@ -300,6 +300,7 @@ const nicoFloatingAvatar = document.getElementById("nicoFloatingAvatar");
 // ================= IMAGES =================
 
 function imagenNico(tipo){
+
   const imgs = {
     saluda: "nico-assets/saluda.png",
     piensa: "nico-assets/piensa.png",
@@ -311,41 +312,66 @@ function imagenNico(tipo){
     reposo: "nico-assets/reposo.png"
   };
 
-  nicoFloatingAvatar.src = imgs[tipo] || imgs.saluda;
+  nicoFloatingAvatar.src =
+    imgs[tipo] || imgs.saluda;
 }
 
 // ================= CHAT =================
 
 function agregarMensaje(tipo, texto){
+
   const div = document.createElement("div");
+
   div.className = `nicoMsg ${tipo}`;
+
   div.innerText = texto;
+
   nicoChatMessages.appendChild(div);
-  nicoChatMessages.scrollTop = nicoChatMessages.scrollHeight;
+
+  nicoChatMessages.scrollTop =
+    nicoChatMessages.scrollHeight;
+
   return div;
 }
 
 // ================= PDF BUTTON =================
 
-function agregarMensajeConBotonPDF(texto, tipoDocumento, numeroDocumento){
+function agregarMensajeConBotonPDF(
+  texto,
+  tipoDocumento,
+  numeroDocumento
+){
+
   const div = document.createElement("div");
+
   div.className = "nicoMsg nico";
+
   div.innerText = texto;
 
   const btn = document.createElement("button");
+
   btn.className = "nicoPdfBtn";
-  btn.innerText = "📄 Ver / Descargar PDF";
+
+  btn.innerText =
+    "📄 Ver / Descargar PDF";
 
   if(tipoDocumento === "invoice"){
-    btn.onclick = () => abrirInvoicePDF(numeroDocumento);
+
+    btn.onclick = () =>
+      abrirInvoicePDF(numeroDocumento);
+
   }else{
-    btn.onclick = () => abrirEstimatePDF(numeroDocumento);
+
+    btn.onclick = () =>
+      abrirEstimatePDF(numeroDocumento);
   }
 
   div.appendChild(btn);
 
   nicoChatMessages.appendChild(div);
-  nicoChatMessages.scrollTop = nicoChatMessages.scrollHeight;
+
+  nicoChatMessages.scrollTop =
+    nicoChatMessages.scrollHeight;
 
   return div;
 }
@@ -353,11 +379,13 @@ function agregarMensajeConBotonPDF(texto, tipoDocumento, numeroDocumento){
 // ================= OPEN / CLOSE =================
 
 function abrirNico(){
+
   nicoActivo = true;
 
   imagenNico("saluda");
 
-  nicoChatPanelEl.style.display = "block";
+  nicoChatPanelEl.style.display =
+    "block";
 
   if(!nicoChatMessages.dataset.saludo){
 
@@ -366,7 +394,8 @@ function abrirNico(){
       "Hola chicos 👋 Estoy listo para ayudarles con estimates, invoices, trabajos y mensajes para clientes."
     );
 
-    nicoChatMessages.dataset.saludo = "true";
+    nicoChatMessages.dataset.saludo =
+      "true";
   }
 
   setTimeout(() => {
@@ -375,14 +404,25 @@ function abrirNico(){
 }
 
 function cerrarNico(){
+
   nicoActivo = false;
-  nicoChatPanelEl.style.display = "none";
+
+  nicoChatPanelEl.style.display =
+    "none";
+
   imagenNico("saluda");
 }
 
 nicoBtn.onclick = () => {
-  if(nicoActivo) cerrarNico();
-  else abrirNico();
+
+  if(nicoActivo){
+
+    cerrarNico();
+
+  }else{
+
+    abrirNico();
+  }
 };
 
 nicoClose.onclick = cerrarNico;
@@ -390,6 +430,7 @@ nicoClose.onclick = cerrarNico;
 // ================= HELPERS =================
 
 function normalizarTexto(t){
+
   return (t || "")
     .toLowerCase()
     .normalize("NFD")
@@ -398,68 +439,118 @@ function normalizarTexto(t){
 }
 
 function dinero(valor){
+
   const n = Number(valor || 0);
+
   return n.toFixed(2);
 }
 
 function obtenerValor(id){
-  return document.getElementById(id)?.value?.trim() || "";
+
+  return (
+    document.getElementById(id)
+    ?.value
+    ?.trim() || ""
+  );
 }
 
 function hoyISO(){
-  return new Date().toISOString().slice(0,10);
+
+  return new Date()
+    .toISOString()
+    .slice(0,10);
 }
 
 function sumarDiasISO(dias){
+
   const d = new Date();
+
   d.setDate(d.getDate() + dias);
-  return d.toISOString().slice(0,10);
+
+  return d
+    .toISOString()
+    .slice(0,10);
 }
 
 function limpiarTelefono(numero){
-  return (numero || "").replace(/\D/g,"");
+
+  return (numero || "")
+    .replace(/\D/g,"");
 }
 
-function abrirSMSDirecto(numero, mensaje){
+function abrirSMSDirecto(
+  numero,
+  mensaje
+){
 
-  const limpio = limpiarTelefono(numero);
+  const limpio =
+    limpiarTelefono(numero);
 
   if(!limpio){
+
     alert("No hay teléfono.");
+
     return;
   }
 
-  const body = encodeURIComponent(mensaje || "");
+  const body =
+    encodeURIComponent(mensaje || "");
 
   const isiPhone =
-    /iPad|iPhone|iPod/.test(navigator.userAgent);
+    /iPad|iPhone|iPod/.test(
+      navigator.userAgent
+    );
 
   if(isiPhone){
-    window.location.href = `sms:${limpio}&body=${body}`;
+
+    window.location.href =
+      `sms:${limpio}&body=${body}`;
+
   }else{
-    window.location.href = `sms:${limpio}?body=${body}`;
+
+    window.location.href =
+      `sms:${limpio}?body=${body}`;
   }
 }
 
 function obtenerDatosFormularioActual(){
 
   return {
-    cliente_nombre: obtenerValor("cliente"),
-    cliente_email: obtenerValor("email_cliente"),
-    cliente_telefono: limpiarTelefono(
-      obtenerValor("whatsapp")
-    ),
-    cliente_direccion: obtenerValor("direccion"),
+
+    cliente_nombre:
+      obtenerValor("cliente"),
+
+    cliente_email:
+      obtenerValor("email_cliente"),
+
+    cliente_telefono:
+      limpiarTelefono(
+        obtenerValor("whatsapp")
+      ),
+
+    cliente_direccion:
+      obtenerValor("direccion"),
+
     tipo_limpieza:
-      typeof tipoSeleccionado !== "undefined"
+      typeof tipoSeleccionado !==
+      "undefined"
       ? tipoSeleccionado
       : "",
-    notes: obtenerValor("notas"),
-    total: Number(
-      obtenerValor("precio_total") || 0
-    ),
-    fecha: obtenerValor("fecha"),
-    hora: obtenerValor("hora")
+
+    notes:
+      obtenerValor("notas"),
+
+    total:
+      Number(
+        obtenerValor("precio_total")
+        || 0
+      ),
+
+    fecha:
+      obtenerValor("fecha"),
+
+    hora:
+      obtenerValor("hora")
   };
 }
 
@@ -503,42 +594,64 @@ function extraerFechaHora(texto){
   );
 
   return {
-    fecha: fechaMatch ? fechaMatch[0] : "",
-    hora: horaMatch ? horaMatch[0] : ""
+    fecha:
+      fechaMatch
+      ? fechaMatch[0]
+      : "",
+
+    hora:
+      horaMatch
+      ? horaMatch[0]
+      : ""
   };
 }
 
 function buscarDatosCliente(nombre){
 
-  const nombreNorm = normalizarTexto(nombre);
+  const nombreNorm =
+    normalizarTexto(nombre);
 
   let cliente = null;
   let servicio = null;
 
-  if(typeof todosLosClientes !== "undefined"){
+  if(
+    typeof todosLosClientes !==
+    "undefined"
+  ){
 
-    cliente = todosLosClientes.find(c =>
-      normalizarTexto(
-        c.nombre || c.id || ""
-      ).includes(nombreNorm)
-      ||
-      nombreNorm.includes(
+    cliente =
+      todosLosClientes.find(c =>
+
         normalizarTexto(
           c.nombre || c.id || ""
+        ).includes(nombreNorm)
+
+        ||
+
+        nombreNorm.includes(
+          normalizarTexto(
+            c.nombre || c.id || ""
+          )
         )
-      )
-    );
+      );
   }
 
-  if(typeof todosLosServicios !== "undefined"){
+  if(
+    typeof todosLosServicios !==
+    "undefined"
+  ){
 
-    servicio = [...todosLosServicios]
+    servicio =
+      [...todosLosServicios]
       .reverse()
       .find(s =>
+
         normalizarTexto(
           s.cliente || ""
         ).includes(nombreNorm)
+
         ||
+
         nombreNorm.includes(
           normalizarTexto(
             s.cliente || ""
@@ -562,10 +675,12 @@ function prepararMensajeCliente({
 }){
 
   if(!telefono){
+
     agregarMensaje(
       "nico",
       "Rodri, el cliente no tiene teléfono."
     );
+
     return;
   }
 
@@ -576,6 +691,7 @@ function prepararMensajeCliente({
 
   agregarMensaje(
     "nico",
+
 `⚠️ MENSAJE PENDIENTE DE APROBACIÓN
 
 Cliente:
@@ -598,10 +714,12 @@ CANCELAR`
 function confirmarEnvioCliente(){
 
   if(!nicoMensajeClientePendiente){
+
     agregarMensaje(
       "nico",
       "No hay mensajes pendientes."
     );
+
     return;
   }
 
@@ -634,30 +752,37 @@ function cancelarEnvioCliente(){
 
 function prepararContratoCliente(){
 
-  const datos = obtenerDatosFormularioActual();
+  const datos =
+    obtenerDatosFormularioActual();
 
   if(!datos.cliente_nombre){
+
     agregarMensaje(
       "nico",
       "Rodri, falta el nombre del cliente."
     );
+
     return;
   }
 
   if(!datos.cliente_telefono){
+
     agregarMensaje(
       "nico",
       "Rodri, falta el teléfono del cliente."
     );
+
     return;
   }
 
   const urlFirma =
+
 `${ELITE_BASE_URL}/firmar.html?cliente=${encodeURIComponent(
   datos.cliente_nombre
 )}`;
 
   const mensaje =
+
 `Hello ${datos.cliente_nombre},
 
 Thank you for choosing Elite Cleaners Company 🌟
@@ -669,9 +794,14 @@ ${urlFirma}
 Thank you again for trusting Elite Cleaners Company.`;
 
   prepararMensajeCliente({
-    telefono: datos.cliente_telefono,
+
+    telefono:
+      datos.cliente_telefono,
+
     mensaje,
-    cliente: datos.cliente_nombre
+
+    cliente:
+      datos.cliente_nombre
   });
 }
 
@@ -679,25 +809,31 @@ Thank you again for trusting Elite Cleaners Company.`;
 
 function prepararReviewCliente(){
 
-  const datos = obtenerDatosFormularioActual();
+  const datos =
+    obtenerDatosFormularioActual();
 
   if(!datos.cliente_nombre){
+
     agregarMensaje(
       "nico",
       "Rodri, falta el nombre del cliente."
     );
+
     return;
   }
 
   if(!datos.cliente_telefono){
+
     agregarMensaje(
       "nico",
       "Rodri, falta el teléfono del cliente."
     );
+
     return;
   }
 
   const mensaje =
+
 `Hello ${datos.cliente_nombre},
 
 Thank you for choosing Elite Cleaners Company 🌟
@@ -713,9 +849,14 @@ ${ELITE_REVIEW_LINK}
 Thank you again for trusting Elite Cleaners Company.`;
 
   prepararMensajeCliente({
-    telefono: datos.cliente_telefono,
+
+    telefono:
+      datos.cliente_telefono,
+
     mensaje,
-    cliente: datos.cliente_nombre
+
+    cliente:
+      datos.cliente_nombre
   });
 }
 
@@ -723,28 +864,41 @@ Thank you again for trusting Elite Cleaners Company.`;
 
 function prepararRecordatorioCliente(){
 
-  const datos = obtenerDatosFormularioActual();
+  const datos =
+    obtenerDatosFormularioActual();
 
   if(!datos.cliente_nombre){
+
     agregarMensaje(
       "nico",
       "Rodri, falta el nombre del cliente."
     );
+
     return;
   }
 
   if(!datos.cliente_telefono){
+
     agregarMensaje(
       "nico",
       "Rodri, falta el teléfono del cliente."
     );
+
     return;
   }
 
   const staff =
-    obtenerValor("search-empleado") || "Elite Cleaners Team";
+
+    obtenerValor(
+      "search-empleado"
+    )
+
+    ||
+
+    "Elite Cleaners Team";
 
   const mensaje =
+
 `Hello ${datos.cliente_nombre}! 🌟
 
 This is a friendly reminder from Elite Cleaners Company about your upcoming cleaning service:
@@ -758,50 +912,79 @@ We look forward to seeing you.
 Please let us know if you have any questions.`;
 
   prepararMensajeCliente({
-    telefono: datos.cliente_telefono,
+
+    telefono:
+      datos.cliente_telefono,
+
     mensaje,
-    cliente: datos.cliente_nombre
+
+    cliente:
+      datos.cliente_nombre
   });
 }
 
 // ================= SALES MESSAGE =================
 
-function prepararMensajeVenta(nombreCliente = ""){
+function prepararMensajeVenta(
+  nombreCliente = ""
+){
 
-  let datos = obtenerDatosFormularioActual();
+  let datos =
+    obtenerDatosFormularioActual();
+
   if(nombreCliente){
-  const { cliente, servicio } = buscarDatosCliente(nombreCliente);
 
-  datos.cliente_nombre =
-    servicio?.cliente ||
-    cliente?.nombre ||
-    cliente?.id ||
-    nombreCliente;
+    const {
+      cliente,
+      servicio
+    } =
+      buscarDatosCliente(
+        nombreCliente
+      );
 
-  datos.cliente_telefono =
-    servicio?.whatsapp ||
-    cliente?.whatsapp ||
-    cliente?.telefono ||
-    "";
-}
+    datos.cliente_nombre =
+
+      servicio?.cliente ||
+
+      cliente?.nombre ||
+
+      cliente?.id ||
+
+      nombreCliente;
+
+    datos.cliente_telefono =
+
+      servicio?.whatsapp ||
+
+      cliente?.whatsapp ||
+
+      cliente?.telefono ||
+
+      "";
+  }
 
   if(!datos.cliente_nombre){
+
     agregarMensaje(
       "nico",
       "Rodri, selecciona o escribe primero el nombre del cliente."
     );
+
     return;
   }
 
   if(!datos.cliente_telefono){
+
     agregarMensaje(
       "nico",
       "Rodri, falta el teléfono del cliente."
     );
+
     return;
   }
 
   const mensaje =
+
 `Hello ${datos.cliente_nombre}! 🌟
 
 This is Elite Cleaners Company.
@@ -815,312 +998,646 @@ If you would like, we can send you an estimate or help you schedule a Deep Clean
 Thank you for trusting Elite Cleaners Company!`;
 
   prepararMensajeCliente({
-    telefono: datos.cliente_telefono,
+
+    telefono:
+      datos.cliente_telefono,
+
     mensaje,
-    cliente: datos.cliente_nombre
+
+    cliente:
+      datos.cliente_nombre
   });
 }
 
 // ================= PAYLOADS =================
 
-function construirPayloadEstimateDesdeDatos(datos){
+function construirPayloadEstimateDesdeDatos(
+  datos
+){
+
   return {
-    cliente_nombre: datos.cliente_nombre || "",
-    cliente_email: datos.cliente_email || "",
-    cliente_telefono: limpiarTelefono(datos.cliente_telefono),
-    cliente_direccion: datos.cliente_direccion || "",
-    tipo_limpieza: datos.tipo_limpieza || "",
-    notes: datos.notes || "",
-    total: Number(datos.total || 0),
-    subtotal: Number(datos.total || 0),
+
+    cliente_nombre:
+      datos.cliente_nombre || "",
+
+    cliente_email:
+      datos.cliente_email || "",
+
+    cliente_telefono:
+      limpiarTelefono(
+        datos.cliente_telefono
+      ),
+
+    cliente_direccion:
+      datos.cliente_direccion || "",
+
+    tipo_limpieza:
+      datos.tipo_limpieza || "",
+
+    notes:
+      datos.notes || "",
+
+    total:
+      Number(datos.total || 0),
+
+    subtotal:
+      Number(datos.total || 0),
+
     items: [
       {
-        description: datos.tipo_limpieza || "Cleaning Service",
-        price: Number(datos.total || 0),
+        description:
+          datos.tipo_limpieza
+          || "Cleaning Service",
+
+        price:
+          Number(datos.total || 0),
+
         quantity: 1,
-        total: Number(datos.total || 0)
+
+        total:
+          Number(datos.total || 0)
       }
     ],
+
     status: "Draft"
   };
 }
 
-function construirPayloadInvoiceDesdeEstimate(estimate){
+function construirPayloadInvoiceDesdeEstimate(
+  estimate
+){
+
   return {
-    estimate_numero: estimate.numero || "",
-    cliente_nombre: estimate.cliente_nombre || "",
-    cliente_email: estimate.cliente_email || "",
-    cliente_telefono: estimate.cliente_telefono || "",
-    cliente_direccion: estimate.cliente_direccion || "",
-    tipo_limpieza: estimate.tipo_limpieza || "",
-    notes: estimate.notes || "",
-    total: Number(estimate.total || 0),
-    subtotal: Number(estimate.subtotal || estimate.total || 0),
-    amount_due: Number(estimate.total || 0),
+
+    estimate_numero:
+      estimate.numero || "",
+
+    cliente_nombre:
+      estimate.cliente_nombre || "",
+
+    cliente_email:
+      estimate.cliente_email || "",
+
+    cliente_telefono:
+      estimate.cliente_telefono || "",
+
+    cliente_direccion:
+      estimate.cliente_direccion || "",
+
+    tipo_limpieza:
+      estimate.tipo_limpieza || "",
+
+    notes:
+      estimate.notes || "",
+
+    total:
+      Number(estimate.total || 0),
+
+    subtotal:
+      Number(
+        estimate.subtotal
+        ||
+        estimate.total
+        || 0
+      ),
+
+    amount_due:
+      Number(estimate.total || 0),
+
     paid: 0,
-    balance_due: Number(estimate.total || 0),
-    items: estimate.items && estimate.items.length ? estimate.items : [
-      {
-        description: estimate.tipo_limpieza || "Cleaning Service",
-        price: Number(estimate.total || 0),
-        quantity: 1,
-        total: Number(estimate.total || 0)
-      }
-    ],
+
+    balance_due:
+      Number(estimate.total || 0),
+
+    items:
+
+      estimate.items &&
+      estimate.items.length
+
+      ? estimate.items
+
+      : [
+        {
+          description:
+            estimate.tipo_limpieza
+            || "Cleaning Service",
+
+          price:
+            Number(estimate.total || 0),
+
+          quantity: 1,
+
+          total:
+            Number(estimate.total || 0)
+        }
+      ],
+
     status: "Unpaid",
+
     fecha: hoyISO(),
-    due_date: sumarDiasISO(7)
+
+    due_date:
+      sumarDiasISO(7)
   };
 }
 
-function construirTrabajoDesdeEstimate(estimate, fecha, hora){
+function construirTrabajoDesdeEstimate(
+  estimate,
+  fecha,
+  hora
+){
+
   return {
-    cliente: estimate.cliente_nombre || "",
-    direccion: estimate.cliente_direccion || "",
-    whatsapp: limpiarTelefono(estimate.cliente_telefono),
-    telefono: limpiarTelefono(estimate.cliente_telefono),
-    email_cliente: estimate.cliente_email || "",
-    precio_total: Number(estimate.total || 0),
-    empleado_nombre: obtenerValor("search-empleado"),
-    empleado_email: obtenerValor("email-empleado"),
-    empleado_nombre_2: obtenerValor("search-empleado-2"),
-    empleado_email_2: obtenerValor("email-empleado-2"),
+
+    cliente:
+      estimate.cliente_nombre || "",
+
+    direccion:
+      estimate.cliente_direccion || "",
+
+    whatsapp:
+      limpiarTelefono(
+        estimate.cliente_telefono
+      ),
+
+    telefono:
+      limpiarTelefono(
+        estimate.cliente_telefono
+      ),
+
+    email_cliente:
+      estimate.cliente_email || "",
+
+    precio_total:
+      Number(estimate.total || 0),
+
+    empleado_nombre:
+      obtenerValor(
+        "search-empleado"
+      ),
+
+    empleado_email:
+      obtenerValor(
+        "email-empleado"
+      ),
+
+    empleado_nombre_2:
+      obtenerValor(
+        "search-empleado-2"
+      ),
+
+    empleado_email_2:
+      obtenerValor(
+        "email-empleado-2"
+      ),
+
     fecha,
     hora,
-    notas: estimate.notes || "",
-    tipo: estimate.tipo_limpieza || "ESTÁNDAR",
+
+    notas:
+      estimate.notes || "",
+
+    tipo:
+      estimate.tipo_limpieza
+      || "ESTÁNDAR",
+
     estado: "pendiente",
+
     hora_inicio: "--:--",
+
     hora_fin: "--:--",
+
     firma_cliente: false,
-    estimate_numero: estimate.numero || "",
+
+    estimate_numero:
+      estimate.numero || "",
+
     creado_por: "Nico",
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+
+    timestamp:
+      firebase.firestore
+      .FieldValue
+      .serverTimestamp()
   };
 }
 
 // ================= ESTIMATES =================
 
-async function crearEstimateConDatos(datos){
+async function crearEstimateConDatos(
+  datos
+){
 
   if(!datos.cliente_nombre){
-    agregarMensaje("nico", "Rodri, falta el nombre del cliente para crear el estimate.");
+
+    agregarMensaje(
+      "nico",
+      "Rodri, falta el nombre del cliente para crear el estimate."
+    );
+
     return;
   }
 
-  if(!datos.total || Number(datos.total) <= 0){
-    agregarMensaje("nico", "Rodri, falta el precio total.");
+  if(
+    !datos.total ||
+    Number(datos.total) <= 0
+  ){
+
+    agregarMensaje(
+      "nico",
+      "Rodri, falta el precio total."
+    );
+
     return;
   }
 
   imagenNico("celular");
 
-  const payload = construirPayloadEstimateDesdeDatos(datos);
+  const payload =
+    construirPayloadEstimateDesdeDatos(
+      datos
+    );
 
-  const res = await fetch(CREAR_ESTIMATE_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
+  const res = await fetch(
+    CREAR_ESTIMATE_URL,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type":
+          "application/json"
+      },
+
+      body:
+        JSON.stringify(payload)
+    }
+  );
 
   const data = await res.json();
 
   if(!res.ok || !data.ok){
+
     console.log(data);
-    agregarMensaje("nico", "Rodri, no pude crear el estimate.");
+
+    agregarMensaje(
+      "nico",
+      "Rodri, no pude crear el estimate."
+    );
+
     return;
   }
 
-  const numero = data.estimate.numero;
+  const numero =
+    data.estimate.numero;
 
   imagenNico("bien");
 
   agregarMensajeConBotonPDF(
+
 `✅ Estimate creado correctamente
 
-👤 Cliente: ${payload.cliente_nombre}
-🧼 Tipo: ${payload.tipo_limpieza || "Sin tipo"}
-💵 Total: $${dinero(payload.total)}
-📍 Dirección: ${payload.cliente_direccion || "Sin dirección"}
+👤 Cliente:
+${payload.cliente_nombre}
+
+🧼 Tipo:
+${payload.tipo_limpieza || "Sin tipo"}
+
+💵 Total:
+$${dinero(payload.total)}
+
+📍 Dirección:
+${payload.cliente_direccion || "Sin dirección"}
 
 📄 Estimate:
 ${numero}`,
+
     "estimate",
     numero
   );
 }
 
 async function obtenerEstimates(){
-  const res = await fetch(CONSULTAR_ESTIMATES_URL);
+
+  const res = await fetch(
+    CONSULTAR_ESTIMATES_URL
+  );
+
   const data = await res.json();
+
   return data.estimates || [];
 }
 
 async function mostrarEstimates(){
 
   try{
+
     imagenNico("celular");
 
-    const estimates = await obtenerEstimates();
+    const estimates =
+      await obtenerEstimates();
 
     if(!estimates.length){
-      agregarMensaje("nico", "Rodri, todavía no encontré estimates guardados.");
+
+      agregarMensaje(
+        "nico",
+        "Rodri, todavía no encontré estimates guardados."
+      );
+
       return;
     }
 
-    let texto = "📋 Últimos estimates:\n\n";
+    let texto =
+      "📋 Últimos estimates:\n\n";
 
-    estimates.slice(0,10).forEach((e, i) => {
-      texto += `${i + 1}. ${e.cliente_nombre || "Sin cliente"}\n`;
-      texto += `Tipo: ${e.tipo_limpieza || "Sin tipo"}\n`;
-      texto += `Total: $${dinero(e.total)}\n`;
-      texto += `Estimate: ${e.numero || "Sin número"}\n`;
-      texto += `Para verlo: ver estimate ${e.numero || ""}\n\n`;
+    estimates
+      .slice(0,10)
+      .forEach((e, i) => {
+
+      texto +=
+`${i + 1}. ${e.cliente_nombre || "Sin cliente"}
+
+Tipo:
+${e.tipo_limpieza || "Sin tipo"}
+
+Total:
+$${dinero(e.total)}
+
+Estimate:
+${e.numero || "Sin número"}
+
+Para verlo:
+ver estimate ${e.numero || ""}
+
+\n`;
     });
 
-    agregarMensaje("nico", texto.trim());
+    agregarMensaje(
+      "nico",
+      texto.trim()
+    );
 
     imagenNico("bien");
 
   }catch(e){
+
     console.log(e);
-    agregarMensaje("nico", "Rodri, hubo un error consultando los estimates.");
+
+    agregarMensaje(
+      "nico",
+      "Rodri, hubo un error consultando los estimates."
+    );
   }
 }
 
 // ================= INVOICES =================
 
-async function convertirEstimateAInvoice(numeroEstimate){
+async function convertirEstimateAInvoice(
+  numeroEstimate
+){
 
   try{
+
     imagenNico("celular");
 
-    const estimates = await obtenerEstimates();
+    const estimates =
+      await obtenerEstimates();
 
-    const estimate = estimates.find(e =>
-      normalizarTexto(e.numero || "").includes(
-        normalizarTexto(numeroEstimate || "")
-      )
-    );
+    const estimate =
+      estimates.find(e =>
+
+        normalizarTexto(
+          e.numero || ""
+        ).includes(
+
+          normalizarTexto(
+            numeroEstimate || ""
+          )
+        )
+      );
 
     if(!estimate){
-      agregarMensaje("nico", "Rodri, no encontré ese estimate.");
+
+      agregarMensaje(
+        "nico",
+        "Rodri, no encontré ese estimate."
+      );
+
       return;
     }
 
-    const payload = construirPayloadInvoiceDesdeEstimate(estimate);
+    const payload =
+      construirPayloadInvoiceDesdeEstimate(
+        estimate
+      );
 
-    const res = await fetch(CREAR_INVOICE_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
+    const res = await fetch(
+      CREAR_INVOICE_URL,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type":
+            "application/json"
+        },
+
+        body:
+          JSON.stringify(payload)
+      }
+    );
 
     const data = await res.json();
 
     if(!res.ok || !data.ok){
+
       console.log(data);
-      agregarMensaje("nico", "Rodri, no pude crear el invoice.");
+
+      agregarMensaje(
+        "nico",
+        "Rodri, no pude crear el invoice."
+      );
+
       return;
     }
 
-    const invoice = data.invoice || {};
+    const invoice =
+      data.invoice || {};
+
     const numeroInvoice =
+
       invoice.numero ||
+
       invoice.invoice_numero ||
+
       data.numero ||
+
       "INV-SIN-NUMERO";
 
     imagenNico("bien");
 
     agregarMensajeConBotonPDF(
+
 `✅ Invoice creado desde estimate
 
-📄 Estimate: ${estimate.numero}
-🧾 Invoice: ${numeroInvoice}
+📄 Estimate:
+${estimate.numero}
 
-👤 Cliente: ${payload.cliente_nombre}
-🧼 Tipo: ${payload.tipo_limpieza || "Sin tipo"}
-💵 Total: $${dinero(payload.total)}
-📍 Dirección: ${payload.cliente_direccion || "Sin dirección"}`,
+🧾 Invoice:
+${numeroInvoice}
+
+👤 Cliente:
+${payload.cliente_nombre}
+
+🧼 Tipo:
+${payload.tipo_limpieza || "Sin tipo"}
+
+💵 Total:
+$${dinero(payload.total)}
+
+📍 Dirección:
+${payload.cliente_direccion || "Sin dirección"}`,
+
       "invoice",
       numeroInvoice
     );
 
   }catch(e){
+
     console.log(e);
-    agregarMensaje("nico", "Rodri, hubo un error convirtiendo el estimate a invoice.");
+
+    agregarMensaje(
+      "nico",
+      "Rodri, hubo un error convirtiendo el estimate a invoice."
+    );
   }
 }
 
 async function obtenerInvoices(){
-  const res = await fetch(CONSULTAR_INVOICES_URL);
+
+  const res = await fetch(
+    CONSULTAR_INVOICES_URL
+  );
+
   const data = await res.json();
+
   return data.invoices || [];
 }
 
 async function mostrarInvoices(){
 
   try{
+
     imagenNico("celular");
 
-    const invoices = await obtenerInvoices();
+    const invoices =
+      await obtenerInvoices();
 
     if(!invoices.length){
-      agregarMensaje("nico", "Rodri, todavía no encontré invoices guardados.");
+
+      agregarMensaje(
+        "nico",
+        "Rodri, todavía no encontré invoices guardados."
+      );
+
       return;
     }
 
-    let texto = "🧾 Últimos invoices:\n\n";
+    let texto =
+      "🧾 Últimos invoices:\n\n";
 
-    invoices.slice(0,10).forEach((inv, i) => {
-      texto += `${i + 1}. ${inv.cliente_nombre || "Sin cliente"}\n`;
-      texto += `Total: $${dinero(inv.total || inv.amount_due || inv.balance_due)}\n`;
-      texto += `Invoice: ${inv.numero || inv.invoice_numero || "Sin número"}\n`;
-      texto += `Para verlo: ver invoice ${inv.numero || inv.invoice_numero || ""}\n\n`;
+    invoices
+      .slice(0,10)
+      .forEach((inv, i) => {
+
+      texto +=
+
+`${i + 1}. ${inv.cliente_nombre || "Sin cliente"}
+
+Total:
+$${dinero(
+  inv.total ||
+  inv.amount_due ||
+  inv.balance_due
+)}
+
+Invoice:
+${inv.numero || inv.invoice_numero || "Sin número"}
+
+Para verlo:
+ver invoice ${inv.numero || inv.invoice_numero || ""}
+
+\n`;
     });
 
-    agregarMensaje("nico", texto.trim());
+    agregarMensaje(
+      "nico",
+      texto.trim()
+    );
 
     imagenNico("bien");
 
   }catch(e){
+
     console.log(e);
-    agregarMensaje("nico", "Rodri, hubo un error consultando los invoices.");
+
+    agregarMensaje(
+      "nico",
+      "Rodri, hubo un error consultando los invoices."
+    );
   }
 }
 
 // ================= JOBS =================
 
-async function convertirEstimateATrabajo(numeroEstimate){
+async function convertirEstimateATrabajo(
+  numeroEstimate
+){
 
   try{
+
     imagenNico("celular");
 
-    const estimates = await obtenerEstimates();
+    const estimates =
+      await obtenerEstimates();
 
-    const estimate = estimates.find(e =>
-      normalizarTexto(e.numero || "").includes(
-        normalizarTexto(numeroEstimate || "")
-      )
-    );
+    const estimate =
+      estimates.find(e =>
+
+        normalizarTexto(
+          e.numero || ""
+        ).includes(
+
+          normalizarTexto(
+            numeroEstimate || ""
+          )
+        )
+      );
 
     if(!estimate){
-      agregarMensaje("nico", "Rodri, no encontré ese estimate para convertirlo a trabajo.");
-      return;
-    }
-
-    const datosFormulario = obtenerDatosFormularioActual();
-
-    const fecha = datosFormulario.fecha || "";
-    const hora = datosFormulario.hora || "";
-
-    if(!fecha || !hora){
-
-      nicoTrabajoPendiente = estimate;
 
       agregarMensaje(
         "nico",
+        "Rodri, no encontré ese estimate para convertirlo a trabajo."
+      );
+
+      return;
+    }
+
+    const datosFormulario =
+      obtenerDatosFormularioActual();
+
+    const fecha =
+      datosFormulario.fecha || "";
+
+    const hora =
+      datosFormulario.hora || "";
+
+    if(!fecha || !hora){
+
+      nicoTrabajoPendiente =
+        estimate;
+
+      agregarMensaje(
+        "nico",
+
 `Rodri, ya encontré el estimate, pero falta fecha y hora para crear el trabajo.
 
 Envíamelo así:
@@ -1131,17 +1648,31 @@ Envíamelo así:
       return;
     }
 
-    await crearTrabajoRealDesdeEstimate(estimate, fecha, hora);
+    await crearTrabajoRealDesdeEstimate(
+      estimate,
+      fecha,
+      hora
+    );
 
   }catch(e){
+
     console.log(e);
-    agregarMensaje("nico", "Rodri, hubo un error convirtiendo el estimate a trabajo.");
+
+    agregarMensaje(
+      "nico",
+      "Rodri, hubo un error convirtiendo el estimate a trabajo."
+    );
   }
 }
 
-async function crearTrabajoRealDesdeEstimate(estimate, fecha, hora){
+async function crearTrabajoRealDesdeEstimate(
+  estimate,
+  fecha,
+  hora
+){
 
   try{
+
     imagenNico("celular");
 
     const payload =
@@ -1152,41 +1683,82 @@ async function crearTrabajoRealDesdeEstimate(estimate, fecha, hora){
       );
 
     if(!payload.cliente){
-      agregarMensaje("nico", "Rodri, falta el nombre del cliente.");
+
+      agregarMensaje(
+        "nico",
+        "Rodri, falta el nombre del cliente."
+      );
+
       return;
     }
 
     if(!payload.direccion){
-      agregarMensaje("nico", "Rodri, falta la dirección del servicio.");
+
+      agregarMensaje(
+        "nico",
+        "Rodri, falta la dirección del servicio."
+      );
+
       return;
     }
 
-    await db.collection("clientes")
+    await db
+      .collection("clientes")
       .doc(payload.cliente)
       .set({
-        nombre: payload.cliente,
-        direccion: payload.direccion,
-        whatsapp: payload.whatsapp,
-        telefono: payload.whatsapp,
-        email: payload.email_cliente
-      }, { merge: true });
+
+        nombre:
+          payload.cliente,
+
+        direccion:
+          payload.direccion,
+
+        whatsapp:
+          payload.whatsapp,
+
+        telefono:
+          payload.whatsapp,
+
+        email:
+          payload.email_cliente
+
+      }, {
+        merge: true
+      });
 
     const docRef =
-      await db.collection("servicios").add(payload);
+      await db
+      .collection("servicios")
+      .add(payload);
 
     imagenNico("bien");
 
     agregarMensaje(
+
       "nico",
+
 `✅ Trabajo real creado correctamente
 
-📄 Estimate: ${payload.estimate_numero}
-🧼 Tipo: ${payload.tipo}
-👤 Cliente: ${payload.cliente}
-💵 Precio: $${dinero(payload.precio_total)}
-📍 Dirección: ${payload.direccion}
-📅 Fecha: ${payload.fecha}
-⏰ Hora: ${payload.hora}
+📄 Estimate:
+${payload.estimate_numero}
+
+🧼 Tipo:
+${payload.tipo}
+
+👤 Cliente:
+${payload.cliente}
+
+💵 Precio:
+$${dinero(payload.precio_total)}
+
+📍 Dirección:
+${payload.direccion}
+
+📅 Fecha:
+${payload.fecha}
+
+⏰ Hora:
+${payload.hora}
 
 🆔 Trabajo ID:
 ${docRef.id}
@@ -1194,31 +1766,49 @@ ${docRef.id}
 Ya debe aparecer en tu Admin como pendiente.`
     );
 
-    nicoTrabajoPendiente = null;
+    nicoTrabajoPendiente =
+      null;
 
   }catch(e){
+
     console.log(e);
-    agregarMensaje("nico", "Rodri, no pude crear el trabajo en Firebase.");
+
+    agregarMensaje(
+      "nico",
+      "Rodri, no pude crear el trabajo en Firebase."
+    );
   }
 }
 
-async function completarTrabajoPendienteConFechaHora(mensaje){
+async function completarTrabajoPendienteConFechaHora(
+  mensaje
+){
 
-  const datos = extraerFechaHora(mensaje);
+  const datos =
+    extraerFechaHora(mensaje);
 
-  if(!datos.fecha || !datos.hora){
+  if(
+    !datos.fecha ||
+    !datos.hora
+  ){
+
     agregarMensaje(
       "nico",
+
 `Rodri, necesito fecha y hora en este formato:
 
 2026-05-12, 09:00`
     );
+
     return;
   }
 
   await crearTrabajoRealDesdeEstimate(
+
     nicoTrabajoPendiente,
+
     datos.fecha,
+
     datos.hora
   );
 }
@@ -1284,7 +1874,11 @@ function escribirDocumentoPDF(nuevaVentana, tipo, doc){
         <h1>${titulo}</h1>
         <div class="doc-number">${numero}</div>
         <div class="doc-number">Date: ${doc.fecha || hoyISO()}</div>
-        ${isInvoice ? `<div class="doc-number">Due Date: ${doc.due_date || ""}</div>` : `<div class="doc-number">Valid Until: ${doc.valid_until || doc.fecha || ""}</div>`}
+        ${
+          isInvoice
+          ? `<div class="doc-number">Due Date: ${doc.due_date || ""}</div>`
+          : `<div class="doc-number">Valid Until: ${doc.valid_until || doc.fecha || ""}</div>`
+        }
         <div class="doc-number">Status: ${status}</div>
       </div>
     </div>
@@ -1378,20 +1972,26 @@ async function abrirEstimatePDF(numeroEstimate){
   try{
     imagenNico("celular");
 
-    const estimates = await obtenerEstimates();
+    const estimates =
+      await obtenerEstimates();
 
-    const estimate = estimates.find(e =>
-      normalizarTexto(e.numero || "").includes(
-        normalizarTexto(numeroEstimate || "")
-      )
-    );
+    const estimate =
+      estimates.find(e =>
+        normalizarTexto(e.numero || "").includes(
+          normalizarTexto(numeroEstimate || "")
+        )
+      );
 
     if(!estimate){
-      agregarMensaje("nico", "Rodri, no encontré ese estimate.");
+      agregarMensaje(
+        "nico",
+        "Rodri, no encontré ese estimate."
+      );
       return;
     }
 
-    const nuevaVentana = window.open("", "_blank");
+    const nuevaVentana =
+      window.open("", "_blank");
 
     if(!nuevaVentana){
       agregarMensaje(
@@ -1416,7 +2016,10 @@ async function abrirEstimatePDF(numeroEstimate){
 
   }catch(e){
     console.log(e);
-    agregarMensaje("nico", "❌ Error abriendo estimate.");
+    agregarMensaje(
+      "nico",
+      "❌ Error abriendo estimate."
+    );
   }
 }
 
@@ -1425,22 +2028,28 @@ async function abrirInvoicePDF(numeroInvoice){
   try{
     imagenNico("celular");
 
-    const invoices = await obtenerInvoices();
+    const invoices =
+      await obtenerInvoices();
 
-    const invoice = invoices.find(inv =>
-      normalizarTexto(
-        inv.numero || inv.invoice_numero || ""
-      ).includes(
-        normalizarTexto(numeroInvoice || "")
-      )
-    );
+    const invoice =
+      invoices.find(inv =>
+        normalizarTexto(
+          inv.numero || inv.invoice_numero || ""
+        ).includes(
+          normalizarTexto(numeroInvoice || "")
+        )
+      );
 
     if(!invoice){
-      agregarMensaje("nico", "Rodri, no encontré ese invoice.");
+      agregarMensaje(
+        "nico",
+        "Rodri, no encontré ese invoice."
+      );
       return;
     }
 
-    const nuevaVentana = window.open("", "_blank");
+    const nuevaVentana =
+      window.open("", "_blank");
 
     if(!nuevaVentana){
       agregarMensaje(
@@ -1465,37 +2074,53 @@ async function abrirInvoicePDF(numeroInvoice){
 
   }catch(e){
     console.log(e);
-    agregarMensaje("nico", "❌ Error abriendo invoice.");
+    agregarMensaje(
+      "nico",
+      "❌ Error abriendo invoice."
+    );
   }
 }
 
 // ================= MEMORIA NICO =================
 
 async function guardarMemoriaNico({
+
   tipo = "general",
+
   titulo = "",
+
   contenido = "",
+
   prioridad = "normal"
+
 }){
 
   try{
 
-    await db.collection("memoria_nico").add({
+    await db
+      .collection("memoria_nico")
+      .add({
 
-      tipo,
-      titulo,
-      contenido,
-      prioridad,
+        tipo,
+        titulo,
+        contenido,
+        prioridad,
 
-      creado_por: "Nico",
+        creado_por: "Nico",
 
-      fecha_creacion:
-        firebase.firestore.FieldValue.serverTimestamp()
-    });
+        fecha_creacion:
+          firebase.firestore
+          .FieldValue
+          .serverTimestamp()
+      });
 
     agregarMensaje(
+
       "nico",
-      `🧠 Perfecto Rodri. Ya guardé este recuerdo en mi memoria permanente.\n\n${contenido}`
+
+`🧠 Perfecto Rodri. Ya guardé este recuerdo en mi memoria permanente.
+
+${contenido}`
     );
 
     imagenNico("bien");
@@ -1516,13 +2141,20 @@ async function obtenerMemoriasNico(){
   try{
 
     const snapshot =
-      await db.collection("memoria_nico")
-      .orderBy("fecha_creacion", "desc")
+
+      await db
+      .collection("memoria_nico")
+      .orderBy(
+        "fecha_creacion",
+        "desc"
+      )
       .limit(50)
       .get();
 
     return snapshot.docs.map(doc => ({
+
       id: doc.id,
+
       ...doc.data()
     }));
 
@@ -1536,82 +2168,125 @@ async function obtenerMemoriasNico(){
 
 // ================= THINK =================
 
-async function pensarConNico(mensaje){
+async function pensarConNico(
+  mensaje
+){
 
   try{
+
     imagenNico("piensa");
 
-    const memorias = await obtenerMemoriasNico();
+    const memorias =
+      await obtenerMemoriasNico();
 
-    const contextoMemoria = memorias
-      .map(m => `- ${m.contenido}`)
+    const contextoMemoria =
+
+      memorias
+      .map(m =>
+        `- ${m.contenido}`
+      )
       .join("\n");
 
     const mensajeConMemoria =
+
 `MEMORIA PERMANENTE DE NICO:
+
 ${contextoMemoria || "Sin memorias guardadas todavía."}
 
 MENSAJE DEL USUARIO:
+
 ${mensaje}`;
 
-    const res = await fetch(PENSAR_NICO_URL, {
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        mensaje: mensajeConMemoria
-      })
-    });
+    const res = await fetch(
+      PENSAR_NICO_URL,
+      {
 
-    const data = await res.json();
+        method:"POST",
+
+        headers:{
+          "Content-Type":
+            "application/json"
+        },
+
+        body: JSON.stringify({
+          mensaje:
+            mensajeConMemoria
+        })
+      }
+    );
+
+    const data =
+      await res.json();
 
     if(!res.ok){
+
       console.log(data);
+
       return "Rodri, no pude responder ahora mismo.";
     }
 
     return (
+
       data.respuesta ||
+
       data.output_text ||
+
       "Aquí estoy, Rodri."
+
     ).trim();
 
   }catch(e){
+
     console.log(e);
+
     return "Rodri, hubo un problema conectando con Nico.";
   }
 }
 
-// ================= GUARDAR MEMORIA =================
+// ================= SEND =================
 
-if(
-  t.includes("recuerda que") ||
-  t.includes("remember that")
-){
-  const contenido = mensaje
-    .replace(/nico/ig,"")
-    .replace(/recuerda que/ig,"")
-    .replace(/remember that/ig,"")
-    .trim();
+async function enviarTextoANico(){
 
-  if(!contenido){
-    agregarMensaje(
-      "nico",
-      "Rodri, dime qué quieres que recuerde. Ejemplo: Nico, recuerda que los clientes solo hablan inglés."
-    );
+  const mensaje =
+    nicoChatInput.value.trim();
+
+  if(!mensaje || nicoPensando) return;
+
+  nicoChatInput.value = "";
+
+  agregarMensaje("user", mensaje);
+
+  const t = normalizarTexto(mensaje);
+
+  // ================= GUARDAR MEMORIA =================
+
+  if(
+    t.includes("recuerda que") ||
+    t.includes("remember that")
+  ){
+    const contenido = mensaje
+      .replace(/nico/ig,"")
+      .replace(/recuerda que/ig,"")
+      .replace(/remember that/ig,"")
+      .trim();
+
+    if(!contenido){
+      agregarMensaje(
+        "nico",
+        "Rodri, dime qué quieres que recuerde. Ejemplo: Nico, recuerda que los clientes solo hablan inglés."
+      );
+      return;
+    }
+
+    await guardarMemoriaNico({
+      tipo: "general",
+      titulo: "Memoria guardada por Rodrigo",
+      contenido,
+      prioridad: "normal"
+    });
+
     return;
   }
-
-  await guardarMemoriaNico({
-    tipo: "general",
-    titulo: "Memoria guardada por Rodrigo",
-    contenido,
-    prioridad: "normal"
-  });
-
-  return;
-}
 
   // ================= APROBAR MENSAJE =================
 
@@ -1667,31 +2342,38 @@ if(
     return;
   }
 
-    // ================= MENSAJE DE VENTA =================
+  // ================= MENSAJE DE VENTA =================
 
   if(
-  t.includes("mensaje de venta") ||
-  t.includes("vender") ||
-  t.includes("venta") ||
-  t.includes("deep clean")
-){
-  let nombreCliente = mensaje
-    .replace(/nico/ig,"")
-    .replace(/crea/ig,"")
-    .replace(/crear/ig,"")
-    .replace(/un mensaje/ig,"")
-    .replace(/mensaje de venta/ig,"")
-    .replace(/mensaje para vender/ig,"")
-    .replace(/vender/ig,"")
-    .replace(/deep clean/ig,"")
-    .replace(/clientes recurrentes/ig,"")
-    .replace(/\ba\b/ig,"")
-    .trim();
+    t.includes("mensaje de venta") ||
+    t.includes("vender") ||
+    t.includes("venta") ||
+    t.includes("deep clean")
+  ){
+    let nombreCliente = mensaje
+      .replace(/nico/ig,"")
+      .replace(/crea/ig,"")
+      .replace(/crear/ig,"")
+      .replace(/un mensaje/ig,"")
+      .replace(/mensaje de venta/ig,"")
+      .replace(/mensaje para vender/ig,"")
+      .replace(/vender/ig,"")
+      .replace(/deep clean/ig,"")
+      .replace(/clientes recurrentes/ig,"")
+      .replace(/\ba\b/ig,"")
+      .trim();
 
-  prepararMensajeVenta(nombreCliente);
-  return;
-}
-  
+    prepararMensajeVenta(nombreCliente);
+    return;
+  }
+
+  // ================= COMPLETAR TRABAJO PENDIENTE =================
+
+  if(nicoTrabajoPendiente){
+    await completarTrabajoPendienteConFechaHora(mensaje);
+    return;
+  }
+
   // ================= CONVERTIR ESTIMATE A TRABAJO =================
 
   if(
@@ -1708,22 +2390,18 @@ if(
       t.includes("job")
     )
   ){
-
     const numeroEstimate =
       extraerNumeroDocumento(mensaje);
 
     if(!numeroEstimate){
-
       agregarMensaje(
         "nico",
         "Rodri, dime cuál estimate quieres convertir."
       );
-
       return;
     }
 
     await convertirEstimateATrabajo(numeroEstimate);
-
     return;
   }
 
@@ -1739,22 +2417,18 @@ if(
     t.includes("estimate") &&
     t.includes("invoice")
   ){
-
     const numeroEstimate =
       extraerNumeroDocumento(mensaje);
 
     if(!numeroEstimate){
-
       agregarMensaje(
         "nico",
         "Rodri, dime cuál estimate quieres convertir."
       );
-
       return;
     }
 
     await convertirEstimateAInvoice(numeroEstimate);
-
     return;
   }
 
@@ -1766,31 +2440,25 @@ if(
     t.includes("muestrame invoices") ||
     t.includes("muéstrame invoices")
   ){
-
     await mostrarInvoices();
-
     return;
   }
 
   // ================= VER INVOICE PDF =================
 
   if(t.includes("ver invoice")){
-
     const numero =
       extraerNumeroDocumento(mensaje);
 
     if(!numero){
-
       agregarMensaje(
         "nico",
         "Rodri, dime cuál invoice quieres ver."
       );
-
       return;
     }
 
     await abrirInvoicePDF(numero);
-
     return;
   }
 
@@ -1802,31 +2470,25 @@ if(
     t.includes("muestrame estimates") ||
     t.includes("muéstrame estimates")
   ){
-
     await mostrarEstimates();
-
     return;
   }
 
   // ================= VER ESTIMATE PDF =================
 
   if(t.includes("ver estimate")){
-
     const numero =
       extraerNumeroDocumento(mensaje);
 
     if(!numero){
-
       agregarMensaje(
         "nico",
         "Rodri, dime cuál estimate quieres ver."
       );
-
       return;
     }
 
     await abrirEstimatePDF(numero);
-
     return;
   }
 
@@ -1854,23 +2516,16 @@ if(
       datosFormulario.cliente_nombre &&
       datosFormulario.total > 0
     ){
-
-      await crearEstimateConDatos(
-        datosFormulario
-      );
-
+      await crearEstimateConDatos(datosFormulario);
       return;
     }
 
     if(nombreExtraido){
 
-      const {
-        cliente,
-        servicio
-      } = buscarDatosCliente(nombreExtraido);
+      const { cliente, servicio } =
+        buscarDatosCliente(nombreExtraido);
 
       const datosEncontrados = {
-
         cliente_nombre:
           servicio?.cliente ||
           cliente?.nombre ||
@@ -1911,10 +2566,7 @@ if(
           )
       };
 
-      await crearEstimateConDatos(
-        datosEncontrados
-      );
-
+      await crearEstimateConDatos(datosEncontrados);
       return;
     }
 
@@ -1976,9 +2628,7 @@ nicoChatInput.addEventListener(
       e.key === "Enter" &&
       !e.shiftKey
     ){
-
       e.preventDefault();
-
       enviarTextoANico();
     }
   }
