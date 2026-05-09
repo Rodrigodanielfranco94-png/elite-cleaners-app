@@ -1537,6 +1537,7 @@ async function obtenerMemoriasNico(){
 // ================= THINK =================
 
 async function pensarConNico(mensaje){
+
   try{
     imagenNico("piensa");
 
@@ -1582,21 +1583,7 @@ ${mensaje}`;
   }
 }
 
-// ================= SEND =================
-
-async function enviarTextoANico(){
-
-  const mensaje = nicoChatInput.value.trim();
-
-  if(!mensaje || nicoPensando) return;
-
-  nicoChatInput.value = "";
-
-  agregarMensaje("user", mensaje);
-
-  const t = normalizarTexto(mensaje);
-  
-  // ================= GUARDAR MEMORIA =================
+// ================= GUARDAR MEMORIA =================
 
 if(
   t.includes("recuerda que") ||
