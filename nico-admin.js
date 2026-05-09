@@ -764,6 +764,47 @@ Please let us know if you have any questions.`;
   });
 }
 
+// ================= SALES MESSAGE =================
+
+function prepararMensajeVenta(){
+
+  const datos = obtenerDatosFormularioActual();
+
+  if(!datos.cliente_nombre){
+    agregarMensaje(
+      "nico",
+      "Rodri, selecciona o escribe primero el nombre del cliente."
+    );
+    return;
+  }
+
+  if(!datos.cliente_telefono){
+    agregarMensaje(
+      "nico",
+      "Rodri, falta el teléfono del cliente."
+    );
+    return;
+  }
+
+  const mensaje =
+`Hello ${datos.cliente_nombre}! 🌟
+
+This is Elite Cleaners Company.
+
+We wanted to let you know that we are currently offering Deep Cleaning services for our recurring clients.
+
+A Deep Clean is a great option to refresh your home and take care of areas that are not always covered during regular maintenance cleanings.
+
+If you would like, we can send you an estimate or help you schedule a Deep Cleaning service.
+
+Thank you for trusting Elite Cleaners Company!`;
+
+  prepararMensajeCliente({
+    telefono: datos.cliente_telefono,
+    mensaje,
+    cliente: datos.cliente_nombre
+  });
+}
 // ================= PAYLOADS =================
 
 function construirPayloadEstimateDesdeDatos(datos){
@@ -1516,6 +1557,17 @@ async function enviarTextoANico(){
     return;
   }
 
+    // ================= MENSAJE DE VENTA =================
+
+  if(
+    t.includes("mensaje de venta") ||
+    t.includes("vender") ||
+    t.includes("venta") ||
+    t.includes("deep clean")
+  ){
+    prepararMensajeVenta();
+    return;
+  }
   // ================= COMPLETAR TRABAJO PENDIENTE =================
 
   if(nicoTrabajoPendiente){
