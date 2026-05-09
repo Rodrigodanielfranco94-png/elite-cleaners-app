@@ -363,7 +363,7 @@ function abrirNico(){
 
     agregarMensaje(
       "nico",
-      "Hola chicos 👋 Estoy listo para ayudarle con estimates, invoices, trabajos y mensajes para clientes."
+      "Hola chicos 👋 Estoy listo para ayudarles con estimates, invoices, trabajos y mensajes para clientes."
     );
 
     nicoChatMessages.dataset.saludo = "true";
