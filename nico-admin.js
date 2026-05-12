@@ -1,6 +1,7 @@
 // ================= NICO ADMIN FINAL LEFT PANEL + ESTIMATES + INVOICES + JOBS + PDF BUTTON + CLIENT APPROVAL + SALES MESSAGES + MEMORY =================
 
-const PENSAR_NICO_URL = "http://localhost:3000/chat";
+const PENSAR_NICO_URL =
+"https://us-central1-elite-cleaners-app.cloudfunctions.net/pensarNico";
 
 const CREAR_ESTIMATE_URL =
 "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearEstimateNico";
