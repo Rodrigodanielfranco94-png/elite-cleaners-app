@@ -38,6 +38,7 @@ let nicoActivo = false;
 let nicoPensando = false;
 let nicoTrabajoPendiente = null;
 let nicoMensajeClientePendiente = null;
+let nicoUltimoEstimadoRapido = null;
 
 // ================= UI =================
 
