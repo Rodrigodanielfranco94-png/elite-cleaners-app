@@ -2247,36 +2247,41 @@ ${mensaje}`;
 
 const NICO_PRICING = {
   "ESTÁNDAR": {
-    base: 160,
+    base: 120,
+    habitacion: 20,
+    bano: 30
+  },
+
+  "PROFUNDA": {
+    base: 180,
     habitacion: 25,
+    bano: 40
+  },
+
+  "MOVE-IN": {
+    base: 220,
+    habitacion: 30,
     bano: 45
   },
-  "PROFUNDA": {
-    base: 250,
-    habitacion: 35,
-    bano: 60
-  },
-  "MOVE-IN": {
-    base: 280,
-    habitacion: 40,
-    bano: 65
-  },
+
   "MOVE-OUT": {
-    base: 280,
-    habitacion: 40,
-    bano: 65
+    base: 220,
+    habitacion: 30,
+    bano: 45
   },
+
   "POST-CONSTRUCCIÓN": {
-    base: 380,
-    habitacion: 55,
-    bano: 80
+    base: 260,
+    habitacion: 35,
+    bano: 50
   },
+
   extras: {
-    nevera: 45,
-    horno: 45,
-    gabinetes: 80,
-    ventanas: 75,
-    baseboards: 65
+    nevera: 25,
+    horno: 25,
+    gabinetes: 40,
+    ventanas: 45,
+    baseboards: 35
   }
 };
 
