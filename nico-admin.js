@@ -2466,7 +2466,12 @@ async function enviarTextoANico(){
   agregarMensaje("user", mensaje);
 
   const t = normalizarTexto(mensaje);
+// ================= ESTIMADO RÁPIDO DESDE TEXTO =================
 
+if(esSolicitudDeEstimadoRapido(mensaje)){
+  responderEstimadoRapido(mensaje);
+  return;
+}
   // ================= GUARDAR MEMORIA =================
 
   if(
