@@ -2700,7 +2700,12 @@ async function enviarTextoANico(){
     await abrirEstimatePDF(numero);
     return;
   }
+// ================= ESTIMADO RÁPIDO DESDE TEXTO =================
 
+if(esSolicitudDeEstimadoRapido(mensaje)){
+  responderEstimadoRapido(mensaje);
+  return;
+}
   // ================= CREAR ESTIMATE =================
 
   if(
