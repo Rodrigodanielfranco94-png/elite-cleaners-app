@@ -2771,7 +2771,65 @@ async function enviarTextoANico(){
     await convertirEstimateAInvoice(numeroEstimate);
     return;
   }
+// ================= CREAR INVOICE DESDE CLIENTE =================
 
+if(
+  (
+    t.includes("crear invoice") ||
+    t.includes("crea invoice") ||
+    t.includes("create invoice")
+  )
+){
+
+  let nombreCliente = mensaje
+    .replace(/nico/ig,"")
+    .replace(/crear/ig,"")
+    .replace(/crea/ig,"")
+    .replace(/invoice/ig,"")
+    .replace(/de/ig,"")
+    .trim();
+
+  if(!nombreCliente){
+
+    agregarMensaje(
+      "nico",
+      "Rodri, dime el nombre del cliente."
+    );
+
+    return;
+  }
+
+  const estimates =
+    await obtenerEstimates();
+
+  const estimate =
+    [...estimates]
+    .reverse()
+    .find(e =>
+
+      normalizarTexto(
+        e.cliente_nombre || ""
+      ).includes(
+        normalizarTexto(nombreCliente)
+      )
+    );
+
+  if(!estimate){
+
+    agregarMensaje(
+      "nico",
+      `Rodri, no encontré estimates de ${nombreCliente}.`
+    );
+
+    return;
+  }
+
+  await convertirEstimateAInvoice(
+    estimate.numero
+  );
+
+  return;
+}
   // ================= MOSTRAR INVOICES =================
 
   if(
