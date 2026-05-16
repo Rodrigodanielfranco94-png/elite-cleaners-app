@@ -2774,19 +2774,19 @@ async function enviarTextoANico(){
 // ================= CREAR INVOICE DESDE CLIENTE =================
 
 if(
-  (
-    t.includes("crear invoice") ||
-    t.includes("crea invoice") ||
-    t.includes("create invoice")
-  )
+  t.includes("crear invoice") ||
+  t.includes("crea invoice") ||
+  t.includes("create invoice")
 ){
 
   let nombreCliente = mensaje
     .replace(/nico/ig,"")
     .replace(/crear/ig,"")
     .replace(/crea/ig,"")
+    .replace(/create/ig,"")
     .replace(/invoice/ig,"")
-    .replace(/de/ig,"")
+    .replace(/\bde\b/ig,"")
+    .replace(/[,.]/g,"")
     .trim();
 
   if(!nombreCliente){
@@ -2802,17 +2802,22 @@ if(
   const estimates =
     await obtenerEstimates();
 
+  const nombreBuscado =
+    normalizarTexto(nombreCliente);
+
   const estimate =
     [...estimates]
     .reverse()
-    .find(e =>
+    .find(e => {
 
-      normalizarTexto(
-        e.cliente_nombre || ""
-      ).includes(
-        normalizarTexto(nombreCliente)
-      )
-    );
+      const nombreEstimate =
+        normalizarTexto(e.cliente_nombre || "");
+
+      return (
+        nombreEstimate.includes(nombreBuscado) ||
+        nombreBuscado.includes(nombreEstimate)
+      );
+    });
 
   if(!estimate){
 
