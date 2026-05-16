@@ -2499,6 +2499,20 @@ ${
 
   return calculo;
 }
+// ================= SEND =================
+
+async function enviarTextoANico(){
+
+  const mensaje =
+    nicoChatInput.value.trim();
+
+  if(!mensaje || nicoPensando) return;
+
+  nicoChatInput.value = "";
+
+  agregarMensaje("user", mensaje);
+
+  const t = normalizarTexto(mensaje);
   // ================= GUARDAR MEMORIA =================
 
   if(
@@ -2732,12 +2746,6 @@ ${
     await abrirEstimatePDF(numero);
     return;
   }
-// ================= ESTIMADO RÁPIDO DESDE TEXTO =================
-
-if(esSolicitudDeEstimadoRapido(mensaje)){
-  responderEstimadoRapido(mensaje);
-  return;
-}
   // ================= CREAR ESTIMATE =================
 
   if(
