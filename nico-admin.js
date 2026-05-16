@@ -2458,21 +2458,10 @@ function responderEstimadoRapido(mensaje){
 
   let faltantes = [];
 
-  if(!cliente){
-    faltantes.push("nombre");
-  }
-
-  if(!direccion){
-    faltantes.push("dirección");
-  }
-
-  if(!telefono){
-    faltantes.push("teléfono");
-  }
-
-  if(!email){
-    faltantes.push("email");
-  }
+  if(!cliente) faltantes.push("nombre");
+  if(!direccion) faltantes.push("dirección");
+  if(!telefono) faltantes.push("teléfono");
+  if(!email) faltantes.push("email");
 
   agregarMensaje(
     "nico",
@@ -2489,9 +2478,7 @@ ${calculo.habitaciones || 0}
 ${calculo.banos || 0}
 
 ➕ Extras:
-${calculo.extras.length
-? calculo.extras.join(", ")
-: "Sin extras"}
+${calculo.extras.length ? calculo.extras.join(", ") : "Sin extras"}
 
 💵 Total estimado:
 $${dinero(calculo.total)}
@@ -2504,33 +2491,13 @@ Ya coloqué el precio y las notas automáticamente en el formulario.
 ${
   faltantes.length
   ? `Para crear el PDF todavía faltan:\n\n• ${faltantes.join("\n• ")}`
-  : `🔥 Todo está listo para crear el estimate PDF.`
+  : `🔥 Todo está listo para crear el Estimate PDF.\n\nSi quieres crearlo ahora, escribe:\n\nCREAR PDF`
 }`
   );
 
   imagenNico("bien");
 
   return calculo;
-}
-// ================= SEND =================
-
-async function enviarTextoANico(){
-
-  const mensaje =
-    nicoChatInput.value.trim();
-
-  if(!mensaje || nicoPensando) return;
-
-  nicoChatInput.value = "";
-
-  agregarMensaje("user", mensaje);
-
-  const t = normalizarTexto(mensaje);
-// ================= ESTIMADO RÁPIDO DESDE TEXTO =================
-
-if(esSolicitudDeEstimadoRapido(mensaje)){
-  responderEstimadoRapido(mensaje);
-  return;
 }
   // ================= GUARDAR MEMORIA =================
 
