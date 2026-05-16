@@ -2513,6 +2513,91 @@ async function enviarTextoANico(){
   agregarMensaje("user", mensaje);
 
   const t = normalizarTexto(mensaje);
+    // ================= ESTIMADO RÁPIDO DESDE TEXTO =================
+
+  if(esSolicitudDeEstimadoRapido(mensaje)){
+
+    const calculo =
+      responderEstimadoRapido(mensaje);
+
+    const quiereCrear =
+      t.includes("crear") ||
+      t.includes("crea") ||
+      t.includes("haz") ||
+      t.includes("hacer") ||
+      t.includes("create");
+
+    if(quiereCrear){
+
+      const datosFormulario =
+        obtenerDatosFormularioActual();
+
+      const datosEstimate = {
+        ...datosFormulario,
+        tipo_limpieza: calculo.tipo_limpieza,
+        notes: calculo.notes,
+        total: calculo.total
+      };
+
+      if(
+        !datosEstimate.cliente_nombre ||
+        !datosEstimate.cliente_direccion
+      ){
+        agregarMensaje(
+          "nico",
+          "Rodri, ya calculé el precio y lo puse en el formulario, pero falta el nombre del cliente o la dirección para crear el PDF."
+        );
+        return;
+      }
+
+      await crearEstimateConDatos(datosEstimate);
+      return;
+    }
+
+    return;
+  }
+
+  // ================= CREAR PDF DESDE ÚLTIMO ESTIMADO =================
+
+  if(
+    t === "crear pdf" ||
+    t === "create pdf" ||
+    t === "crear estimate pdf" ||
+    t === "create estimate"
+  ){
+
+    if(!nicoUltimoEstimadoRapido){
+      agregarMensaje(
+        "nico",
+        "Rodri, todavía no tengo ningún estimado calculado. Primero dime los detalles de la limpieza."
+      );
+      return;
+    }
+
+    const datosFormulario =
+      obtenerDatosFormularioActual();
+
+    const datosFinales = {
+      ...datosFormulario,
+      tipo_limpieza: nicoUltimoEstimadoRapido.tipo_limpieza,
+      notes: nicoUltimoEstimadoRapido.notes,
+      total: nicoUltimoEstimadoRapido.total
+    };
+
+    if(
+      !datosFinales.cliente_nombre ||
+      !datosFinales.cliente_direccion
+    ){
+      agregarMensaje(
+        "nico",
+        "Rodri, para crear el PDF necesito al menos el nombre del cliente y la dirección en el formulario."
+      );
+      return;
+    }
+
+    await crearEstimateConDatos(datosFinales);
+    return;
+  }
   // ================= GUARDAR MEMORIA =================
 
   if(
