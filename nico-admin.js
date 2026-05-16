@@ -2427,11 +2427,57 @@ function esSolicitudDeEstimadoRapido(texto){
 }
 
 function responderEstimadoRapido(mensaje){
-  const calculo = calcularEstimateDesdeTexto(mensaje);
+
+  const calculo =
+    calcularEstimateDesdeTexto(mensaje);
+
+  nicoUltimoEstimadoRapido =
+    calculo;
+
+  if(document.getElementById("precio_total")){
+    document.getElementById("precio_total").value =
+      calculo.total;
+  }
+
+  if(document.getElementById("notas")){
+    document.getElementById("notas").value =
+      calculo.notes;
+  }
+
+  const cliente =
+    obtenerValor("cliente");
+
+  const direccion =
+    obtenerValor("direccion");
+
+  const telefono =
+    obtenerValor("whatsapp");
+
+  const email =
+    obtenerValor("email_cliente");
+
+  let faltantes = [];
+
+  if(!cliente){
+    faltantes.push("nombre");
+  }
+
+  if(!direccion){
+    faltantes.push("dirección");
+  }
+
+  if(!telefono){
+    faltantes.push("teléfono");
+  }
+
+  if(!email){
+    faltantes.push("email");
+  }
 
   agregarMensaje(
     "nico",
-`✅ Rodri, ya calculé el estimado aproximado:
+
+`✅ Perfecto Rodri, ya calculé el estimado aproximado.
 
 🧼 Tipo:
 ${calculo.tipo_limpieza}
@@ -2443,7 +2489,9 @@ ${calculo.habitaciones || 0}
 ${calculo.banos || 0}
 
 ➕ Extras:
-${calculo.extras.length ? calculo.extras.join(", ") : "Sin extras detectados"}
+${calculo.extras.length
+? calculo.extras.join(", ")
+: "Sin extras"}
 
 💵 Total estimado:
 $${dinero(calculo.total)}
@@ -2451,7 +2499,13 @@ $${dinero(calculo.total)}
 📝 Notas:
 ${calculo.notes}
 
-Para convertirlo en PDF necesito el nombre del cliente, teléfono, dirección y email en el formulario.`
+Ya coloqué el precio y las notas automáticamente en el formulario.
+
+${
+  faltantes.length
+  ? `Para crear el PDF todavía faltan:\n\n• ${faltantes.join("\n• ")}`
+  : `🔥 Todo está listo para crear el estimate PDF.`
+}`
   );
 
   imagenNico("bien");
