@@ -677,7 +677,7 @@ function obtenerMillasServicio(s) {
             document.getElementById('admin-correction').style.display = "block";
             document.getElementById('hora_inicio_real').value = s.hora_inicio;
             document.getElementById('hora_fin_real').value = s.hora_fin;
-            document.getElementById('millas_reales').value = Number(s.millas_reales) > 0 ? s.millas_reales : "";
+            document.getElementById('millas_servicio').value = s.millas_servicio || obtenerMillasServicio(s) || "";
             selectType(s.tipo);
             document.getElementById('main-button').innerText = "GUARDAR CAMBIOS";
             document.getElementById('cancel-edit').style.display = "block";
