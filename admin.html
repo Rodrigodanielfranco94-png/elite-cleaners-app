@@ -356,7 +356,21 @@ Thank you for choosing Elite Cleaners Company.`;
             todosLosClientes = [];
             snap.forEach(doc => todosLosClientes.push({ id: doc.id, ...doc.data() }));
         });
+function obtenerMillasServicio(s) {
+    const real = parseFloat(s.millas_reales);
+    const servicio = parseFloat(s.millas_servicio);
+    const estimadas = parseFloat(s.millas_estimadas);
 
+    const cliente = todosLosClientes.find(c => c.nombre === s.cliente || c.id === s.cliente);
+    const clienteMillas = parseFloat(cliente?.millas_servicio);
+
+    if (real > 0) return real;
+    if (servicio > 0) return servicio;
+    if (estimadas > 0) return estimadas;
+    if (clienteMillas > 0) return clienteMillas;
+
+    return 0;
+}
         function filtrarClientes() {
             const q = document.getElementById('cliente').value.toLowerCase();
             const l = document.getElementById('suggestions-clientes');
@@ -456,9 +470,9 @@ Thank you for choosing Elite Cleaners Company.`;
                 email_cliente: document.getElementById('email_cliente').value || "",
                 precio_total: document.getElementById('precio_total').value || 0,
                 millas_servicio: document.getElementById('millas_servicio').value || 0,
-                millas_reales: document.getElementById('millas_reales')
-                    ? document.getElementById('millas_reales').value || 0
-                    : document.getElementById('millas_servicio').value || 0,
+                millas_reales: id && document.getElementById('millas_reales')
+    ? document.getElementById('millas_reales').value || ""
+    : "",
                 empleado_nombre: document.getElementById('search-empleado').value,
                 empleado_email: document.getElementById('email-empleado').value,
                 empleado_nombre_2: document.getElementById('search-empleado-2').value || "",
@@ -528,20 +542,14 @@ Thank you for choosing Elite Cleaners Company.`;
                         <h3>${s.cliente}</h3>
                         <span class="price-tag">$${s.precio_total || 0}</span>
                         <p>📅 ${s.fecha} | ⏰ ${horaFormateada}</p>
-                        <p>🚗 ${
-    s.millas_reales || 
-    s.millas_servicio || 
-    s.millas_estimadas || 
-    (todosLosClientes.find(c => c.nombre === s.cliente)?.millas_servicio) || 
-    0
-} millas ida/vuelta</p>
-                        } millas ida/vuelta</p>
+<p>📍 ${s.direccion}</p>
+<p>🚗 ${obtenerMillasServicio(s)} millas ida/vuelta</p>
                         <p>👤 ${s.empleado_nombre_2 ? s.empleado_nombre+' & '+s.empleado_nombre_2 : s.empleado_nombre}</p>
                         <div class="time-box">
                             <div class="time-row"><b>Inicio:</b> ${s.hora_inicio}</div>
                             <div class="time-row"><b>Fin:</b> ${s.hora_fin}</div>
                             <div class="time-row total-time-row"><b>Tiempo:</b> ${infoTiempo.texto}</div>
-                            <div class="time-row"><b>Millas:</b> ${
+                            <div class="time-row"><b>Millas:</b> ${obtenerMillasServicio(s)} mi</div>
     s.millas_reales || 
     s.millas_servicio || 
     s.millas_estimadas || 
