@@ -530,6 +530,7 @@ Thank you for choosing Elite Cleaners Company.`;
                         <span class="price-tag">$${s.precio_total || 0}</span>
                         <p>📅 ${s.fecha} | ⏰ ${horaFormateada}</p>
                         <p>📍 ${s.direccion}</p>
+                        <p>🚗 ${s.millas_total || s.millas_reales || s.millas_estimadas || 0} millas ida/vuelta</p>
                         <p>👤 ${s.empleado_nombre_2 ? s.empleado_nombre+' & '+s.empleado_nombre_2 : s.empleado_nombre}</p>
                         <div class="time-box">
                             <div class="time-row"><b>Inicio:</b> ${s.hora_inicio}</div>
