@@ -528,12 +528,13 @@ Thank you for choosing Elite Cleaners Company.`;
                         <h3>${s.cliente}</h3>
                         <span class="price-tag">$${s.precio_total || 0}</span>
                         <p>📅 ${s.fecha} | ⏰ ${horaFormateada}</p>
-                        <p>📍 ${s.direccion}</p>
                         <p>🚗 ${
-                           s.millas_reales || 
-                            s.millas_estimadas || 
-                            (todosLosClientes.find(c => c.nombre === s.cliente)?.millas_servicio) || 
-                            0
+    s.millas_reales || 
+    s.millas_servicio || 
+    s.millas_estimadas || 
+    (todosLosClientes.find(c => c.nombre === s.cliente)?.millas_servicio) || 
+    0
+} millas ida/vuelta</p>
                         } millas ida/vuelta</p>
                         <p>👤 ${s.empleado_nombre_2 ? s.empleado_nombre+' & '+s.empleado_nombre_2 : s.empleado_nombre}</p>
                         <div class="time-box">
@@ -541,11 +542,12 @@ Thank you for choosing Elite Cleaners Company.`;
                             <div class="time-row"><b>Fin:</b> ${s.hora_fin}</div>
                             <div class="time-row total-time-row"><b>Tiempo:</b> ${infoTiempo.texto}</div>
                             <div class="time-row"><b>Millas:</b> ${
-                                s.millas_reales ||
-                                s.millas_estimadas ||
-                                (todosLosClientes.find(c => c.nombre === s.cliente)?.millas_servicio) ||
-                                0
-                            } mi</div>
+    s.millas_reales || 
+    s.millas_servicio || 
+    s.millas_estimadas || 
+    (todosLosClientes.find(c => c.nombre === s.cliente)?.millas_servicio) || 
+    0
+} mi</div>
                         </div>
                         <div class="action-buttons">
                             <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">${s.estado === 'completado' ? 'Reabrir' : 'Terminar'}</button>
