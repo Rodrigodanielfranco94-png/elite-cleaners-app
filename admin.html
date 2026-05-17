@@ -577,7 +577,7 @@ function obtenerMillasServicio(s) {
             .filter(s => s.estado === "completado" && (s.empleado_email === emp.email || s.empleado_email_2 === emp.email))
             .forEach(s => {
                 min += calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).minutos;
-                millas += Number(s.millas_reales || s.millas_servicio || 0);
+                millas += Number(obtenerMillasServicio(s));
             });
 
         if(min > 0 || millas > 0) {
@@ -605,7 +605,7 @@ function obtenerMillasServicio(s) {
         Time: calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).texto,
         Service_Miles: s.millas_servicio || 0,
         Real_Miles: s.millas_reales || 0,
-        Total_Miles: s.millas_reales || s.millas_servicio || 0
+        Total_Miles: obtenerMillasServicio(s)
     }));
 
     const payrollData = todosLosEmpleados.map(emp => {
@@ -616,7 +616,7 @@ function obtenerMillasServicio(s) {
             .filter(s => s.empleado_email === emp.email || s.empleado_email_2 === emp.email)
             .forEach(s => {
                 min += calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).minutos;
-                millas += Number(s.millas_reales || s.millas_servicio || 0);
+                millas += Number(obtenerMillasServicio(s));
             });
 
         return {
@@ -677,7 +677,7 @@ function obtenerMillasServicio(s) {
             document.getElementById('admin-correction').style.display = "block";
             document.getElementById('hora_inicio_real').value = s.hora_inicio;
             document.getElementById('hora_fin_real').value = s.hora_fin;
-            document.getElementById('millas_reales').value = s.millas_reales || s.millas_servicio || 0;
+            document.getElementById('millas_reales').value = Number(s.millas_reales) > 0 ? s.millas_reales : "";
             selectType(s.tipo);
             document.getElementById('main-button').innerText = "GUARDAR CAMBIOS";
             document.getElementById('cancel-edit').style.display = "block";
