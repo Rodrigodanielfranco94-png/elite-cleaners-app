@@ -455,11 +455,10 @@ Thank you for choosing Elite Cleaners Company.`;
                 whatsapp: document.getElementById('whatsapp').value.replace(/\D/g,''),
                 email_cliente: document.getElementById('email_cliente').value || "",
                 precio_total: document.getElementById('precio_total').value || 0,
-                millas_estimadas: document.getElementById('millas_servicio').value || 0,
-                millas_reales: document.getElementById('millas_reales') ? document.getElementById('millas_reales').value || 0 : 0,
-                millas_total: document.getElementById('millas_reales') && document.getElementById('millas_reales').value 
-                 ? document.getElementById('millas_reales').value 
-                 : document.getElementById('millas_servicio').value || 0,
+                millas_servicio: document.getElementById('millas_servicio').value || 0,
+                millas_reales: document.getElementById('millas_reales')
+                    ? document.getElementById('millas_reales').value || 0
+                    : document.getElementById('millas_servicio').value || 0,
                 empleado_nombre: document.getElementById('search-empleado').value,
                 empleado_email: document.getElementById('email-empleado').value,
                 empleado_nombre_2: document.getElementById('search-empleado-2').value || "",
