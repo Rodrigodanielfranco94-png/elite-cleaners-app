@@ -103,6 +103,7 @@
             <div id="suggestions-clientes" class="suggestions-list"></div>
         </div>
         <input type="text" id="direccion" placeholder="Dirección del Servicio">
+        <input type="number" id="millas_servicio" placeholder="Millas ida y vuelta del servicio">
         <input type="tel" id="whatsapp" placeholder="Teléfono del Cliente">
         <input type="email" id="email_cliente" placeholder="Correo del Cliente">
         
@@ -134,8 +135,9 @@
         <div id="admin-correction" style="display: none;">
             <span class="label-text" style="color: #f59e0b;">Corrección de Horas Reales</span>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <input type="text" id="hora_inicio_real" placeholder="Inicio (Ej: 10:30 am)">
+               <input type="text" id="hora_inicio_real" placeholder="Inicio (Ej: 10:30 am)">
                 <input type="text" id="hora_fin_real" placeholder="Fin (Ej: 2:45 pm)">
+                <input type="number" id="millas_reales" placeholder="Millas reales ida/vuelta">
             </div>
         </div>
 
@@ -159,7 +161,7 @@
         <span class="label-text" style="color: #22c55e;">Resumen de Nómina (Payroll)</span>
         <table class="payroll-table">
             <thead>
-                <tr><th>Staff</th><th>Horas</th><th>Total</th></tr>
+               <tr><th>Staff</th><th>Horas</th><th>Millas</th><th>Total</th></tr>
             </thead>
             <tbody id="lista-nomina"></tbody>
         </table>
@@ -371,6 +373,7 @@ Thank you for choosing Elite Cleaners Company.`;
                     document.getElementById('direccion').value = c.direccion || '';
                     document.getElementById('whatsapp').value = c.whatsapp || c.telefono || '';
                     document.getElementById('email_cliente').value = c.email || '';
+                    document.getElementById('millas_servicio').value = c.millas_servicio || c.millas_total || '';
                     l.style.display = "none";
                 };
                 l.appendChild(d);
@@ -452,6 +455,11 @@ Thank you for choosing Elite Cleaners Company.`;
                 whatsapp: document.getElementById('whatsapp').value.replace(/\D/g,''),
                 email_cliente: document.getElementById('email_cliente').value || "",
                 precio_total: document.getElementById('precio_total').value || 0,
+                millas_estimadas: document.getElementById('millas_servicio').value || 0,
+                millas_reales: document.getElementById('millas_reales') ? document.getElementById('millas_reales').value || 0 : 0,
+                millas_total: document.getElementById('millas_reales') && document.getElementById('millas_reales').value 
+                 ? document.getElementById('millas_reales').value 
+                 : document.getElementById('millas_servicio').value || 0,
                 empleado_nombre: document.getElementById('search-empleado').value,
                 empleado_email: document.getElementById('email-empleado').value,
                 empleado_nombre_2: document.getElementById('search-empleado-2').value || "",
@@ -477,7 +485,8 @@ Thank you for choosing Elite Cleaners Company.`;
                 direccion: data.direccion,
                 whatsapp: data.whatsapp,
                 telefono: data.whatsapp,
-                email: data.email_cliente
+                email: data.email_cliente,
+                millas_servicio: data.millas_total || data.millas_estimadas || 0
             }, { merge: true });
 
             if (id) db.collection("servicios").doc(id).update(data).then(() => location.reload());
@@ -526,6 +535,7 @@ Thank you for choosing Elite Cleaners Company.`;
                             <div class="time-row"><b>Inicio:</b> ${s.hora_inicio}</div>
                             <div class="time-row"><b>Fin:</b> ${s.hora_fin}</div>
                             <div class="time-row total-time-row"><b>Tiempo:</b> ${infoTiempo.texto}</div>
+                            <div class="time-row"><b>Millas:</b> ${s.millas_total || s.millas_reales || s.millas_estimadas || 0} mi</div>
                         </div>
                         <div class="action-buttons">
                             <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">${s.estado === 'completado' ? 'Reabrir' : 'Terminar'}</button>
@@ -542,29 +552,81 @@ Thank you for choosing Elite Cleaners Company.`;
         }
 
         function generarNomina() {
-            const tabla = document.getElementById('lista-nomina');
-            tabla.innerHTML = "";
-            todosLosEmpleados.forEach(emp => {
-                let min = 0;
-                todosLosServicios.filter(s => s.estado === "completado" && (s.empleado_email === emp.email || s.empleado_email_2 === emp.email)).forEach(s => {
-                    min += calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).minutos;
-                });
-                if(min > 0) tabla.innerHTML += `<tr><td><b>${emp.nombre}</b></td><td>${Math.floor(min/60)}h ${min%60}m</td><td class="pay-amount">$${((min/60)*emp.pago_hora).toFixed(2)}</td></tr>`;
-            });
-        }
+    const tabla = document.getElementById('lista-nomina');
+    tabla.innerHTML = "";
 
-        async function reiniciarHorasMes() {
-            const completados = todosLosServicios.filter(s => s.estado === "completado");
-            if (completados.length === 0 || !confirm("¿Deseas cerrar el mes actual?")) return;
-            const data = completados.map(s => ({ Customer: s.cliente, Date: s.fecha, Price: s.precio_total || 0, Time: calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).texto }));
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Closing");
-            XLSX.writeFile(wb, "Elite_Report.xlsx");
-            const batch = db.batch();
-            completados.forEach(s => batch.delete(db.collection("servicios").doc(s.id)));
-            await batch.commit();
+    todosLosEmpleados.forEach(emp => {
+        let min = 0;
+        let millas = 0;
+
+        todosLosServicios
+            .filter(s => s.estado === "completado" && (s.empleado_email === emp.email || s.empleado_email_2 === emp.email))
+            .forEach(s => {
+                min += calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).minutos;
+                millas += Number(s.millas_total || s.millas_reales || s.millas_estimadas || 0);
+            });
+
+        if(min > 0 || millas > 0) {
+            tabla.innerHTML += `
+                <tr>
+                    <td><b>${emp.nombre}</b></td>
+                    <td>${Math.floor(min/60)}h ${min%60}m</td>
+                    <td>${millas.toFixed(1)} mi</td>
+                    <td class="pay-amount">$${((min/60)*emp.pago_hora).toFixed(2)}</td>
+                </tr>`;
         }
+    });
+}
+
+    async function reiniciarHorasMes() {
+    const completados = todosLosServicios.filter(s => s.estado === "completado");
+    if (completados.length === 0 || !confirm("¿Deseas cerrar el mes actual?")) return;
+
+    const data = completados.map(s => ({
+        Customer: s.cliente,
+        Date: s.fecha,
+        Price: s.precio_total || 0,
+        Staff_1: s.empleado_nombre || "",
+        Staff_2: s.empleado_nombre_2 || "",
+        Time: calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).texto,
+        Estimated_Miles: s.millas_estimadas || 0,
+        Real_Miles: s.millas_reales || 0,
+        Total_Miles: s.millas_total || s.millas_reales || s.millas_estimadas || 0
+    }));
+
+    const payrollData = todosLosEmpleados.map(emp => {
+        let min = 0;
+        let millas = 0;
+
+        completados
+            .filter(s => s.empleado_email === emp.email || s.empleado_email_2 === emp.email)
+            .forEach(s => {
+                min += calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).minutos;
+                millas += Number(s.millas_total || s.millas_reales || s.millas_estimadas || 0);
+            });
+
+        return {
+            Staff: emp.nombre,
+            Hours: `${Math.floor(min/60)}h ${min%60}m`,
+            Miles: millas.toFixed(1),
+            Pay: ((min/60) * emp.pago_hora).toFixed(2)
+        };
+    }).filter(r => r.Hours !== "0h 0m" || Number(r.Miles) > 0);
+
+    const wb = XLSX.utils.book_new();
+
+    const ws1 = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws1, "Jobs");
+
+    const ws2 = XLSX.utils.json_to_sheet(payrollData);
+    XLSX.utils.book_append_sheet(wb, ws2, "Payroll");
+
+    XLSX.writeFile(wb, "Elite_Report.xlsx");
+
+    const batch = db.batch();
+    completados.forEach(s => batch.delete(db.collection("servicios").doc(s.id)));
+    await batch.commit();
+}
 
         function abrirChat(num) {
             abrirSMS(num);
@@ -590,6 +652,7 @@ Thank you for choosing Elite Cleaners Company.`;
             document.getElementById('whatsapp').value = s.whatsapp || s.telefono || "";
             document.getElementById('email_cliente').value = s.email_cliente || "";
             document.getElementById('precio_total').value = s.precio_total || 0;
+            document.getElementById('millas_servicio').value = s.millas_estimadas || s.millas_total || 0;
             document.getElementById('search-empleado').value = s.empleado_nombre;
             document.getElementById('email-empleado').value = s.empleado_email || ""; 
             document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || "";
@@ -600,6 +663,7 @@ Thank you for choosing Elite Cleaners Company.`;
             document.getElementById('admin-correction').style.display = "block";
             document.getElementById('hora_inicio_real').value = s.hora_inicio;
             document.getElementById('hora_fin_real').value = s.hora_fin;
+            document.getElementById('millas_reales').value = s.millas_reales || s.millas_total || s.millas_estimadas || 0;
             selectType(s.tipo);
             document.getElementById('main-button').innerText = "GUARDAR CAMBIOS";
             document.getElementById('cancel-edit').style.display = "block";
