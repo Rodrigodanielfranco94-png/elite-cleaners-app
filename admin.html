@@ -485,7 +485,7 @@ Thank you for choosing Elite Cleaners Company.`;
                 whatsapp: data.whatsapp,
                 telefono: data.whatsapp,
                 email: data.email_cliente,
-                millas_servicio: data.millas_total || data.millas_estimadas || 0
+                millas_servicio: data.millas_servicio || 0
             }, { merge: true });
 
             if (id) db.collection("servicios").doc(id).update(data).then(() => location.reload());
@@ -573,7 +573,7 @@ Thank you for choosing Elite Cleaners Company.`;
             .filter(s => s.estado === "completado" && (s.empleado_email === emp.email || s.empleado_email_2 === emp.email))
             .forEach(s => {
                 min += calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).minutos;
-                millas += Number(s.millas_total || s.millas_reales || s.millas_estimadas || 0);
+                millas += Number(s.millas_reales || s.millas_servicio || 0);
             });
 
         if(min > 0 || millas > 0) {
