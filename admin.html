@@ -664,29 +664,41 @@ function obtenerMillasServicio(s) {
         function borrarStaff(id, n) { if(confirm("¿Borrar a este empleado?")) db.collection("usuarios").doc(id).delete(); }
         
         function editar(id, s) {
-            document.getElementById('edit-id').value = id;
-            document.getElementById('cliente').value = s.cliente;
-            document.getElementById('direccion').value = s.direccion;
-            document.getElementById('whatsapp').value = s.whatsapp || s.telefono || "";
-            document.getElementById('email_cliente').value = s.email_cliente || "";
-            document.getElementById('precio_total').value = s.precio_total || 0;
-            document.getElementById('millas_servicio').value = s.millas_servicio || 0;;
-            document.getElementById('search-empleado').value = s.empleado_nombre;
-            document.getElementById('email-empleado').value = s.empleado_email || ""; 
-            document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || "";
-            document.getElementById('email-empleado-2').value = s.empleado_email_2 || ""; 
-            document.getElementById('fecha').value = s.fecha;
-            document.getElementById('hora').value = s.hora;
-            document.getElementById('notas').value = s.notas;
-            document.getElementById('admin-correction').style.display = "block";
-            document.getElementById('hora_inicio_real').value = s.hora_inicio;
-            document.getElementById('hora_fin_real').value = s.hora_fin;
-            document.getElementById('millas_servicio').value = s.millas_servicio || obtenerMillasServicio(s) || "";
-            selectType(s.tipo);
-            document.getElementById('main-button').innerText = "GUARDAR CAMBIOS";
-            document.getElementById('cancel-edit').style.display = "block";
-            window.scrollTo({top: 0, behavior: 'smooth'});
-        }
+    document.getElementById('edit-id').value = id;
+    document.getElementById('cliente').value = s.cliente;
+    document.getElementById('direccion').value = s.direccion;
+    document.getElementById('whatsapp').value = s.whatsapp || s.telefono || "";
+    document.getElementById('email_cliente').value = s.email_cliente || "";
+    document.getElementById('precio_total').value = s.precio_total || 0;
+
+    document.getElementById('search-empleado').value = s.empleado_nombre;
+    document.getElementById('email-empleado').value = s.empleado_email || "";
+
+    document.getElementById('search-empleado-2').value = s.empleado_nombre_2 || "";
+    document.getElementById('email-empleado-2').value = s.empleado_email_2 || "";
+
+    document.getElementById('fecha').value = s.fecha;
+    document.getElementById('hora').value = s.hora;
+    document.getElementById('notas').value = s.notas;
+
+    document.getElementById('admin-correction').style.display = "block";
+
+    document.getElementById('hora_inicio_real').value = s.hora_inicio;
+    document.getElementById('hora_fin_real').value = s.hora_fin;
+
+    document.getElementById('millas_reales').value =
+        Number(s.millas_reales) > 0 ? s.millas_reales : "";
+
+    document.getElementById('millas_servicio').value =
+        s.millas_servicio || obtenerMillasServicio(s) || "";
+
+    selectType(s.tipo);
+
+    document.getElementById('main-button').innerText = "GUARDAR CAMBIOS";
+    document.getElementById('cancel-edit').style.display = "block";
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
         function solicitarResenaGoogle(nombre, telefono) {
             if(!telefono) return alert("El cliente no tiene teléfono.");
