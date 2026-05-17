@@ -353,9 +353,11 @@ Thank you for choosing Elite Cleaners Company.`;
         }
 
         db.collection("clientes").onSnapshot(snap => {
-            todosLosClientes = [];
-            snap.forEach(doc => todosLosClientes.push({ id: doc.id, ...doc.data() }));
-        });
+    todosLosClientes = [];
+    snap.forEach(doc => todosLosClientes.push({ id: doc.id, ...doc.data() }));
+    renderHistorial();
+    generarNomina();
+});
 function obtenerMillasServicio(s) {
     const real = parseFloat(s.millas_reales);
     const servicio = parseFloat(s.millas_servicio);
@@ -469,7 +471,9 @@ function obtenerMillasServicio(s) {
                 whatsapp: document.getElementById('whatsapp').value.replace(/\D/g,''),
                 email_cliente: document.getElementById('email_cliente').value || "",
                 precio_total: document.getElementById('precio_total').value || 0,
-                millas_servicio: document.getElementById('millas_servicio').value || 0,
+                millas_servicio: Number(document.getElementById('millas_servicio').value) > 0
+    ? document.getElementById('millas_servicio').value
+    : obtenerMillasServicio({ cliente: cli_nombre }),
                 millas_reales: id && document.getElementById('millas_reales')
     ? document.getElementById('millas_reales').value || ""
     : "",
