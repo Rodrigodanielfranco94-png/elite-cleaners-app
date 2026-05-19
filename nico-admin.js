@@ -15,6 +15,9 @@ const CREAR_INVOICE_URL =
 const CONSULTAR_INVOICES_URL =
 "https://us-central1-elite-cleaners-app.cloudfunctions.net/consultarInvoices";
 
+const ENVIAR_CORREO_NICO_URL =
+"https://us-central1-elite-cleaners-app.cloudfunctions.net/enviarCorreoNico";
+
 const CREAR_RECEIPT_URL =
 "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearReceiptNico";
 
