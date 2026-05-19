@@ -1038,11 +1038,13 @@ function construirPayloadEstimateDesdeDatos(datos){
     notes:
 `${datos.notes || ""}
 
-Mileage / Travel Fee:
-${millasServicio} miles round trip
-$${dinero(mileageRate)} per mile
-Travel Fee: $${dinero(travelFee)}`,
+--------------------------------
 
+Mileage / Travel Fee
+
+• ${millasServicio} miles round trip
+• $${dinero(mileageRate)} per mile
+• Travel Fee: $${dinero(travelFee)}`,
     cleaning_total: cleaningTotal,
     millas_servicio: millasServicio,
     mileage_rate: mileageRate,
