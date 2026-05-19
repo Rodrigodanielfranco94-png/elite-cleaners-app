@@ -42,6 +42,7 @@ let nicoPensando = false;
 let nicoTrabajoPendiente = null;
 let nicoMensajeClientePendiente = null;
 let nicoUltimoEstimadoRapido = null;
+let nicoEmailDocumentoPendiente = null;
 
 // ================= UI =================
 
@@ -2651,6 +2652,31 @@ async function enviarTextoANico(){
 
   agregarMensaje("user", mensaje);
 
+  // ================= EMAIL PENDIENTE =================
+
+if(
+  nicoEmailDocumentoPendiente &&
+  (
+    mensaje.includes("INV-") ||
+    mensaje.includes("EST-")
+  )
+){
+
+  const numeroDocumento = mensaje.trim();
+
+  if(numeroDocumento.startsWith("INV-")){
+    prepararEmailDocumento("invoice", numeroDocumento);
+  }
+
+  if(numeroDocumento.startsWith("EST-")){
+    prepararEmailDocumento("estimate", numeroDocumento);
+  }
+
+  nicoEmailDocumentoPendiente = null;
+
+  return;
+}
+  
   const t = normalizarTexto(mensaje);
   // ================= APROBAR / CANCELAR EMAIL =================
 
@@ -2675,6 +2701,7 @@ if(
 
   if(!numero){
     agregarMensaje("nico", "Rodri, dime cuál estimate quieres enviar. Ejemplo: enviar estimate EST-XXXXX");
+    nicoEmailDocumentoPendiente = "estimate";
     return;
   }
 
@@ -2693,6 +2720,7 @@ if(
 
   if(!numero){
     agregarMensaje("nico", "Rodri, dime cuál invoice quieres enviar. Ejemplo: enviar invoice INV-XXXXX");
+    nicoEmailDocumentoPendiente = "invoice";
     return;
   }
 
