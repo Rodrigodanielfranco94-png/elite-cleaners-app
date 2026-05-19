@@ -3189,11 +3189,20 @@ if(
           "",
 
         total:
-          Number(
-            servicio?.precio_total ||
-            datosFormulario.total ||
-            0
-          )
+  Number(
+    servicio?.precio_total ||
+    datosFormulario.total ||
+    0
+  ),
+
+millas_servicio:
+  Number(
+    servicio?.millas_servicio ||
+    servicio?.millas_estimadas ||
+    cliente?.millas_servicio ||
+    datosFormulario.millas_servicio ||
+    0
+  )
       };
 
       await crearEstimateConDatos(datosEncontrados);
