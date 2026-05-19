@@ -1869,7 +1869,15 @@ function escribirDocumentoPDF(nuevaVentana, tipo, doc){
   th{background:#1f2937;color:white;text-align:left;padding:12px;font-size:13px;text-transform:uppercase;}
   td{border-bottom:1px solid #e5e7eb;padding:14px 12px;font-size:14px;vertical-align:top;}
   .right{text-align:right;}
-  .notes{margin-top:30px;padding:18px;background:#f9fafb;border-left:4px solid #2563eb;font-size:14px;line-height:1.5;}
+  .notes{
+  margin-top:30px;
+  padding:18px;
+  background:#f9fafb;
+  border-left:4px solid #2563eb;
+  font-size:14px;
+  line-height:1.5;
+  white-space:pre-line;
+}
   .total-box{margin-top:30px;display:flex;justify-content:flex-end;}
   .total-inner{width:300px;border-top:2px solid #111827;padding-top:15px;}
   .total-row{display:flex;justify-content:space-between;font-size:18px;font-weight:bold;}
