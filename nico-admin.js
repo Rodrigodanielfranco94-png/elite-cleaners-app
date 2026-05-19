@@ -552,6 +552,9 @@ function obtenerDatosFormularioActual(){
         || 0
       ),
 
+millas_servicio:
+  Number(obtenerValor("millas_servicio") || 0),
+    
     fecha:
       obtenerValor("fecha"),
 
@@ -1017,58 +1020,55 @@ Thank you for trusting Elite Cleaners Company!`;
 
 // ================= PAYLOADS =================
 
-function construirPayloadEstimateDesdeDatos(
-  datos
-){
+function construirPayloadEstimateDesdeDatos(datos){
+
+  const cleaningTotal = Number(datos.total || 0);
+  const millasServicio = Number(datos.millas_servicio || 0);
+  const mileageRate = 0.67;
+  const travelFee = millasServicio * mileageRate;
+  const totalFinal = cleaningTotal + travelFee;
 
   return {
-
-    cliente_nombre:
-      datos.cliente_nombre || "",
-
-    cliente_email:
-      datos.cliente_email || "",
-
-    cliente_telefono:
-      limpiarTelefono(
-        datos.cliente_telefono
-      ),
-
-    cliente_direccion:
-      datos.cliente_direccion || "",
-
-    tipo_limpieza:
-      datos.tipo_limpieza || "",
+    cliente_nombre: datos.cliente_nombre || "",
+    cliente_email: datos.cliente_email || "",
+    cliente_telefono: limpiarTelefono(datos.cliente_telefono),
+    cliente_direccion: datos.cliente_direccion || "",
+    tipo_limpieza: datos.tipo_limpieza || "",
 
     notes:
-      datos.notes || "",
+`${datos.notes || ""}
 
-    total:
-      Number(datos.total || 0),
+Mileage / Travel Fee:
+${millasServicio} miles round trip
+$${dinero(mileageRate)} per mile
+Travel Fee: $${dinero(travelFee)}`,
 
-    subtotal:
-      Number(datos.total || 0),
+    cleaning_total: cleaningTotal,
+    millas_servicio: millasServicio,
+    mileage_rate: mileageRate,
+    travel_fee: Number(travelFee.toFixed(2)),
+
+    total: Number(totalFinal.toFixed(2)),
+    subtotal: Number(totalFinal.toFixed(2)),
 
     items: [
       {
-        description:
-          datos.tipo_limpieza
-          || "Cleaning Service",
-
-        price:
-          Number(datos.total || 0),
-
+        description: datos.tipo_limpieza || "Cleaning Service",
+        price: cleaningTotal,
         quantity: 1,
-
-        total:
-          Number(datos.total || 0)
+        total: cleaningTotal
+      },
+      {
+        description: `Mileage / Travel Fee (${millasServicio} miles × $0.67)`,
+        price: Number(travelFee.toFixed(2)),
+        quantity: 1,
+        total: Number(travelFee.toFixed(2))
       }
     ],
 
     status: "Draft"
   };
 }
-
 function construirPayloadInvoiceDesdeEstimate(
   estimate
 ){
@@ -1307,7 +1307,16 @@ ${payload.cliente_nombre}
 🧼 Tipo:
 ${payload.tipo_limpieza || "Sin tipo"}
 
-💵 Total:
+💵 Cleaning:
+$${dinero(payload.cleaning_total)}
+
+🚗 Travel Fee:
+$${dinero(payload.travel_fee)}
+
+📍 Millas ida/vuelta:
+${payload.millas_servicio}
+
+💰 Total:
 $${dinero(payload.total)}
 
 📍 Dirección:
