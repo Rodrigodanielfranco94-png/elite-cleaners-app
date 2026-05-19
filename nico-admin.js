@@ -2652,24 +2652,29 @@ async function enviarTextoANico(){
 
   agregarMensaje("user", mensaje);
 
-  // ================= EMAIL PENDIENTE =================
+// ================= EMAIL PENDIENTE =================
 
 if(
   nicoEmailDocumentoPendiente &&
   (
-    mensaje.includes("INV-") ||
-    mensaje.includes("EST-")
+    mensaje.toUpperCase().includes("INV-") ||
+    mensaje.toUpperCase().includes("EST-")
   )
 ){
 
-  const numeroDocumento = mensaje.trim();
+  const numeroDocumento = extraerNumeroDocumento(mensaje);
 
-  if(numeroDocumento.startsWith("INV-")){
-    prepararEmailDocumento("invoice", numeroDocumento);
+  if(!numeroDocumento){
+    agregarMensaje("nico", "Rodri, no pude leer el número del documento.");
+    return;
   }
 
-  if(numeroDocumento.startsWith("EST-")){
-    prepararEmailDocumento("estimate", numeroDocumento);
+  if(nicoEmailDocumentoPendiente === "invoice"){
+    await prepararEnvioInvoiceEmail(numeroDocumento);
+  }
+
+  if(nicoEmailDocumentoPendiente === "estimate"){
+    await prepararEnvioEstimateEmail(numeroDocumento);
   }
 
   nicoEmailDocumentoPendiente = null;
