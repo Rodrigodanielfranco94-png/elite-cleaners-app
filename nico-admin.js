@@ -1177,6 +1177,15 @@ function construirTrabajoDesdeEstimate(
     precio_total:
       Number(estimate.total || 0),
 
+    millas_servicio:
+  Number(estimate.millas_servicio || 0),
+
+travel_fee:
+  Number(estimate.travel_fee || 0),
+
+cleaning_total:
+  Number(estimate.cleaning_total || estimate.total || 0),
+
     empleado_nombre:
       obtenerValor(
         "search-empleado"
