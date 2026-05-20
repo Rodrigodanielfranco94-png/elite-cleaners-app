@@ -56,8 +56,8 @@ const camera = new THREE.PerspectiveCamera(
   1000
 );
 
-camera.position.set(0, 0.5, 4);
-camera.lookAt(0, 0, 0);
+camera.position.set(0, 1.1, 5.8);
+camera.lookAt(0, 0.9, 0);
 
 const renderer = new THREE.WebGLRenderer({ alpha: true });
 renderer.setSize(window.innerWidth, 500);
@@ -80,8 +80,8 @@ loader.load(
 
     const model = gltf.scene;
 
-    model.scale.set(0.9, 0.9, 0.9);
-    model.position.set(0, -0.2, 0);
+    model.scale.set(0.55, 0.55, 0.55);
+model.position.set(0, -1.05, 0);
 
     scene.add(model);
     estado.innerText = "Nico 3D cargado ✅";
@@ -91,7 +91,7 @@ loader.load(
     function animate() {
       requestAnimationFrame(animate);
 
-      model.rotation.y += 0.003;
+      model.rotation.y = 0;
 
       renderer.render(scene, camera);
     }
