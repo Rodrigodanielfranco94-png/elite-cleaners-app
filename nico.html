@@ -44,8 +44,8 @@ button{
 <div id="estado">Nico en reposo...</div>
   
 <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js';
-import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160/examples/jsm/loaders/GLTFLoader.js';
+import * as THREE from 'https://esm.sh/three@0.160.0';
+import { GLTFLoader } from 'https://esm.sh/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 
 const scene = new THREE.Scene();
 
@@ -66,6 +66,7 @@ document.body.appendChild(renderer.domElement);
 const light = new THREE.HemisphereLight(0xffffff, 0x444444, 3);
 scene.add(light);
 
+const estado = document.getElementById("estado");
 const loader = new GLTFLoader();
 
 loader.load(
