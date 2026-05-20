@@ -41,59 +41,7 @@ button{
 
 <h1>Nico 🔥 Animado</h1>
 
-<img id="avatar" src="nico-assets/reposo.png">
-
 <div id="estado">Nico en reposo...</div>
-
-<button onclick="caminar()">🚶 Caminar</button>
-<button onclick="detener()">🛑 Detener</button>
-
-<script>
-
-const avatar = document.getElementById("avatar");
-const estado = document.getElementById("estado");
-
-let caminando = false;
-let intervalo;
-
-// CONFIG SPRITE
-const totalFrames = 6;
-let frame = 0;
-
-function caminar(){
-
-  if(caminando) return;
-
-  caminando = true;
-  estado.innerText = "Nico caminando...";
-
-  avatar.src = "nico-assets/camina-sprite.PNG";
-
-  avatar.style.objectFit = "none";
-
-  const frameWidth = 180;
-
-  intervalo = setInterval(() => {
-
-    frame = (frame + 1) % totalFrames;
-
-    avatar.style.objectPosition = `-${frame * frameWidth}px 0px`;
-
-  }, 120);
-}
-
-function detener(){
-
-  caminando = false;
-  clearInterval(intervalo);
-
-  avatar.src = "nico-assets/reposo.png";
-  avatar.style.objectFit = "contain";
-
-  estado.innerText = "Nico en reposo...";
-}
-
-</script>
   
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js';
