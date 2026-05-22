@@ -72,7 +72,21 @@
     </style>
 </head>
 <body>
+<div id="loginBox" style="position:fixed; inset:0; background:#000; z-index:99999; display:flex; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#111; border:1px solid #2c2c2c; border-radius:18px; padding:25px; width:100%; max-width:380px; color:white;">
+    <h2 style="margin-top:0; color:#3b82f6;">Elite Admin Login</h2>
 
+    <input id="loginEmail" type="email" placeholder="Email" style="width:100%; padding:14px; margin-bottom:12px; border-radius:10px; border:1px solid #333; background:#000; color:white;">
+
+    <input id="loginPassword" type="password" placeholder="Password" style="width:100%; padding:14px; margin-bottom:12px; border-radius:10px; border:1px solid #333; background:#000; color:white;">
+
+    <button onclick="loginAdmin()" style="width:100%; padding:14px; border:none; border-radius:10px; background:#3b82f6; color:white; font-weight:bold;">
+      Entrar
+    </button>
+
+    <p id="loginError" style="color:#ef4444; font-size:13px; margin-top:12px;"></p>
+  </div>
+</div>
     <h1>ELITE <span>ADMIN</span></h1>
 
     <div class="stats-grid">
@@ -762,6 +776,46 @@ const supabaseClient = supabase.createClient(
 );
 
 console.log("Supabase conectado 🔥");
+   let currentUser = null;
+
+async function revisarSesion() {
+  const { data } = await supabaseClient.auth.getUser();
+
+  if (data && data.user) {
+    currentUser = data.user;
+
+    document.getElementById("loginBox").style.display = "none";
+
+    console.log("Usuario conectado:", currentUser.email);
+  } else {
+    document.getElementById("loginBox").style.display = "flex";
+  }
+}
+
+async function loginAdmin() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value.trim();
+  const errorBox = document.getElementById("loginError");
+
+  errorBox.textContent = "";
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    errorBox.textContent = "Email o contraseña incorrectos.";
+    return;
+  }
+
+  currentUser = data.user;
+  document.getElementById("loginBox").style.display = "none";
+
+  alert("Bienvenido " + currentUser.email);
+}
+
+revisarSesion();     
 </script>
     <script src="nico-admin.js"></script>
 </body>
