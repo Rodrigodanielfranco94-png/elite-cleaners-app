@@ -3355,7 +3355,38 @@ millas_servicio:
 
     return;
   }
+// ================= MOSTRAR MEMORIAS =================
 
+if(
+  t.includes("mostrar memorias") ||
+  t.includes("ver memorias") ||
+  t.includes("mis memorias") ||
+  t.includes("memorias de nico")
+){
+  const memorias = await obtenerMemoriasNico();
+
+  if(!memorias.length){
+    agregarMensaje(
+      "nico",
+      "Todavía no tengo memorias guardadas para este usuario."
+    );
+    return;
+  }
+
+  const textoMemorias = memorias
+    .map((m, i) =>
+      `${i + 1}. [${m.prioridad || "normal"}] ${m.tipo || "general"}\n${m.contenido}`
+    )
+    .join("\n\n");
+
+  agregarMensaje(
+    "nico",
+    `🧠 MEMORIAS DE NICO:\n\n${textoMemorias}`
+  );
+
+  return;
+}
+  
   // ================= IA NORMAL =================
 
   nicoPensando = true;
