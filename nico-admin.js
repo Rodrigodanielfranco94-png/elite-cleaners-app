@@ -2758,6 +2758,46 @@ async function prepararEnvioInvoiceEmail(numeroInvoice){
 
   prepararEmailDocumento("invoice", invoice);
 }
+async function detectarMemoriaAutomatica(mensaje){
+  try{
+    const t = normalizarTexto(mensaje);
+
+    const palabrasClave = [
+      "cliente", "client",
+      "prefiere", "prefers",
+      "siempre", "always",
+      "precio", "price",
+      "cobra", "charge",
+      "millas", "miles",
+      "direccion", "address",
+      "horario", "schedule",
+      "lunes", "martes", "miercoles", "jueves", "viernes",
+      "deep clean", "standard", "profunda", "estandar",
+      "importante", "important"
+    ];
+
+    const debeGuardar = palabrasClave.some(p => t.includes(p));
+
+    if(!debeGuardar) return;
+
+    if(t.includes("hola") || t.includes("gracias")) return;
+
+    await guardarMemoriaNico({
+      tipo: "auto",
+      titulo:
+        "Memoria automática detectada por Nico",
+      contenido:
+        mensaje,
+      prioridad:
+        t.includes("importante") || t.includes("important")
+          ? "importante"
+          : "normal"
+    });
+
+  }catch(e){
+    console.log("No se pudo guardar memoria automática:", e);
+  }
+}
 // ================= SEND =================
 
 async function enviarTextoANico(){
@@ -2770,6 +2810,8 @@ async function enviarTextoANico(){
   nicoChatInput.value = "";
 
   agregarMensaje("user", mensaje);
+  
+  detectarMemoriaAutomatica(mensaje);
 
 // ================= EMAIL PENDIENTE =================
 
