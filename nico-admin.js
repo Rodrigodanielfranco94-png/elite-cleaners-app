@@ -2191,6 +2191,26 @@ ${contenido}`
     );
   }
 }
+async function obtenerConversacionesRecientesNico(){
+  try{
+    const usuarioNombre =
+      window.usuarioActual?.nombre || "Rodrigo";
+
+    const snapshot = await db
+      .collection("conversaciones_nico")
+      .where("usuario_nombre", "==", usuarioNombre)
+      .limit(20)
+      .get();
+
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  }catch(e){
+    console.log(e);
+    return [];
+  }
+}
 
 async function obtenerMemoriasNico(){
 
