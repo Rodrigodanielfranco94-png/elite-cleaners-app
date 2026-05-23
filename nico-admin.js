@@ -2171,7 +2171,31 @@ async function guardarMemoriaNico({
 
 }){
 
-  try{
+try{
+
+    const memoriaParecida =
+      await db
+      .collection("memoria_nico")
+      .where(
+        "usuario_nombre",
+        "==",
+        window.usuarioActual?.nombre || "Rodrigo"
+      )
+      .limit(50)
+      .get();
+
+    const yaExiste =
+      memoriaParecida.docs.some(doc => {
+        const data = doc.data();
+
+        return normalizarTexto(data.contenido || "") ===
+               normalizarTexto(contenido || "");
+      });
+
+    if(yaExiste){
+      console.log("Memoria duplicada ignorada");
+      return;
+    }
 
     await db
       .collection("memoria_nico")
