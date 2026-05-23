@@ -793,7 +793,7 @@ async function revisarSesion() {
   }
 }
 
-async function loginAdmin() {
+window.loginAdmin = async function () {
   const email = document.getElementById("loginEmail").value.trim();
   const password = document.getElementById("loginPassword").value.trim();
   const errorBox = document.getElementById("loginError");
