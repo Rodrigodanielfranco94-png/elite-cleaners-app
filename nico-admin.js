@@ -2229,7 +2229,7 @@ async function obtenerConversacionesRecientesNico(){
       .limit(20)
       .get();
 
-    return snapshot.docs.map(doc => ({
+    return docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
@@ -2246,16 +2246,56 @@ async function obtenerMemoriasNico(){
     const usuarioNombre =
   window.usuarioActual?.nombre || "Rodrigo";
 
-const snapshot =
-
+const criticasSnap =
   await db
   .collection("memoria_nico")
   .where("usuario_nombre", "in", [
     usuarioNombre,
     "General"
   ])
-  .limit(50)
+  .where("prioridad", "==", "critica")
+  .limit(15)
   .get();
+
+const importantesSnap =
+  await db
+  .collection("memoria_nico")
+  .where("usuario_nombre", "in", [
+    usuarioNombre,
+    "General"
+  ])
+  .where("prioridad", "==", "importante")
+  .limit(20)
+  .get();
+
+const normalesSnap =
+  await db
+  .collection("memoria_nico")
+  .where("usuario_nombre", "in", [
+    usuarioNombre,
+    "General"
+  ])
+  .where("prioridad", "==", "normal")
+  .limit(10)
+  .get();
+
+const temporalesSnap =
+  await db
+  .collection("memoria_nico")
+  .where("usuario_nombre", "in", [
+    usuarioNombre,
+    "General"
+  ])
+  .where("prioridad", "==", "temporal")
+  .limit(5)
+  .get();
+
+const docs = [
+  ...criticasSnap.docs,
+  ...importantesSnap.docs,
+  ...normalesSnap.docs,
+  ...temporalesSnap.docs
+];
 
     return snapshot.docs.map(doc => ({
 
