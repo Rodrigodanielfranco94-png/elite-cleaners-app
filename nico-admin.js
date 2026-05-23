@@ -2134,7 +2134,14 @@ async function guardarMemoriaNico({
     await db
       .collection("memoria_nico")
       .add({
+usuario_id:
+  window.usuarioActual?.id || "sin_usuario",
 
+usuario_email:
+  window.usuarioActual?.email || "sin_email",
+
+usuario_nombre:
+  window.usuarioActual?.nombre || "Rodrigo",
         tipo,
         titulo,
         contenido,
@@ -2174,16 +2181,19 @@ async function obtenerMemoriasNico(){
 
   try{
 
-    const snapshot =
+    const usuarioNombre =
+  window.usuarioActual?.nombre || "Rodrigo";
 
-      await db
-      .collection("memoria_nico")
-      .orderBy(
-        "fecha_creacion",
-        "desc"
-      )
-      .limit(50)
-      .get();
+const snapshot =
+
+  await db
+  .collection("memoria_nico")
+  .where("usuario_nombre", "in", [
+    usuarioNombre,
+    "General"
+  ])
+  .limit(50)
+  .get();
 
     return snapshot.docs.map(doc => ({
 
@@ -2873,7 +2883,9 @@ if(
 
     await guardarMemoriaNico({
       tipo: "general",
-      titulo: "Memoria guardada por Rodrigo",
+      titulo:
+  "Memoria guardada por " +
+  (window.usuarioActual?.nombre || "Rodrigo"),
       contenido,
       prioridad: "normal"
     });
