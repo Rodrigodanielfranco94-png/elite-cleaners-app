@@ -2229,66 +2229,59 @@ async function obtenerConversacionesRecientesNico(){
       .limit(20)
       .get();
 
-    return docs.map(doc => ({
+    return snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
+
   }catch(e){
     console.log(e);
     return [];
   }
 }
-
 async function obtenerMemoriasNico(){
-
   try{
-
     const usuarioNombre =
-  window.usuarioActual?.nombre || "Rodrigo";
+      window.usuarioActual?.nombre || "Rodrigo";
 
-const criticasSnap =
-  await db
-  .collection("memoria_nico")
-  .where("usuario_nombre", "in", [
-    usuarioNombre,
-    "General"
-  ])
-  .where("prioridad", "==", "critica")
-  .limit(15)
-  .get();
+    const criticasSnap = await db.collection("memoria_nico")
+      .where("usuario_nombre", "in", [usuarioNombre, "General"])
+      .where("prioridad", "==", "critica")
+      .limit(15)
+      .get();
 
-  console.log(
-    "Memoria duplicada ignorada"
-  );
+    const importantesSnap = await db.collection("memoria_nico")
+      .where("usuario_nombre", "in", [usuarioNombre, "General"])
+      .where("prioridad", "==", "importante")
+      .limit(20)
+      .get();
 
-  await db
-  .collection("memoria_nico")
-  .where("usuario_nombre", "in", [
-    usuarioNombre,
-    "General"
-  ])
-  .where("prioridad", "==", "temporal")
-  .limit(5)
-  .get();
+    const normalesSnap = await db.collection("memoria_nico")
+      .where("usuario_nombre", "in", [usuarioNombre, "General"])
+      .where("prioridad", "==", "normal")
+      .limit(10)
+      .get();
 
-const docs = [
-  ...criticasSnap.docs,
-  ...importantesSnap.docs,
-  ...normalesSnap.docs,
-  ...temporalesSnap.docs
-];
+    const temporalesSnap = await db.collection("memoria_nico")
+      .where("usuario_nombre", "in", [usuarioNombre, "General"])
+      .where("prioridad", "==", "temporal")
+      .limit(5)
+      .get();
 
-    return snapshot.docs.map(doc => ({
+    const docs = [
+      ...criticasSnap.docs,
+      ...importantesSnap.docs,
+      ...normalesSnap.docs,
+      ...temporalesSnap.docs
+    ];
 
+    return docs.map(doc => ({
       id: doc.id,
-
       ...doc.data()
     }));
 
   }catch(e){
-
     console.log(e);
-
     return [];
   }
 }
