@@ -1520,6 +1520,15 @@ async function convertirEstimateAInvoice(
       data.numero ||
 
       "INV-SIN-NUMERO";
+    await guardarMemoriaNico({
+  tipo: "invoice",
+  titulo:
+    "Invoice creado para " +
+    (payload.cliente_nombre || "cliente"),
+  contenido:
+    `Invoice ${numeroInvoice} creado para ${payload.cliente_nombre}. Viene del estimate ${estimate.numero}. Tipo: ${payload.tipo_limpieza}. Total: $${dinero(payload.total)}. Dirección: ${payload.cliente_direccion}.`,
+  prioridad: "importante"
+});
 
     imagenNico("bien");
 
