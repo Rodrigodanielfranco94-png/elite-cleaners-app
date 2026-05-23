@@ -2857,6 +2857,26 @@ async function detectarMemoriaAutomatica(mensaje){
     console.log("No se pudo guardar memoria automática:", e);
   }
 }
+// ================= PANEL VISUAL DE MEMORIAS =================
+
+async function mostrarPanelMemoriasNico(){
+  const memorias = await obtenerMemoriasNico();
+
+  if(!memorias.length){
+    agregarMensaje("nico", "Todavía no tengo memorias guardadas para este usuario.");
+    return;
+  }
+
+  let texto = "🧠 MEMORIAS GUARDADAS:\n\n";
+
+  memorias.forEach((m, i) => {
+    texto += `${i + 1}. [${m.prioridad || "normal"}] ${m.tipo || "general"}\n`;
+    texto += `${m.contenido || "Sin contenido"}\n`;
+    texto += `ID: ${m.id}\n\n`;
+  });
+
+  agregarMensaje("nico", texto.trim());
+}
 // ================= SEND =================
 
 async function enviarTextoANico(){
@@ -2903,6 +2923,15 @@ if(
 }
   
   const t = normalizarTexto(mensaje);
+  if(
+  t.includes("mostrar memorias") ||
+  t.includes("ver memorias") ||
+  t.includes("panel de memorias") ||
+  t.includes("memorias de nico")
+){
+  await mostrarPanelMemoriasNico();
+  return;
+}
   // ================= APROBAR / CANCELAR EMAIL =================
 
 if(t === "aprobar email" || t === "approve email"){
