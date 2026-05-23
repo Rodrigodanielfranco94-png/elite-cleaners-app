@@ -2167,7 +2167,9 @@ async function guardarMemoriaNico({
 
   contenido = "",
 
-  prioridad = "normal"
+  prioridad = "normal",
+
+  expira = null
 
 }){
 
@@ -2299,7 +2301,33 @@ async function obtenerMemoriasNico(){
       ...temporalesSnap.docs
     ];
 
-    return docs.map(doc => ({
+    const ahora = Date.now();
+
+const memoriasFiltradas = docs.filter(doc => {
+
+  const data = doc.data();
+
+  if(
+    data.expira &&
+    ahora > data.expira
+  ){
+
+    db.collection("memoria_nico")
+      .doc(doc.id)
+      .delete();
+
+    console.log(
+      "Memoria expirada eliminada:",
+      doc.id
+    );
+
+    return false;
+  }
+
+  return true;
+});
+    
+    return memoriasFiltradas.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
@@ -2813,88 +2841,111 @@ async function detectarMemoriaAutomatica(mensaje){
     let tipo = "auto";
     let prioridad = "normal";
 
-    if(
-      t.includes("muy importante") ||
-      t.includes("crítico") ||
-      t.includes("critico") ||
-      t.includes("critical") ||
-      t.includes("no olvidar") ||
-      t.includes("nunca olvidar")
-    ){
-      tipo = "critica";
-      prioridad = "critica";
-    } else if(
-      t.includes("cliente") ||
-      t.includes("client") ||
-      t.includes("prefiere") ||
-      t.includes("prefers") ||
-      t.includes("siempre") ||
-      t.includes("always")
-    ){
-      tipo = "cliente";
-      prioridad = "importante";
-    } else if(
-      t.includes("precio") ||
-      t.includes("price") ||
-      t.includes("cobra") ||
-      t.includes("charge") ||
-      t.includes("millas") ||
-      t.includes("miles") ||
-      t.includes("$")
-    ){
-      tipo = "financiera";
-      prioridad = "importante";
-    } else if(
-      t.includes("horario") ||
-      t.includes("schedule") ||
-      t.includes("lunes") ||
-      t.includes("martes") ||
-      t.includes("miercoles") ||
-      t.includes("jueves") ||
-      t.includes("viernes") ||
-      t.includes("sabado") ||
-      t.includes("domingo")
-    ){
-      tipo = "operativa";
-      prioridad = "importante";
-    } else if(
-      t.includes("triste") ||
-      t.includes("feliz") ||
-      t.includes("extraño") ||
-      t.includes("extrano") ||
-      t.includes("familia") ||
-      t.includes("nico") ||
-      t.includes("dayana") ||
-      t.includes("rodri")
-    ){
-      tipo = "emocional";
-      prioridad = "importante";
-    } else if(
-      t.includes("mañana") ||
-      t.includes("manana") ||
-      t.includes("solo hoy") ||
-      t.includes("por ahora") ||
-      t.includes("temporal")
-    ){
-      tipo = "temporal";
-      prioridad = "temporal";
-    } else {
-      return;
-    }
+if(
+  t.includes("muy importante") ||
+  t.includes("crítico") ||
+  t.includes("critico") ||
+  t.includes("critical") ||
+  t.includes("no olvidar") ||
+  t.includes("nunca olvidar")
+){
+  tipo = "critica";
+  prioridad = "critica";
+} else if(
+  t.includes("cliente") ||
+  t.includes("client") ||
+  t.includes("prefiere") ||
+  t.includes("prefers") ||
+  t.includes("siempre") ||
+  t.includes("always")
+){
+  tipo = "cliente";
+  prioridad = "importante";
+} else if(
+  t.includes("precio") ||
+  t.includes("price") ||
+  t.includes("cobra") ||
+  t.includes("charge") ||
+  t.includes("millas") ||
+  t.includes("miles") ||
+  t.includes("$")
+){
+  tipo = "financiera";
+  prioridad = "importante";
+} else if(
+  t.includes("horario") ||
+  t.includes("schedule") ||
+  t.includes("lunes") ||
+  t.includes("martes") ||
+  t.includes("miercoles") ||
+  t.includes("jueves") ||
+  t.includes("viernes") ||
+  t.includes("sabado") ||
+  t.includes("domingo")
+){
+  tipo = "operativa";
+  prioridad = "importante";
+} else if(
+  t.includes("triste") ||
+  t.includes("feliz") ||
+  t.includes("extraño") ||
+  t.includes("extrano") ||
+  t.includes("familia") ||
+  t.includes("nico") ||
+  t.includes("dayana") ||
+  t.includes("rodri")
+){
+  tipo = "emocional";
+  prioridad = "importante";
+} else if(
+  t.includes("mañana") ||
+  t.includes("manana") ||
+  t.includes("solo hoy") ||
+  t.includes("por ahora") ||
+  t.includes("temporal")
+){
+  tipo = "temporal";
+  prioridad = "temporal";
+} else {
+  return;
+}
+
+if(
+  t.includes("solo hoy") ||
+  t.includes("por hoy")
+){
+  expira =
+    Date.now() +
+    (1000 * 60 * 60 * 24);
+}
+
+if(
+  t.includes("hasta mañana") ||
+  t.includes("mañana olvidar")
+){
+  expira =
+    Date.now() +
+    (1000 * 60 * 60 * 48);
+}
+
+if(
+  t.includes("temporal") ||
+  t.includes("temporalmente")
+){
+  expira =
+    Date.now() +
+    (1000 * 60 * 60 * 24 * 7);
+}
 
     await guardarMemoriaNico({
-      tipo,
-      titulo:
-        "Memoria inteligente detectada por Nico",
-      contenido:
-        mensaje,
-      prioridad
-    });
-
-  }catch(e){
-    console.log("No se pudo guardar memoria automática:", e);
-  }
-}
+  tipo,
+  titulo:
+    "Memoria inteligente detectada por Nico",
+  contenido:
+    mensaje,
+  prioridad,
+  expira
+});
 // ================= PANEL VISUAL DE MEMORIAS =================
 
 async function mostrarPanelMemoriasNico(){
