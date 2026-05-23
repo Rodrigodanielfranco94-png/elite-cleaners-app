@@ -1320,6 +1320,15 @@ async function crearEstimateConDatos(
 
   const numero =
     data.estimate.numero;
+  await guardarMemoriaNico({
+  tipo: "cliente",
+  titulo:
+    "Estimate creado para " +
+    (payload.cliente_nombre || "cliente"),
+  contenido:
+    `Cliente ${payload.cliente_nombre} recibió un estimate ${numero}. Tipo: ${payload.tipo_limpieza}. Total: $${dinero(payload.total)}. Dirección: ${payload.cliente_direccion}. Millas: ${payload.millas_servicio}.`,
+  prioridad: "importante"
+});
 
   imagenNico("bien");
 
