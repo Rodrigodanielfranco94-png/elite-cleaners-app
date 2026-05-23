@@ -2762,36 +2762,95 @@ async function detectarMemoriaAutomatica(mensaje){
   try{
     const t = normalizarTexto(mensaje);
 
-    const palabrasClave = [
-      "cliente", "client",
-      "prefiere", "prefers",
-      "siempre", "always",
-      "precio", "price",
-      "cobra", "charge",
-      "millas", "miles",
-      "direccion", "address",
-      "horario", "schedule",
-      "lunes", "martes", "miercoles", "jueves", "viernes",
-      "deep clean", "standard", "profunda", "estandar",
-      "importante", "important"
-    ];
+    if(!t || t.length < 12) return;
 
-    const debeGuardar = palabrasClave.some(p => t.includes(p));
+    if(
+      t.includes("hola") ||
+      t.includes("gracias") ||
+      t.includes("ok") ||
+      t.includes("perfecto") ||
+      t.includes("jaja")
+    ) return;
 
-    if(!debeGuardar) return;
+    let tipo = "auto";
+    let prioridad = "normal";
 
-    if(t.includes("hola") || t.includes("gracias")) return;
+    if(
+      t.includes("muy importante") ||
+      t.includes("crítico") ||
+      t.includes("critico") ||
+      t.includes("critical") ||
+      t.includes("no olvidar") ||
+      t.includes("nunca olvidar")
+    ){
+      tipo = "critica";
+      prioridad = "critica";
+    } else if(
+      t.includes("cliente") ||
+      t.includes("client") ||
+      t.includes("prefiere") ||
+      t.includes("prefers") ||
+      t.includes("siempre") ||
+      t.includes("always")
+    ){
+      tipo = "cliente";
+      prioridad = "importante";
+    } else if(
+      t.includes("precio") ||
+      t.includes("price") ||
+      t.includes("cobra") ||
+      t.includes("charge") ||
+      t.includes("millas") ||
+      t.includes("miles") ||
+      t.includes("$")
+    ){
+      tipo = "financiera";
+      prioridad = "importante";
+    } else if(
+      t.includes("horario") ||
+      t.includes("schedule") ||
+      t.includes("lunes") ||
+      t.includes("martes") ||
+      t.includes("miercoles") ||
+      t.includes("jueves") ||
+      t.includes("viernes") ||
+      t.includes("sabado") ||
+      t.includes("domingo")
+    ){
+      tipo = "operativa";
+      prioridad = "importante";
+    } else if(
+      t.includes("triste") ||
+      t.includes("feliz") ||
+      t.includes("extraño") ||
+      t.includes("extrano") ||
+      t.includes("familia") ||
+      t.includes("nico") ||
+      t.includes("dayana") ||
+      t.includes("rodri")
+    ){
+      tipo = "emocional";
+      prioridad = "importante";
+    } else if(
+      t.includes("mañana") ||
+      t.includes("manana") ||
+      t.includes("solo hoy") ||
+      t.includes("por ahora") ||
+      t.includes("temporal")
+    ){
+      tipo = "temporal";
+      prioridad = "temporal";
+    } else {
+      return;
+    }
 
     await guardarMemoriaNico({
-      tipo: "auto",
+      tipo,
       titulo:
-        "Memoria automática detectada por Nico",
+        "Memoria inteligente detectada por Nico",
       contenido:
         mensaje,
-      prioridad:
-        t.includes("importante") || t.includes("important")
-          ? "importante"
-          : "normal"
+      prioridad
     });
 
   }catch(e){
