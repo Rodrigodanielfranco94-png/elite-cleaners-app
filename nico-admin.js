@@ -336,8 +336,23 @@ function agregarMensaje(tipo, texto){
 
   nicoChatMessages.scrollTop =
     nicoChatMessages.scrollHeight;
+  guardarConversacionNico(tipo, texto);
 
   return div;
+}
+async function guardarConversacionNico(tipo, texto){
+  try{
+    await db.collection("conversaciones_nico").add({
+      usuario_id: window.usuarioActual?.id || "sin_usuario",
+      usuario_email: window.usuarioActual?.email || "sin_email",
+      usuario_nombre: window.usuarioActual?.nombre || "Rodrigo",
+      tipo: tipo,
+      mensaje: texto,
+      fecha_creacion: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }catch(e){
+    console.log("No se pudo guardar conversación Nico:", e);
+  }
 }
 
 // ================= PDF BUTTON =================
