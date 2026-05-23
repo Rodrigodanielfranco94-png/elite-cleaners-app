@@ -1780,6 +1780,15 @@ async function crearTrabajoRealDesdeEstimate(
       await db
       .collection("servicios")
       .add(payload);
+    await guardarMemoriaNico({
+  tipo: "trabajo",
+  titulo:
+    "Trabajo creado para " +
+    (payload.cliente || "cliente"),
+  contenido:
+    `Trabajo creado para ${payload.cliente}. Fecha: ${payload.fecha}. Hora: ${payload.hora}. Tipo: ${payload.tipo}. Precio: $${dinero(payload.precio_total)}. Dirección: ${payload.direccion}. Estimate: ${payload.estimate_numero}.`,
+  prioridad: "importante"
+});
 
     imagenNico("bien");
 
