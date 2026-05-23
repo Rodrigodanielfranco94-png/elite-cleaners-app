@@ -2237,7 +2237,6 @@ ${contextoMemoria || "Sin memorias guardadas todavía."}
 MENSAJE DEL USUARIO:
 
 ${mensaje}`;
-
     const res = await fetch(
       PENSAR_NICO_URL,
       {
