@@ -2280,6 +2280,43 @@ const normalesSnap =
   .get();
 
 const temporalesSnap =
+  const memoriaParecida =
+  await db
+  .collection("memoria_nico")
+  .where("usuario_nombre", "==",
+    window.usuarioActual?.nombre || "Rodrigo"
+  )
+  .limit(50)
+  .get();
+
+const yaExiste =
+  memoriaParecida.docs.some(doc => {
+
+    const data = doc.data();
+
+    const textoExistente =
+      normalizarTexto(
+        data.contenido || ""
+      );
+
+    const nuevoTexto =
+      normalizarTexto(
+        contenido || ""
+      );
+
+    return (
+      textoExistente === nuevoTexto
+    );
+  });
+
+if(yaExiste){
+
+  console.log(
+    "Memoria duplicada ignorada"
+  );
+
+  return;
+}
   await db
   .collection("memoria_nico")
   .where("usuario_nombre", "in", [
