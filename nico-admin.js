@@ -2257,6 +2257,8 @@ async function pensarConNico(
 
     const memorias =
       await obtenerMemoriasNico();
+    const conversacionesRecientes =
+  await obtenerConversacionesRecientesNico();
 
     const contextoMemoria =
 
@@ -2265,6 +2267,13 @@ async function pensarConNico(
         `- ${m.contenido}`
       )
       .join("\n");
+    const contextoConversacion =
+
+  conversacionesRecientes
+  .map(c =>
+    `${c.usuario_nombre || "Usuario"} (${c.tipo}): ${c.mensaje}`
+  )
+  .join("\n");
 
  const nombreUsuario =
   window.usuarioActual?.nombre || "Rodrigo";
@@ -2278,6 +2287,10 @@ ${nombreUsuario}
 MEMORIA PERMANENTE DE NICO:
 
 ${contextoMemoria || "Sin memorias guardadas todavía."}
+
+CONVERSACIÓN RECIENTE:
+
+${contextoConversacion || "Sin conversación reciente."}
 
 MENSAJE DEL USUARIO:
 
