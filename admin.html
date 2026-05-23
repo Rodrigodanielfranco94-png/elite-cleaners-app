@@ -811,6 +811,18 @@ window.loginAdmin = async function () {
   }
 
   currentUser = data.user;
+    window.usuarioActual = {
+    id: data.user.id,
+    email: data.user.email,
+    nombre:
+        data.user.email === "rodrigodanielfranco94@gmail.com"
+        ? "Rodrigo"
+        : data.user.email === "oddayanapimientoprada@gmail.com"
+        ? "Dayana"
+        : "Usuario"
+};
+
+console.log("Usuario detectado:", window.usuarioActual);
   document.getElementById("loginBox").style.display = "none";
 
   alert("Bienvenido " + currentUser.email);
