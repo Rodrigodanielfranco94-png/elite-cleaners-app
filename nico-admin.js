@@ -2221,9 +2221,16 @@ async function pensarConNico(
       )
       .join("\n");
 
-    const mensajeConMemoria =
+ const nombreUsuario =
+  window.usuarioActual?.nombre || "Rodrigo";
 
-`MEMORIA PERMANENTE DE NICO:
+const mensajeConMemoria =
+
+`USUARIO ACTUAL DEL SISTEMA:
+
+${nombreUsuario}
+
+MEMORIA PERMANENTE DE NICO:
 
 ${contextoMemoria || "Sin memorias guardadas todavía."}
 
