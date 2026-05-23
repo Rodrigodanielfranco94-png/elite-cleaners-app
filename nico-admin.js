@@ -2257,66 +2257,10 @@ const criticasSnap =
   .limit(15)
   .get();
 
-const importantesSnap =
-  await db
-  .collection("memoria_nico")
-  .where("usuario_nombre", "in", [
-    usuarioNombre,
-    "General"
-  ])
-  .where("prioridad", "==", "importante")
-  .limit(20)
-  .get();
-
-const normalesSnap =
-  await db
-  .collection("memoria_nico")
-  .where("usuario_nombre", "in", [
-    usuarioNombre,
-    "General"
-  ])
-  .where("prioridad", "==", "normal")
-  .limit(10)
-  .get();
-
-const temporalesSnap =
-  const memoriaParecida =
-  await db
-  .collection("memoria_nico")
-  .where("usuario_nombre", "==",
-    window.usuarioActual?.nombre || "Rodrigo"
-  )
-  .limit(50)
-  .get();
-
-const yaExiste =
-  memoriaParecida.docs.some(doc => {
-
-    const data = doc.data();
-
-    const textoExistente =
-      normalizarTexto(
-        data.contenido || ""
-      );
-
-    const nuevoTexto =
-      normalizarTexto(
-        contenido || ""
-      );
-
-    return (
-      textoExistente === nuevoTexto
-    );
-  });
-
-if(yaExiste){
-
   console.log(
     "Memoria duplicada ignorada"
   );
 
-  return;
-}
   await db
   .collection("memoria_nico")
   .where("usuario_nombre", "in", [
