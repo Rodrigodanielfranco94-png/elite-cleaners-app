@@ -2172,20 +2172,22 @@ try{
     }
 
     await db
-      .collection("memoria_nico")
-      .add({
-usuario_id:
-  window.usuarioActual?.id || "sin_usuario",
+  .collection("memoria_nico")
+  .add({
+    usuario_id:
+      window.usuarioActual?.id || "sin_usuario",
 
-usuario_email:
-  window.usuarioActual?.email || "sin_email",
+    usuario_email:
+      window.usuarioActual?.email || "sin_email",
 
-usuario_nombre:
-  window.usuarioActual?.nombre || "Rodrigo",
-        tipo,
-        titulo,
-        contenido,
-        prioridad,
+    usuario_nombre:
+      window.usuarioActual?.nombre || "Rodrigo",
+
+    tipo,
+    titulo,
+    contenido,
+    prioridad,
+    expira,
 
         creado_por: "Nico",
 
@@ -2812,6 +2814,7 @@ async function detectarMemoriaAutomatica(mensaje){
 
     let tipo = "auto";
     let prioridad = "normal";
+    let expira = null;
 
 if(
   t.includes("muy importante") ||
@@ -2918,6 +2921,10 @@ if(
   prioridad,
   expira
 });
+      }catch(e){
+    console.log("No se pudo guardar memoria automática:", e);
+  }
+}
 // ================= PANEL VISUAL DE MEMORIAS =================
 
 async function mostrarPanelMemoriasNico(){
