@@ -49,22 +49,17 @@ MENSAJE DEL USUARIO:
 
 ${mensaje}`;
     const res = await fetch(
-      PENSAR_NICO_URL,
-      {
-
-        method:"POST",
-
-        headers:{
-          "Content-Type":
-            "application/json"
-        },
-
-        body: JSON.stringify({
-          mensaje:
-            mensajeConMemoria
-        })
-      }
-    );
+  window.NICO_CONFIG.PENSAR_NICO_URL,
+  {
+    method:"POST",
+    headers:{
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      mensaje: mensajeConMemoria
+    })
+  }
+);
 
     const data =
       await res.json();
