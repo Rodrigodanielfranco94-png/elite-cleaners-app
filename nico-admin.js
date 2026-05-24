@@ -1234,7 +1234,10 @@ millas_servicio:
   }
 }
 
-nicoSend.onclick = enviarTextoANico;
+nicoSend.addEventListener("click", enviarTextoANico);
+console.log("Nico admin cargado ✅");
+console.log("Botón enviar:", nicoSend);
+console.log("Función enviarTextoANico:", typeof enviarTextoANico);
 
 nicoChatInput.addEventListener(
   "keydown",
