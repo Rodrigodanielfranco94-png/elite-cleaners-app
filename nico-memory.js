@@ -311,6 +311,8 @@ if(
 }
 
 async function mostrarPanelMemoriasNico(){
+  const memorias = await obtenerMemoriasNico();
+
   if(!memorias.length){
     agregarMensaje("nico", "Todavía no tengo memorias guardadas para este usuario.");
     return;
