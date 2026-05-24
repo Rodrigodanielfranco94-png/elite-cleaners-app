@@ -603,7 +603,13 @@ async function enviarTextoANico(){
 
   agregarMensaje("user", mensaje);
   
-  detectarMemoriaAutomatica(mensaje);
+  try {
+  if (typeof detectarMemoriaAutomatica === "function") {
+    detectarMemoriaAutomatica(mensaje);
+  }
+} catch (e) {
+  console.log("Error memoria automática:", e);
+}
 
 // ================= EMAIL PENDIENTE =================
 
