@@ -786,59 +786,6 @@ if(
     await crearEstimateConDatos(datosFinales);
     return;
   }
-  // ================= GUARDAR MEMORIA =================
-
-  if(
-    t.includes("recuerda que") ||
-    t.includes("remember that")
-  ){
-    const contenido = mensaje
-      .replace(/nico/ig,"")
-      .replace(/recuerda que/ig,"")
-      .replace(/remember that/ig,"")
-      .trim();
-    let prioridad = "normal";
-
-if (
-  t.includes("muy importante") ||
-  t.includes("crítico") ||
-  t.includes("critico") ||
-  t.includes("critical") ||
-  t.includes("importantísimo")
-) {
-  prioridad = "critica";
-} else if (
-  t.includes("importante") ||
-  t.includes("important")
-) {
-  prioridad = "importante";
-} else if (
-  t.includes("temporal") ||
-  t.includes("por ahora") ||
-  t.includes("solo hoy")
-) {
-  prioridad = "temporal";
-}
-
-    if(!contenido){
-      agregarMensaje(
-        "nico",
-        "Rodri, dime qué quieres que recuerde. Ejemplo: Nico, recuerda que los clientes solo hablan inglés."
-      );
-      return;
-    }
-
-    await guardarMemoriaNico({
-      tipo: "general",
-      titulo:
-  "Memoria guardada por " +
-  (window.usuarioActual?.nombre || "Rodrigo"),
-      contenido,
-      prioridad: prioridad
-    });
-
-    return;
-  }
 
   // ================= APROBAR MENSAJE =================
 
