@@ -602,8 +602,7 @@ async function enviarTextoANico(){
   nicoChatInput.value = "";
 
   agregarMensaje("user", mensaje);
-  agregarMensaje("nico", "Prueba: sí entré a enviarTextoANico ✅");
-return;
+
   
   try {
   if (typeof detectarMemoriaAutomatica === "function") {
