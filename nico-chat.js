@@ -87,9 +87,4 @@ ${mensaje}`;
 
   return "Rodri, el error real es: " + (e.message || e);
 }
-
-    console.log(e);
-
-    return "Rodri, hubo un problema conectando con Nico.";
-  }
 }
