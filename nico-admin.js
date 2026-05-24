@@ -971,8 +971,20 @@ if(
     return;
   }
 
-  const estimates =
-    await obtenerEstimates();
+ const estimates = [
+  ...(await obtenerEstimates()),
+  ...(typeof todosLosServicios !== "undefined" ? todosLosServicios.map(s => ({
+    numero: s.numero || "",
+    cliente_nombre: s.cliente || "",
+    cliente_direccion: s.direccion || "",
+    notes: s.notas || "",
+    total: s.precio_total || 0,
+    tipo_limpieza: s.tipo || "",
+    millas_servicio: s.millas_servicio || 0,
+    fecha: s.fecha || "",
+    hora: s.hora || ""
+  })) : [])
+];
 
 const nombreBuscado =
     normalizarTexto(nombreCliente);
