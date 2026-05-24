@@ -1191,6 +1191,14 @@ millas_servicio:
 
 nicoSend.addEventListener("click", enviarTextoANico);
 
+nicoMic.addEventListener("click", () => {
+  if(typeof iniciarVozNico === "function"){
+    iniciarVozNico();
+  }else{
+    agregarMensaje("nico", "Rodri, la voz de Nico todavía no está cargada.");
+  }
+});
+
 nicoChatInput.addEventListener(
   "keydown",
   (e) => {
