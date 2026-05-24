@@ -248,6 +248,18 @@ style.innerHTML = `
   box-shadow:0 0 0 2px rgba(59,130,246,.15);
 }
 
+#nicoMic{
+  width:58px;
+  min-height:58px;
+  border:none;
+  border-radius:16px;
+  background:linear-gradient(135deg,#f59e0b,#d97706);
+  color:white;
+  font-size:22px;
+  font-weight:900;
+  box-shadow:0 0 18px rgba(245,158,11,.35);
+}
+
 #nicoSend{
   width:82px;
   min-height:58px;
