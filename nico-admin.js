@@ -974,10 +974,10 @@ if(
   const estimates =
     await obtenerEstimates();
 
-  const nombreBuscado =
+const nombreBuscado =
     normalizarTexto(nombreCliente);
 
-  const estimate =
+const estimate =
     [...estimates]
     .reverse()
     .find(e => {
@@ -985,9 +985,27 @@ if(
       const nombreEstimate =
         normalizarTexto(e.cliente_nombre || "");
 
+      const direccionEstimate =
+        normalizarTexto(e.cliente_direccion || "");
+
+      const notasEstimate =
+        normalizarTexto(e.notes || "");
+
       return (
-        nombreEstimate.includes(nombreBuscado) ||
+
+        nombreEstimate.includes(nombreBuscado)
+
+        ||
+
         nombreBuscado.includes(nombreEstimate)
+
+        ||
+
+        direccionEstimate.includes(nombreBuscado)
+
+        ||
+
+        notasEstimate.includes(nombreBuscado)
       );
     });
 
