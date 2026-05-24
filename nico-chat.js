@@ -66,11 +66,11 @@ ${mensaje}`;
 
     if(!res.ok){
 
-      console.log(data);
+  console.log("ERROR BACKEND:", data);
 
-      return "Rodri, no pude responder ahora mismo.";
-    }
-
+  return "Backend dice: " + JSON.stringify(data);
+}
+    
     return (
 
       data.respuesta ||
