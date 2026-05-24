@@ -1,6 +1,5 @@
 // ================= NICO ADMIN FINAL LEFT PANEL + ESTIMATES + INVOICES + JOBS + PDF BUTTON + CLIENT APPROVAL + SALES MESSAGES + MEMORY =================
 const {
-  PENSAR_NICO_URL,
   CREAR_ESTIMATE_URL,
   CONSULTAR_ESTIMATES_URL,
   CREAR_INVOICE_URL,
@@ -1189,9 +1188,6 @@ millas_servicio:
 }
 
 nicoSend.addEventListener("click", enviarTextoANico);
-console.log("Nico admin cargado ✅");
-console.log("Botón enviar:", nicoSend);
-console.log("Función enviarTextoANico:", typeof enviarTextoANico);
 
 nicoChatInput.addEventListener(
   "keydown",
