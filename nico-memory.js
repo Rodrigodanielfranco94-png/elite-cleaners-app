@@ -325,3 +325,9 @@ async function mostrarPanelMemoriasNico(){
 
   agregarMensaje("nico", texto.trim());
 }
+
+window.obtenerMemoriasNico = obtenerMemoriasNico;
+window.obtenerConversacionesRecientesNico = obtenerConversacionesRecientesNico;
+window.guardarMemoriaNico = guardarMemoriaNico;
+window.detectarMemoriaAutomatica = detectarMemoriaAutomatica;
+window.mostrarPanelMemoriasNico = mostrarPanelMemoriasNico;
