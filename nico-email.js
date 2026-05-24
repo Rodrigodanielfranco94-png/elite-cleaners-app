@@ -132,8 +132,5 @@ async function prepararEnvioInvoiceEmail(numeroInvoice){
     return;
   }
 
-  prepararEmailDocumento("invoice", invoice);
-}
-
   agregarMensaje("nico", texto.trim());
 }
