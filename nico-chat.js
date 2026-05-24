@@ -81,7 +81,12 @@ ${mensaje}`;
 
     ).trim();
 
-  }catch(e){
+}catch(e){
+
+  console.log("ERROR REAL DE NICO:", e);
+
+  return "Rodri, el error real es: " + (e.message || e);
+}
 
     console.log(e);
 
