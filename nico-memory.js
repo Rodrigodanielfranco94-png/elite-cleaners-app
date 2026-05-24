@@ -295,7 +295,7 @@ if(
     (1000 * 60 * 60 * 24 * 7);
 }
 
-    await guardarMemoriaNico({
+  await guardarMemoriaNico({
   tipo,
   titulo:
     "Memoria inteligente detectada por Nico",
@@ -304,7 +304,24 @@ if(
   prioridad,
   expira
 });
-      }catch(e){
-    console.log("No se pudo guardar memoria automática:", e);
+
+  }catch(e){
+
+async function mostrarPanelMemoriasNico(){
+  const memorias = await obtenerMemoriasNico();
+
+  if(!memorias.length){
+    agregarMensaje("nico", "Todavía no tengo memorias guardadas para este usuario.");
+    return;
   }
+
+  let texto = "🧠 MEMORIAS GUARDADAS:\n\n";
+
+  memorias.forEach((m, i) => {
+    texto += `${i + 1}. [${m.prioridad || "normal"}] ${m.tipo || "general"}\n`;
+    texto += `${m.contenido || "Sin contenido"}\n`;
+    texto += `ID: ${m.id}\n\n`;
+  });
+
+  agregarMensaje("nico", texto.trim());
 }
