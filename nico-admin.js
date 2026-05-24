@@ -58,6 +58,7 @@ nicoChatPanel.innerHTML = `
 
     <div id="nicoInputRow">
       <textarea id="nicoChatInput" placeholder="Escríbele a Nico..."></textarea>
+      <button id="nicoMic">🎤</button>
       <button id="nicoSend">Enviar</button>
     </div>
   </div>
@@ -282,6 +283,7 @@ const nicoChatPanelEl = document.getElementById("nicoChatPanel");
 const nicoChatMessages = document.getElementById("nicoChatMessages");
 const nicoChatInput = document.getElementById("nicoChatInput");
 const nicoSend = document.getElementById("nicoSend");
+const nicoMic = document.getElementById("nicoMic");
 const nicoClose = document.getElementById("nicoClose");
 const nicoFloatingAvatar = document.getElementById("nicoFloatingAvatar");
 
