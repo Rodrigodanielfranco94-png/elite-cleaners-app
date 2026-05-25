@@ -1,3 +1,5 @@
+// ================= NICO VOICE =================
+
 window.iniciarVozNico = function(){
 
   try{
@@ -7,78 +9,63 @@ window.iniciarVozNico = function(){
       window.webkitSpeechRecognition;
 
     if(!SpeechRecognition){
-
-      agregarMensaje(
-        "nico",
-        "Rodri, este navegador no soporta reconocimiento de voz."
-      );
-
+      agregarMensaje("nico", "Rodri, este navegador no soporta reconocimiento de voz.");
       return;
     }
 
-    const recognition =
-      new SpeechRecognition();
+    const recognition = new SpeechRecognition();
 
-    recognition.lang = "es-ES";
-
+    recognition.lang = "es-US";
     recognition.continuous = false;
-
     recognition.interimResults = false;
-
     recognition.maxAlternatives = 1;
 
-    agregarMensaje(
-      "nico",
-      "🎤 Te escucho, Rodri..."
-    );
+    agregarMensaje("nico", "🎤 Te escucho, Rodri... Di: Oye Nico...");
 
     recognition.start();
 
     recognition.onresult = async (event) => {
-
       try{
+        let texto = event.results[0][0].transcript || "";
+        let limpio = normalizarTexto(texto);
 
-        const texto =
-          event.results[0][0].transcript;
+        if(
+          limpio.startsWith("oye nico") ||
+          limpio.startsWith("hey nico") ||
+          limpio.startsWith("nico")
+        ){
+          texto = texto
+            .replace(/oye nico/ig, "")
+            .replace(/hey nico/ig, "")
+            .replace(/^nico/ig, "")
+            .trim();
+        }
+
+        if(!texto){
+          agregarMensaje("nico", "Rodri, te escuché, pero no recibí el comando.");
+          return;
+        }
 
         nicoChatInput.value = texto;
-
         await enviarTextoANico();
 
       }catch(e){
-
         console.log(e);
-
-        agregarMensaje(
-          "nico",
-          "Rodri, no pude entender la voz."
-        );
+        agregarMensaje("nico", "Rodri, no pude entender la voz.");
       }
     };
 
     recognition.onerror = (event) => {
-
       console.log("VOICE ERROR:", event);
-
-      agregarMensaje(
-        "nico",
-        "Rodri, tuve un problema escuchando tu voz."
-      );
+      agregarMensaje("nico", "Rodri, tuve un problema escuchando tu voz.");
     };
 
     recognition.onend = () => {
-
       console.log("Reconocimiento finalizado");
-
     };
 
   }catch(e){
-
     console.log(e);
-
-    agregarMensaje(
-      "nico",
-      "Rodri, ocurrió un error iniciando el micrófono."
-    );
+    agregarMensaje("nico", "Rodri, ocurrió un error iniciando el micrófono.");
   }
 };
