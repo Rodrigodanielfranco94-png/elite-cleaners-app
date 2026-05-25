@@ -952,15 +952,54 @@ if(
 ){
 
   let nombreCliente = mensaje
-    .replace(/nico/ig,"")
-    .replace(/crear/ig,"")
-    .replace(/crea/ig,"")
-    .replace(/create/ig,"")
-    .replace(/invoice/ig,"")
-    .replace(/\bde\b/ig,"")
-    .replace(/[,.]/g,"")
-    .trim();
+  .replace(/nico/ig,"")
+  .replace(/crear/ig,"")
+  .replace(/crea/ig,"")
+  .replace(/create/ig,"")
+  .replace(/invoice/ig,"")
+  .replace(/\bde\b/ig,"")
+  .replace(/[,.]/g,"")
+  .trim();
 
+// ================= LIMPIEZA INTELIGENTE DE VOZ =================
+
+nombreCliente = nombreCliente
+
+  // comandos basura
+  .replace(/creame/ig, "")
+  .replace(/créame/ig, "")
+  .replace(/preparame/ig, "")
+  .replace(/prepárame/ig, "")
+  .replace(/hazme/ig, "")
+  .replace(/dame/ig, "")
+  .replace(/busca/ig, "")
+  .replace(/quiero/ig, "")
+
+  // estimate/invoice extras
+  .replace(/el estimate de/ig, "")
+  .replace(/estimate de/ig, "")
+  .replace(/invoice de/ig, "")
+  .replace(/el invoice de/ig, "")
+
+  // errores comunes de voz
+  .replace(/esa charry/ig, "Zachary")
+  .replace(/sacary/ig, "Zachary")
+  .replace(/zacary/ig, "Zachary")
+  .replace(/zacari/ig, "Zachary")
+  .replace(/zachari/ig, "Zachary")
+  .replace(/zach/ig, "Zachary")
+
+  .trim();
+// ================= CORRECCIÓN DE VOZ =================
+
+nombreCliente = nombreCliente
+  .replace(/esa charry/ig, "Zachary")
+  .replace(/zach/ig, "Zachary")
+  .replace(/sacary/ig, "Zachary")
+  .replace(/zacari/ig, "Zachary")
+  .replace(/zachari/ig, "Zachary")
+  .trim();
+  
   if(!nombreCliente){
 
     agregarMensaje(
