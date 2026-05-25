@@ -1195,6 +1195,81 @@ millas_servicio:
 
     return;
   }
+
+// ================= BUSCAR TRABAJO AGENDADO / CREAR ESTIMATE DESDE AGENDA =================
+
+if(
+  t.includes("estimate") &&
+  (
+    t.includes("dame") ||
+    t.includes("prepara") ||
+    t.includes("prepárame") ||
+    t.includes("crear") ||
+    t.includes("crea")
+  )
+){
+  let nombreCliente = mensaje
+    .replace(/nico/ig,"")
+    .replace(/oye nico/ig,"")
+    .replace(/dame/ig,"")
+    .replace(/prepara/ig,"")
+    .replace(/prepárame/ig,"")
+    .replace(/preparame/ig,"")
+    .replace(/crear/ig,"")
+    .replace(/crea/ig,"")
+    .replace(/el estimate/ig,"")
+    .replace(/estimate/ig,"")
+    .replace(/de/ig,"")
+    .trim();
+
+  if(!nombreCliente){
+    agregarMensaje("nico", "Rodri, dime el nombre del cliente.");
+    return;
+  }
+
+  const nombreBuscado = normalizarTexto(nombreCliente);
+
+  const servicio = [...todosLosServicios]
+    .reverse()
+    .find(s => {
+      const cliente = normalizarTexto(s.cliente || "");
+      const direccion = normalizarTexto(s.direccion || "");
+      const notas = normalizarTexto(s.notas || "");
+
+      return (
+        cliente.includes(nombreBuscado) ||
+        nombreBuscado.includes(cliente) ||
+        direccion.includes(nombreBuscado) ||
+        notas.includes(nombreBuscado)
+      );
+    });
+
+  if(!servicio){
+    agregarMensaje("nico", `Rodri, no encontré a ${nombreCliente} en los trabajos agendados.`);
+    return;
+  }
+
+  const datosEstimate = {
+    cliente_nombre: servicio.cliente || "",
+    cliente_email: servicio.email_cliente || "",
+    cliente_telefono: servicio.whatsapp || "",
+    cliente_direccion: servicio.direccion || "",
+    tipo_limpieza: servicio.tipo || "",
+    notes: servicio.notas || "",
+    total: Number(servicio.precio_total || 0),
+    millas_servicio: Number(servicio.millas_servicio || servicio.millas_estimadas || 0),
+    fecha: servicio.fecha || "",
+    hora: servicio.hora || ""
+  };
+
+  if(!datosEstimate.cliente_nombre || datosEstimate.total <= 0){
+    agregarMensaje("nico", "Rodri, encontré el cliente, pero falta precio o nombre para crear el estimate.");
+    return;
+  }
+
+  await crearEstimateConDatos(datosEstimate);
+  return;
+}
   
   // ================= IA NORMAL =================
 
