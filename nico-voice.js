@@ -17,7 +17,7 @@ window.iniciarVozNico = function(){
 
     recognition.lang = "es-US";
     recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.interimResults = true;
     recognition.maxAlternatives = 1;
 
     agregarMensaje("nico", "🎤 Te escucho, Rodri... Di: Oye Nico...");
@@ -25,31 +25,79 @@ window.iniciarVozNico = function(){
     recognition.start();
 
     recognition.onresult = async (event) => {
-      try{
-        let texto = event.results[0][0].transcript || "";
-        let limpio = normalizarTexto(texto);
 
-        if(
-          limpio.startsWith("oye nico") ||
-          limpio.startsWith("hey nico") ||
-          limpio.startsWith("nico")
-        ){
-          texto = texto
-            .replace(/oye nico/ig, "")
-            .replace(/hey nico/ig, "")
-            .replace(/^nico/ig, "")
-            .trim();
-        }
+  try{
 
-        if(!texto){
-          agregarMensaje("nico", "Rodri, te escuché, pero no recibí el comando.");
-          return;
-        }
+    let textoFinal = "";
+    let textoTemporal = "";
 
-        nicoChatInput.value = texto;
-        await enviarTextoANico();
+    for(let i = event.resultIndex; i < event.results.length; i++){
 
-      }catch(e){
+      const texto =
+        event.results[i][0].transcript || "";
+
+      if(event.results[i].isFinal){
+
+        textoFinal += texto;
+
+      }else{
+
+        textoTemporal += texto;
+      }
+    }
+
+    // ================= MOSTRAR DICTADO EN VIVO =================
+
+    nicoChatInput.value =
+      (textoFinal || textoTemporal).trim();
+
+    // ================= CUANDO TERMINA DE HABLAR =================
+
+    if(textoFinal.trim()){
+
+      let texto = textoFinal.trim();
+
+      let limpio =
+        normalizarTexto(texto);
+
+      if(
+        limpio.startsWith("oye nico") ||
+        limpio.startsWith("hey nico") ||
+        limpio.startsWith("nico")
+      ){
+
+        texto = texto
+          .replace(/oye nico/ig, "")
+          .replace(/hey nico/ig, "")
+          .replace(/^nico/ig, "")
+          .trim();
+      }
+
+      if(!texto){
+
+        agregarMensaje(
+          "nico",
+          "Rodri, te escuché, pero no recibí el comando."
+        );
+
+        return;
+      }
+
+      nicoChatInput.value = texto;
+
+      await enviarTextoANico();
+    }
+
+  }catch(e){
+
+    console.log(e);
+
+    agregarMensaje(
+      "nico",
+      "Rodri, no pude entender la voz."
+    );
+  }
+};
         console.log(e);
         agregarMensaje("nico", "Rodri, no pude entender la voz.");
       }
