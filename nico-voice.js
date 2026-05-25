@@ -9,111 +9,161 @@ window.iniciarVozNico = function(){
       window.webkitSpeechRecognition;
 
     if(!SpeechRecognition){
-      agregarMensaje("nico", "Rodri, este navegador no soporta reconocimiento de voz.");
+
+      agregarMensaje(
+        "nico",
+        "Rodri, este navegador no soporta reconocimiento de voz."
+      );
+
       return;
     }
 
-    const recognition = new SpeechRecognition();
+    const recognition =
+      new SpeechRecognition();
 
     recognition.lang = "es-US";
+
     recognition.continuous = false;
+
+    // ================= DICTADO EN VIVO =================
+
     recognition.interimResults = true;
+
     recognition.maxAlternatives = 1;
 
-    agregarMensaje("nico", "🎤 Te escucho, Rodri... Di: Oye Nico...");
+    agregarMensaje(
+      "nico",
+      "🎤 Te escucho, Rodri... Di: Oye Nico..."
+    );
 
     recognition.start();
 
+    // ================= RESULTADOS DE VOZ =================
+
     recognition.onresult = async (event) => {
 
-  try{
+      try {
 
-    let textoFinal = "";
-    let textoTemporal = "";
+        let textoFinal = "";
 
-    for(let i = event.resultIndex; i < event.results.length; i++){
+        let textoTemporal = "";
 
-      const texto =
-        event.results[i][0].transcript || "";
+        for (
+          let i = event.resultIndex;
+          i < event.results.length;
+          i++
+        ) {
 
-      if(event.results[i].isFinal){
+          const texto =
+            event.results[i][0].transcript || "";
 
-        textoFinal += texto;
+          // ================= TEXTO FINAL =================
 
-      }else{
+          if (event.results[i].isFinal) {
 
-        textoTemporal += texto;
-      }
-    }
+            textoFinal += texto;
 
-    // ================= MOSTRAR DICTADO EN VIVO =================
+          } else {
 
-    nicoChatInput.value =
-      (textoFinal || textoTemporal).trim();
+            // ================= TEXTO TEMPORAL (EN VIVO) =================
 
-    // ================= CUANDO TERMINA DE HABLAR =================
+            textoTemporal += texto;
+          }
+        }
 
-    if(textoFinal.trim()){
+        // ================= MOSTRAR DICTADO EN TIEMPO REAL =================
 
-      let texto = textoFinal.trim();
+        nicoChatInput.value =
+          (textoFinal || textoTemporal).trim();
 
-      let limpio =
-        normalizarTexto(texto);
+        // ================= CUANDO TERMINA DE HABLAR =================
 
-      if(
-        limpio.startsWith("oye nico") ||
-        limpio.startsWith("hey nico") ||
-        limpio.startsWith("nico")
-      ){
+        if (textoFinal.trim()) {
 
-        texto = texto
-          .replace(/oye nico/ig, "")
-          .replace(/hey nico/ig, "")
-          .replace(/^nico/ig, "")
-          .trim();
-      }
+          let texto =
+            textoFinal.trim();
 
-      if(!texto){
+          let limpio =
+            normalizarTexto(texto);
+
+          // ================= REMOVER "OYE NICO" =================
+
+          if (
+            limpio.startsWith("oye nico") ||
+            limpio.startsWith("hey nico") ||
+            limpio.startsWith("nico")
+          ) {
+
+            texto = texto
+              .replace(/oye nico/ig, "")
+              .replace(/hey nico/ig, "")
+              .replace(/^nico/ig, "")
+              .trim();
+          }
+
+          // ================= VALIDAR =================
+
+          if (!texto) {
+
+            agregarMensaje(
+              "nico",
+              "Rodri, te escuché, pero no recibí el comando."
+            );
+
+            return;
+          }
+
+          // ================= PONER TEXTO FINAL =================
+
+          nicoChatInput.value = texto;
+
+          // ================= ENVIAR A NICO =================
+
+          await enviarTextoANico();
+        }
+
+      } catch (e) {
+
+        console.log(e);
 
         agregarMensaje(
           "nico",
-          "Rodri, te escuché, pero no recibí el comando."
+          "Rodri, no pude entender la voz."
         );
-
-        return;
       }
+    };
 
-      nicoChatInput.value = texto;
+    // ================= ERROR =================
 
-      await enviarTextoANico();
-    }
+    recognition.onerror = (event) => {
 
-  }catch(e){
+      console.log(
+        "VOICE ERROR:",
+        event
+      );
+
+      agregarMensaje(
+        "nico",
+        "Rodri, tuve un problema escuchando tu voz."
+      );
+    };
+
+    // ================= FIN =================
+
+    recognition.onend = () => {
+
+      console.log(
+        "Reconocimiento finalizado"
+      );
+    };
+
+  } catch (e) {
 
     console.log(e);
 
     agregarMensaje(
       "nico",
-      "Rodri, no pude entender la voz."
+      "Rodri, ocurrió un error iniciando el micrófono."
     );
-  }
-};
-        console.log(e);
-        agregarMensaje("nico", "Rodri, no pude entender la voz.");
-      }
-    };
-
-    recognition.onerror = (event) => {
-      console.log("VOICE ERROR:", event);
-      agregarMensaje("nico", "Rodri, tuve un problema escuchando tu voz.");
-    };
-
-    recognition.onend = () => {
-      console.log("Reconocimiento finalizado");
-    };
-
-  }catch(e){
-    console.log(e);
-    agregarMensaje("nico", "Rodri, ocurrió un error iniciando el micrófono.");
   }
 };
