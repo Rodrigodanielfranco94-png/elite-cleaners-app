@@ -1,61 +1,84 @@
-// ================= NICO VOICE =================
+window.iniciarVozNico = function(){
 
-let nicoReconocimiento = null;
-let nicoEscuchando = false;
+  try{
 
-function iniciarVozNico(){
+    const SpeechRecognition =
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
 
-  const SpeechRecognition =
-    window.SpeechRecognition ||
-    window.webkitSpeechRecognition;
+    if(!SpeechRecognition){
 
-  if(!SpeechRecognition){
+      agregarMensaje(
+        "nico",
+        "Rodri, este navegador no soporta reconocimiento de voz."
+      );
+
+      return;
+    }
+
+    const recognition =
+      new SpeechRecognition();
+
+    recognition.lang = "es-ES";
+
+    recognition.continuous = false;
+
+    recognition.interimResults = false;
+
+    recognition.maxAlternatives = 1;
+
     agregarMensaje(
       "nico",
-      "Rodri, este navegador no permite usar micrófono con reconocimiento de voz. Prueba en Chrome."
+      "🎤 Te escucho, Rodri..."
     );
-    return;
+
+    recognition.start();
+
+    recognition.onresult = async (event) => {
+
+      try{
+
+        const texto =
+          event.results[0][0].transcript;
+
+        nicoChatInput.value = texto;
+
+        await enviarTextoANico();
+
+      }catch(e){
+
+        console.log(e);
+
+        agregarMensaje(
+          "nico",
+          "Rodri, no pude entender la voz."
+        );
+      }
+    };
+
+    recognition.onerror = (event) => {
+
+      console.log("VOICE ERROR:", event);
+
+      agregarMensaje(
+        "nico",
+        "Rodri, tuve un problema escuchando tu voz."
+      );
+    };
+
+    recognition.onend = () => {
+
+      console.log("Reconocimiento finalizado");
+
+    };
+
+  }catch(e){
+
+    console.log(e);
+
+    agregarMensaje(
+      "nico",
+      "Rodri, ocurrió un error iniciando el micrófono."
+    );
   }
-
-  nicoReconocimiento = new SpeechRecognition();
-
-  nicoReconocimiento.lang = "es-US";
-  nicoReconocimiento.continuous = false;
-  nicoReconocimiento.interimResults = false;
-
-  nicoReconocimiento.onstart = () => {
-    nicoEscuchando = true;
-    imagenNico("piensa");
-    agregarMensaje("nico", "🎤 Te escucho, Rodri...");
-  };
-
-  nicoReconocimiento.onresult = (event) => {
-    const texto =
-      event.results[0][0].transcript;
-
-    nicoChatInput.value = texto;
-    enviarTextoANico();
-  };
-
-  nicoReconocimiento.onerror = (event) => {
-    console.log("Error voz Nico:", event.error);
-    agregarMensaje("nico", "Rodri, tuve un problema escuchando tu voz.");
-  };
-
-  nicoReconocimiento.onend = () => {
-    nicoEscuchando = false;
-  };
-
-  nicoReconocimiento.start();
-}
-
-function detenerVozNico(){
-  if(nicoReconocimiento){
-    nicoReconocimiento.stop();
-  }
-
-  nicoEscuchando = false;
-}
-
-window.iniciarVozNico = iniciarVozNico;
-window.detenerVozNico = detenerVozNico;
+};
