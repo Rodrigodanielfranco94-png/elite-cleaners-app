@@ -144,6 +144,30 @@
             <div><span class="label-text">Hora Estimada</span><input type="time" id="hora"></div>
         </div>
 
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+    <div>
+        <span class="label-text">Hora Final Estimada</span>
+        <input type="time" id="hora_final_estimada">
+    </div>
+    <div>
+        <span class="label-text">Repetir</span>
+        <select id="repetir" style="width:100%; padding:14px; margin-bottom:10px; border-radius:12px; border:1px solid #2c2c2e; background:#2c2c2e; color:white; font-size:15px;">
+            <option value="ninguno">Ninguno</option>
+            <option value="semanal">Semanal</option>
+            <option value="quincenal">Quincenal</option>
+            <option value="mensual">Mensual</option>
+        </select>
+    </div>
+</div>
+
+<span class="label-text">Estado del calendario</span>
+<select id="estado_calendario" style="width:100%; padding:14px; margin-bottom:10px; border-radius:12px; border:1px solid #2c2c2e; background:#2c2c2e; color:white; font-size:15px;">
+    <option value="pendiente">🟣 Pendiente / Agendado</option>
+    <option value="completado">🟡 Terminado</option>
+    <option value="no_seguro">🔴 No seguro</option>
+    <option value="cita">🟢 Cita extra</option>
+</select>
+
         <span class="label-text">Notas / Instrucciones</span>
         <textarea id="notas" placeholder="Instrucciones especiales..." rows="2"></textarea>
 
@@ -501,6 +525,9 @@ function obtenerMillasServicio(s) {
                 empleado_email_2: document.getElementById('email-empleado-2').value || "",
                 fecha: document.getElementById('fecha').value,
                 hora: document.getElementById('hora').value,
+                hora_final_estimada: document.getElementById('hora_final_estimada').value || "",
+                repetir: document.getElementById('repetir').value || "ninguno",
+                estado_calendario: document.getElementById('estado_calendario').value || "pendiente",
                 notas: document.getElementById('notas').value,
                 tipo: tipoSeleccionado,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
