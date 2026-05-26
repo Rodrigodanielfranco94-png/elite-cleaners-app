@@ -695,7 +695,12 @@ function obtenerMillasServicio(s) {
             abrirSMS(num);
         }
 
-        function marcar(id, est) { db.collection("servicios").doc(id).update({ estado: est }); }
+        function marcar(id, est) { 
+    db.collection("servicios").doc(id).update({ 
+        estado: est,
+        estado_calendario: est === "completado" ? "completado" : "pendiente"
+    }); 
+}
         function borrar(id) { if(confirm("¿Seguro que quieres borrarlo?")) db.collection("servicios").doc(id).delete(); }
         
         function editarStaff(id, n, e, p) {
@@ -785,9 +790,9 @@ function cambiarMes(dir) {
     renderCalendarioElite();
 }
 
-function obtenerColorEvento(estado) {
+function obtenerColorEvento(estado, estadoPrincipal) {
 
-    if (estado === "completado") return "#facc15";
+    if (estadoPrincipal === "completado" || estado === "completado") return "#facc15";
     if (estado === "no_seguro") return "#ef4444";
     if (estado === "cita") return "#22c55e";
 
@@ -833,11 +838,11 @@ function renderCalendarioElite() {
 
         const box = document.createElement("div");
 
-        box.style.background = "#1c1c1e";
+        box.style.background = "#f3f4f6";
         box.style.borderRadius = "14px";
         box.style.padding = "8px";
         box.style.minHeight = "85px";
-        box.style.border = "1px solid #2c2c2e";
+        box.style.border = "1px solid #d1d5db";
         box.style.cursor = "pointer";
 
         let html = `
@@ -854,7 +859,7 @@ function renderCalendarioElite() {
 
             html += `
             <div style="
-            background:${obtenerColorEvento(ev.estado_calendario)};
+            background:${obtenerColorEvento(ev.estado_calendario, ev.estado)};
             padding:3px 5px;
             border-radius:6px;
             font-size:9px;
@@ -925,13 +930,13 @@ function mostrarEventosDia(fecha) {
         border-radius:18px;
         padding:15px;
         margin-bottom:12px;
-        border-left:6px solid ${obtenerColorEvento(ev.estado_calendario)};
+        border-left:6px solid ${obtenerColorEvento(ev.estado_calendario, ev.estado)};
         ">
 
         <div style="
         font-weight:bold;
         font-size:17px;
-        color:white;
+        color:#111827;
         ">
         ${ev.cliente}
         </div>
@@ -1001,11 +1006,12 @@ top:0;
 left:0;
 width:100%;
 height:100%;
-background:#000;
+background:#ffffff;
 z-index:999999;
 overflow-y:auto;
-padding:15px;
+padding:8px;
 box-sizing:border-box;
+zoom:0.82;
 ">
 
 <div style="
