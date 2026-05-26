@@ -1060,13 +1060,16 @@ cursor:pointer;
 
 <div id="calendar-weekdays" style="
 display:grid;
-grid-template-columns:repeat(7,1fr);
+grid-template-columns:repeat(7,minmax(0,1fr));
 gap:6px;
 margin-bottom:8px;
+padding:0 2px;
+box-sizing:border-box;
 text-align:center;
 font-weight:900;
 font-size:13px;
 color:#111827;
+width:100%;
 ">
     <div style="color:#ef4444;">Dom</div>
     <div>Lun</div>
@@ -1079,9 +1082,11 @@ color:#111827;
 
 <div id="calendar-grid" style="
 display:grid;
-grid-template-columns:repeat(7,1fr);
+grid-template-columns:repeat(7,minmax(0,1fr));
 gap:6px;
 margin-bottom:20px;
+width:100%;
+box-sizing:border-box;
 "></div>
 
 <div id="calendar-day-events"></div>
