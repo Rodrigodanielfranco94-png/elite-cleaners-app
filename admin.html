@@ -797,6 +797,88 @@ Please let us know if you have any questions.`;
             abrirSMS(s.whatsapp, mensaje);
         }
        </script> 
+   <div id="elite-calendar-modal" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#000;
+z-index:999999;
+overflow-y:auto;
+padding:15px;
+box-sizing:border-box;
+">
+
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+">
+
+<button onclick="cambiarMes(-1)" style="
+background:#1c1c1e;
+border:none;
+color:white;
+padding:12px 18px;
+border-radius:12px;
+font-size:18px;
+cursor:pointer;
+">
+←
+</button>
+
+<h2 id="calendar-title" style="
+margin:0;
+color:#f59e0b;
+font-size:22px;
+font-weight:900;
+text-align:center;
+">
+MAY 2026
+</h2>
+
+<button onclick="cambiarMes(1)" style="
+background:#1c1c1e;
+border:none;
+color:white;
+padding:12px 18px;
+border-radius:12px;
+font-size:18px;
+cursor:pointer;
+">
+→
+</button>
+
+</div>
+
+<div id="calendar-grid" style="
+display:grid;
+grid-template-columns:repeat(7,1fr);
+gap:6px;
+margin-bottom:20px;
+"></div>
+
+<div id="calendar-day-events"></div>
+
+<button onclick="cerrarCalendarioElite()" style="
+width:100%;
+padding:16px;
+background:#ef4444;
+border:none;
+border-radius:14px;
+color:white;
+font-weight:bold;
+font-size:16px;
+margin-top:20px;
+cursor:pointer;
+">
+CERRAR CALENDARIO
+</button>
+
+</div> 
    <script>
 const SUPABASE_URL = "https://wfwojwnbtcpeaumudyjl.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmd29qd25idGNwZWF1bXVkeWpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODIwMzIsImV4cCI6MjA5NTA1ODAzMn0.ln6meZvxfSZwtTSnF8PhI7B9tB0hCb6xPfg1_q6jgFE";
