@@ -769,6 +769,203 @@ Thank you again for trusting Elite Cleaners Company.`;
             abrirSMS(telefono, mensaje);
         }
 
+let fechaCalendario = new Date();
+
+function abrirCalendarioElite() {
+    document.getElementById("elite-calendar-modal").style.display = "block";
+    renderCalendarioElite();
+}
+
+function cerrarCalendarioElite() {
+    document.getElementById("elite-calendar-modal").style.display = "none";
+}
+
+function cambiarMes(dir) {
+    fechaCalendario.setMonth(fechaCalendario.getMonth() + dir);
+    renderCalendarioElite();
+}
+
+function obtenerColorEvento(estado) {
+
+    if (estado === "completado") return "#facc15";
+    if (estado === "no_seguro") return "#ef4444";
+    if (estado === "cita") return "#22c55e";
+
+    return "#a855f7";
+}
+
+function renderCalendarioElite() {
+
+    const grid = document.getElementById("calendar-grid");
+    const title = document.getElementById("calendar-title");
+
+    grid.innerHTML = "";
+
+    const meses = [
+        "ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO",
+        "JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"
+    ];
+
+    const year = fechaCalendario.getFullYear();
+    const month = fechaCalendario.getMonth();
+
+    title.innerText = `${meses[month]} ${year}`;
+
+    const primerDia = new Date(year, month, 1);
+    const ultimoDia = new Date(year, month + 1, 0);
+
+    const inicioSemana = primerDia.getDay();
+    const totalDias = ultimoDia.getDate();
+
+    for(let i=0; i<inicioSemana; i++) {
+
+        const vacio = document.createElement("div");
+        grid.appendChild(vacio);
+
+    }
+
+    for(let dia=1; dia<=totalDias; dia++) {
+
+        const fechaTexto =
+            `${year}-${String(month+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+
+        const eventos = todosLosServicios.filter(s => s.fecha === fechaTexto);
+
+        const box = document.createElement("div");
+
+        box.style.background = "#1c1c1e";
+        box.style.borderRadius = "14px";
+        box.style.padding = "8px";
+        box.style.minHeight = "85px";
+        box.style.border = "1px solid #2c2c2e";
+        box.style.cursor = "pointer";
+
+        let html = `
+            <div style="
+            font-weight:bold;
+            color:white;
+            margin-bottom:5px;
+            ">
+            ${dia}
+            </div>
+        `;
+
+        eventos.slice(0,3).forEach(ev => {
+
+            html += `
+            <div style="
+            background:${obtenerColorEvento(ev.estado_calendario)};
+            padding:3px 5px;
+            border-radius:6px;
+            font-size:9px;
+            margin-bottom:3px;
+            color:white;
+            overflow:hidden;
+            white-space:nowrap;
+            text-overflow:ellipsis;
+            ">
+            ${ev.cliente}
+            </div>
+            `;
+
+        });
+
+        if(eventos.length > 3) {
+
+            html += `
+            <div style="
+            font-size:9px;
+            color:#8e8e93;
+            ">
+            +${eventos.length - 3} más
+            </div>
+            `;
+
+        }
+
+        box.innerHTML = html;
+
+        box.onclick = () => mostrarEventosDia(fechaTexto);
+
+        grid.appendChild(box);
+    }
+}
+
+function mostrarEventosDia(fecha) {
+
+    const cont = document.getElementById("calendar-day-events");
+
+    const eventos = todosLosServicios.filter(s => s.fecha === fecha);
+
+    cont.innerHTML = `
+    <h3 style="
+    color:#f59e0b;
+    margin-bottom:15px;
+    ">
+    ${fecha}
+    </h3>
+    `;
+
+    if(eventos.length === 0) {
+
+        cont.innerHTML += `
+        <p style="color:#8e8e93;">
+        No hay trabajos este día.
+        </p>
+        `;
+
+        return;
+    }
+
+    eventos.forEach(ev => {
+
+        cont.innerHTML += `
+        <div style="
+        background:#1c1c1e;
+        border-radius:18px;
+        padding:15px;
+        margin-bottom:12px;
+        border-left:6px solid ${obtenerColorEvento(ev.estado_calendario)};
+        ">
+
+        <div style="
+        font-weight:bold;
+        font-size:17px;
+        color:white;
+        ">
+        ${ev.cliente}
+        </div>
+
+        <div style="
+        color:#d1d5db;
+        margin-top:6px;
+        font-size:13px;
+        ">
+        ⏰ ${formatAMPM(ev.hora)}
+        </div>
+
+        <div style="
+        color:#d1d5db;
+        margin-top:4px;
+        font-size:13px;
+        ">
+        📍 ${ev.direccion || ""}
+        </div>
+
+        <div style="
+        color:#22c55e;
+        margin-top:4px;
+        font-size:13px;
+        font-weight:bold;
+        ">
+        💵 $${ev.precio_total || 0}
+        </div>
+
+        </div>
+        `;
+    });
+}
+        
         function enviarRecordatorio(id) {
             const s = todosLosServicios.find(serv => serv.id === id);
             if (!s) return;
