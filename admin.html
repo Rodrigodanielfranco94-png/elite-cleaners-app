@@ -619,7 +619,7 @@ function obtenerMillasServicio(s) {
 
             todosLosServicios.forEach(s => {
                 
-                const textoBusqueda = (document.getElementById('buscarTrabajo')?.value || "").toLowerCase();
+                const textoBusqueda = (document.getElementById('buscarTrabajo')?.value || "").toLowerCase().trim();
 
 const contenidoTrabajo = `
     ${s.cliente || ""}
