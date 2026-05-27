@@ -536,65 +536,89 @@ function obtenerMillasServicio(s) {
         }
 
         function asignarTrabajo() {
-            const id = document.getElementById('edit-id').value;
-            const cli_nombre = document.getElementById('cliente').value;
-            if(!cli_nombre) return alert("Falta el nombre del cliente");
-            const data = {
-                cliente: cli_nombre, 
-                direccion: document.getElementById('direccion').value,
-                whatsapp: document.getElementById('whatsapp').value.replace(/\D/g,''),
-                email_cliente: document.getElementById('email_cliente').value || "",
-                precio_total: document.getElementById('precio_total').value || 0,
-                deposito_requerido: true,
+    const id = document.getElementById('edit-id').value;
+    const cli_nombre = document.getElementById('cliente').value;
 
-                deposito_pagado: id ? undefined : false,
-                deposito_monto: Number(document.getElementById('precio_total').value || 0) * 0.5,
-                balance_restante: Number(document.getElementById('precio_total').value || 0) * 0.5,
-                metodo_pago_deposito: "",
-                comprobante_deposito: "",
-                fecha_pago_deposito: "",
-                millas_servicio: Number(document.getElementById('millas_servicio').value) > 0
-    ? document.getElementById('millas_servicio').value
-    : obtenerMillasServicio({ cliente: cli_nombre }),
-                millas_reales: id && document.getElementById('millas_reales')
-    ? document.getElementById('millas_reales').value || ""
-    : "",
-                empleado_nombre: document.getElementById('search-empleado').value,
-                empleado_email: document.getElementById('email-empleado').value,
-                empleado_nombre_2: document.getElementById('search-empleado-2').value || "",
-                empleado_email_2: document.getElementById('email-empleado-2').value || "",
-                fecha: document.getElementById('fecha').value,
-                hora: document.getElementById('hora').value,
-                hora_final_estimada: document.getElementById('hora_final_estimada').value || "",
-                repetir: document.getElementById('repetir').value || "ninguno",
-                estado_calendario: document.getElementById('estado_calendario').value || "pendiente",
-                notas: document.getElementById('notas').value,
-                tipo: tipoSeleccionado,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            if(id) {
-                data.hora_inicio = document.getElementById('hora_inicio_real').value || "--:--";
-                data.hora_fin = document.getElementById('hora_fin_real').value || "--:--";
-            } else {
-                data.estado = "pendiente";
-                data.hora_inicio = "--:--";
-                data.hora_fin = "--:--";
-                data.firma_cliente = false;
-            }
+    if (!cli_nombre) return alert("Falta el nombre del cliente");
 
-            db.collection("clientes").doc(cli_nombre).set({
-                nombre: cli_nombre,
-                direccion: data.direccion,
-                whatsapp: data.whatsapp,
-                telefono: data.whatsapp,
-                email: data.email_cliente,
-                millas_servicio: data.millas_servicio || 0
-            }, { merge: true });
+    const precio = Number(document.getElementById('precio_total').value || 0);
 
-            if (id) db.collection("servicios").doc(id).update(data).then(() => location.reload());
-            else db.collection("servicios").add(data).then(() => location.reload());
-        }
+    const data = {
+        cliente: cli_nombre,
+        direccion: document.getElementById('direccion').value,
+        whatsapp: document.getElementById('whatsapp').value.replace(/\D/g, ''),
+        email_cliente: document.getElementById('email_cliente').value || "",
+        precio_total: precio,
 
+        deposito_requerido: true,
+        deposito_monto: precio * 0.5,
+        balance_restante: precio * 0.5,
+
+        millas_servicio: Number(document.getElementById('millas_servicio').value) > 0
+            ? document.getElementById('millas_servicio').value
+            : obtenerMillasServicio({ cliente: cli_nombre }),
+
+        millas_reales: id && document.getElementById('millas_reales')
+            ? document.getElementById('millas_reales').value || ""
+            : "",
+
+        empleado_nombre: document.getElementById('search-empleado').value,
+        empleado_email: document.getElementById('email-empleado').value,
+        empleado_nombre_2: document.getElementById('search-empleado-2').value || "",
+        empleado_email_2: document.getElementById('email-empleado-2').value || "",
+
+        fecha: document.getElementById('fecha').value,
+        hora: document.getElementById('hora').value,
+        hora_final_estimada: document.getElementById('hora_final_estimada').value || "",
+        repetir: document.getElementById('repetir').value || "ninguno",
+        estado_calendario: document.getElementById('estado_calendario').value || "pendiente",
+        notas: document.getElementById('notas').value,
+        tipo: tipoSeleccionado,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (id) {
+        data.hora_inicio = document.getElementById('hora_inicio_real').value || "--:--";
+        data.hora_fin = document.getElementById('hora_fin_real').value || "--:--";
+    } else {
+        data.estado = "pendiente";
+        data.hora_inicio = "--:--";
+        data.hora_fin = "--:--";
+        data.firma_cliente = false;
+        data.deposito_pagado = false;
+        data.metodo_pago_deposito = "";
+        data.comprobante_deposito = "";
+        data.fecha_pago_deposito = "";
+    }
+
+    db.collection("clientes").doc(cli_nombre).set({
+        nombre: cli_nombre,
+        direccion: data.direccion,
+        whatsapp: data.whatsapp,
+        telefono: data.whatsapp,
+        email: data.email_cliente,
+        millas_servicio: data.millas_servicio || 0
+    }, { merge: true });
+
+    if (id) {
+        db.collection("servicios").doc(id).update(data)
+            .then(() => {
+                alert("Cambios guardados correctamente ✅");
+                location.reload();
+            })
+            .catch(error => {
+                console.error("Error guardando cambios:", error);
+                alert("Error guardando cambios. Revisa la consola.");
+            });
+    } else {
+        db.collection("servicios").add(data)
+            .then(() => location.reload())
+            .catch(error => {
+                console.error("Error asignando trabajo:", error);
+                alert("Error asignando trabajo. Revisa la consola.");
+            });
+    }
+}
         db.collection("servicios").onSnapshot(snap => {
             todosLosServicios = [];
             snap.forEach(doc => {
