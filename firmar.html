@@ -164,7 +164,8 @@ I ALREADY PAID
 </div>
 
 <script>
-const PAYPAL_LINK = "https://www.paypal.com/ncp/payment/JVJQB8CCSH9EE";
+const CREAR_PAYPAL_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/crearOrdenPayPalDeposito";
+const CAPTURAR_PAYPAL_URL = "https://us-central1-elite-cleaners-app.cloudfunctions.net/capturarOrdenPayPalDeposito";
 const ZELLE_EMAIL = "elitecleanerscompany@gmail.com";
 
 const firebaseConfig = {
@@ -221,12 +222,43 @@ async function cargarServicio() {
   }
 }
 
+async function iniciarPagoPayPal() {
+  try {
+    if (!idServicio) {
+      alert("Service ID not found.");
+      return;
+    }
+
+    const res = await fetch(CREAR_PAYPAL_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        idServicio: idServicio
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.approveUrl) {
+      alert("PayPal error: " + (data.error || "Could not create payment."));
+      return;
+    }
+
+    window.location.href = data.approveUrl;
+
+  } catch (e) {
+    alert("PayPal error: " + e.message);
+  }
+}
+  
 async function solicitarRevisionPago() {
   try {
     await db.collection("servicios").doc(idServicio).update({
       pago_revision_solicitado: true,
       metodo_pago_deposito: "PayPal or Zelle",
-      paypal_link: PAYPAL_LINK,
+      paypal_link: "Dynamic PayPal Checkout",
       zelle_email: ZELLE_EMAIL,
       fecha_solicitud_revision_pago: new Date().toISOString()
     });
