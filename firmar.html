@@ -1,179 +1,346 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sign Agreement - Elite Cleaners Company</title>
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sign Agreement - Elite Cleaners Company</title>
 
-    <style>
-        body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px; text-align: center; }
-        .container { max-width: 500px; margin: auto; }
-        h2 { font-style: italic; font-weight: 900; color: #fff; text-transform: uppercase; margin-bottom: 5px; font-size: 20px; }
-        h2 span { color: #3b82f6; }
-        .legal-box { 
-            background: #1c1c1e; 
-            padding: 20px; 
-            border-radius: 15px; 
-            text-align: left; 
-            font-size: 13px; 
-            line-height: 1.6; 
-            border: 1px solid #2c2c2e; 
-            margin-bottom: 25px; 
-            max-height: 400px; 
-            overflow-y: auto; 
-            color: #d1d5db; 
-        }
-        .legal-box b { color: #fff; display: block; margin-top: 15px; }
-        .title-contract { color: #3b82f6; font-weight: bold; font-size: 14px; display: block; text-align: center; margin-bottom: 15px; text-transform: uppercase; }
-        #signature-pad { background: #1c1c1e; border-radius: 15px; cursor: crosshair; touch-action: none; width: 100%; height: 250px; border: 2px solid #3b82f6; }
-        .buttons { margin-top: 25px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        button { padding: 18px; border-radius: 15px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 14px; }
-        .btn-clear { background: #2c2c2e; color: white; }
-        .btn-save { background: #3b82f6; color: white; }
-        #success-screen { display: none; flex-direction: column; justify-content: center; align-items: center; padding-top: 50px; }
-        #processing-msg { display: none; color: #3b82f6; font-weight: bold; margin-top: 20px; }
-    </style>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<style>
+body { background:#000; color:white; font-family:-apple-system,sans-serif; margin:0; padding:20px; text-align:center; }
+.container { max-width:500px; margin:auto; }
+h2 { font-style:italic; font-weight:900; color:#fff; text-transform:uppercase; margin-bottom:5px; font-size:20px; }
+h2 span { color:#3b82f6; }
+
+.legal-box {
+  background:#1c1c1e; padding:20px; border-radius:15px; text-align:left;
+  font-size:13px; line-height:1.6; border:1px solid #2c2c2e;
+  margin-bottom:20px; max-height:400px; overflow-y:auto; color:#d1d5db;
+}
+.legal-box b { color:#fff; display:block; margin-top:15px; }
+.title-contract { color:#3b82f6; font-weight:bold; font-size:14px; display:block; text-align:center; margin-bottom:15px; text-transform:uppercase; }
+
+.payment-box {
+  background:#111827; border:1px solid #3b82f6; border-radius:18px;
+  padding:18px; margin-bottom:20px; text-align:left;
+}
+.payment-box h3 { margin:0 0 10px 0; color:#3b82f6; text-align:center; }
+.payment-row { display:flex; justify-content:space-between; margin:8px 0; font-size:14px; }
+.payment-row b { color:#22c55e; }
+.pay-btn {
+  width:100%; display:block; text-align:center; text-decoration:none;
+  padding:16px; border-radius:14px; margin-top:12px;
+  font-weight:bold; box-sizing:border-box;
+}
+.paypal { background:#facc15; color:#111; }
+.zelle { background:#6d28d9; color:#fff; }
+.confirm-request { background:#22c55e; color:#fff; border:none; width:100%; margin-top:12px; }
+
+.notice {
+  background:#2c2c2e; border-radius:12px; padding:12px;
+  font-size:12px; color:#d1d5db; margin-top:12px; line-height:1.5;
+}
+
+.locked {
+  background:#7f1d1d; border:1px solid #ef4444; color:#fff;
+  border-radius:12px; padding:12px; font-size:13px; margin-bottom:20px;
+}
+
+.unlocked {
+  background:#14532d; border:1px solid #22c55e; color:#fff;
+  border-radius:12px; padding:12px; font-size:13px; margin-bottom:20px;
+}
+
+#signature-pad { background:#1c1c1e; border-radius:15px; cursor:crosshair; touch-action:none; width:100%; height:250px; border:2px solid #3b82f6; }
+.buttons { margin-top:25px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+button { padding:18px; border-radius:15px; border:none; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:14px; }
+.btn-clear { background:#2c2c2e; color:white; }
+.btn-save { background:#3b82f6; color:white; }
+#success-screen { display:none; flex-direction:column; justify-content:center; align-items:center; padding-top:50px; }
+#processing-msg { display:none; color:#3b82f6; font-weight:bold; margin-top:20px; }
+</style>
 </head>
+
 <body>
-
 <div class="container">
-    <h2>ELITE CLEANERS <span>COMPANY</span></h2>
-    <div id="main-content">
-        <p id="cliente-nombre">Loading agreement...</p>
-        
-        <div class="legal-box">
-            <span class="title-contract">CLEANING SERVICES AGREEMENT</span>
-            
-            <b>• CLAUSE 1: PURPOSE AND SCOPE OF SERVICE</b>
-            The company agrees to perform the cleaning service under industry standards, fulfilling the objective previously agreed upon with the client. Additional tasks will be quoted separately.
+<h2>ELITE CLEANERS <span>COMPANY</span></h2>
 
-            <b>• CLAUSE 2: SUPPLIES AND ACCESS</b>
-            The client must guarantee free access and basic supplies (water and electricity).
+<div id="main-content">
+<p id="cliente-nombre">Loading agreement...</p>
 
-            <b>• CLAUSE 3: ECONOMIC TERMS AND PAYMENT</b>
-            - Deposit (50%): To schedule the service.<br>
-            - Final Payment (50%): Immediately upon completion.<br>
-            - Late Fee: 5% surcharge after 48 hours of delay.
+<div class="legal-box">
+<span class="title-contract">CLEANING SERVICES AGREEMENT</span>
 
-            <b>• CLAUSE 4: CANCELLATION AND FAILED SERVICES</b>
-            Notices with less than 24 hours result in the loss of the deposit. If staff cannot enter (No-Show), the service is charged as executed.
+<b>• CLAUSE 1: PURPOSE AND SCOPE OF SERVICE</b>
+The company agrees to perform the cleaning service under industry standards, fulfilling the objective previously agreed upon with the client. Additional tasks will be quoted separately.
 
-            <b>• CLAUSE 5: CHILD AND PET SAFETY</b>
-            Pets and minors must be secured; the company is not responsible for them. Biological waste (human or animal) is not cleaned.
+<b>• CLAUSE 2: SUPPLIES AND ACCESS</b>
+The client must guarantee free access and basic supplies (water and electricity).
 
-            <b>• CLAUSE 6: EQUIPMENT AND SUPPLIES</b>
-            Elite Cleaners provides professional chemicals and machinery. Use of the client's products is at their own risk of surface damage.
+<b>• CLAUSE 3: ECONOMIC TERMS, DEPOSIT AND PAYMENT</b>
+- Deposit Required: The client must pay the required deposit before signing this agreement and before the service is officially confirmed.<br>
+- Payment Options: The deposit may be paid through PayPal or Zelle.<br>
+- Agreement Activation: This agreement can only be signed after Elite Cleaners Company confirms that the deposit has been received.<br>
+- Final Payment: The remaining balance is due immediately upon completion of the service.<br>
+- Late Fee: A 5% surcharge may apply after 48 hours of delay.
 
-            <b>• CLAUSE 7: LIMIT OF LIABILITY</b>
-            Damage reports must be made with photos within 24 hours. This clause is subject to the exemptions in Clauses 9 and 10.
+<b>• CLAUSE 4: CANCELLATION AND FAILED SERVICES</b>
+Notices with less than 24 hours result in the loss of the deposit. If staff cannot enter (No-Show), the service is charged as executed.
 
-            <b>• CLAUSE 8: TALENT PROTECTION (NON-SOLICITATION)</b>
-            A $2,500 USD fine applies if the client directly hires any team member up to 12 months after the service.
+<b>• CLAUSE 5: CHILD AND PET SAFETY</b>
+Pets and minors must be secured; the company is not responsible for them. Biological waste (human or animal) is not cleaned.
 
-            <b>• CLAUSE 9: MOVING HEAVY OBJECTS</b>
-            The client must be present to move refrigerators, stoves, or heavy furniture. Elite Cleaners is not responsible for scratches or floor damage resulting from these maneuvers.
+<b>• CLAUSE 6: EQUIPMENT AND SUPPLIES</b>
+Elite Cleaners provides professional chemicals and machinery. Use of the client's products is at their own risk of surface damage.
 
-            <b>• CLAUSE 10: EXEMPTION FOR STRUCTURAL FAILURES</b>
-            Elite Cleaners is fully exempt from liability for damage or breakage to glass, doors, faucets, or installations due to poor condition, age, or improper prior installation.
-        </div>
+<b>• CLAUSE 7: LIMIT OF LIABILITY</b>
+Damage reports must be made with photos within 24 hours. This clause is subject to the exemptions in Clauses 9 and 10.
 
-        <canvas id="signature-pad"></canvas>
-        <div id="processing-msg">SAVING SIGNATURE...</div>
+<b>• CLAUSE 8: TALENT PROTECTION (NON-SOLICITATION)</b>
+A $2,500 USD fine applies if the client directly hires any team member up to 12 months after the service.
 
-        <div class="buttons">
-            <button class="btn-clear" onclick="limpiar()">Clear</button>
-            <button class="btn-save" id="btn-confirmar" onclick="procesarFirma()">Confirm and Sign</button>
-        </div>
-    </div>
+<b>• CLAUSE 9: MOVING HEAVY OBJECTS</b>
+The client must be present to move refrigerators, stoves, or heavy furniture. Elite Cleaners is not responsible for scratches or floor damage resulting from these maneuvers.
 
-    <div id="success-screen">
-        <div style="font-size: 60px; margin-bottom: 20px;">✅</div>
-        <h3>AGREEMENT SIGNED!</h3>
-        <p style="color: #3b82f6; font-weight: bold;">You may now close this tab.</p>
-    </div>
+<b>• CLAUSE 10: EXEMPTION FOR STRUCTURAL FAILURES</b>
+Elite Cleaners is fully exempt from liability for damage or breakage to glass, doors, faucets, or installations due to poor condition, age, or improper prior installation.
+</div>
+
+<div class="payment-box" id="payment-box">
+<h3>Deposit Payment Required</h3>
+
+<div class="payment-row">
+<span>Total Service:</span>
+<b id="precio-total">$0.00</b>
+</div>
+
+<div class="payment-row">
+<span>Required Deposit:</span>
+<b id="deposito-monto">$100.00</b>
+</div>
+
+<a class="pay-btn paypal" href="https://www.paypal.com/ncp/payment/JVJQB8CCSH9EE" target="_blank">
+PAY WITH PAYPAL
+</a>
+
+<a class="pay-btn zelle" href="mailto:elitecleanerscompany@gmail.com">
+PAY WITH ZELLE
+</a>
+
+<div class="notice">
+<b>Zelle:</b><br>
+Send payment to:<br>
+elitecleanerscompany@gmail.com<br><br>
+After payment, tap the button below to notify Elite Cleaners.
+</div>
+
+<button class="confirm-request" onclick="solicitarRevisionPago()">
+I ALREADY PAID
+</button>
+</div>
+
+<div id="payment-status" class="locked">
+🔒 Signature locked. Deposit must be confirmed by Elite Cleaners Company before signing.
+</div>
+
+<div id="signature-section" style="display:none;">
+<canvas id="signature-pad"></canvas>
+<div id="processing-msg">SAVING SIGNATURE...</div>
+
+<div class="buttons">
+<button class="btn-clear" onclick="limpiar()">Clear</button>
+<button class="btn-save" id="btn-confirmar" onclick="procesarFirma()">Confirm and Sign</button>
+</div>
+</div>
+</div>
+
+<div id="success-screen">
+<div style="font-size:60px; margin-bottom:20px;">✅</div>
+<h3>AGREEMENT SIGNED!</h3>
+<p style="color:#3b82f6; font-weight:bold;">You may now close this tab.</p>
+</div>
 </div>
 
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
-        authDomain: "elite-cleaners-app.firebaseapp.com",
-        projectId: "elite-cleaners-app",
-        storageBucket: "elite-cleaners-app.appspot.com",
-        messagingSenderId: "826642317319",
-        appId: "1:826642317319:web:cddce7904b590ae"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+const PAYPAL_LINK = "https://www.paypal.com/ncp/payment/JVJQB8CCSH9EE";
+const ZELLE_EMAIL = "elitecleanerscompany@gmail.com";
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const idServicio = urlParams.get('id');
-    const nombreCliente = urlParams.get('cliente') || "Customer";
-    document.getElementById('cliente-nombre').innerText = "Agreement for: " + nombreCliente;
+const firebaseConfig = {
+  apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
+  authDomain: "elite-cleaners-app.firebaseapp.com",
+  projectId: "elite-cleaners-app",
+  storageBucket: "elite-cleaners-app.appspot.com",
+  messagingSenderId: "826642317319",
+  appId: "1:826642317319:web:cddce7904b590ae"
+};
 
-    const canvas = document.getElementById('signature-pad');
-    const ctx = canvas.getContext('2d');
-    let dibujando = false;
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-    function ajustarCanvas() {
-        const r = window.devicePixelRatio || 1;
-        canvas.width = canvas.offsetWidth * r;
-        canvas.height = canvas.offsetHeight * r;
-        ctx.scale(r, r);
-        ctx.strokeStyle = "#FFFFFF";
-        ctx.lineWidth = 3;
-        ctx.lineJoin = "round";
-        ctx.lineCap = "round";
-    }
-    window.addEventListener('resize', ajustarCanvas);
+const urlParams = new URLSearchParams(window.location.search);
+const idServicio = urlParams.get("id");
+const nombreCliente = urlParams.get("cliente") || "Customer";
+
+document.getElementById("cliente-nombre").innerText = "Agreement for: " + nombreCliente;
+
+let servicioActual = null;
+
+async function cargarServicio() {
+  if (!idServicio) {
+    alert("Service ID not found.");
+    return;
+  }
+
+  const doc = await db.collection("servicios").doc(idServicio).get();
+
+  if (!doc.exists) {
+    alert("Agreement not found.");
+    return;
+  }
+
+  servicioActual = doc.data();
+
+  const precio = Number(servicioActual.precio_total || 0);
+  const deposito = Number(servicioActual.deposito_monto || 100);
+
+  document.getElementById("precio-total").innerText = "$" + precio.toFixed(2);
+  document.getElementById("deposito-monto").innerText = "$" + deposito.toFixed(2);
+
+  if (servicioActual.deposito_pagado === true) {
+    document.getElementById("payment-box").style.display = "none";
+    document.getElementById("payment-status").className = "unlocked";
+    document.getElementById("payment-status").innerText = "✅ Deposit confirmed. You can now sign the agreement.";
+    document.getElementById("signature-section").style.display = "block";
     ajustarCanvas();
+  } else {
+    document.getElementById("signature-section").style.display = "none";
+    document.getElementById("payment-status").className = "locked";
+    document.getElementById("payment-status").innerText = "🔒 Signature locked. Deposit must be confirmed by Elite Cleaners Company before signing.";
+  }
+}
 
-    function obtenerPos(e) {
-        const rect = canvas.getBoundingClientRect();
-        const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
-        const clientY = (e.touches && e.touches[0]) ? e.touches[0].clientY : e.clientY;
-        return { x: clientX - rect.left, y: clientY - rect.top };
-    }
+async function solicitarRevisionPago() {
+  try {
+    await db.collection("servicios").doc(idServicio).update({
+      pago_revision_solicitado: true,
+      metodo_pago_deposito: "PayPal or Zelle",
+      paypal_link: PAYPAL_LINK,
+      zelle_email: ZELLE_EMAIL,
+      fecha_solicitud_revision_pago: new Date().toISOString()
+    });
 
-    canvas.addEventListener('mousedown', (e) => { dibujando = true; ctx.beginPath(); const p = obtenerPos(e); ctx.moveTo(p.x, p.y); });
-    canvas.addEventListener('touchstart', (e) => { dibujando = true; ctx.beginPath(); const p = obtenerPos(e); ctx.moveTo(p.x, p.y); e.preventDefault(); }, {passive: false});
-    canvas.addEventListener('mousemove', (e) => { if (!dibujando) return; const p = obtenerPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
-    canvas.addEventListener('touchmove', (e) => { if (!dibujando) return; const p = obtenerPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); }, {passive: false});
-    window.addEventListener('mouseup', () => { dibujando = false; });
-    window.addEventListener('touchend', () => { dibujando = false; });
+    alert("Thank you. Elite Cleaners Company will verify your deposit. Once confirmed, the signature will be unlocked.");
+  } catch (e) {
+    alert("Error: " + e.message);
+  }
+}
 
-    function limpiar() { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.beginPath(); }
+const canvas = document.getElementById("signature-pad");
+const ctx = canvas.getContext("2d");
+let dibujando = false;
 
-    async function procesarFirma() {
-        const btn = document.getElementById('btn-confirmar');
-        btn.disabled = true;
-        document.getElementById('processing-msg').style.display = 'block';
+function ajustarCanvas() {
+  const r = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth * r;
+  canvas.height = canvas.offsetHeight * r;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(r, r);
+  ctx.strokeStyle = "#FFFFFF";
+  ctx.lineWidth = 3;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+}
 
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
-        const tCtx = tempCanvas.getContext('2d');
-        tCtx.drawImage(canvas, 0, 0);
-        tCtx.globalCompositeOperation = 'difference';
-        tCtx.fillStyle = 'white';
-        tCtx.fillRect(0,0,tempCanvas.width,tempCanvas.height);
-        const firmaImg = tempCanvas.toDataURL('image/png');
+window.addEventListener("resize", ajustarCanvas);
 
-        try {
-            await db.collection("servicios").doc(idServicio).update({
-                firma_cliente: true,
-                firma_imagen: firmaImg,
-                fecha_firma: new Date().toISOString()
-            });
+function obtenerPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+  const clientY = (e.touches && e.touches[0]) ? e.touches[0].clientY : e.clientY;
+  return { x: clientX - rect.left, y: clientY - rect.top };
+}
 
-            document.getElementById('main-content').style.display = 'none';
-            document.getElementById('success-screen').style.display = 'flex';
-        } catch (e) {
-            alert("Error: " + e.message);
-            btn.disabled = false;
-        }
-    }
+canvas.addEventListener("mousedown", (e) => {
+  dibujando = true;
+  ctx.beginPath();
+  const p = obtenerPos(e);
+  ctx.moveTo(p.x, p.y);
+});
+
+canvas.addEventListener("touchstart", (e) => {
+  dibujando = true;
+  ctx.beginPath();
+  const p = obtenerPos(e);
+  ctx.moveTo(p.x, p.y);
+  e.preventDefault();
+}, { passive:false });
+
+canvas.addEventListener("mousemove", (e) => {
+  if (!dibujando) return;
+  const p = obtenerPos(e);
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+});
+
+canvas.addEventListener("touchmove", (e) => {
+  if (!dibujando) return;
+  const p = obtenerPos(e);
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+  e.preventDefault();
+}, { passive:false });
+
+window.addEventListener("mouseup", () => { dibujando = false; });
+window.addEventListener("touchend", () => { dibujando = false; });
+
+function limpiar() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.beginPath();
+}
+
+async function procesarFirma() {
+  const doc = await db.collection("servicios").doc(idServicio).get();
+  const servicio = doc.data();
+
+  if (!servicio || servicio.deposito_pagado !== true) {
+    alert("Deposit has not been confirmed yet. The agreement cannot be signed.");
+    return;
+  }
+
+  const btn = document.getElementById("btn-confirmar");
+  btn.disabled = true;
+  document.getElementById("processing-msg").style.display = "block";
+
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.width = canvas.width;
+  tempCanvas.height = canvas.height;
+
+  const tCtx = tempCanvas.getContext("2d");
+  tCtx.drawImage(canvas, 0, 0);
+  tCtx.globalCompositeOperation = "difference";
+  tCtx.fillStyle = "white";
+  tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+  const firmaImg = tempCanvas.toDataURL("image/png");
+
+  try {
+    await db.collection("servicios").doc(idServicio).update({
+      firma_cliente: true,
+      firma_imagen: firmaImg,
+      fecha_firma: new Date().toISOString()
+    });
+
+    document.getElementById("main-content").style.display = "none";
+    document.getElementById("success-screen").style.display = "flex";
+  } catch (e) {
+    alert("Error: " + e.message);
+    btn.disabled = false;
+  }
+}
+
+cargarServicio();
 </script>
 </body>
 </html>
