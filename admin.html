@@ -30,6 +30,28 @@
         .staff-actions { display: flex; gap: 5px; }
         .btn-mini { padding: 6px 10px; border: none; border-radius: 6px; font-size: 9px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; }
         .search-container { position: relative; margin-bottom: 5px; }
+        .search-jobs-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #1c1c1e;
+    border: 1px solid #3b82f6;
+    border-radius: 18px;
+    padding: 12px 15px;
+    margin: 10px 0 18px 0;
+}
+
+.search-jobs-box span {
+    font-size: 22px;
+}
+
+.search-jobs-box input {
+    margin: 0;
+    background: transparent;
+    border: none;
+    padding: 8px 0;
+    font-size: 15px;
+}
         .suggestions-list { position: absolute; width: 100%; background: #3b82f6; border-radius: 10px; z-index: 100; max-height: 150px; overflow-y: auto; display: none; }
         .suggestion-item { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-weight: bold; }
         .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
@@ -197,7 +219,17 @@
         <button id="cancel-edit" style="display:none; background:none; border:none; color:#ef4444; width:100%; margin-top:10px; font-weight:bold; cursor:pointer;" onclick="location.reload()">CANCELAR EDICIÓN</button>
     </div>
 
-    <div id="historial"></div>
+    <div class="search-jobs-box">
+    <span>🔍</span>
+    <input 
+        type="text" 
+        id="buscarTrabajo" 
+        placeholder="Buscar trabajo por cliente, dirección, fecha o staff..."
+        oninput="renderHistorial()"
+    >
+</div>
+
+<div id="historial"></div>
 
     <div class="payroll-container">
         <span class="label-text" style="color: #22c55e;">Resumen de Nómina (Payroll)</span>
@@ -586,6 +618,21 @@ function obtenerMillasServicio(s) {
             });
 
             todosLosServicios.forEach(s => {
+                
+                const textoBusqueda = (document.getElementById('buscarTrabajo')?.value || "").toLowerCase();
+
+const contenidoTrabajo = `
+    ${s.cliente || ""}
+    ${s.direccion || ""}
+    ${s.fecha || ""}
+    ${s.hora || ""}
+    ${s.tipo || ""}
+    ${s.empleado_nombre || ""}
+    ${s.empleado_nombre_2 || ""}
+    ${s.precio_total || ""}
+`.toLowerCase();
+
+if (textoBusqueda && !contenidoTrabajo.includes(textoBusqueda)) return;
                 if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
                     const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
                     const btnFirma = s.firma_cliente ? `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">Ver Firma</button>` : `<button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Acuerdo</button>`;
