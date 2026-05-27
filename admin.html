@@ -174,7 +174,7 @@
     <div>
         <span class="label-text">Repetir</span>
         <select id="repetir" style="width:100%; padding:14px; margin-bottom:10px; border-radius:12px; border:1px solid #2c2c2e; background:#2c2c2e; color:white; font-size:15px;">
-            <option value="ninguno">Ninguno</option>
+            <option value="ninguno">Única vez</option>
             <option value="semanal">Semanal</option>
             <option value="quincenal">Quincenal</option>
             <option value="mensual">Mensual</option>
@@ -602,10 +602,11 @@ function obtenerMillasServicio(s) {
 
     if (id) {
         db.collection("servicios").doc(id).update(data)
-            .then(() => {
-                alert("Cambios guardados correctamente ✅");
-                location.reload();
-            })
+           .then(async () => {
+    await crearRepeticiones(data, data.repetir);
+    alert("Cambios guardados correctamente ✅");
+    location.reload();
+})
             .catch(error => {
                 console.error("Error guardando cambios:", error);
                 alert("Error guardando cambios. Revisa la consola.");
@@ -716,6 +717,7 @@ ${estadoDeposito}
 <p>📅 ${s.fecha} | ⏰ ${horaFormateada}</p>
 <p>📍 ${s.direccion}</p>
 <p>🚗 ${obtenerMillasServicio(s)} millas ida/vuelta</p>
+<p>🔁 ${s.repetir === "ninguno" ? "Única vez" : s.repetir}</p>
 <p>👤 ${s.empleado_nombre_2 ? s.empleado_nombre+' & '+s.empleado_nombre_2 : s.empleado_nombre}</p>
 <div class="time-box">
     <div class="time-row"><b>Inicio:</b> ${s.hora_inicio}</div>
