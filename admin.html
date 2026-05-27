@@ -515,7 +515,7 @@ function obtenerMillasServicio(s) {
                 precio_total: document.getElementById('precio_total').value || 0,
                 deposito_requerido: true,
 
-                deposito_pagado: false,
+                deposito_pagado: id ? undefined : false,
                 deposito_monto: Number(document.getElementById('precio_total').value || 0) * 0.5,
                 balance_restante: Number(document.getElementById('precio_total').value || 0) * 0.5,
                 metodo_pago_deposito: "",
@@ -589,6 +589,13 @@ function obtenerMillasServicio(s) {
                 if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
                     const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
                     const btnFirma = s.firma_cliente ? `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">Ver Firma</button>` : `<button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Acuerdo</button>`;
+                    const depositoMonto = Number(s.deposito_monto || 0).toFixed(2);
+const estadoDeposito = s.deposito_pagado
+    ? `<p style="color:#22c55e; font-weight:bold;">✅ Depósito confirmado: $${depositoMonto}</p>`
+    : `<p style="color:#f59e0b; font-weight:bold;">🔒 Depósito pendiente: $${depositoMonto}</p>`;
+const btnDeposito = s.deposito_pagado
+    ? `<button class="btn-action" style="background:#92400e;" onclick="cancelarDeposito('${s.id}')">Cancelar Depósito</button>`
+    : `<button class="btn-action" style="background:#22c55e;" onclick="confirmarDeposito('${s.id}')">Confirmar Depósito</button>`;
                     const card = document.createElement('div');
                     card.className = 'card-servicio';
                     const horaFormateada = formatAMPM(s.hora);
@@ -598,7 +605,8 @@ function obtenerMillasServicio(s) {
                         <div style="font-size:10px; color:#3b82f6; font-weight:bold;">${s.tipo}</div>
                         <h3>${s.cliente}</h3>
                         <span class="price-tag">$${s.precio_total || 0}</span>
-                        <p>📅 ${s.fecha} | ⏰ ${horaFormateada}</p>
+${estadoDeposito}
+<p>📅 ${s.fecha} | ⏰ ${horaFormateada}</p>
 <p>📍 ${s.direccion}</p>
 <p>🚗 ${obtenerMillasServicio(s)} millas ida/vuelta</p>
 <p>👤 ${s.empleado_nombre_2 ? s.empleado_nombre+' & '+s.empleado_nombre_2 : s.empleado_nombre}</p>
@@ -609,9 +617,13 @@ function obtenerMillasServicio(s) {
                            <div class="time-row"><b>Millas:</b> ${obtenerMillasServicio(s)} mi</div>
                         </div>
                         <div class="action-buttons">
-                            <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">${s.estado === 'completado' ? 'Reabrir' : 'Terminar'}</button>
-                            ${btnFirma}
-                            <button class="btn-action btn-whatsapp" onclick="enviarRecordatorio('${s.id}')">Recordatorio 📱</button>
+    <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">${s.estado === 'completado' ? 'Reabrir' : 'Terminar'}</button>
+    
+    ${btnFirma}
+
+    ${btnDeposito}
+
+    <button class="btn-action btn-whatsapp" onclick="enviarRecordatorio('${s.id}')">Recordatorio 📱</button>
                             <button class="btn-action btn-review" onclick="solicitarResenaGoogle('${s.cliente}', '${s.whatsapp}')">Reseña ⭐️</button>
                             <button class="btn-action btn-edit" id="edit-btn-${s.id}">Editar</button>
                             <button class="btn-action btn-review" style="background:#ef4444" onclick="borrar('${s.id}')">Borrar</button>
@@ -703,11 +715,31 @@ function obtenerMillasServicio(s) {
             abrirSMS(num);
         }
 
-        function marcar(id, est) { 
+  function marcar(id, est) { 
     db.collection("servicios").doc(id).update({ 
         estado: est,
         estado_calendario: est === "completado" ? "completado" : "pendiente"
     }); 
+}
+
+function confirmarDeposito(id) {
+    if (!confirm("¿Confirmas que el cliente ya pagó el depósito?")) return;
+
+    db.collection("servicios").doc(id).update({
+        deposito_pagado: true,
+        fecha_pago_deposito: new Date().toISOString(),
+        metodo_pago_deposito: "Confirmado manualmente por Admin"
+    });
+}
+
+function cancelarDeposito(id) {
+    if (!confirm("¿Quieres marcar este depósito como NO pagado?")) return;
+
+    db.collection("servicios").doc(id).update({
+        deposito_pagado: false,
+        fecha_pago_deposito: "",
+        metodo_pago_deposito: ""
+    });
 }
         function borrar(id) { if(confirm("¿Seguro que quieres borrarlo?")) db.collection("servicios").doc(id).delete(); }
         
