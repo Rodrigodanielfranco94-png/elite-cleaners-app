@@ -513,6 +513,14 @@ function obtenerMillasServicio(s) {
                 whatsapp: document.getElementById('whatsapp').value.replace(/\D/g,''),
                 email_cliente: document.getElementById('email_cliente').value || "",
                 precio_total: document.getElementById('precio_total').value || 0,
+                deposito_requerido: true,
+
+                deposito_pagado: false,
+                deposito_monto: Number(document.getElementById('precio_total').value || 0) * 0.5,
+                balance_restante: Number(document.getElementById('precio_total').value || 0) * 0.5,
+                metodo_pago_deposito: "",
+                comprobante_deposito: "",
+                fecha_pago_deposito: "",
                 millas_servicio: Number(document.getElementById('millas_servicio').value) > 0
     ? document.getElementById('millas_servicio').value
     : obtenerMillasServicio({ cliente: cli_nombre }),
