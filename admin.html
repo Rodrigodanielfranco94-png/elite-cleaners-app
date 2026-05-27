@@ -612,11 +612,47 @@ function obtenerMillasServicio(s) {
             });
     } else {
         db.collection("servicios").add(data)
-            .then(() => location.reload())
+    .then(async () => {
+        await crearRepeticiones(data, data.repetir);
+        location.reload();
+    })
             .catch(error => {
                 console.error("Error asignando trabajo:", error);
                 alert("Error asignando trabajo. Revisa la consola.");
             });
+    }
+}
+        async function crearRepeticiones(data, repeticion) {
+    if (!data.fecha || repeticion === "ninguno") return;
+
+    const fechaBase = new Date(data.fecha + "T00:00:00");
+
+    const cantidad = 12; // crea 12 trabajos futuros
+
+    for (let i = 1; i <= cantidad; i++) {
+        const nuevaFecha = new Date(fechaBase);
+
+        if (repeticion === "semanal") nuevaFecha.setDate(fechaBase.getDate() + (7 * i));
+        if (repeticion === "quincenal") nuevaFecha.setDate(fechaBase.getDate() + (14 * i));
+        if (repeticion === "mensual") nuevaFecha.setMonth(fechaBase.getMonth() + i);
+
+        const fechaTexto = nuevaFecha.toISOString().slice(0, 10);
+
+        await db.collection("servicios").add({
+            ...data,
+            fecha: fechaTexto,
+            estado: "pendiente",
+            estado_calendario: "pendiente",
+            hora_inicio: "--:--",
+            hora_fin: "--:--",
+            firma_cliente: false,
+            deposito_pagado: false,
+            fecha_pago_deposito: "",
+            metodo_pago_deposito: "",
+            comprobante_deposito: "",
+            repeticion_generada: true,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
     }
 }
         db.collection("servicios").onSnapshot(snap => {
