@@ -899,6 +899,7 @@ const btnDeposito = s.deposito_pagado
     <p>🍳 Hornos: ${s.horno || 0} | 🧊 Nevera: ${s.nevera || "No"}</p>
     <p>🪟 Ventanas: ${s.ventanas || "No"} | 🚪 Gabinetes: ${s.gabinetes || "No"} | 🧹 Baseboards: ${s.baseboards || "No"}</p>
     <p>🧼 Alfombras: ${s.lavado_alfombras || "No"}</p>
+    ${s.notas_internas ? `<p>📝 ${s.notas_internas}</p>` : ""}
 </div>
                         <span class="price-tag">$${s.precio_total || 0}</span>
 ${estadoDeposito}
