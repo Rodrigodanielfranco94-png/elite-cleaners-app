@@ -665,12 +665,19 @@ async function crearEstimateConDatos(datos){
   }
 
   const numero =
-    data.numero ||
-    data.numeroEstimate ||
-    data.estimate_number ||
-    data.estimate?.numero ||
-    data.id ||
-    "";
+  data.numero ||
+  data.estimate_number ||
+  data.numeroEstimate ||
+  data.estimate?.numero ||
+  data.estimate?.estimate_number ||
+  data.estimate?.id ||
+  data.id ||
+  data.docId ||
+  data.documentId ||
+  "";
+
+agregarMensaje("nico", `Número recibido: ${numero}`);
+console.log("Respuesta crear estimate:", data);
 
   if(numero){
     agregarMensajeConBotonPDF(
