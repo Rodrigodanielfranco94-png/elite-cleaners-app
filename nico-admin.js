@@ -760,7 +760,50 @@ if(
   await prepararEnvioInvoiceEmail(numero);
   return;
 }
-    // ================= ESTIMADO RÁPIDO DESDE TEXTO =================
+  
+  // ================= CREAR PDF DESDE ÚLTIMO ESTIMADO =================
+
+  if(
+    t === "crear pdf" ||
+    t === "create pdf" ||
+    t === "crear estimate pdf" ||
+    t === "create estimate"
+  ){
+
+    if(!nicoUltimoEstimadoRapido){
+      agregarMensaje(
+        "nico",
+        "Rodri, todavía no tengo ningún estimado calculado. Primero dime los detalles de la limpieza."
+      );
+      return;
+    }
+
+    const datosFormulario =
+      obtenerDatosFormularioActual();
+
+    const datosFinales = {
+      ...datosFormulario,
+      tipo_limpieza: nicoUltimoEstimadoRapido.tipo_limpieza,
+      notes: nicoUltimoEstimadoRapido.notes,
+      total: nicoUltimoEstimadoRapido.total
+    };
+
+    if(
+      !datosFinales.cliente_nombre ||
+      !datosFinales.cliente_direccion
+    ){
+      agregarMensaje(
+        "nico",
+        "Rodri, para crear el PDF necesito al menos el nombre del cliente y la dirección en el formulario."
+      );
+      return;
+    }
+
+    await crearEstimateConDatos(datosFinales);
+    return;
+  }
+
+  // ================= ESTIMADO RÁPIDO DESDE TEXTO =================
 
   if(
   typeof esSolicitudDeEstimadoRapido === "function" &&
@@ -813,49 +856,7 @@ if(
 
     return;
   }
-
-  // ================= CREAR PDF DESDE ÚLTIMO ESTIMADO =================
-
-  if(
-    t === "crear pdf" ||
-    t === "create pdf" ||
-    t === "crear estimate pdf" ||
-    t === "create estimate"
-  ){
-
-    if(!nicoUltimoEstimadoRapido){
-      agregarMensaje(
-        "nico",
-        "Rodri, todavía no tengo ningún estimado calculado. Primero dime los detalles de la limpieza."
-      );
-      return;
-    }
-
-    const datosFormulario =
-      obtenerDatosFormularioActual();
-
-    const datosFinales = {
-      ...datosFormulario,
-      tipo_limpieza: nicoUltimoEstimadoRapido.tipo_limpieza,
-      notes: nicoUltimoEstimadoRapido.notes,
-      total: nicoUltimoEstimadoRapido.total
-    };
-
-    if(
-      !datosFinales.cliente_nombre ||
-      !datosFinales.cliente_direccion
-    ){
-      agregarMensaje(
-        "nico",
-        "Rodri, para crear el PDF necesito al menos el nombre del cliente y la dirección en el formulario."
-      );
-      return;
-    }
-
-    await crearEstimateConDatos(datosFinales);
-    return;
-  }
-
+  
   // ================= APROBAR MENSAJE =================
 
   if(
