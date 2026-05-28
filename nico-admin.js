@@ -736,9 +736,16 @@ if(
 
     if(nombreExtraido){
 
-      const { cliente, servicio } =
-        buscarDatosCliente(nombreExtraido);
+      const servicio =
+  typeof todosLosServicios !== "undefined"
+    ? [...todosLosServicios].reverse().find(s =>
+        normalizarTexto(s.cliente || "").includes(normalizarTexto(nombreExtraido)) ||
+        normalizarTexto(nombreExtraido).includes(normalizarTexto(s.cliente || ""))
+      )
+    : null;
 
+const cliente = null;
+      
       const datosEncontrados = {
         cliente_nombre:
           servicio?.cliente ||
