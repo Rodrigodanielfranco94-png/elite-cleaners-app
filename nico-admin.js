@@ -356,8 +356,54 @@ async function guardarConversacionNico(tipo, texto){
 function agregarMensajeConBotonPDF(
   texto,
   tipoDocumento,
-  numeroDocumento
+  numeroDocumento,
+  documentoCompleto = null
 ){
+
+  const div = document.createElement("div");
+  div.className = "nicoMsg nico";
+  div.innerText = texto;
+
+  const btn = document.createElement("button");
+  btn.className = "nicoPdfBtn";
+  btn.innerText = "📄 Ver / Descargar PDF";
+
+  btn.onclick = () => {
+    try{
+      const nuevaVentana = window.open("", "_blank");
+
+      if(!nuevaVentana){
+        agregarMensaje("nico", "Rodri, el navegador bloqueó la ventana.");
+        return;
+      }
+
+      if(documentoCompleto && typeof escribirDocumentoPDF === "function"){
+        escribirDocumentoPDF(
+          nuevaVentana,
+          tipoDocumento,
+          documentoCompleto
+        );
+        return;
+      }
+
+      if(tipoDocumento === "invoice"){
+        abrirInvoicePDF(numeroDocumento);
+      }else{
+        abrirEstimatePDF(numeroDocumento);
+      }
+
+    }catch(e){
+      console.log("Error abriendo PDF:", e);
+      agregarMensaje("nico", "❌ Error abriendo estimate.");
+    }
+  };
+
+  div.appendChild(btn);
+  nicoChatMessages.appendChild(div);
+  nicoChatMessages.scrollTop = nicoChatMessages.scrollHeight;
+
+  return div;
+}
 
   const div = document.createElement("div");
 
@@ -680,11 +726,18 @@ agregarMensaje("nico", `Número recibido: ${numero}`);
 console.log("Respuesta crear estimate:", data);
 
   if(numero){
-    agregarMensajeConBotonPDF(
-      `Listo Rodri, creé el estimate de ${payload.cliente_nombre}.`,
-      "estimate",
-      numero
-    );
+    const estimateCompleto = {
+  ...payload,
+  numero: numero,
+  status: "Draft"
+};
+
+agregarMensajeConBotonPDF(
+  `Listo Rodri, creé el estimate de ${payload.cliente_nombre}.`,
+  "estimate",
+  numero,
+  estimateCompleto
+);
   }else{
     agregarMensaje(
       "nico",
