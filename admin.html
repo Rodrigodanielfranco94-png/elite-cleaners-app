@@ -303,9 +303,24 @@
 
 <!-- ===== CARPET CLEANING ===== -->
 
-<span class="label-text">Lavado de Alfombras</span>
+<span class="label-text" style="color:#f59e0b;">4. LAVADO DE ALFOMBRAS</span>
 
-<input type="text" id="lavado_alfombras" placeholder="Ej: 2 habitaciones">
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+
+<div>
+<span class="label-text">Habitaciones con alfombra</span>
+<input type="number" id="alfombra_habitaciones" placeholder="0">
+</div>
+
+<div>
+<span class="label-text">Pies cuadrados de alfombra</span>
+<input type="number" id="alfombra_pies_cuadrados" placeholder="0">
+</div>
+
+</div>
+
+<span class="label-text">Notas de alfombra</span>
+<textarea id="alfombra_notas" placeholder="Ej: manchas, escaleras, pasillo, sala..." rows="2"></textarea>
 
       <!-- ===== NOTAS INTERNAS ===== -->
 
