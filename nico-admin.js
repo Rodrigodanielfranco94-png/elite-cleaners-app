@@ -533,17 +533,26 @@ millas_servicio:
 
 function extraerNombreDesdeComando(texto){
 
-  let t = texto.trim();
+  let t = String(texto || "").trim();
 
   t = t
     .replace(/nico/ig,"")
+    .replace(/oye nico/ig,"")
     .replace(/crea/ig,"")
     .replace(/crear/ig,"")
+    .replace(/hacer/ig,"")
+    .replace(/haz/ig,"")
+    .replace(/dame/ig,"")
+    .replace(/prepara/ig,"")
+    .replace(/prepárame/ig,"")
+    .replace(/preparame/ig,"")
     .replace(/estimate/ig,"")
     .replace(/estimado/ig,"")
     .replace(/cotizacion/ig,"")
     .replace(/cotización/ig,"")
-    .replace(/de /ig,"")
+    .replace(/\bel\b/ig,"")
+    .replace(/\bde\b/ig,"")
+    .replace(/\s+/g," ")
     .trim();
 
   return t;
