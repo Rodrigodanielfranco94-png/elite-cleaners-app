@@ -802,60 +802,6 @@ if(
     await crearEstimateConDatos(datosFinales);
     return;
   }
-
-  // ================= ESTIMADO RÁPIDO DESDE TEXTO =================
-
-  if(
-  typeof esSolicitudDeEstimadoRapido === "function" &&
-  esSolicitudDeEstimadoRapido(mensaje)
-){
-
-  const calculo =
-    typeof responderEstimadoRapido === "function"
-      ? responderEstimadoRapido(mensaje)
-      : null;
-
-  if(!calculo){
-    agregarMensaje("nico", "Rodri, no pude calcular ese estimate rápido.");
-    return;
-  }
-
-  const quiereCrear =
-    t.includes("crear") ||
-    t.includes("crea") ||
-    t.includes("haz") ||
-    t.includes("hacer") ||
-    t.includes("create");
-
-    if(quiereCrear){
-
-      const datosFormulario =
-        obtenerDatosFormularioActual();
-
-      const datosEstimate = {
-        ...datosFormulario,
-        tipo_limpieza: calculo.tipo_limpieza,
-        notes: calculo.notes,
-        total: calculo.total
-      };
-
-      if(
-        !datosEstimate.cliente_nombre ||
-        !datosEstimate.cliente_direccion
-      ){
-        agregarMensaje(
-          "nico",
-          "Rodri, ya calculé el precio y lo puse en el formulario, pero falta el nombre del cliente o la dirección para crear el PDF."
-        );
-        return;
-      }
-
-      await crearEstimateConDatos(datosEstimate);
-      return;
-    }
-
-    return;
-  }
   
   // ================= APROBAR MENSAJE =================
 
@@ -1296,6 +1242,60 @@ millas_servicio:
     return;
   }
 
+  // ================= ESTIMADO RÁPIDO DESDE TEXTO =================
+
+  if(
+  typeof esSolicitudDeEstimadoRapido === "function" &&
+  esSolicitudDeEstimadoRapido(mensaje)
+){
+
+  const calculo =
+    typeof responderEstimadoRapido === "function"
+      ? responderEstimadoRapido(mensaje)
+      : null;
+
+  if(!calculo){
+    agregarMensaje("nico", "Rodri, no pude calcular ese estimate rápido.");
+    return;
+  }
+
+  const quiereCrear =
+    t.includes("crear") ||
+    t.includes("crea") ||
+    t.includes("haz") ||
+    t.includes("hacer") ||
+    t.includes("create");
+
+    if(quiereCrear){
+
+      const datosFormulario =
+        obtenerDatosFormularioActual();
+
+      const datosEstimate = {
+        ...datosFormulario,
+        tipo_limpieza: calculo.tipo_limpieza,
+        notes: calculo.notes,
+        total: calculo.total
+      };
+
+      if(
+        !datosEstimate.cliente_nombre ||
+        !datosEstimate.cliente_direccion
+      ){
+        agregarMensaje(
+          "nico",
+          "Rodri, ya calculé el precio y lo puse en el formulario, pero falta el nombre del cliente o la dirección para crear el PDF."
+        );
+        return;
+      }
+
+      await crearEstimateConDatos(datosEstimate);
+      return;
+    }
+
+    return;
+  }
+  
 // ================= BUSCAR TRABAJO AGENDADO / CREAR ESTIMATE DESDE AGENDA =================
 
 if(
