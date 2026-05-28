@@ -695,6 +695,52 @@ console.log("Respuesta crear estimate:", data);
   return data;
 }
 
+// ================= ABRIR ESTIMATE PDF =================
+
+function abrirEstimatePDF(numeroEstimate){
+
+  try{
+
+    if(!numeroEstimate){
+      agregarMensaje("nico", "❌ No recibí el número del estimate.");
+      return;
+    }
+
+    const url =
+      `${ELITE_BASE_URL}/estimate.html?numero=${encodeURIComponent(numeroEstimate)}`;
+
+    window.open(url, "_blank");
+
+  }catch(e){
+
+    console.log("Error abriendo estimate:", e);
+    agregarMensaje("nico", "❌ Error abriendo estimate.");
+  }
+}
+
+// ================= ABRIR INVOICE PDF =================
+
+function abrirInvoicePDF(numeroInvoice){
+
+  try{
+
+    if(!numeroInvoice){
+      agregarMensaje("nico", "❌ No recibí el número del invoice.");
+      return;
+    }
+
+    const url =
+      `${ELITE_BASE_URL}/invoice.html?numero=${encodeURIComponent(numeroInvoice)}`;
+
+    window.open(url, "_blank");
+
+  }catch(e){
+
+    console.log("Error abriendo invoice:", e);
+    agregarMensaje("nico", "❌ Error abriendo invoice.");
+  }
+}
+
 // ================= SEND =================
 
 async function enviarTextoANico(){
