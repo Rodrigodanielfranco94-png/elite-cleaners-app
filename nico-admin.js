@@ -623,8 +623,25 @@ async function enviarTextoANico(){
   agregarMensaje("user", mensaje);
 
   
-  try {
-  if (typeof detectarMemoriaAutomatica === "function") {
+  const textoMemoria = normalizarTexto(mensaje);
+
+const esComandoNico =
+  textoMemoria.includes("crear estimate") ||
+  textoMemoria.includes("crea estimate") ||
+  textoMemoria.includes("crear invoice") ||
+  textoMemoria.includes("crea invoice") ||
+  textoMemoria.includes("enviar estimate") ||
+  textoMemoria.includes("enviar invoice") ||
+  textoMemoria.includes("ver estimate") ||
+  textoMemoria.includes("ver invoice") ||
+  textoMemoria.includes("mostrar estimates") ||
+  textoMemoria.includes("mostrar invoices") ||
+  textoMemoria.includes("pedir reseña") ||
+  textoMemoria.includes("recordatorio") ||
+  textoMemoria.includes("enviar contrato");
+
+try {
+  if (!esComandoNico && typeof detectarMemoriaAutomatica === "function") {
     detectarMemoriaAutomatica(mensaje);
   }
 } catch (e) {
