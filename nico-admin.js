@@ -538,26 +538,37 @@ function extraerNombreDesdeComando(texto){
   t = t
     .replace(/nico/ig,"")
     .replace(/oye nico/ig,"")
+
     .replace(/crea/ig,"")
     .replace(/crear/ig,"")
     .replace(/hacer/ig,"")
     .replace(/haz/ig,"")
     .replace(/dame/ig,"")
+
     .replace(/prepara/ig,"")
     .replace(/prepárame/ig,"")
     .replace(/preparame/ig,"")
+
     .replace(/estimate/ig,"")
+    .replace(/estímate/ig,"")
+    .replace(/estimáte/ig,"")
+    .replace(/el estimate/ig,"")
+    .replace(/el estímate/ig,"")
+    .replace(/el estimáte/ig,"")
+
     .replace(/estimado/ig,"")
+
     .replace(/cotizacion/ig,"")
     .replace(/cotización/ig,"")
+
     .replace(/\bel\b/ig,"")
     .replace(/\bde\b/ig,"")
+
     .replace(/\s+/g," ")
     .trim();
 
   return t;
 }
-
 function buscarDatosCliente(nombre){
 
   const nombreNorm =
@@ -725,17 +736,20 @@ if(
       obtenerDatosFormularioActual();
 
     const nombreExtraido =
-      extraerNombreDesdeComando(mensaje);
+  extraerNombreDesdeComando(mensaje);
 
-    agregarMensaje("nico", `Nombre extraído: ${nombreExtraido}`);
+agregarMensaje(
+  "nico",
+  `Nombre extraído: ${nombreExtraido}`
+);
 
-    if(
-      datosFormulario.cliente_nombre &&
-      datosFormulario.total > 0
-    ){
-      await crearEstimateConDatos(datosFormulario);
-      return;
-    }
+if(
+  datosFormulario.cliente_nombre &&
+  datosFormulario.total > 0
+){
+  await crearEstimateConDatos(datosFormulario);
+  return;
+}
 
     if(nombreExtraido){
 
