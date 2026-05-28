@@ -639,6 +639,14 @@ const esComandoNico =
   textoMemoria.includes("pedir reseña") ||
   textoMemoria.includes("recordatorio") ||
   textoMemoria.includes("enviar contrato");
+  textoMemoria.includes("crear estimado") ||
+  textoMemoria.includes("crea estimado") ||
+  textoMemoria.includes("hacer estimate") ||
+  textoMemoria.includes("haz estimate") ||
+  textoMemoria.includes("cotizacion") ||
+  textoMemoria.includes("cotización") ||
+  textoMemoria.includes("send estimate") ||
+  textoMemoria.includes("send invoice") ||
 
 try {
   if (!esComandoNico && typeof detectarMemoriaAutomatica === "function") {
