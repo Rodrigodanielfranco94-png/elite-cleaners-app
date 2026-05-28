@@ -748,6 +748,13 @@ if(
     : null;
 
 const cliente = null;
+
+      agregarMensaje(
+  "nico",
+  servicio
+    ? `Trabajo encontrado: ${servicio.cliente} | $${servicio.precio_total || 0}`
+    : "No encontré ese cliente en todosLosServicios."
+);
       
       const datosEncontrados = {
         cliente_nombre:
