@@ -727,6 +727,8 @@ if(
     const nombreExtraido =
       extraerNombreDesdeComando(mensaje);
 
+    agregarMensaje("nico", `Nombre extraído: ${nombreExtraido}`);
+
     if(
       datosFormulario.cliente_nombre &&
       datosFormulario.total > 0
