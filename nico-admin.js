@@ -629,6 +629,65 @@ function buscarDatosCliente(nombre){
   };
 }
 
+// ================= CREAR ESTIMATE CON DATOS =================
+
+async function crearEstimateConDatos(datos){
+
+  if(!CREAR_ESTIMATE_URL){
+    throw new Error("CREAR_ESTIMATE_URL no está configurado.");
+  }
+
+  const payload = {
+    cliente_nombre: datos.cliente_nombre || "",
+    cliente_email: datos.cliente_email || "",
+    cliente_telefono: datos.cliente_telefono || "",
+    cliente_direccion: datos.cliente_direccion || "",
+    tipo_limpieza: datos.tipo_limpieza || "",
+    notes: datos.notes || "",
+    total: Number(datos.total || 0),
+    millas_servicio: Number(datos.millas_servicio || 0),
+    fecha: datos.fecha || "",
+    hora: datos.hora || ""
+  };
+
+  const res = await fetch(CREAR_ESTIMATE_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await res.json();
+
+  if(!res.ok){
+    throw new Error(data.error || data.message || "Error creando estimate.");
+  }
+
+  const numero =
+    data.numero ||
+    data.numeroEstimate ||
+    data.estimate_number ||
+    data.estimate?.numero ||
+    data.id ||
+    "";
+
+  if(numero){
+    agregarMensajeConBotonPDF(
+      `Listo Rodri, creé el estimate de ${payload.cliente_nombre}.`,
+      "estimate",
+      numero
+    );
+  }else{
+    agregarMensaje(
+      "nico",
+      `Listo Rodri, creé el estimate de ${payload.cliente_nombre}, pero no recibí número de estimate.`
+    );
+  }
+
+  return data;
+}
+
 // ================= SEND =================
 
 async function enviarTextoANico(){
