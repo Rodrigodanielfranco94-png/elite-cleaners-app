@@ -408,7 +408,13 @@ function abrirNico(){
 
     agregarMensaje(
       "nico",
-      "Hola chicos 👋 Estoy listo para ayudarles con estimates, invoices, trabajos y mensajes para clientes."
+      const usuarioNico =
+  localStorage.getItem("usuarioActivo") ||
+  localStorage.getItem("usuario") ||
+  localStorage.getItem("nombreUsuario") ||
+  "Rodrigo";
+
+const saludoNico = `Hola ${usuarioNico}, ¿en qué puedo ayudarte?`;
     );
 
     nicoChatMessages.dataset.saludo =
