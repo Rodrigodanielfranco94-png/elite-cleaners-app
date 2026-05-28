@@ -405,40 +405,6 @@ function agregarMensajeConBotonPDF(
   return div;
 }
 
-  const div = document.createElement("div");
-
-  div.className = "nicoMsg nico";
-
-  div.innerText = texto;
-
-  const btn = document.createElement("button");
-
-  btn.className = "nicoPdfBtn";
-
-  btn.innerText =
-    "📄 Ver / Descargar PDF";
-
-  if(tipoDocumento === "invoice"){
-
-    btn.onclick = () =>
-      abrirInvoicePDF(numeroDocumento);
-
-  }else{
-
-    btn.onclick = () =>
-      abrirEstimatePDF(numeroDocumento);
-  }
-
-  div.appendChild(btn);
-
-  nicoChatMessages.appendChild(div);
-
-  nicoChatMessages.scrollTop =
-    nicoChatMessages.scrollHeight;
-
-  return div;
-}
-
 // ================= OPEN / CLOSE =================
 
 function abrirNico(){
