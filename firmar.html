@@ -234,9 +234,9 @@ async function iniciarPagoPayPal() {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        idServicio: idServicio
-      })
+     body: JSON.stringify({
+  servicio_id: idServicio
+})
     });
 
     const data = await res.json();
