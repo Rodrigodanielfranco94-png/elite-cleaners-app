@@ -820,9 +820,32 @@ millas_servicio:
   )
       };
 
-      await crearEstimateConDatos(datosEncontrados);
-      return;
-    }
+try{
+
+  agregarMensaje(
+    "nico",
+    "Voy a intentar crear el estimate ahora..."
+  );
+
+  await crearEstimateConDatos(datosEncontrados);
+
+  agregarMensaje(
+    "nico",
+    `Listo Rodri, creé el estimate de ${datosEncontrados.cliente_nombre}.`
+  );
+
+}catch(e){
+
+  console.log("Error creando estimate:", e);
+
+  agregarMensaje(
+    "nico",
+    `Rodri, encontré el trabajo, pero hubo un error creando el estimate: ${e.message || e}`
+  );
+}
+
+return;
+}
 
     agregarMensaje(
       "nico",
