@@ -919,7 +919,15 @@ const btnDeposito = s.deposito_pagado
     <p>🛏️ ${s.habitaciones || 0} Hab | 🚿 ${s.banos || 0} Baños | 🚽 ${s.medios_banos || 0} Medios baños | 🛋️ ${s.salas || 0} Salas</p>
     <p>🍳 Hornos: ${s.horno || 0} | 🧊 Nevera: ${s.nevera || "No"}</p>
     <p>🪟 Ventanas: ${s.ventanas || "No"} | 🚪 Gabinetes: ${s.gabinetes || "No"} | 🧹 Baseboards: ${s.baseboards || "No"}</p>
-    <p>🧼 Alfombras: ${s.lavado_alfombras || "No"}</p>
+    <p>
+🧼 Alfombras:
+${s.alfombra_habitaciones || 0} habitaciones |
+${s.alfombra_pies_cuadrados || 0} ft²
+</p>
+
+${s.alfombra_notas ? `
+<p>📝 Alfombra: ${s.alfombra_notas}</p>
+` : ""}
     ${s.notas_internas ? `<p>📝 ${s.notas_internas}</p>` : ""}
 </div>
                         <span class="price-tag">$${s.precio_total || 0}</span>
