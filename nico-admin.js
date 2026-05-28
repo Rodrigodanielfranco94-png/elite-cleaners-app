@@ -702,6 +702,7 @@ if(
 }
   
   const t = normalizarTexto(mensaje);
+  agregarMensaje("nico", "Prueba: Nico recibió el mensaje y está leyendo el comando.");
     // ================= CREAR ESTIMATE =================
 
   if(
