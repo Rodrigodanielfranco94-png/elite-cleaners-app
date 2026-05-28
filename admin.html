@@ -826,32 +826,22 @@ const btnDeposito = s.deposito_pagado
                     card.innerHTML = `
                         <button class="chat-btn" onclick="abrirChat('${s.whatsapp}')">💬</button>
                         <div style="font-size:10px; color:#3b82f6; font-weight:bold;">${s.tipo}</div>
-                        <h3>${s.cliente}</h3>
+                        <h3 onclick="toggleDetalles('${s.id}')" style="cursor:pointer;">
+    ${s.cliente} <span style="font-size:14px;">⌄</span>
+</h3>
+
+<div id="detalles-${s.id}" style="display:none; background:#000; border:1px solid #3b82f6; border-radius:14px; padding:12px; margin:10px 0;">
+    <p>🏠 ${s.pies_cuadrados || 0} ft²</p>
+    <p>🛏️ ${s.habitaciones || 0} Hab | 🚿 ${s.banos || 0} Baños | 🛋️ ${s.salas || 0} Salas</p>
+    <p>🍳 Horno: ${s.horno || "No"} | 🧊 Nevera: ${s.nevera || "No"}</p>
+    <p>🪟 Ventanas: ${s.ventanas || "No"} | 🚪 Gabinetes: ${s.gabinetes || "No"}</p>
+    <p>🧼 Alfombras: ${s.lavado_alfombras || "No"}</p>
+</div>
                         <span class="price-tag">$${s.precio_total || 0}</span>
 ${estadoDeposito}
 <p>📅 ${s.fecha} | ⏰ ${horaFormateada}</p>
 <p>📍 ${s.direccion}</p>
-<p>🏠 ${s.pies_cuadrados || 0} ft²</p>
 
-<p>
-🛏️ ${s.habitaciones || 0} Hab |
-🚿 ${s.banos || 0} Baños |
-🛋️ ${s.salas || 0} Salas
-</p>
-
-<p>
-🍳 Horno: ${s.horno || "No"} |
-🧊 Nevera: ${s.nevera || "No"}
-</p>
-
-<p>
-🪟 Ventanas: ${s.ventanas || "No"} |
-🚪 Gabinetes: ${s.gabinetes || "No"}
-</p>
-
-<p>
-🧼 Alfombras: ${s.lavado_alfombras || "No"}
-</p>
 <p>🚗 ${obtenerMillasServicio(s)} millas ida/vuelta</p>
 <p>🔁 ${s.repetir === "ninguno" ? "Única vez" : s.repetir}</p>
 <p>👤 ${s.empleado_nombre_2 ? s.empleado_nombre+' & '+s.empleado_nombre_2 : s.empleado_nombre}</p>
@@ -879,6 +869,13 @@ ${estadoDeposito}
             });
         }
 
+function toggleDetalles(id) {
+    const box = document.getElementById("detalles-" + id);
+    if (!box) return;
+
+    box.style.display = box.style.display === "none" ? "block" : "none";
+}
+        
         function generarNomina() {
     const tabla = document.getElementById('lista-nomina');
     tabla.innerHTML = "";
