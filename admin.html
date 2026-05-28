@@ -831,6 +831,27 @@ const btnDeposito = s.deposito_pagado
 ${estadoDeposito}
 <p>📅 ${s.fecha} | ⏰ ${horaFormateada}</p>
 <p>📍 ${s.direccion}</p>
+<p>🏠 ${s.pies_cuadrados || 0} ft²</p>
+
+<p>
+🛏️ ${s.habitaciones || 0} Hab |
+🚿 ${s.banos || 0} Baños |
+🛋️ ${s.salas || 0} Salas
+</p>
+
+<p>
+🍳 Horno: ${s.horno || "No"} |
+🧊 Nevera: ${s.nevera || "No"}
+</p>
+
+<p>
+🪟 Ventanas: ${s.ventanas || "No"} |
+🚪 Gabinetes: ${s.gabinetes || "No"}
+</p>
+
+<p>
+🧼 Alfombras: ${s.lavado_alfombras || "No"}
+</p>
 <p>🚗 ${obtenerMillasServicio(s)} millas ida/vuelta</p>
 <p>🔁 ${s.repetir === "ninguno" ? "Única vez" : s.repetir}</p>
 <p>👤 ${s.empleado_nombre_2 ? s.empleado_nombre+' & '+s.empleado_nombre_2 : s.empleado_nombre}</p>
