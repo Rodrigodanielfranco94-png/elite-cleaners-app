@@ -190,8 +190,101 @@
     <option value="cita">🟢 Cita extra</option>
 </select>
 
-        <span class="label-text">Notas / Instrucciones</span>
-        <textarea id="notas" placeholder="Instrucciones especiales..." rows="2"></textarea>
+       <!-- ===== PROPERTY SIZE ===== -->
+
+<span class="label-text">Pie Cuadrado de la Propiedad</span>
+
+<input type="number" id="pies_cuadrados" placeholder="Ej: 1800 ft²">
+
+<!-- ===== PROPERTY DETAILS ===== -->
+
+<span class="label-text">Detalles de la Propiedad</span>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+
+<input type="number" id="habitaciones" placeholder="Habitaciones">
+
+<input type="number" id="banos" placeholder="Baños">
+
+<input type="number" id="medios_banos" placeholder="Medios baños">
+
+<input type="number" id="salas" placeholder="Salas">
+
+<input type="number" id="cocinas" placeholder="Cocinas">
+
+<input type="number" id="oficinas" placeholder="Oficinas">
+
+</div>
+
+<!-- ===== EXTRAS ===== -->
+
+<span class="label-text">Extras</span>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+
+<select id="horno" style="width:100%; padding:14px; border-radius:12px; border:1px solid #2c2c2e; background:#2c2c2e; color:white;">
+
+<option value="">Horno</option>
+
+<option value="No">No</option>
+
+<option value="Outside">Outside</option>
+
+<option value="Inside">Inside</option>
+
+<option value="Inside & Outside">Inside & Outside</option>
+
+</select>
+
+<select id="nevera" style="width:100%; padding:14px; border-radius:12px; border:1px solid #2c2c2e; background:#2c2c2e; color:white;">
+
+<option value="">Nevera</option>
+
+<option value="No">No</option>
+
+<option value="Outside">Outside</option>
+
+<option value="Inside">Inside</option>
+
+<option value="Inside & Outside">Inside & Outside</option>
+
+</select>
+
+<select id="gabinetes" style="width:100%; padding:14px; border-radius:12px; border:1px solid #2c2c2e; background:#2c2c2e; color:white;">
+
+<option value="">Gabinetes</option>
+
+<option value="No">No</option>
+
+<option value="Outside">Outside</option>
+
+<option value="Inside">Inside</option>
+
+<option value="Inside & Outside">Inside & Outside</option>
+
+</select>
+
+<select id="ventanas" style="width:100%; padding:14px; border-radius:12px; border:1px solid #2c2c2e; background:#2c2c2e; color:white;">
+
+<option value="">Ventanas</option>
+
+<option value="No">No</option>
+
+<option value="Outside">Outside</option>
+
+<option value="Inside">Inside</option>
+
+<option value="Inside & Outside">Inside & Outside</option>
+
+</select>
+
+</div>
+
+<!-- ===== CARPET CLEANING ===== -->
+
+<span class="label-text">Lavado de Alfombras</span>
+
+<input type="text" id="lavado_alfombras" placeholder="Ej: 2 habitaciones">
 
         <span class="label-text">Información de Venta</span>
         <input type="number" id="precio_total" placeholder="Precio Total del Servicio ($)">
