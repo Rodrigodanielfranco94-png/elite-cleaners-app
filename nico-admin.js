@@ -628,6 +628,10 @@ async function enviarTextoANico(){
 const esComandoNico =
   textoMemoria.includes("crear estimate") ||
   textoMemoria.includes("crea estimate") ||
+  textoMemoria.includes("crear el estimate") ||
+  textoMemoria.includes("crea el estimate") ||
+  textoMemoria.includes("dame el estimate") ||
+  textoMemoria.includes("prepara el estimate") ||
   textoMemoria.includes("crear estimado") ||
   textoMemoria.includes("crea estimado") ||
   textoMemoria.includes("hacer estimate") ||
@@ -1173,6 +1177,10 @@ const estimate =
   if(
     t.includes("crear estimate") ||
     t.includes("crea estimate") ||
+    t.includes("crear el estimate") ||
+    t.includes("crea el estimate") ||
+    t.includes("dame el estimate") ||
+    t.includes("prepara el estimate") ||
     t.includes("create estimate") ||
     t.includes("hacer estimate") ||
     t.includes("haz estimate") ||
