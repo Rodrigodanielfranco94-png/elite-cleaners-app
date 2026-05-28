@@ -628,9 +628,19 @@ async function enviarTextoANico(){
 const esComandoNico =
   textoMemoria.includes("crear estimate") ||
   textoMemoria.includes("crea estimate") ||
+  textoMemoria.includes("crear estimado") ||
+  textoMemoria.includes("crea estimado") ||
+  textoMemoria.includes("hacer estimate") ||
+  textoMemoria.includes("haz estimate") ||
+  textoMemoria.includes("cotizacion") ||
+  textoMemoria.includes("cotización") ||
+  textoMemoria.includes("create estimate") ||
+  textoMemoria.includes("send estimate") ||
+  textoMemoria.includes("enviar estimate") ||
   textoMemoria.includes("crear invoice") ||
   textoMemoria.includes("crea invoice") ||
-  textoMemoria.includes("enviar estimate") ||
+  textoMemoria.includes("create invoice") ||
+  textoMemoria.includes("send invoice") ||
   textoMemoria.includes("enviar invoice") ||
   textoMemoria.includes("ver estimate") ||
   textoMemoria.includes("ver invoice") ||
@@ -639,14 +649,6 @@ const esComandoNico =
   textoMemoria.includes("pedir reseña") ||
   textoMemoria.includes("recordatorio") ||
   textoMemoria.includes("enviar contrato");
-  textoMemoria.includes("crear estimado") ||
-  textoMemoria.includes("crea estimado") ||
-  textoMemoria.includes("hacer estimate") ||
-  textoMemoria.includes("haz estimate") ||
-  textoMemoria.includes("cotizacion") ||
-  textoMemoria.includes("cotización") ||
-  textoMemoria.includes("send estimate") ||
-  textoMemoria.includes("send invoice") ||
 
 try {
   if (!esComandoNico && typeof detectarMemoriaAutomatica === "function") {
