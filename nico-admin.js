@@ -888,11 +888,6 @@ try{
 
   await crearEstimateConDatos(datosEncontrados);
 
-  agregarMensaje(
-    "nico",
-    `Listo Rodri, creé el estimate de ${datosEncontrados.cliente_nombre}.`
-  );
-
 }catch(e){
 
   console.log("Error creando estimate:", e);
