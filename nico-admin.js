@@ -551,8 +551,8 @@ function extraerNombreDesdeComando(texto){
     .replace(/nico/ig,"")
     .replace(/oye nico/ig,"")
 
-    .replace(/crea/ig,"")
     .replace(/crear/ig,"")
+    .replace(/crea/ig,"")
     .replace(/hacer/ig,"")
     .replace(/haz/ig,"")
     .replace(/dame/ig,"")
@@ -575,6 +575,8 @@ function extraerNombreDesdeComando(texto){
 
     .replace(/\bel\b/ig,"")
     .replace(/\bde\b/ig,"")
+
+    .replace(/^\s*r\s+/ig,"")
 
     .replace(/\s+/g," ")
     .trim();
