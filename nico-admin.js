@@ -702,6 +702,109 @@ if(
 }
   
   const t = normalizarTexto(mensaje);
+    // ================= CREAR ESTIMATE =================
+
+  if(
+    t.includes("crear estimate") ||
+    t.includes("crea estimate") ||
+    t.includes("crear el estimate") ||
+    t.includes("crea el estimate") ||
+    t.includes("dame el estimate") ||
+    t.includes("prepara el estimate") ||
+    t.includes("create estimate") ||
+    t.includes("hacer estimate") ||
+    t.includes("haz estimate") ||
+    t.includes("crear estimado") ||
+    t.includes("crea estimado") ||
+    t.includes("cotizacion") ||
+    t.includes("cotización")
+  ){
+
+    const datosFormulario =
+      obtenerDatosFormularioActual();
+
+    const nombreExtraido =
+      extraerNombreDesdeComando(mensaje);
+
+    if(
+      datosFormulario.cliente_nombre &&
+      datosFormulario.total > 0
+    ){
+      await crearEstimateConDatos(datosFormulario);
+      return;
+    }
+
+    if(nombreExtraido){
+
+      const { cliente, servicio } =
+        buscarDatosCliente(nombreExtraido);
+
+      const datosEncontrados = {
+        cliente_nombre:
+          servicio?.cliente ||
+          cliente?.nombre ||
+          cliente?.id ||
+          nombreExtraido,
+
+        cliente_email:
+          servicio?.email_cliente ||
+          cliente?.email ||
+          "",
+
+        cliente_telefono:
+          servicio?.whatsapp ||
+          cliente?.whatsapp ||
+          cliente?.telefono ||
+          "",
+
+        cliente_direccion:
+          servicio?.direccion ||
+          cliente?.direccion ||
+          "",
+
+        tipo_limpieza:
+          servicio?.tipo ||
+          datosFormulario.tipo_limpieza ||
+          "",
+
+        notes:
+          servicio?.notas ||
+          datosFormulario.notes ||
+          "",
+
+        total:
+  Number(
+    servicio?.precio_total ||
+    datosFormulario.total ||
+    0
+  ),
+
+millas_servicio:
+  Number(
+    servicio?.millas_servicio ||
+    servicio?.millas_estimadas ||
+    cliente?.millas_servicio ||
+    datosFormulario.millas_servicio ||
+    0
+  )
+      };
+
+      await crearEstimateConDatos(datosEncontrados);
+      return;
+    }
+
+    agregarMensaje(
+      "nico",
+`Rodri, para crear el estimate necesito:
+
+• Cliente
+• Precio Total
+• Tipo de limpieza
+• Dirección`
+    );
+
+    return;
+  }
   if(
   t.includes("mostrar memorias") ||
   t.includes("ver memorias") ||
@@ -1136,109 +1239,6 @@ const estimate =
     }
 
     await abrirEstimatePDF(numero);
-    return;
-  }
-  // ================= CREAR ESTIMATE =================
-
-  if(
-    t.includes("crear estimate") ||
-    t.includes("crea estimate") ||
-    t.includes("crear el estimate") ||
-    t.includes("crea el estimate") ||
-    t.includes("dame el estimate") ||
-    t.includes("prepara el estimate") ||
-    t.includes("create estimate") ||
-    t.includes("hacer estimate") ||
-    t.includes("haz estimate") ||
-    t.includes("crear estimado") ||
-    t.includes("crea estimado") ||
-    t.includes("cotizacion") ||
-    t.includes("cotización")
-  ){
-
-    const datosFormulario =
-      obtenerDatosFormularioActual();
-
-    const nombreExtraido =
-      extraerNombreDesdeComando(mensaje);
-
-    if(
-      datosFormulario.cliente_nombre &&
-      datosFormulario.total > 0
-    ){
-      await crearEstimateConDatos(datosFormulario);
-      return;
-    }
-
-    if(nombreExtraido){
-
-      const { cliente, servicio } =
-        buscarDatosCliente(nombreExtraido);
-
-      const datosEncontrados = {
-        cliente_nombre:
-          servicio?.cliente ||
-          cliente?.nombre ||
-          cliente?.id ||
-          nombreExtraido,
-
-        cliente_email:
-          servicio?.email_cliente ||
-          cliente?.email ||
-          "",
-
-        cliente_telefono:
-          servicio?.whatsapp ||
-          cliente?.whatsapp ||
-          cliente?.telefono ||
-          "",
-
-        cliente_direccion:
-          servicio?.direccion ||
-          cliente?.direccion ||
-          "",
-
-        tipo_limpieza:
-          servicio?.tipo ||
-          datosFormulario.tipo_limpieza ||
-          "",
-
-        notes:
-          servicio?.notas ||
-          datosFormulario.notes ||
-          "",
-
-        total:
-  Number(
-    servicio?.precio_total ||
-    datosFormulario.total ||
-    0
-  ),
-
-millas_servicio:
-  Number(
-    servicio?.millas_servicio ||
-    servicio?.millas_estimadas ||
-    cliente?.millas_servicio ||
-    datosFormulario.millas_servicio ||
-    0
-  )
-      };
-
-      await crearEstimateConDatos(datosEncontrados);
-      return;
-    }
-
-    agregarMensaje(
-      "nico",
-`Rodri, para crear el estimate necesito:
-
-• Cliente
-• Precio Total
-• Tipo de limpieza
-• Dirección`
-    );
-
     return;
   }
 
