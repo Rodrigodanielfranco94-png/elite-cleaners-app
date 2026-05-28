@@ -707,7 +707,7 @@ function abrirEstimatePDF(numeroEstimate){
     }
 
     const url =
-      `${ELITE_BASE_URL}/estimate.html?numero=${encodeURIComponent(numeroEstimate)}`;
+  `https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/estimate-pdf.html?numero=${encodeURIComponent(numeroEstimate)}`;
 
     window.open(url, "_blank");
 
