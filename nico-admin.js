@@ -762,17 +762,27 @@ if(
 }
     // ================= ESTIMADO RÁPIDO DESDE TEXTO =================
 
-  if(esSolicitudDeEstimadoRapido(mensaje)){
+  if(
+  typeof esSolicitudDeEstimadoRapido === "function" &&
+  esSolicitudDeEstimadoRapido(mensaje)
+){
 
-    const calculo =
-      responderEstimadoRapido(mensaje);
+  const calculo =
+    typeof responderEstimadoRapido === "function"
+      ? responderEstimadoRapido(mensaje)
+      : null;
 
-    const quiereCrear =
-      t.includes("crear") ||
-      t.includes("crea") ||
-      t.includes("haz") ||
-      t.includes("hacer") ||
-      t.includes("create");
+  if(!calculo){
+    agregarMensaje("nico", "Rodri, no pude calcular ese estimate rápido.");
+    return;
+  }
+
+  const quiereCrear =
+    t.includes("crear") ||
+    t.includes("crea") ||
+    t.includes("haz") ||
+    t.includes("hacer") ||
+    t.includes("create");
 
     if(quiereCrear){
 
