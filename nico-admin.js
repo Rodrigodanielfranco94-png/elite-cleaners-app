@@ -406,16 +406,16 @@ function abrirNico(){
 
   if(!nicoChatMessages.dataset.saludo){
 
-    agregarMensaje(
-      "nico",
-      const usuarioNico =
-  localStorage.getItem("usuarioActivo") ||
-  localStorage.getItem("usuario") ||
-  localStorage.getItem("nombreUsuario") ||
-  "Rodrigo";
+    const usuarioNico =
+      window.usuarioActual?.nombre ||
+      localStorage.getItem("usuarioActivo") ||
+      localStorage.getItem("usuario") ||
+      localStorage.getItem("nombreUsuario") ||
+      "Rodrigo";
 
-const saludoNico = `Hola ${usuarioNico}, ¿en qué puedo ayudarte?`;
-    );
+    const saludoNico = `Hola ${usuarioNico}, ¿en qué puedo ayudarte?`;
+
+    agregarMensaje("nico", saludoNico);
 
     nicoChatMessages.dataset.saludo =
       "true";
