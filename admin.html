@@ -665,7 +665,29 @@ function obtenerMillasServicio(s) {
         hora_final_estimada: document.getElementById('hora_final_estimada').value || "",
         repetir: document.getElementById('repetir').value || "ninguno",
         estado_calendario: document.getElementById('estado_calendario').value || "pendiente",
-        notas: document.getElementById('notas').value,
+        pies_cuadrados: document.getElementById('pies_cuadrados').value || "",
+
+habitaciones: document.getElementById('habitaciones').value || "",
+
+banos: document.getElementById('banos').value || "",
+
+medios_banos: document.getElementById('medios_banos').value || "",
+
+salas: document.getElementById('salas').value || "",
+
+cocinas: document.getElementById('cocinas').value || "",
+
+oficinas: document.getElementById('oficinas').value || "",
+
+horno: document.getElementById('horno').value || "",
+
+nevera: document.getElementById('nevera').value || "",
+
+gabinetes: document.getElementById('gabinetes').value || "",
+
+ventanas: document.getElementById('ventanas').value || "",
+
+lavado_alfombras: document.getElementById('lavado_alfombras').value || "",
         tipo: tipoSeleccionado,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     };
