@@ -1567,17 +1567,36 @@ if(
   }
 
   const datosEstimate = {
-    cliente_nombre: servicio.cliente || "",
-    cliente_email: servicio.email_cliente || "",
-    cliente_telefono: servicio.whatsapp || "",
-    cliente_direccion: servicio.direccion || "",
-    tipo_limpieza: servicio.tipo || "",
-    notes: servicio.notas || "",
-    total: Number(servicio.precio_total || 0),
-    millas_servicio: Number(servicio.millas_servicio || servicio.millas_estimadas || 0),
-    fecha: servicio.fecha || "",
-    hora: servicio.hora || ""
-  };
+  cliente_nombre: servicio.cliente || "",
+  cliente_email: servicio.email_cliente || "",
+  cliente_telefono: servicio.whatsapp || "",
+  cliente_direccion: servicio.direccion || "",
+  tipo_limpieza: servicio.tipo || "",
+  notes: servicio.notas || "",
+  total: Number(servicio.precio_total || 0),
+  millas_servicio: Number(servicio.millas_servicio || servicio.millas_estimadas || 0),
+  fecha: servicio.fecha || "",
+  hora: servicio.hora || "",
+
+  pies_cuadrados: servicio.pies_cuadrados || "",
+  habitaciones: servicio.habitaciones || "",
+  banos: servicio.banos || "",
+  medios_banos: servicio.medios_banos || "",
+  salas: servicio.salas || "",
+  cocinas: servicio.cocinas || "",
+  oficinas: servicio.oficinas || "",
+
+  horno: servicio.horno || "",
+  nevera: servicio.nevera || "",
+  gabinetes: servicio.gabinetes || "",
+  ventanas: servicio.ventanas || "",
+  baseboards: servicio.baseboards || "",
+
+  alfombra_habitaciones: servicio.alfombra_habitaciones || "",
+  alfombra_pies_cuadrados: servicio.alfombra_pies_cuadrados || "",
+  alfombra_notas: servicio.alfombra_notas || "",
+  notas_internas: servicio.notas_internas || ""
+};
 
   if(!datosEstimate.cliente_nombre || datosEstimate.total <= 0){
     agregarMensaje("nico", "Rodri, encontré el cliente, pero falta precio o nombre para crear el estimate.");
