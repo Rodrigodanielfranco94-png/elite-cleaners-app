@@ -21,7 +21,7 @@ function escribirDocumentoPDF(nuevaVentana, tipo, doc){
   .title{text-align:right;}
   .title h1{margin:0;font-size:38px;color:#1f2937;letter-spacing:1px;}
   .doc-number{margin-top:8px;color:#6b7280;font-size:14px;}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-bottom:30px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-bottom:18px;border-bottom:1px solid #e5e7eb;padding-bottom:22px;}
   .section-title{font-size:13px;color:#2563eb;font-weight:bold;text-transform:uppercase;margin-bottom:8px;}
   .info{font-size:15px;line-height:1.55;}
   table{width:100%;border-collapse:collapse;margin-top:25px;}
