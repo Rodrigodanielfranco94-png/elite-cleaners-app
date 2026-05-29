@@ -534,6 +534,25 @@ function obtenerDatosFormularioActual(){
 
 millas_servicio:
   Number(obtenerValor("millas_servicio") || 0),
+
+pies_cuadrados: obtenerValor("pies_cuadrados"),
+habitaciones: obtenerValor("habitaciones"),
+banos: obtenerValor("banos"),
+medios_banos: obtenerValor("medios_banos"),
+salas: obtenerValor("salas"),
+cocinas: obtenerValor("cocinas"),
+oficinas: obtenerValor("oficinas"),
+
+horno: obtenerValor("horno"),
+nevera: obtenerValor("nevera"),
+gabinetes: obtenerValor("gabinetes"),
+ventanas: obtenerValor("ventanas"),
+baseboards: obtenerValor("baseboards"),
+
+alfombra_habitaciones: obtenerValor("alfombra_habitaciones"),
+alfombra_pies_cuadrados: obtenerValor("alfombra_pies_cuadrados"),
+alfombra_notas: obtenerValor("alfombra_notas"),
+notas_internas: obtenerValor("notas_internas"),
     
     fecha:
       obtenerValor("fecha"),
@@ -652,18 +671,40 @@ async function crearEstimateConDatos(datos){
   }
 
   const payload = {
-    cliente_nombre: datos.cliente_nombre || "",
-    cliente_email: datos.cliente_email || "",
-    cliente_telefono: datos.cliente_telefono || "",
-    cliente_direccion: datos.cliente_direccion || "",
-    tipo_limpieza: datos.tipo_limpieza || "",
-    notes: datos.notes || "",
-    total: Number(datos.total || 0),
-    millas_servicio: Number(datos.millas_servicio || 0),
-    fecha: datos.fecha || "",
-    hora: datos.hora || ""
-  };
+  cliente_nombre: datos.cliente_nombre || "",
+  cliente_email: datos.cliente_email || "",
+  cliente_telefono: datos.cliente_telefono || "",
+  cliente_direccion: datos.cliente_direccion || "",
 
+  tipo_limpieza: datos.tipo_limpieza || "",
+  notes: datos.notes || "",
+
+  total: Number(datos.total || 0),
+  millas_servicio: Number(datos.millas_servicio || 0),
+
+  fecha: datos.fecha || "",
+  hora: datos.hora || "",
+
+  pies_cuadrados: datos.pies_cuadrados || "",
+  habitaciones: datos.habitaciones || "",
+  banos: datos.banos || "",
+  medios_banos: datos.medios_banos || "",
+  salas: datos.salas || "",
+  cocinas: datos.cocinas || "",
+  oficinas: datos.oficinas || "",
+
+  horno: datos.horno || "",
+  nevera: datos.nevera || "",
+  gabinetes: datos.gabinetes || "",
+  ventanas: datos.ventanas || "",
+  baseboards: datos.baseboards || "",
+
+  alfombra_habitaciones: datos.alfombra_habitaciones || "",
+  alfombra_pies_cuadrados: datos.alfombra_pies_cuadrados || "",
+  alfombra_notas: datos.alfombra_notas || "",
+
+  notas_internas: datos.notas_internas || ""
+};
   const res = await fetch(CREAR_ESTIMATE_URL, {
     method: "POST",
     headers: {
@@ -697,7 +738,29 @@ console.log("Respuesta crear estimate:", data);
     const estimateCompleto = {
   ...payload,
   numero: numero,
-  status: "Draft"
+  status: "Draft",
+
+  fecha: datos.fecha || "",
+  hora: datos.hora || "",
+
+  pies_cuadrados: datos.pies_cuadrados || "",
+  habitaciones: datos.habitaciones || "",
+  banos: datos.banos || "",
+  medios_banos: datos.medios_banos || "",
+  salas: datos.salas || "",
+  cocinas: datos.cocinas || "",
+  oficinas: datos.oficinas || "",
+
+  horno: datos.horno || "",
+  nevera: datos.nevera || "",
+  gabinetes: datos.gabinetes || "",
+  ventanas: datos.ventanas || "",
+  baseboards: datos.baseboards || "",
+
+  alfombra_habitaciones: datos.alfombra_habitaciones || "",
+  alfombra_pies_cuadrados: datos.alfombra_pies_cuadrados || "",
+  alfombra_notas: datos.alfombra_notas || "",
+  notas_internas: datos.notas_internas || ""
 };
 
 agregarMensajeConBotonPDF(
