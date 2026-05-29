@@ -953,25 +953,24 @@ const cliente = null;
           datosFormulario.notes ||
           "",
 
-pies_cuadrados: servicio?.pies_cuadrados || "",
-habitaciones: servicio?.habitaciones || "",
-banos: servicio?.banos || "",
-medios_banos: servicio?.medios_banos || "",
-salas: servicio?.salas || "",
-cocinas: servicio?.cocinas || "",
-oficinas: servicio?.oficinas || "",
+pies_cuadrados: servicio?.pies_cuadrados || datosFormulario.pies_cuadrados || "",
+habitaciones: servicio?.habitaciones || datosFormulario.habitaciones || "",
+banos: servicio?.banos || datosFormulario.banos || "",
+medios_banos: servicio?.medios_banos || datosFormulario.medios_banos || "",
+salas: servicio?.salas || datosFormulario.salas || "",
+cocinas: servicio?.cocinas || datosFormulario.cocinas || "",
+oficinas: servicio?.oficinas || datosFormulario.oficinas || "",
 
-horno: servicio?.horno || "",
-nevera: servicio?.nevera || "",
-gabinetes: servicio?.gabinetes || "",
-ventanas: servicio?.ventanas || "",
-baseboards: servicio?.baseboards || "",
+horno: servicio?.horno || datosFormulario.horno || "",
+nevera: servicio?.nevera || datosFormulario.nevera || "",
+gabinetes: servicio?.gabinetes || datosFormulario.gabinetes || "",
+ventanas: servicio?.ventanas || datosFormulario.ventanas || "",
+baseboards: servicio?.baseboards || datosFormulario.baseboards || "",
 
-alfombra_habitaciones: servicio?.alfombra_habitaciones || "",
-alfombra_pies_cuadrados: servicio?.alfombra_pies_cuadrados || "",
-alfombra_notas: servicio?.alfombra_notas || "",
-notas_internas: servicio?.notas_internas || "",
-        
+alfombra_habitaciones: servicio?.alfombra_habitaciones || datosFormulario.alfombra_habitaciones || "",
+alfombra_pies_cuadrados: servicio?.alfombra_pies_cuadrados || datosFormulario.alfombra_pies_cuadrados || "",
+alfombra_notas: servicio?.alfombra_notas || datosFormulario.alfombra_notas || "",
+notas_internas: servicio?.notas_internas || datosFormulario.notas_internas || "",
         total:
   Number(
     servicio?.precio_total ||
