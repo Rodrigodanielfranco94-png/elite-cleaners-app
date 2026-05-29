@@ -94,6 +94,30 @@ function escribirDocumentoPDF(nuevaVentana, tipo, doc){
           ${doc.estimate_numero ? `<strong>From Estimate:</strong> ${doc.estimate_numero}<br>` : ""}
           <strong>Created By:</strong> Nico
         </div>
+
+<div class="section-title" style="margin-top:20px;">Property Details</div>
+<div class="info">
+  <strong>Square Feet:</strong> ${doc.pies_cuadrados || "0"} ft²<br>
+  <strong>Bedrooms:</strong> ${doc.habitaciones || "0"}<br>
+  <strong>Bathrooms:</strong> ${doc.banos || "0"}<br>
+  <strong>Half Bathrooms:</strong> ${doc.medios_banos || "0"}<br>
+  <strong>Living Rooms:</strong> ${doc.salas || "0"}<br>
+  <strong>Kitchens:</strong> ${doc.cocinas || "0"}<br>
+  <strong>Offices:</strong> ${doc.oficinas || "0"}<br>
+  <strong>Miles:</strong> ${doc.millas_servicio || "0"} miles
+</div>
+
+<div class="section-title" style="margin-top:20px;">Extras</div>
+<div class="info">
+  <strong>Oven:</strong> ${doc.horno || "0"}<br>
+  <strong>Fridge:</strong> ${doc.nevera || "No"}<br>
+  <strong>Cabinets:</strong> ${doc.gabinetes || "No"}<br>
+  <strong>Windows:</strong> ${doc.ventanas || "No"}<br>
+  <strong>Baseboards:</strong> ${doc.baseboards || "No"}<br>
+  <strong>Carpet Rooms:</strong> ${doc.alfombra_habitaciones || "0"}<br>
+  <strong>Carpet Sq Ft:</strong> ${doc.alfombra_pies_cuadrados || "0"} ft²<br>
+  <strong>Carpet Notes:</strong> ${doc.alfombra_notas || ""}
+</div>
       </div>
     </div>
 
