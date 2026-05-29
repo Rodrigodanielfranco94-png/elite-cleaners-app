@@ -524,8 +524,10 @@ function obtenerDatosFormularioActual(){
       : "",
 
     notes:
-      obtenerValor("notas"),
-
+  obtenerValor("notas_internas") ||
+  obtenerValor("alfombra_notas") ||
+  "",
+    
     total:
       Number(
         obtenerValor("precio_total")
