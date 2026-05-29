@@ -953,6 +953,25 @@ const cliente = null;
           datosFormulario.notes ||
           "",
 
+pies_cuadrados: servicio?.pies_cuadrados || "",
+habitaciones: servicio?.habitaciones || "",
+banos: servicio?.banos || "",
+medios_banos: servicio?.medios_banos || "",
+salas: servicio?.salas || "",
+cocinas: servicio?.cocinas || "",
+oficinas: servicio?.oficinas || "",
+
+horno: servicio?.horno || "",
+nevera: servicio?.nevera || "",
+gabinetes: servicio?.gabinetes || "",
+ventanas: servicio?.ventanas || "",
+baseboards: servicio?.baseboards || "",
+
+alfombra_habitaciones: servicio?.alfombra_habitaciones || "",
+alfombra_pies_cuadrados: servicio?.alfombra_pies_cuadrados || "",
+alfombra_notas: servicio?.alfombra_notas || "",
+notas_internas: servicio?.notas_internas || "",
+        
         total:
   Number(
     servicio?.precio_total ||
