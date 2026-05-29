@@ -76,24 +76,26 @@ function escribirDocumentoPDF(nuevaVentana, tipo, doc){
       </div>
     </div>
 
-    <div class="grid">
-      <div>
-        <div class="section-title">Bill To</div>
-        <div class="info">
-          <strong>${doc.cliente_nombre || ""}</strong><br>
-          ${doc.cliente_email || ""}<br>
-          ${doc.cliente_telefono || ""}<br>
-          ${doc.cliente_direccion || ""}
-        </div>
-      </div>
+  <div class="grid">
+  <div>
+    <div class="section-title">Bill To</div>
+    <div class="info">
+      <strong>${doc.cliente_nombre || ""}</strong><br>
+      ${doc.cliente_email || ""}<br>
+      ${doc.cliente_telefono || ""}<br>
+      ${doc.cliente_direccion || ""}
+    </div>
+  </div>
 
-      <div>
-        <div class="section-title">Service Details</div>
-        <div class="info">
-          <strong>Cleaning Type:</strong> ${doc.tipo_limpieza || ""}<br>
-          ${doc.estimate_numero ? `<strong>From Estimate:</strong> ${doc.estimate_numero}<br>` : ""}
-          <strong>Created By:</strong> Nico
-        </div>
+  <div>
+    <div class="section-title">Service Details</div>
+    <div class="info">
+      <strong>Cleaning Type:</strong> ${doc.tipo_limpieza || ""}<br>
+      ${doc.estimate_numero ? `<strong>From Estimate:</strong> ${doc.estimate_numero}<br>` : ""}
+      <strong>Created By:</strong> Nico
+    </div>
+  </div>
+</div>
 
 <div class="section-title" style="margin-top:20px;">Property Details</div>
 <div class="info">
@@ -118,8 +120,6 @@ function escribirDocumentoPDF(nuevaVentana, tipo, doc){
   <strong>Carpet Sq Ft:</strong> ${doc.alfombra_pies_cuadrados || "0"} ft²<br>
   <strong>Carpet Notes:</strong> ${doc.alfombra_notas || ""}
 </div>
-      </div>
-    </div>
 
     <table>
       <thead>
