@@ -973,7 +973,29 @@ s.estado === "completado"
                            <div class="time-row"><b>Millas:</b> ${obtenerMillasServicio(s)} mi</div>
                         </div>
                         <div class="action-buttons">
-    <button class="btn-action btn-done" onclick="marcar('${s.id}', '${s.estado === 'completado' ? 'pendiente' : 'completado'}')">${s.estado === 'completado' ? 'Reabrir' : 'Terminar'}</button>
+    <select
+style="
+width:100%;
+padding:10px;
+border-radius:10px;
+background:#000;
+color:white;
+border:1px solid #3b82f6;
+"
+onchange="cambiarEstadoTrabajo('${s.id}', this.value)"
+>
+<option value="no_iniciado" ${s.estado === "no_iniciado" ? "selected" : ""}>
+🟣 No iniciado
+</option>
+
+<option value="en_progreso" ${s.estado === "en_progreso" ? "selected" : ""}>
+🟠 En progreso
+</option>
+
+<option value="completado" ${s.estado === "completado" ? "selected" : ""}>
+🟢 Terminado
+</option>
+</select>
     
     ${btnFirma}
 
@@ -1085,6 +1107,18 @@ function toggleDetalles(id) {
     }); 
 }
 
+function cambiarEstadoTrabajo(id, estado) {
+
+    db.collection("servicios").doc(id).update({
+        estado: estado,
+        estado_calendario:
+            estado === "completado"
+            ? "completado"
+            : "pendiente"
+    });
+
+}
+        
 function confirmarDeposito(id) {
     if (!confirm("¿Confirmas que el cliente ya pagó el depósito?")) return;
 
@@ -1229,13 +1263,16 @@ function cambiarMes(dir) {
 
 function obtenerColorEvento(estado, estadoPrincipal) {
 
-    if (estadoPrincipal === "completado" || estado === "completado") return "#facc15";
+    if (estadoPrincipal === "completado") return "#22c55e";
+    if (estadoPrincipal === "en_progreso") return "#f97316";
+    if (estadoPrincipal === "no_iniciado") return "#a855f7";
+
     if (estado === "no_seguro") return "#ef4444";
     if (estado === "cita") return "#22c55e";
+    if (estado === "completado") return "#22c55e";
 
     return "#a855f7";
 }
-
 function renderCalendarioElite() {
 
     const grid = document.getElementById("calendar-grid");
