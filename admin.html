@@ -603,6 +603,7 @@ function obtenerMillasServicio(s) {
                     document.getElementById('whatsapp').value = c.whatsapp || c.telefono || '';
                     document.getElementById('email_cliente').value = c.email || '';
                     document.getElementById('millas_servicio').value = c.millas_servicio || c.millas_total || '';
+                    document.getElementById('repetir').value = c.repetir || "ninguno";
                     document.getElementById('pies_cuadrados').value = c.pies_cuadrados || "";
                     document.getElementById('habitaciones').value = c.habitaciones || "";
                     document.getElementById('banos').value = c.banos || "";
@@ -780,6 +781,8 @@ notas_internas: document.getElementById('notas_internas').value || "",
     telefono: data.whatsapp,
     email: data.email_cliente,
     millas_servicio: data.millas_servicio || 0,
+
+    repetir: data.repetir || "ninguno",
 
     pies_cuadrados: data.pies_cuadrados || "",
     habitaciones: data.habitaciones || "",
