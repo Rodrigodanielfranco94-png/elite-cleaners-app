@@ -182,6 +182,14 @@
     </div>
 </div>
 
+<span class="label-text">Estado del trabajo</span>
+
+<select id="estado_trabajo" style="width:100%; padding:14px; margin-bottom:10px; border-radius:12px; border:1px solid #2c2c2e; background:#2c2c2e; color:white; font-size:15px;">
+    <option value="no_iniciado">🟣 No iniciado</option>
+    <option value="en_progreso">🟠 En progreso</option>
+    <option value="completado">🟢 Terminado</option>
+</select>
+        
 <span class="label-text">Estado del calendario</span>
 <select id="estado_calendario" style="width:100%; padding:14px; margin-bottom:10px; border-radius:12px; border:1px solid #2c2c2e; background:#2c2c2e; color:white; font-size:15px;">
     <option value="pendiente">🟣 Pendiente / Agendado</option>
@@ -724,11 +732,15 @@ function obtenerMillasServicio(s) {
         empleado_email_2: document.getElementById('email-empleado-2').value || "",
 
         fecha: document.getElementById('fecha').value,
-        hora: document.getElementById('hora').value,
-        hora_final_estimada: document.getElementById('hora_final_estimada').value || "",
-        repetir: document.getElementById('repetir').value || "ninguno",
-        estado_calendario: document.getElementById('estado_calendario').value || "pendiente",
-        pies_cuadrados: document.getElementById('pies_cuadrados').value || "",
+hora: document.getElementById('hora').value,
+hora_final_estimada: document.getElementById('hora_final_estimada').value || "",
+
+repetir: document.getElementById('repetir').value || "ninguno",
+
+estado_calendario: document.getElementById('estado_calendario').value || "pendiente",
+estado: document.getElementById('estado_trabajo').value || "no_iniciado",
+
+pies_cuadrados: document.getElementById('pies_cuadrados').value || "",
 
 habitaciones: document.getElementById('habitaciones').value || "",
 
@@ -764,7 +776,7 @@ notas_internas: document.getElementById('notas_internas').value || "",
         data.hora_inicio = document.getElementById('hora_inicio_real').value || "--:--";
         data.hora_fin = document.getElementById('hora_fin_real').value || "--:--";
     } else {
-        data.estado = "pendiente";
+        data.estado = "no_iniciado";
         data.hora_inicio = "--:--";
         data.hora_fin = "--:--";
         data.firma_cliente = false;
@@ -844,7 +856,7 @@ notas_internas: document.getElementById('notas_internas').value || "",
         await db.collection("servicios").add({
             ...data,
             fecha: fechaTexto,
-            estado: "pendiente",
+            estado: "no_iniciado",
             estado_calendario: "pendiente",
             hora_inicio: "--:--",
             hora_fin: "--:--",
@@ -935,8 +947,21 @@ ${s.alfombra_notas ? `
 </div>
                         <span class="price-tag">$${s.precio_total || 0}</span>
 ${estadoDeposito}
+<p style="color:#22c55e;">
+💰 Balance restante: $${Number(s.balance_restante || 0).toFixed(2)}
+</p>
 <p>📅 ${s.fecha} | ⏰ ${horaFormateada}</p>
 <p>📍 ${s.direccion}</p>
+
+<p>
+🧽 ${
+s.estado === "completado"
+? "Terminado"
+: s.estado === "en_progreso"
+? "En progreso"
+: "No iniciado"
+}
+</p>
 
 <p>🚗 ${obtenerMillasServicio(s)} millas ida/vuelta</p>
 <p>🔁 ${s.repetir === "ninguno" ? "Única vez" : s.repetir}</p>
@@ -1110,6 +1135,7 @@ function cancelarDeposito(id) {
     document.getElementById('hora_final_estimada').value = s.hora_final_estimada || "";
     document.getElementById('repetir').value = s.repetir || "ninguno";
     document.getElementById('estado_calendario').value = s.estado_calendario || "pendiente";
+    document.getElementById('estado_trabajo').value = s.estado || "no_iniciado";
     document.getElementById('pies_cuadrados').value = s.pies_cuadrados || "";
 
 document.getElementById('habitaciones').value = s.habitaciones || "";
