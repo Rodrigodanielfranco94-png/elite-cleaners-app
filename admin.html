@@ -823,6 +823,7 @@ notas_internas: document.getElementById('notas_internas').value || "",
 }
         async function crearRepeticiones(data, repeticion) {
     if (!data.fecha || repeticion === "ninguno") return;
+    if (data.repeticion_generada) return;
 
     const fechaBase = new Date(data.fecha + "T00:00:00");
 
