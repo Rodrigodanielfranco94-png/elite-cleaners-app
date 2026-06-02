@@ -802,7 +802,6 @@ notas_internas: document.getElementById('notas_internas').value || "",
     if (id) {
         db.collection("servicios").doc(id).update(data)
            .then(async () => {
-    await crearRepeticiones(data, data.repetir);
     alert("Cambios guardados correctamente ✅");
     location.reload();
 })
@@ -812,14 +811,14 @@ notas_internas: document.getElementById('notas_internas').value || "",
             });
     } else {
         db.collection("servicios").add(data)
-    .then(async () => {
-        await crearRepeticiones(data, data.repetir);
-        location.reload();
-    })
-            .catch(error => {
-                console.error("Error asignando trabajo:", error);
-                alert("Error asignando trabajo. Revisa la consola.");
-            });
+.then(async () => {
+    await crearRepeticiones(data, data.repetir);
+    location.reload();
+})
+.catch(error => {
+    console.error("Error asignando trabajo:", error);
+    alert("Error asignando trabajo. Revisa la consola.");
+});
     }
 }
         async function crearRepeticiones(data, repeticion) {
