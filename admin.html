@@ -1281,7 +1281,7 @@ function renderCalendarioElite() {
             white-space:nowrap;
             text-overflow:ellipsis;
             ">
-            ${ev.cliente}
+            ${ev.repetir && ev.repetir !== "ninguno" ? "🔁 " : ""}${ev.cliente}
             </div>
             `;
 
@@ -1350,7 +1350,7 @@ function mostrarEventosDia(fecha) {
         font-size:17px;
         color:#111827;
         ">
-        ${ev.cliente}
+        ${ev.repetir && ev.repetir !== "ninguno" ? "🔁 " : ""}${ev.cliente}
         </div>
 
         <div style="
@@ -1375,7 +1375,14 @@ function mostrarEventosDia(fecha) {
         font-size:13px;
         font-weight:bold;
         ">
-        💵 $${ev.precio_total || 0}
+        <div style="
+color:#7c3aed;
+margin-top:4px;
+font-size:13px;
+font-weight:bold;
+">
+🔁 ${ev.repetir === "ninguno" ? "Única vez" : ev.repetir || "Única vez"}
+</div>
         </div>
 
         </div>
