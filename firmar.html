@@ -239,30 +239,6 @@ async function cargarServicio() {
     document.getElementById("payment-status").innerText = "🔒 Signature locked. Deposit must be confirmed by Elite Cleaners Company before signing.";
   }
 }
-
-    const res = await fetch(CREAR_PAYPAL_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-     body: JSON.stringify({
-  servicio_id: idServicio
-})
-    });
-
-    const data = await res.json();
-
-    if (!res.ok || !data.approveUrl) {
-      alert("PayPal error: " + (data.error || "Could not create payment."));
-      return;
-    }
-
-    window.location.href = data.approveUrl;
-
-  } catch (e) {
-    alert("PayPal error: " + e.message);
-  }
-}
   
 async function solicitarRevisionPago() {
   try {
