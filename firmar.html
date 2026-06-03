@@ -269,7 +269,7 @@ async function solicitarRevisionPago() {
     await db.collection("servicios").doc(idServicio).update({
       pago_revision_solicitado: true,
       metodo_pago_deposito: "Zelle or Venmo",
-      paypal_link: "Dynamic PayPal Checkout",
+      paypal_link: "",
       zelle_email: ZELLE_EMAIL,
       fecha_solicitud_revision_pago: new Date().toISOString()
     });
