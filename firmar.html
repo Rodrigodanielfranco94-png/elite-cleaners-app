@@ -372,7 +372,51 @@ async function procesarFirma() {
   }
 }
 
-cargarServicio();
+async function capturarPagoSiRegresaDePayPal() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("token");
+  const servicioId = params.get("id");
+
+  if (!token || !servicioId) return false;
+
+  try {
+    alert("Processing PayPal payment...");
+
+    const res = await fetch(CAPTURAR_PAYPAL_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        servicio_id: servicioId,
+        orderID: token
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.ok) {
+      alert("PayPal capture error: " + (data.error || "Payment could not be confirmed."));
+      return false;
+    }
+
+    alert("Payment confirmed successfully ✅");
+
+    const cleanUrl = window.location.origin + window.location.pathname + "?id=" + servicioId + "&cliente=" + encodeURIComponent(nombreCliente);
+    window.history.replaceState({}, document.title, cleanUrl);
+
+    await cargarServicio();
+    return true;
+
+  } catch (e) {
+    alert("PayPal error: " + e.message);
+    return false;
+  }
+}
+  
+capturarPagoSiRegresaDePayPal().then((capturado) => {
+  if (!capturado) cargarServicio();
+});
 </script>
 </body>
 </html>
