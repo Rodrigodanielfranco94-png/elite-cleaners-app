@@ -383,11 +383,6 @@ async function procesarFirma() {
   }
 }
 
-async function capturarPagoSiRegresaDePayPal() {
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get("token");
-  const servicioId = params.get("id");
-
   if (!token || !servicioId) return false;
 
   try {
