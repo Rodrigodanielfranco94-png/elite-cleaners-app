@@ -109,7 +109,7 @@ Elite Cleaners is fully exempt from liability for damage or breakage to glass, d
 </div>
 
 <div class="payment-box" id="payment-box">
-<h3>Deposit Payment Required</h3>
+<h3>Deposit Payment Required (Zelle or Venmo)</h3>
 
 <div class="payment-row">
 <span>Total Service:</span>
@@ -125,9 +125,26 @@ Elite Cleaners is fully exempt from liability for damage or breakage to glass, d
 PAY WITH PAYPAL
 </button>
 
-<a class="pay-btn zelle" href="mailto:elitecleanerscompany@gmail.com">
-PAY WITH ZELLE
-</a>
+<button class="pay-btn zelle" onclick="mostrarZelle()">
+  PAY WITH ZELLE
+</button>
+
+<button
+id="btnVenmo"
+style="
+width:100%;
+padding:18px;
+border:none;
+border-radius:14px;
+font-size:20px;
+font-weight:bold;
+background:#008CFF;
+color:white;
+margin-top:10px;
+"
+onclick="mostrarVenmo()">
+PAY WITH VENMO
+</button>
 
 <div class="notice">
 <b>Zelle:</b><br>
