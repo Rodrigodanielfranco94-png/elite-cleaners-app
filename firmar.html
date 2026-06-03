@@ -240,13 +240,6 @@ async function cargarServicio() {
   }
 }
 
-async function iniciarPagoPayPal() {
-  try {
-    if (!idServicio) {
-      alert("Service ID not found.");
-      return;
-    }
-
     const res = await fetch(CREAR_PAYPAL_URL, {
       method: "POST",
       headers: {
