@@ -430,6 +430,12 @@ async function capturarPagoSiRegresaDePayPal() {
     return false;
   }
 }
+
+function mostrarVenmo() {
+  alert(
+    "Send the deposit through Venmo to @EliteCleanersCompany. After payment, return here and tap 'I ALREADY PAID'."
+  );
+}
   
 capturarPagoSiRegresaDePayPal().then((capturado) => {
   if (!capturado) cargarServicio();
