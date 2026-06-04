@@ -157,7 +157,7 @@ rodrigodanielfranco94@gmail.com
 After payment, tap the button below to notify Elite Cleaners.
 
 <button class="confirm-request" onclick="solicitarRevisionPago()">
-I ALREADY PAID
+I SENT MY DEPOSIT
 </button>
 </div>
 
@@ -250,7 +250,7 @@ async function solicitarRevisionPago() {
       fecha_solicitud_revision_pago: new Date().toISOString()
     });
 
-    alert("Thank you. Elite Cleaners Company will verify your deposit. Once confirmed, the signature will be unlocked.");
+    alert("Thank you ✅\n\nElite Cleaners Company has been notified. Once your deposit is verified, your signature will be unlocked.");
   } catch (e) {
     alert("Error: " + e.message);
   }
@@ -359,16 +359,51 @@ async function procesarFirma() {
   }
 }
 
-function mostrarVenmo() {
+function obtenerDepositoActual() {
+  const depositoTexto = document.getElementById("deposito-monto").innerText || "$0";
+  return Number(depositoTexto.replace("$", "").trim()) || 0;
+}
+
+async function mostrarZelle() {
+  const deposito = obtenerDepositoActual().toFixed(2);
+
+  try {
+    await navigator.clipboard.writeText(ZELLE_EMAIL);
+  } catch (e) {}
+
   alert(
-    "Send your deposit through Venmo to @Rodrigo-Franco-. After payment, return here and tap 'I ALREADY PAID'."
+    "Zelle email copied ✅\n\n" +
+    "Please open your banking app, choose Zelle, and send $" + deposito + " to:\n\n" +
+    ZELLE_EMAIL + "\n\n" +
+    "After sending the payment, return here and tap 'I SENT MY DEPOSIT'."
   );
 }
 
-function mostrarZelle() {
-  alert(
-    "Send your deposit through Zelle to rodrigodanielfranco94@gmail.com. After payment, return here and tap 'I ALREADY PAID'."
-  );
+function mostrarVenmo() {
+  const deposito = obtenerDepositoActual().toFixed(2);
+  const note = encodeURIComponent("Elite Cleaners Deposit - " + nombreCliente);
+
+  const venmoApp =
+    "venmo://paycharge?txn=pay&recipients=Rodrigo-Franco-&amount=" +
+    deposito +
+    "&note=" +
+    note;
+
+  const venmoWeb =
+    "https://venmo.com/Rodrigo-Franco-?txn=pay&amount=" +
+    deposito +
+    "&note=" +
+    note;
+
+const tiempoInicio = Date.now();
+
+window.location.href = venmoApp;
+
+setTimeout(() => {
+  if (Date.now() - tiempoInicio < 1800) {
+    window.location.href = venmoWeb;
+  }
+}, 1500);
 }
   
 cargarServicio();
