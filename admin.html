@@ -747,7 +747,8 @@ function obtenerMillasServicio(s) {
                     document.getElementById('alfombra_pies_cuadrados').value = c.alfombra_pies_cuadrados || "";
                     document.getElementById('alfombra_notas').value = c.alfombra_notas || "";
                     document.getElementById('notas_internas').value = c.notas_internas || "";
-                    l.style.display = "none";
+l.style.display = "none";
+calcularPrecioAutomatico();
                 };
                 l.appendChild(d);
             });
@@ -819,11 +820,152 @@ function obtenerMillasServicio(s) {
     section.classList.toggle("open");
 }
         function selectType(t) {
-            tipoSeleccionado = t;
-            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('btn-' + t).classList.add('active');
-        }
+    tipoSeleccionado = t;
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-' + t).classList.add('active');
+    calcularPrecioAutomatico();
+}
 
+const ELITE_PRICING = {
+    bases: {
+        "ESTÁNDAR": 180,
+        "PROFUNDA": 250,
+        "PRIMERA": 250,
+        "MOVE-IN": 320,
+        "MOVE-OUT": 320,
+        "POST-CONSTRUCCION": 450
+    },
+
+    ambientes: {
+        habitacion: 20,
+        bano: 30,
+        medio_bano: 15,
+        sala: 15,
+        cocina: 25,
+        oficina: 20,
+        lavanderia: 10,
+        garaje: 20,
+        comedor: 10,
+        sala_juegos: 20
+    },
+
+    extras: {
+        nevera_outside: 20,
+        nevera_inside: 60,
+        nevera_inside_outside: 80,
+
+        horno: 85,
+
+        gabinetes_outside: 20,
+        gabinetes_inside: 45,
+        gabinetes_inside_outside: 65,
+
+        ventanas_outside: 50,
+        ventanas_inside: 50,
+        ventanas_inside_outside: 100,
+
+        baseboards: 35,
+
+        alfombra_habitacion: 50,
+        alfombra_ft2: 0.25,
+
+        milla: 0.22
+    }
+};
+
+function valorNumero(id) {
+    return Number(document.getElementById(id)?.value || 0);
+}
+
+function valorSelect(id) {
+    return document.getElementById(id)?.value || "";
+}
+
+function calcularPrecioAutomatico() {
+    let tipo = tipoSeleccionado || "ESTÁNDAR";
+
+    const base = ELITE_PRICING.bases[tipo] || ELITE_PRICING.bases["ESTÁNDAR"];
+
+    let total = base;
+
+    total += valorNumero("habitaciones") * ELITE_PRICING.ambientes.habitacion;
+    total += valorNumero("banos") * ELITE_PRICING.ambientes.bano;
+    total += valorNumero("medios_banos") * ELITE_PRICING.ambientes.medio_bano;
+    total += valorNumero("salas") * ELITE_PRICING.ambientes.sala;
+    total += valorNumero("cocinas") * ELITE_PRICING.ambientes.cocina;
+    total += valorNumero("oficinas") * ELITE_PRICING.ambientes.oficina;
+    total += valorNumero("lavanderia") * ELITE_PRICING.ambientes.lavanderia;
+    total += valorNumero("garaje") * ELITE_PRICING.ambientes.garaje;
+    total += valorNumero("comedor") * ELITE_PRICING.ambientes.comedor;
+    total += valorNumero("sala_juegos") * ELITE_PRICING.ambientes.sala_juegos;
+
+    total += valorNumero("horno") * ELITE_PRICING.extras.horno;
+
+    const nevera = valorSelect("nevera");
+    if (nevera === "Outside") total += ELITE_PRICING.extras.nevera_outside;
+    if (nevera === "Inside") total += ELITE_PRICING.extras.nevera_inside;
+    if (nevera === "Inside & Outside") total += ELITE_PRICING.extras.nevera_inside_outside;
+
+    const gabinetes = valorSelect("gabinetes");
+    if (gabinetes === "Outside") total += ELITE_PRICING.extras.gabinetes_outside;
+    if (gabinetes === "Inside") total += ELITE_PRICING.extras.gabinetes_inside;
+    if (gabinetes === "Inside & Outside") total += ELITE_PRICING.extras.gabinetes_inside_outside;
+
+    const ventanas = valorSelect("ventanas");
+    if (ventanas === "Outside") total += ELITE_PRICING.extras.ventanas_outside;
+    if (ventanas === "Inside") total += ELITE_PRICING.extras.ventanas_inside;
+    if (ventanas === "Inside & Outside") total += ELITE_PRICING.extras.ventanas_inside_outside;
+
+    const baseboards = valorSelect("baseboards");
+    if (baseboards === "Sí") total += ELITE_PRICING.extras.baseboards;
+
+    total += valorNumero("alfombra_habitaciones") * ELITE_PRICING.extras.alfombra_habitacion;
+    total += valorNumero("alfombra_pies_cuadrados") * ELITE_PRICING.extras.alfombra_ft2;
+
+    total += valorNumero("millas_servicio") * ELITE_PRICING.extras.milla;
+
+    const precioInput = document.getElementById("precio_total");
+    if (precioInput) {
+        precioInput.value = total.toFixed(2);
+    }
+}
+
+function activarCalculadoraAutomatica() {
+    const campos = [
+        "millas_servicio",
+        "habitaciones",
+        "banos",
+        "medios_banos",
+        "salas",
+        "cocinas",
+        "oficinas",
+        "horno",
+        "nevera",
+        "gabinetes",
+        "ventanas",
+        "baseboards",
+        "lavanderia",
+        "garaje",
+        "comedor",
+        "sala_juegos",
+        "alfombra_habitaciones",
+        "alfombra_pies_cuadrados"
+    ];
+
+    campos.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener("input", calcularPrecioAutomatico);
+            el.addEventListener("change", calcularPrecioAutomatico);
+        }
+    });
+
+    calcularPrecioAutomatico();
+}
+
+document.addEventListener("DOMContentLoaded", activarCalculadoraAutomatica);
+setTimeout(activarCalculadoraAutomatica, 500);
+        
         function asignarTrabajo() {
     const id = document.getElementById('edit-id').value;
     const cli_nombre = document.getElementById('cliente').value;
@@ -1352,7 +1494,8 @@ document.getElementById('notas_internas').value = s.notas_internas || "";
     document.getElementById('millas_servicio').value =
         s.millas_servicio || obtenerMillasServicio(s) || "";
 
-    selectType(s.tipo);
+    selectType(s.tipo || "ESTÁNDAR");
+calcularPrecioAutomatico();
 
     document.getElementById('main-button').innerText = "GUARDAR CAMBIOS";
     document.getElementById('cancel-edit').style.display = "block";
