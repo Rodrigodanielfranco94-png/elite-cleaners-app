@@ -186,6 +186,14 @@
         </div>
     </div>
 
+<div class="accordion-section" id="sec-staff">
+    <div class="accordion-title" onclick="toggleSection('sec-staff')">
+        2. Staff
+        <span>⌄</span>
+    </div>
+
+    <div class="accordion-content">
+        
 <span class="label-text">Personal 1 (Staff 1)</span>
         <div class="search-container">
             <input type="text" id="search-empleado" placeholder="Buscar personal 1..." oninput="filtrarEmpleados(1)" autocomplete="off">
@@ -199,8 +207,11 @@
             <div id="suggestions-2" class="suggestions-list"></div>
         </div>
         <input type="hidden" id="email-empleado-2">
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div><span class="label-text">Fecha</span><input type="date" id="fecha"></div>
             <div><span class="label-text">Hora Estimada</span><input type="time" id="hora"></div>
         </div>
