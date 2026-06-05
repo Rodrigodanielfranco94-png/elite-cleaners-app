@@ -899,6 +899,11 @@ function calcularPrecioAutomatico() {
     total += valorNumero("comedor") * ELITE_PRICING.ambientes.comedor;
     total += valorNumero("sala_juegos") * ELITE_PRICING.ambientes.sala_juegos;
 
+    const ft2 = valorNumero("pies_cuadrados");
+    if (ft2 > 2500) {
+        total += (ft2 - 2500) * 0.03;
+    }
+
     total += valorNumero("horno") * ELITE_PRICING.extras.horno;
 
     const nevera = valorSelect("nevera");
@@ -929,10 +934,10 @@ function calcularPrecioAutomatico() {
         precioInput.value = total.toFixed(2);
     }
 }
-
 function activarCalculadoraAutomatica() {
     const campos = [
         "millas_servicio",
+        "pies_cuadrados",
         "habitaciones",
         "banos",
         "medios_banos",
