@@ -399,6 +399,14 @@
 
     </div>
 </div>
+
+<div class="accordion-section" id="sec-alfombra">
+    <div class="accordion-title" onclick="toggleSection('sec-alfombra')">
+        6. Lavado de Alfombras
+        <span>⌄</span>
+    </div>
+
+    <div class="accordion-content">
         
 <!-- ===== CARPET CLEANING ===== -->
 
@@ -422,7 +430,16 @@
 <textarea id="alfombra_notas" placeholder="Ej: manchas, escaleras, pasillo, sala..." rows="2"></textarea>
 
       <!-- ===== NOTAS INTERNAS ===== -->
+    </div>
+</div>
+        
+<div class="accordion-section" id="sec-venta">
+    <div class="accordion-title" onclick="toggleSection('sec-venta')">
+        7. Venta y Tipo de Limpieza
+        <span>⌄</span>
+    </div>
 
+    <div class="accordion-content">        
 <span class="label-text">NOTAS INTERNAS / INSTRUCCIONES ESPECIALES</span>
 
 <textarea
@@ -452,7 +469,10 @@ style="width:100%;"></textarea>
             <button class="type-btn" id="btn-PRIMERA" onclick="selectType('PRIMERA')">PRIMERA VEZ</button>
             <button class="type-btn" id="btn-POST-CONSTRUCCION" onclick="selectType('POST-CONSTRUCCION')">POST-CONSTRUCCIÓN</button>
         </div>
-
+        
+    </div>
+</div>
+        
         <button class="save-btn" id="main-button" onclick="asignarTrabajo()">ASIGNAR TRABAJO</button>
         <button id="cancel-edit" style="display:none; background:none; border:none; color:#ef4444; width:100%; margin-top:10px; font-weight:bold; cursor:pointer;" onclick="location.reload()">CANCELAR EDICIÓN</button>
     </div>
