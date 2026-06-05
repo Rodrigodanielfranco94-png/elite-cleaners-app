@@ -406,7 +406,32 @@ setTimeout(() => {
 }, 1500);
 }
   
-cargarServicio();
+db.collection("servicios").doc(idServicio).onSnapshot((doc) => {
+  if (!doc.exists) {
+    alert("Agreement not found.");
+    return;
+  }
+
+  servicioActual = doc.data();
+
+  const precio = Number(servicioActual.precio_total || 0);
+  const deposito = Number(servicioActual.deposito_monto || 100);
+
+  document.getElementById("precio-total").innerText = "$" + precio.toFixed(2);
+  document.getElementById("deposito-monto").innerText = "$" + deposito.toFixed(2);
+
+  if (servicioActual.deposito_pagado === true) {
+    document.getElementById("payment-box").style.display = "none";
+    document.getElementById("payment-status").className = "unlocked";
+    document.getElementById("payment-status").innerText = "✅ Deposit confirmed. You can now sign the agreement.";
+    document.getElementById("signature-section").style.display = "block";
+    ajustarCanvas();
+  } else {
+    document.getElementById("signature-section").style.display = "none";
+    document.getElementById("payment-status").className = "locked";
+    document.getElementById("payment-status").innerText = "🔒 Signature locked. Deposit must be confirmed by Elite Cleaners Company before signing.";
+  }
+});
 </script>
 </body>
 </html>
