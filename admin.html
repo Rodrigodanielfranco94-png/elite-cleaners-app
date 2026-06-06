@@ -1727,12 +1727,15 @@ function cerrarEditorEvento() {
 async function guardarEditorEvento() {
     const id = document.getElementById("edit-cal-id").value;
 
-    await db.collection("servicios").doc(id).update({
-        fecha: document.getElementById("edit-cal-fecha").value,
-        hora: document.getElementById("edit-cal-hora").value,
-        hora_final_estimada: document.getElementById("edit-cal-hora-final").value,
-        estado_calendario: document.getElementById("edit-cal-estado").value
-    });
+  const estadoCal = document.getElementById("edit-cal-estado").value;
+
+await db.collection("servicios").doc(id).update({
+    fecha: document.getElementById("edit-cal-fecha").value,
+    hora: document.getElementById("edit-cal-hora").value,
+    hora_final_estimada: document.getElementById("edit-cal-hora-final").value,
+    estado_calendario: estadoCal,
+    estado: estadoCal === "completado" ? "completado" : "no_iniciado"
+});
 
     cerrarEditorEvento();
     renderCalendarioElite();
