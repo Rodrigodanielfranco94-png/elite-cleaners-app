@@ -118,6 +118,54 @@
 .accordion-section.open .accordion-content {
   display:block;
 }
+        
+ #modal-editar-evento {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.85);
+  z-index:1000000;
+  padding:18px;
+  box-sizing:border-box;
+}
+
+.editor-evento-box {
+  background:#f2f2f7;
+  color:#111;
+  border-radius:22px;
+  padding:18px;
+  max-width:430px;
+  margin:40px auto;
+}
+
+.editor-evento-box h2 {
+  text-align:center;
+  margin:0 0 15px;
+}
+
+.editor-evento-box label {
+  display:block;
+  font-size:12px;
+  font-weight:bold;
+  color:#555;
+  margin-top:10px;
+}
+
+.editor-evento-box input,
+.editor-evento-box select {
+  background:white;
+  color:#111;
+  border:1px solid #ddd;
+  margin-bottom:8px;
+}
+
+.editor-evento-actions {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:15px;
+}
+        
     </style>
 </head>
 <body>
