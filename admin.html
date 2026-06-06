@@ -1914,6 +1914,39 @@ CERRAR CALENDARIO
 </button>
 
 </div> 
+    <div id="modal-editar-evento">
+  <div class="editor-evento-box">
+    <h2>Editar evento</h2>
+
+    <input type="hidden" id="edit-cal-id">
+
+    <label>Cliente</label>
+    <input type="text" id="edit-cal-cliente" readonly>
+
+    <label>Fecha</label>
+    <input type="date" id="edit-cal-fecha">
+
+    <label>Hora de inicio</label>
+    <input type="time" id="edit-cal-hora">
+
+    <label>Hora final estimada</label>
+    <input type="time" id="edit-cal-hora-final">
+
+    <label>Estado calendario</label>
+    <select id="edit-cal-estado">
+      <option value="pendiente">🟣 Pendiente / Agendado</option>
+      <option value="completado">🟡 Terminado</option>
+      <option value="no_seguro">🔴 No seguro</option>
+      <option value="cita">🟢 Cita extra</option>
+    </select>
+
+    <div class="editor-evento-actions">
+      <button class="save-btn" style="background:#ef4444;" onclick="cerrarEditorEvento()">Cancelar</button>
+      <button class="save-btn" style="background:#3b82f6;" onclick="guardarEditorEvento()">Guardar</button>
+    </div>
+  </div>    
+</div>
+    
    <script>
 const SUPABASE_URL = "https://wfwojwnbtcpeaumudyjl.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmd29qd25idGNwZWF1bXVkeWpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODIwMzIsImV4cCI6MjA5NTA1ODAzMn0.ln6meZvxfSZwtTSnF8PhI7B9tB0hCb6xPfg1_q6jgFE";
