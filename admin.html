@@ -1783,12 +1783,18 @@ function mostrarEventosDia(fecha) {
                 </div>
 
                 <div style="color:#374151; margin-top:6px; font-size:13px;">
-                    ⏰ ${formatAMPM(ev.hora)}
-                </div>
+    ⏰ ${formatAMPM(ev.hora)}
+</div>
 
-                <div style="color:#374151; margin-top:4px; font-size:13px;">
-                    📍 ${ev.direccion || ""}
-                </div>
+${ev.hora_fin && ev.hora_fin !== "--:--" ? `
+    <div style="color:#22c55e; margin-top:4px; font-size:13px; font-weight:bold;">
+        ✅ Terminado: ${formatAMPM(ev.hora_fin)}
+    </div>
+` : ""}
+
+<div style="color:#374151; margin-top:4px; font-size:13px;">
+    📍 ${ev.direccion || ""}
+</div>
 
                 <div style="color:#7c3aed; margin-top:4px; font-size:13px; font-weight:bold;">
                     🔁 ${ev.repetir === "ninguno" ? "Única vez" : ev.repetir || "Única vez"}
