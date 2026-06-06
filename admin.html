@@ -1439,14 +1439,30 @@ function toggleDetalles(id) {
 
 function cambiarEstadoTrabajo(id, estado) {
 
-    db.collection("servicios").doc(id).update({
+    const ahora = new Date();
+
+    const horaActual =
+        String(ahora.getHours()).padStart(2, "0") +
+        ":" +
+        String(ahora.getMinutes()).padStart(2, "0");
+
+    const datos = {
         estado: estado,
         estado_calendario:
             estado === "completado"
             ? "completado"
             : "pendiente"
-    });
+    };
 
+    if (estado === "en_progreso") {
+        datos.hora_inicio = horaActual;
+    }
+
+    if (estado === "completado") {
+        datos.hora_fin = horaActual;
+    }
+
+    db.collection("servicios").doc(id).update(datos);
 }
         
 function confirmarDeposito(id) {
