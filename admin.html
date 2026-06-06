@@ -1695,8 +1695,238 @@ async function guardarEditorEvento() {
     alert("Evento actualizado ✅");
 }
 
+function abrirEditorEvento(id) {
+    const ev = todosLosServicios.find(s => s.id === id);
+    if (!ev) return alert("Trabajo no encontrado");
+
+    document.getElementById("edit-cal-id").value = id;
+    document.getElementById("edit-cal-cliente").value = ev.cliente || "";
+    document.getElementById("edit-cal-fecha").value = ev.fecha || "";
+    document.getElementById("edit-cal-hora").value = ev.hora || "";
+    document.getElementById("edit-cal-hora-final").value = ev.hora_final_estimada || "";
+    document.getElementById("edit-cal-estado").value = ev.estado_calendario || "pendiente";
+
+    document.getElementById("modal-editar-evento").style.display = "block";
+}
+
+function cerrarEditorEvento() {
+    document.getElementById("modal-editar-evento").style.display = "none";
+}
+
+async function guardarEditorEvento() {
+    const id = document.getElementById("edit-cal-id").value;
+
+    await db.collection("servicios").doc(id).update({
+        fecha: document.getElementById("edit-cal-fecha").value,
+        hora: document.getElementById("edit-cal-hora").value,
+        hora_final_estimada: document.getElementById("edit-cal-hora-final").value,
+        estado_calendario: document.getElementById("edit-cal-estado").value
+    });
+
+    cerrarEditorEvento();
+    renderCalendarioElite();
+
+    const nuevaFecha = document.getElementById("edit-cal-fecha").value;
+    mostrarEventosDia(nuevaFecha);
+
+    alert("Evento actualizado ✅");
+}
+
+function mostrarEventosDia(fecha) {
+
+O sea, debe quedar así:
+
+function abrirEditorEvento(id) {
+   ...
+}
+
+function cerrarEditorEvento() {
+   ...
+}
+
+async function guardarEditorEvento() {
+   ...
+}
+
+function mostrarEventosDia(fecha) {
+   ...
+}
+You have not enough Humanizer words left. Upgrade your Surfer plan.
 function mostrarEventosDia(fecha) {
         
+function mostrarEventosDia(fecha) {
+
+    const cont = document.getElementById("calendar-day-events");
+
+    const eventos = todosLosServicios.filter(s => s.fecha === fecha);
+
+    cont.innerHTML = 
+    <h3 style="
+    color:#f59e0b;
+    margin-bottom:15px;
+    ">
+    ${fecha}
+    </h3>
+    ;
+
+    if(eventos.length === 0) {
+
+        cont.innerHTML += 
+        <p style="color:#8e8e93;">
+        No hay trabajos este día.
+        </p>
+        ;
+
+        return;
+    }
+
+    eventos.forEach(ev => {
+
+        cont.innerHTML += 
+        <div style="
+        background:#f3f4f6;
+        border-radius:18px;
+        padding:15px;
+        margin-bottom:12px;
+        border-left:6px solid ${obtenerColorEvento(ev.estado_calendario, ev.estado)};
+        ">
+
+        <div style="
+        font-weight:bold;
+        font-size:17px;
+        color:#111827;
+        ">
+        ${ev.repetir && ev.repetir !== "ninguno" ? "🔁 " : ""}${ev.cliente}
+        </div>
+
+        <div style="
+        color:#374151;
+        margin-top:6px;
+        font-size:13px;
+        ">
+        ⏰ ${formatAMPM(ev.hora)}
+        </div>
+
+        <div style="
+        color:#374151;
+        margin-top:4px;
+        font-size:13px;
+        ">
+        📍 ${ev.direccion || ""}
+        </div>
+
+        <div style="
+        color:#22c55e;
+        margin-top:4px;
+        font-size:13px;
+        font-weight:bold;
+        ">
+        <div style="
+color:#7c3aed;
+margin-top:4px;
+font-size:13px;
+font-weight:bold;
+">
+🔁 ${ev.repetir === "ninguno" ? "Única vez" : ev.repetir || "Única vez"}
+</div>
+        </div>
+
+        </div>
+        ;
+    });
+}
+     donde pego esto ? 
+
+function abrirEditorEvento(id) {
+    const ev = todosLosServicios.find(s => s.id === id);
+    if (!ev) return alert("Trabajo no encontrado");
+
+    document.getElementById("edit-cal-id").value = id;
+    document.getElementById("edit-cal-cliente").value = ev.cliente || "";
+    document.getElementById("edit-cal-fecha").value = ev.fecha || "";
+    document.getElementById("edit-cal-hora").value = ev.hora || "";
+    document.getElementById("edit-cal-hora-final").value = ev.hora_final_estimada || "";
+    document.getElementById("edit-cal-estado").value = ev.estado_calendario || "pendiente";
+
+    document.getElementById("modal-editar-evento").style.display = "block";
+}
+
+function cerrarEditorEvento() {
+    document.getElementById("modal-editar-evento").style.display = "none";
+}
+
+async function guardarEditorEvento() {
+    const id = document.getElementById("edit-cal-id").value;
+
+    await db.collection("servicios").doc(id).update({
+        fecha: document.getElementById("edit-cal-fecha").value,
+        hora: document.getElementById("edit-cal-hora").value,
+        hora_final_estimada: document.getElementById("edit-cal-hora-final").value,
+        estado_calendario: document.getElementById("edit-cal-estado").value
+    });
+
+    cerrarEditorEvento();
+    renderCalendarioElite();
+
+    const nuevaFecha = document.getElementById("edit-cal-fecha").value;
+    mostrarEventosDia(nuevaFecha);
+
+    alert("Evento actualizado ✅");
+}
+
+Veo el problema. Ahora mismo tienes esto:
+
+function mostrarEventosDia(fecha) {
+
+function mostrarEventosDia(fecha) {
+
+Eso está mal porque tienes la función duplicada.
+
+Debes hacer esto:
+
+Busca esta línea
+function mostrarEventosDia(fecha) {
+Y pega las nuevas funciones JUSTO ARRIBA
+
+Debe quedar así:
+
+function abrirEditorEvento(id) {
+    const ev = todosLosServicios.find(s => s.id === id);
+    if (!ev) return alert("Trabajo no encontrado");
+
+    document.getElementById("edit-cal-id").value = id;
+    document.getElementById("edit-cal-cliente").value = ev.cliente || "";
+    document.getElementById("edit-cal-fecha").value = ev.fecha || "";
+    document.getElementById("edit-cal-hora").value = ev.hora || "";
+    document.getElementById("edit-cal-hora-final").value = ev.hora_final_estimada || "";
+    document.getElementById("edit-cal-estado").value = ev.estado_calendario || "pendiente";
+
+    document.getElementById("modal-editar-evento").style.display = "block";
+}
+
+function cerrarEditorEvento() {
+    document.getElementById("modal-editar-evento").style.display = "none";
+}
+
+async function guardarEditorEvento() {
+    const id = document.getElementById("edit-cal-id").value;
+
+    await db.collection("servicios").doc(id).update({
+        fecha: document.getElementById("edit-cal-fecha").value,
+        hora: document.getElementById("edit-cal-hora").value,
+        hora_final_estimada: document.getElementById("edit-cal-hora-final").value,
+        estado_calendario: document.getElementById("edit-cal-estado").value
+    });
+
+    cerrarEditorEvento();
+    renderCalendarioElite();
+
+    const nuevaFecha = document.getElementById("edit-cal-fecha").value;
+    mostrarEventosDia(nuevaFecha);
+
+    alert("Evento actualizado ✅");
+}
+
 function mostrarEventosDia(fecha) {
 
     const cont = document.getElementById("calendar-day-events");
