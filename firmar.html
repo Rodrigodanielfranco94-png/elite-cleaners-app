@@ -447,11 +447,15 @@ if (servicioActual.deposito_pagado === true) {
     document.getElementById("signature-section").style.display = "block";
 
     setTimeout(ajustarCanvas, 300);
-} else {
+}} else {
+    document.querySelector(".notice").style.display = "block";
+    document.querySelector(".zelle").style.display = "block";
+    document.getElementById("btnVenmo").style.display = "block";
+
     document.getElementById("signature-section").style.display = "none";
     document.getElementById("payment-status").className = "locked";
     document.getElementById("payment-status").innerText = "🔒 Signature locked. Deposit must be confirmed by Elite Cleaners Company before signing.";
-  }
+}
 });
   
   cargarServicio();
