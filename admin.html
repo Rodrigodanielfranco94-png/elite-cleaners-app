@@ -1238,7 +1238,9 @@ const contenidoTrabajo = `
 if (textoBusqueda && !contenidoTrabajo.includes(textoBusqueda)) return;
                 if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
                     const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
-                    const btnFirma = s.firma_cliente ? `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">Ver Firma</button>` : `<button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">Acuerdo</button>`;
+                    const btnFirma = s.contrato_firmado
+    ? `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">✍️ Ver Firma</button>`
+    : `<button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">📄 Acuerdo</button>`;
                     const depositoMonto = Number(s.deposito_monto || 0).toFixed(2);
 const estadoDeposito = s.deposito_pagado
     ? `<p style="color:#22c55e; font-weight:bold;">✅ Depósito confirmado: $${depositoMonto}</p>`
