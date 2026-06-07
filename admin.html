@@ -1246,6 +1246,9 @@ const estadoDeposito = s.deposito_pagado
 const btnDeposito = s.deposito_pagado
     ? `<button class="btn-action" style="background:#92400e;" onclick="cancelarDeposito('${s.id}')">Cancelar Depósito</button>`
     : `<button class="btn-action" style="background:#22c55e;" onclick="confirmarDeposito('${s.id}')">Confirmar Depósito</button>`;
+     const btnBalance = s.balance_pagado
+    ? `<button class="btn-action" style="background:#92400e;" onclick="cancelarBalance('${s.id}')">Cancelar Balance</button>`
+    : `<button class="btn-action" style="background:#16a34a;" onclick="confirmarBalance('${s.id}')">Confirmar Balance</button>`;               
                     const card = document.createElement('div');
                     card.className = 'card-servicio';
                     const horaFormateada = formatAMPM(s.hora);
