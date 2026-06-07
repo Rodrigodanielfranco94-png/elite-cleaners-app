@@ -184,6 +184,7 @@ I SENT MY DEPOSIT
 </div>
 
 <script>
+const ZELLE_EMAIL = "rodrigodanielfranco94@gmail.com";
 const VENMO_USERNAME = "Elite-Cleaners-Company";
 
 const firebaseConfig = {
@@ -430,6 +431,8 @@ db.collection("servicios").doc(idServicio).onSnapshot((doc) => {
     document.getElementById("payment-status").innerText = "🔒 Signature locked. Deposit must be confirmed by Elite Cleaners Company before signing.";
   }
 });
+  
+  cargarServicio();
 </script>
 </body>
 </html>
