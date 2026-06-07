@@ -1437,7 +1437,7 @@ function toggleDetalles(id) {
     }); 
 }
 
-function cambiarEstadoTrabajo(id, estado) {
+async function cambiarEstadoTrabajo(id, estado) {
 
     const ahora = new Date();
 
@@ -1462,7 +1462,31 @@ function cambiarEstadoTrabajo(id, estado) {
         datos.hora_fin = horaActual;
     }
 
-    db.collection("servicios").doc(id).update(datos);
+    await db.collection("servicios").doc(id).update(datos);
+
+    if (estado === "completado") {
+        const servicio = todosLosServicios.find(s => s.id === id);
+
+        if (!servicio) return;
+
+        const total = Number(servicio.precio_total || 0);
+        const deposito = Number(servicio.deposito_monto || 0);
+        const balance = Number(servicio.balance_restante || (total - deposito));
+
+        const mensaje =
+`Hello ${servicio.cliente}, your cleaning service has been completed. ✅
+
+Remaining balance: $${balance.toFixed(2)}
+
+You can send the payment via Venmo:
+@Elite-Cleaners-Company
+
+You may also pay through Zelle if preferred.
+
+Thank you for choosing Elite Cleaners Company.`;
+
+        abrirSMS(servicio.whatsapp, mensaje);
+    }
 }
         
 function confirmarDeposito(id) {
