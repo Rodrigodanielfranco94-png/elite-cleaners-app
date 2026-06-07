@@ -384,26 +384,24 @@ function mostrarVenmo() {
   const note = encodeURIComponent("Elite Cleaners Deposit - " + nombreCliente);
 
   const venmoApp =
-    "venmo://paycharge?txn=pay&recipients=Rodrigo-Franco-&amount=" +
-    deposito +
-    "&note=" +
-    note;
+    "venmo://paycharge?txn=pay&recipients=" + VENMO_USERNAME +
+    "&amount=" + deposito +
+    "&note=" + note;
 
   const venmoWeb =
-    "https://venmo.com/Rodrigo-Franco-?txn=pay&amount=" +
-    deposito +
-    "&note=" +
-    note;
+    "https://venmo.com/" + VENMO_USERNAME +
+    "?txn=pay&amount=" + deposito +
+    "&note=" + note;
 
-const tiempoInicio = Date.now();
+  const tiempoInicio = Date.now();
 
-window.location.href = venmoApp;
+  window.location.href = venmoApp;
 
-setTimeout(() => {
-  if (Date.now() - tiempoInicio < 1800) {
-    window.location.href = venmoWeb;
-  }
-}, 1500);
+  setTimeout(() => {
+    if (Date.now() - tiempoInicio < 1800) {
+      window.location.href = venmoWeb;
+    }
+  }, 1500);
 }
   
 db.collection("servicios").doc(idServicio).onSnapshot((doc) => {
