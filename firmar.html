@@ -353,11 +353,15 @@ async function procesarFirma() {
   const firmaImg = tempCanvas.toDataURL("image/png");
 
   try {
-    await db.collection("servicios").doc(idServicio).update({
-      firma_cliente: true,
-      firma_imagen: firmaImg,
-      fecha_firma: new Date().toISOString()
-    });
+    const fechaFirma = new Date().toISOString();
+
+await db.collection("servicios").doc(idServicio).update({
+  firma_cliente: true,
+  contrato_firmado: true,
+  firma_imagen: firmaImg,
+  fecha_firma: fechaFirma,
+  estado_contrato: "firmado"
+});
 
     document.getElementById("main-content").style.display = "none";
     document.getElementById("success-screen").style.display = "flex";
