@@ -1505,6 +1505,26 @@ function confirmarDeposito(id) {
     });
 }
 
+ function confirmarBalance(id) {
+    if (!confirm("¿Confirmas que el cliente ya pagó el balance restante?")) return;
+
+    db.collection("servicios").doc(id).update({
+        balance_pagado: true,
+        fecha_pago_balance: new Date().toISOString(),
+        metodo_pago_balance: "Confirmado manualmente por Admin"
+    });
+}
+
+function cancelarBalance(id) {
+    if (!confirm("¿Deseas cancelar la confirmación del balance final?")) return;
+
+    db.collection("servicios").doc(id).update({
+        balance_pagado: false,
+        fecha_pago_balance: "",
+        metodo_pago_balance: ""
+    });
+}       
+
 function cancelarDeposito(id) {
     if (!confirm("¿Quieres marcar este depósito como NO pagado?")) return;
 
