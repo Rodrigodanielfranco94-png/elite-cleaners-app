@@ -1280,9 +1280,10 @@ ${s.alfombra_notas ? `
 </div>
                         <span class="price-tag">$${s.precio_total || 0}</span>
 ${estadoDeposito}
-<p style="color:#22c55e;">
-💰 Balance restante: $${Number(s.balance_restante || 0).toFixed(2)}
-</p>
+${s.balance_pagado
+? `<p style="color:#22c55e;font-weight:bold;">✅ Balance pagado</p>`
+: `<p style="color:#f59e0b;font-weight:bold;">💰 Balance pendiente: $${Number(s.balance_restante || 0).toFixed(2)}</p>`
+}
 <p>📅 ${s.fecha} | ⏰ ${horaFormateada}</p>
 <p>📍 ${s.direccion}</p>
 
