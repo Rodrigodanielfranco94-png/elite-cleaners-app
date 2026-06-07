@@ -229,12 +229,19 @@ async function cargarServicio() {
   document.getElementById("deposito-monto").innerText = "$" + deposito.toFixed(2);
 
   if (servicioActual.deposito_pagado === true) {
-    document.getElementById("payment-box").style.display = "none";
+    document.getElementById("payment-box").style.display = "block";
+
+    document.querySelector(".notice").style.display = "none";
+    document.querySelector(".zelle").style.display = "none";
+    document.getElementById("btnVenmo").style.display = "none";
+
     document.getElementById("payment-status").className = "unlocked";
     document.getElementById("payment-status").innerText = "✅ Deposit confirmed. You can now sign the agreement.";
+
     document.getElementById("signature-section").style.display = "block";
-    ajustarCanvas();
-  } else {
+
+    setTimeout(ajustarCanvas, 300);
+} else {
     document.getElementById("signature-section").style.display = "none";
     document.getElementById("payment-status").className = "locked";
     document.getElementById("payment-status").innerText = "🔒 Signature locked. Deposit must be confirmed by Elite Cleaners Company before signing.";
