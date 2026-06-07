@@ -366,6 +366,26 @@ await db.collection("servicios").doc(idServicio).update({
   fecha_firma: fechaFirma,
   estado_contrato: "firmado"
 });
+   await fetch("https://enviarcorreonico-cnnxm2vdja-uc.a.run.app", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    para: "elitecleanerscompany@gmail.com",
+    asunto: "✅ New Signed Agreement - " + nombreCliente,
+    mensaje: `
+      <h3>New agreement signed</h3>
+      <p><b>Client:</b> ${nombreCliente}</p>
+      <p><b>Service ID:</b> ${idServicio}</p>
+      <p><b>Date signed:</b> ${fechaFirma}</p>
+      <p>The client has signed the cleaning services agreement.</p>
+      <br>
+      <p><b>Signature:</b></p>
+      <img src="${firmaImg}" style="max-width:100%;border:1px solid #ccc;border-radius:10px;">
+    `
+  })
+}); 
 
 await fetch("https://us-central1-elite-cleaners-app.cloudfunctions.net/enviarCorreoNico", {
   method: "POST",
