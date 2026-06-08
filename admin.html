@@ -206,16 +206,15 @@
 }
 
 #admin-fixed-top {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 5000;
+  position: static;
   background: #000;
-  padding: 15px;
-  border-bottom: 1px solid #2c2c2e;
-  max-height: 68vh;
-  overflow-y: auto;
+}
+
+.search-jobs-box {
+  position: sticky;
+  top: 0;
+  z-index: 4000;
+  background: #1c1c1e;
 }
 
 #historial {
