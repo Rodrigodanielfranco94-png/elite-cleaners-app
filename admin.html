@@ -1475,7 +1475,11 @@ onchange="cambiarEstadoTrabajo('${s.id}', this.value)"
     <button class="btn-action btn-whatsapp" onclick="enviarRecordatorio('${s.id}')">Recordatorio 📱</button>
                             <button class="btn-action btn-review" onclick="solicitarResenaGoogle('${s.cliente}', '${s.whatsapp}')">Reseña ⭐️</button>
                             <button class="btn-action btn-edit" id="edit-btn-${s.id}">Editar</button>
-                            <button class="btn-action btn-review" style="background:#ef4444" onclick="borrar('${s.id}')">Borrar</button>
+                           <button class="btn-action btn-review" style="background:#ef4444" onclick="borrar('${s.id}')">Borrar</button>
+
+<button class="btn-action" style="background:#7f1d1d;" onclick="borrarClienteCompleto('${s.cliente}')">
+    Borrar Cliente Completo
+</button>
                         </div>`;
                     h.appendChild(card);
                     document.getElementById(`edit-btn-${s.id}`).onclick = () => editar(s.id, s);
