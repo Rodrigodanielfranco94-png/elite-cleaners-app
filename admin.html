@@ -195,6 +195,23 @@
   font-size:13px;
   color:#d1d5db;
 }
+
+#admin-fixed-top {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5000;
+  background: #000;
+  padding: 15px;
+  border-bottom: 1px solid #2c2c2e;
+  max-height: 68vh;
+  overflow-y: auto;
+}
+
+#historial {
+  margin-top: calc(var(--admin-fixed-height, 620px) + 15px);
+}
         
     </style>
 </head>
