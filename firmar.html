@@ -256,6 +256,8 @@ async function solicitarRevisionPago() {
   try {
     await db.collection("servicios").doc(idServicio).update({
       pago_revision_solicitado: true,
+      notificacion_deposito: true,
+      tipo_notificacion_pago: "deposito",
       metodo_pago_deposito: "Zelle or Venmo",
       paypal_link: "",
       zelle_email: ZELLE_EMAIL,
