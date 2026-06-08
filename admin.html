@@ -961,6 +961,13 @@ calcularPrecioAutomatico();
             l.style.display = f.length > 0 ? "block" : "none";
         }
 
+function togglePayroll() {
+    const box = document.getElementById("payroll-content");
+    if (!box) return;
+
+    box.style.display = box.style.display === "none" ? "block" : "none";
+}
+        
         function toggleSection(id) {
     const section = document.getElementById(id);
     if (!section) return;
