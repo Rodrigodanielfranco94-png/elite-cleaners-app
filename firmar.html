@@ -270,6 +270,20 @@ async function solicitarRevisionPago() {
   }
 }
 
+async function solicitarRevisionBalance() {
+  try {
+    await db.collection("servicios").doc(idServicio).update({
+      notificacion_balance: true,
+      tipo_notificacion_pago: "balance",
+      metodo_pago_balance: "Zelle or Venmo",
+      fecha_solicitud_revision_balance: new Date().toISOString()
+    });
+
+    alert("Thank you ✅\n\nElite Cleaners Company has been notified. Once your balance payment is verified, your account will be marked as paid.");
+  } catch (e) {
+    alert("Error: " + e.message);
+  }
+}
 const canvas = document.getElementById("signature-pad");
 const ctx = canvas.getContext("2d");
 let dibujando = false;
@@ -418,17 +432,29 @@ async function mostrarZelle() {
 }
 
 function mostrarVenmo() {
-  const deposito = obtenerDepositoActual().toFixed(2);
-  const note = encodeURIComponent("Elite Cleaners Deposit - " + nombreCliente);
+  let monto = obtenerDepositoActual().toFixed(2);
+  let notaTipo = "Deposit";
+
+  if (
+    servicioActual &&
+    servicioActual.estado === "completado" &&
+    servicioActual.deposito_pagado === true &&
+    servicioActual.balance_pagado !== true
+  ) {
+    monto = Number(servicioActual.balance_restante || 0).toFixed(2);
+    notaTipo = "Balance";
+  }
+
+  const note = encodeURIComponent("Elite Cleaners " + notaTipo + " - " + nombreCliente);
 
   const venmoApp =
     "venmo://paycharge?txn=pay&recipients=" + VENMO_USERNAME +
-    "&amount=" + deposito +
+    "&amount=" + monto +
     "&note=" + note;
 
   const venmoWeb =
     "https://venmo.com/" + VENMO_USERNAME +
-    "?txn=pay&amount=" + deposito +
+    "?txn=pay&amount=" + monto +
     "&note=" + note;
 
   const tiempoInicio = Date.now();
@@ -456,31 +482,61 @@ db.collection("servicios").doc(idServicio).onSnapshot((doc) => {
   document.getElementById("precio-total").innerText = "$" + precio.toFixed(2);
   document.getElementById("deposito-monto").innerText = "$" + deposito.toFixed(2);
 
-if (servicioActual.deposito_pagado === true) {
-    document.getElementById("payment-box").style.display = "block";
+if (
+  servicioActual.estado === "completado" &&
+  servicioActual.deposito_pagado === true &&
+  servicioActual.balance_pagado !== true
+) {
+  const balance = Number(servicioActual.balance_restante || 0);
 
-    document.querySelector(".notice").style.display = "none";
-    document.querySelector(".zelle").style.display = "none";
-    document.getElementById("btnVenmo").style.display = "none";
+  document.querySelector(".payment-box h3").innerText = "Balance Payment Required";
+  document.querySelector("#deposito-monto").innerText = "$" + balance.toFixed(2);
+  document.querySelector(".payment-row span:nth-child(1)").innerText = "Balance Due:";
 
-    document.getElementById("payment-status").className = "unlocked";
-    document.getElementById("payment-status").innerText = "✅ Deposit confirmed. You can now sign the agreement.";
+  document.querySelector(".notice").style.display = "block";
+  document.querySelector(".zelle").style.display = "block";
+  document.getElementById("btnVenmo").style.display = "block";
 
-    document.getElementById("signature-section").style.display = "block";
+  document.querySelector(".confirm-request").innerText = "I SENT MY BALANCE";
+  document.querySelector(".confirm-request").setAttribute("onclick", "solicitarRevisionBalance()");
 
-    setTimeout(ajustarCanvas, 300);
+  document.getElementById("payment-status").className = "locked";
+  document.getElementById("payment-status").innerText = "💰 Balance payment pending. Please send the remaining balance.";
+  document.getElementById("signature-section").style.display = "none";
+
+} else if (servicioActual.deposito_pagado === true) {
+  document.getElementById("payment-box").style.display = "block";
+
+  document.querySelector(".notice").style.display = "none";
+  document.querySelector(".zelle").style.display = "none";
+  document.getElementById("btnVenmo").style.display = "none";
+
+  document.getElementById("payment-status").className = "unlocked";
+  document.getElementById("payment-status").innerText = "✅ Deposit confirmed. You can now sign the agreement.";
+
+  document.getElementById("signature-section").style.display = "block";
+
+  setTimeout(ajustarCanvas, 300);
+
 } else {
-    document.querySelector(".notice").style.display = "block";
-    document.querySelector(".zelle").style.display = "block";
-    document.getElementById("btnVenmo").style.display = "block";
+  document.querySelector(".payment-box h3").innerText = "Deposit Payment Required (Zelle or Venmo)";
+  document.querySelector(".payment-row span:nth-child(1)").innerText = "Required Deposit:";
 
-    document.getElementById("signature-section").style.display = "none";
-    document.getElementById("payment-status").className = "locked";
-    document.getElementById("payment-status").innerText = "🔒 Signature locked. Deposit must be confirmed by Elite Cleaners Company before signing.";
+  document.querySelector(".notice").style.display = "block";
+  document.querySelector(".zelle").style.display = "block";
+  document.getElementById("btnVenmo").style.display = "block";
+
+  document.querySelector(".confirm-request").innerText = "I SENT MY DEPOSIT";
+  document.querySelector(".confirm-request").setAttribute("onclick", "solicitarRevisionPago()");
+
+  document.getElementById("signature-section").style.display = "none";
+  document.getElementById("payment-status").className = "locked";
+  document.getElementById("payment-status").innerText = "🔒 Signature locked. Deposit must be confirmed by Elite Cleaners Company before signing.";
 }
-});
   
-  cargarServicio();
+  });
+  
+cargarServicio();
 </script>
 </body>
 </html>
