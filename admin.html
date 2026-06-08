@@ -1696,6 +1696,42 @@ function ignorarNotificacionBalance(id) {
     });
 }
         function borrar(id) { if(confirm("¿Seguro que quieres borrarlo?")) db.collection("servicios").doc(id).delete(); }
+
+async function borrarClienteCompleto(nombreCliente) {
+    if (!nombreCliente) return alert("Cliente no válido.");
+
+    const confirmar = confirm(
+        `¿Seguro que quieres eliminar COMPLETAMENTE a ${nombreCliente}?\n\nEsto borrará todos los trabajos agendados de este cliente.`
+    );
+
+    if (!confirmar) return;
+
+    try {
+        const snap = await db.collection("servicios")
+            .where("cliente", "==", nombreCliente)
+            .get();
+
+        if (snap.empty) {
+            alert("No hay trabajos para borrar de este cliente.");
+            return;
+        }
+
+        const batch = db.batch();
+
+        snap.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+
+        batch.delete(db.collection("clientes").doc(nombreCliente));
+
+        await batch.commit();
+
+        alert(`Cliente ${nombreCliente} eliminado completamente ✅`);
+    } catch (error) {
+        console.error("Error eliminando cliente completo:", error);
+        alert("Error eliminando cliente completo. Revisa la consola.");
+    }
+}
         
         function editarStaff(id, n, e, p) {
             document.getElementById('edit-staff-id').value = id;
