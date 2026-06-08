@@ -1709,6 +1709,59 @@ function ignorarNotificacionBalance(id) {
     });
 }
         function borrar(id) { if(confirm("¿Seguro que quieres borrarlo?")) db.collection("servicios").doc(id).delete(); }
+        async function borrarClienteCompleto(nombreCliente) {
+
+    if (!nombreCliente) {
+        alert("Cliente no válido.");
+        return;
+    }
+
+    const confirmar = confirm(
+`🚨 ELIMINAR CLIENTE COMPLETO
+
+Cliente: ${nombreCliente}
+
+Se eliminarán:
+
+• Todos los trabajos agendados
+• Todas las repeticiones futuras
+• Toda la información guardada del cliente
+
+Esta acción NO se puede deshacer.
+
+¿Deseas continuar?`
+    );
+
+    if (!confirmar) return;
+
+    try {
+
+        const snapshot = await db.collection("servicios")
+            .where("cliente", "==", nombreCliente)
+            .get();
+
+        const batch = db.batch();
+
+        snapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+
+        batch.delete(
+            db.collection("clientes").doc(nombreCliente)
+        );
+
+        await batch.commit();
+
+        alert(`✅ ${nombreCliente} fue eliminado completamente.`);
+
+    } catch(error) {
+
+        console.error(error);
+
+        alert("❌ Error eliminando cliente.");
+
+    }
+}
 
 async function borrarClienteCompleto(nombreCliente) {
     if (!nombreCliente) return alert("Cliente no válido.");
