@@ -68,7 +68,16 @@
         .time-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
         .time-row b { color: #3b82f6; font-size: 10px; text-transform: uppercase; }
         .total-time-row { border-top: 1px solid #3b82f6; margin-top: 8px; padding-top: 8px; font-weight: bold; color: #22c55e !important; }
-        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
+        .action-buttons {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-top:15px;
+}
+
+.action-buttons .btn-action {
+    min-height:48px;
+}
         .btn-action { padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 11px; cursor: pointer; text-transform: uppercase; }
         .btn-done { background: #22c55e; }
         .btn-edit { background: #6366f1; }
