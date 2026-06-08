@@ -593,20 +593,29 @@ style="width:100%;"></textarea>
     >
 </div>
 
+ <div class="payroll-container">
+
+        <span class="label-text" style="color: #22c55e;">Resumen de Nómina (Payroll)</span>
+
+        <table class="payroll-table">
+
+            <thead>
+
+               <tr><th>Staff</th><th>Horas</th><th>Millas</th><th>Total</th></tr>
+
+            </thead>
+
+            <tbody id="lista-nomina"></tbody>
+
+        </table>
+
+        <button class="btn-reset" onclick="reiniciarHorasMes()">Cerrar Mes y Descargar Excel</button>
+
+    </div>
+    
 </div>
 
 <div id="historial"></div>
-
-    <div class="payroll-container">
-        <span class="label-text" style="color: #22c55e;">Resumen de Nómina (Payroll)</span>
-        <table class="payroll-table">
-            <thead>
-               <tr><th>Staff</th><th>Horas</th><th>Millas</th><th>Total</th></tr>
-            </thead>
-            <tbody id="lista-nomina"></tbody>
-        </table>
-        <button class="btn-reset" onclick="reiniciarHorasMes()">Cerrar Mes y Descargar Excel</button>
-    </div>
 
     <div id="modal-firma">
         <div class="modal-content" id="capture-area">
