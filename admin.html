@@ -210,15 +210,29 @@
   background: #000;
 }
 
+#admin-fixed-top {
+  position: static;
+  background: #000;
+}
+
 .search-jobs-box {
+  display:flex;
+  align-items:center;
+  gap:10px;
+
   position: sticky;
   top: 0;
-  z-index: 4000;
-  background: #1c1c1e;
+  z-index: 9999;
+
+  background:#1c1c1e;
+  border:1px solid #3b82f6;
+  border-radius:18px;
+  padding:12px 15px;
+  margin:10px 0 18px 0;
 }
 
 #historial {
-  margin-top: calc(var(--admin-fixed-height, 620px) + 15px);
+  margin-top: 0;
 }
         
     </style>
