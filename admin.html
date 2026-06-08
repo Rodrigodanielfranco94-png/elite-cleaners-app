@@ -1608,18 +1608,20 @@ function confirmarDeposito(id) {
         notificacion_deposito: false,
         fecha_pago_deposito: new Date().toISOString(),
         metodo_pago_deposito: "Confirmado manualmente por Admin"
+        estado_pago: "deposito_pagado"
     });
 }
 
 function confirmarBalance(id) {
     if (!confirm("¿Confirmas que el cliente ya pagó el balance restante?")) return;
 
-    db.collection("servicios").doc(id).update({
-        balance_pagado: true,
-        notificacion_balance: false,
-        fecha_pago_balance: new Date().toISOString(),
-        metodo_pago_balance: "Confirmado manualmente por Admin"
-    });
+db.collection("servicios").doc(id).update({
+    balance_pagado: true,
+    notificacion_balance: false,
+    fecha_pago_balance: new Date().toISOString(),
+    metodo_pago_balance: "Confirmado manualmente por Admin",
+    estado_pago: "pagado_completo"
+});
 }
 
 function cancelarBalance(id) {
