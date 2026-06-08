@@ -1328,6 +1328,20 @@ function renderNotificacionesPagos() {
         }
     });
 }
+
+function actualizarEspacioTopFijo() {
+    const top = document.getElementById("admin-fixed-top");
+    if (!top) return;
+
+    document.documentElement.style.setProperty(
+        "--admin-fixed-height",
+        top.offsetHeight + "px"
+    );
+}
+
+window.addEventListener("load", actualizarEspacioTopFijo);
+window.addEventListener("resize", actualizarEspacioTopFijo);
+setInterval(actualizarEspacioTopFijo, 700);
         
         function renderHistorial() {
             const h = document.getElementById('historial');
