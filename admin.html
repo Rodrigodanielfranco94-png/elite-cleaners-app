@@ -608,31 +608,11 @@ style="width:100%;"></textarea>
     >
 </div>
 
- <div class="payroll-container">
-
-        <span class="label-text" style="color: #22c55e;">Resumen de Nómina (Payroll)</span>
-
-        <table class="payroll-table">
-
-            <thead>
-
-               <tr><th>Staff</th><th>Horas</th><th>Millas</th><th>Total</th></tr>
-
-            </thead>
-
-            <tbody id="lista-nomina"></tbody>
-
-        </table>
-
-        <button class="btn-reset" onclick="reiniciarHorasMes()">Cerrar Mes y Descargar Excel</button>
-
-    </div>
-    
 </div>
 
 <div id="historial"></div>
 
-    <div class="payroll-container">
+<div class="payroll-container">
     <div class="accordion-title" onclick="togglePayroll()">
         Resumen de Nómina (Payroll)
         <span>⌄</span>
@@ -641,15 +621,22 @@ style="width:100%;"></textarea>
     <div id="payroll-content" style="display:none;">
         <table class="payroll-table">
             <thead>
-               <tr><th>Staff</th><th>Horas</th><th>Millas</th><th>Total</th></tr>
+                <tr>
+                    <th>Staff</th>
+                    <th>Horas</th>
+                    <th>Millas</th>
+                    <th>Total</th>
+                </tr>
             </thead>
+
             <tbody id="lista-nomina"></tbody>
         </table>
 
-        <button class="btn-reset" onclick="reiniciarHorasMes()">Cerrar Mes y Descargar Excel</button>
+        <button class="btn-reset" onclick="reiniciarHorasMes()">
+            Cerrar Mes y Descargar Excel
+        </button>
     </div>
 </div>
-
     <div id="modal-firma">
         <div class="modal-content" id="capture-area">
             <h2 id="modal-title-legal" style="color:#fff; margin-top:0; text-align:center; font-style:italic; font-size:18px;">ELITE CLEANERS <span style="color:#3b82f6;">COMPANY</span></h2>
