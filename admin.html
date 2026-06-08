@@ -165,6 +165,36 @@
   gap:10px;
   margin-top:15px;
 }
+
+.payment-alert-box {
+  background:#111827;
+  border:1px solid #f59e0b;
+  border-radius:20px;
+  padding:16px;
+  margin-bottom:20px;
+}
+
+.payment-alert-title {
+  color:#f59e0b;
+  font-weight:900;
+  font-size:15px;
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+
+.payment-alert-item {
+  background:#000;
+  border:1px solid #2c2c2e;
+  border-radius:14px;
+  padding:12px;
+  margin-top:10px;
+}
+
+.payment-alert-item p {
+  margin:4px 0;
+  font-size:13px;
+  color:#d1d5db;
+}
         
     </style>
 </head>
@@ -200,6 +230,12 @@
     <button class="save-btn" style="background:#f59e0b; margin-bottom:20px;" onclick="abrirCalendarioElite()">
     📅 VER CALENDARIO ELITE
 </button>
+    <div id="centro-notificaciones-pagos" class="payment-alert-box" style="display:none;">
+    <div class="payment-alert-title" id="titulo-notificaciones-pagos">
+        🔔 Pagos por verificar
+    </div>
+    <div id="lista-notificaciones-pagos"></div>
+</div>
     <div class="form-container section-staff">
         <span class="label-text">Gestión de Personal (Staff)</span>
         <input type="hidden" id="edit-staff-id">
@@ -1199,17 +1235,78 @@ notas_internas: document.getElementById('notas_internas').value || "",
     }
 }
         db.collection("servicios").onSnapshot(snap => {
-            todosLosServicios = [];
-            snap.forEach(doc => {
-                const s = doc.data();
-                todosLosServicios.push({ id: doc.id, ...s });
-            });
-            document.getElementById('count-pendientes').innerText = todosLosServicios.filter(s => s.estado !== 'completado').length;
-            document.getElementById('count-completados').innerText = todosLosServicios.filter(s => s.estado === 'completado').length;
-            renderHistorial();
-            generarNomina();
-        });
+    todosLosServicios = [];
+    snap.forEach(doc => {
+        const s = doc.data();
+        todosLosServicios.push({ id: doc.id, ...s });
+    });
 
+    document.getElementById('count-pendientes').innerText = todosLosServicios.filter(s => s.estado !== 'completado').length;
+    document.getElementById('count-completados').innerText = todosLosServicios.filter(s => s.estado === 'completado').length;
+
+    renderNotificacionesPagos();
+    renderHistorial();
+    generarNomina();
+});
+
+function renderNotificacionesPagos() {
+    const box = document.getElementById("centro-notificaciones-pagos");
+    const lista = document.getElementById("lista-notificaciones-pagos");
+    const titulo = document.getElementById("titulo-notificaciones-pagos");
+
+    if (!box || !lista || !titulo) return;
+
+    const notificaciones = todosLosServicios.filter(s =>
+        (s.notificacion_deposito === true && s.deposito_pagado !== true) ||
+        (s.notificacion_balance === true && s.balance_pagado !== true)
+    );
+
+    if (notificaciones.length === 0) {
+        box.style.display = "none";
+        lista.innerHTML = "";
+        return;
+    }
+
+    box.style.display = "block";
+    titulo.innerText = `🔔 Pagos por verificar (${notificaciones.length})`;
+    lista.innerHTML = "";
+
+    notificaciones.forEach(s => {
+        const depositoMonto = Number(s.deposito_monto || 0).toFixed(2);
+        const balanceMonto = Number(s.balance_restante || 0).toFixed(2);
+
+        if (s.notificacion_deposito === true && s.deposito_pagado !== true) {
+            lista.innerHTML += `
+                <div class="payment-alert-item">
+                    <p><b>💵 ${s.cliente}</b> notificó que envió el depósito.</p>
+                    <p>Depósito: <b style="color:#22c55e;">$${depositoMonto}</b></p>
+                    <button class="btn-action" style="background:#22c55e; width:100%; margin-top:8px;" onclick="confirmarDeposito('${s.id}')">
+                        ✅ Confirmar depósito
+                    </button>
+                    <button class="btn-action" style="background:#6b7280; width:100%; margin-top:8px;" onclick="ignorarNotificacionDeposito('${s.id}')">
+                        Ignorar
+                    </button>
+                </div>
+            `;
+        }
+
+        if (s.notificacion_balance === true && s.balance_pagado !== true) {
+            lista.innerHTML += `
+                <div class="payment-alert-item">
+                    <p><b>💰 ${s.cliente}</b> notificó que envió el balance.</p>
+                    <p>Balance: <b style="color:#22c55e;">$${balanceMonto}</b></p>
+                    <button class="btn-action" style="background:#22c55e; width:100%; margin-top:8px;" onclick="confirmarBalance('${s.id}')">
+                        ✅ Confirmar balance
+                    </button>
+                    <button class="btn-action" style="background:#6b7280; width:100%; margin-top:8px;" onclick="ignorarNotificacionBalance('${s.id}')">
+                        Ignorar
+                    </button>
+                </div>
+            `;
+        }
+    });
+}
+        
         function renderHistorial() {
             const h = document.getElementById('historial');
             h.innerHTML = "";
@@ -1481,38 +1578,45 @@ async function cambiarEstadoTrabajo(id, estado) {
         const deposito = Number(servicio.deposito_monto || 0);
         const balance = Number(servicio.balance_restante || (total - deposito));
 
-        const mensaje =
+        const venmoLink = `https://venmo.com/u/Elite-Cleaners-Company?txn=pay&amount=${balance.toFixed(2)}&note=Elite%20Cleaners%20Balance`;
+
+const mensaje =
 `Hello ${servicio.cliente}, your cleaning service has been completed. ✅
 
 Remaining balance: $${balance.toFixed(2)}
 
-You can send the payment via Venmo:
-@Elite-Cleaners-Company
+Pay via Venmo:
+${venmoLink}
 
-You may also pay through Zelle:
+Or pay through Zelle:
 rodrigodanielfranco94@gmail.com
 
 Thank you for choosing Elite Cleaners Company.`;
-
-        abrirSMS(servicio.whatsapp, mensaje);
-    }
+        if (!servicio.whatsapp) {
+    alert("El cliente no tiene teléfono registrado.");
+    return;
 }
-        
+
+abrirSMS(servicio.whatsapp, mensaje);
+    }
+}        
 function confirmarDeposito(id) {
     if (!confirm("¿Confirmas que el cliente ya pagó el depósito?")) return;
 
     db.collection("servicios").doc(id).update({
         deposito_pagado: true,
+        notificacion_deposito: false,
         fecha_pago_deposito: new Date().toISOString(),
         metodo_pago_deposito: "Confirmado manualmente por Admin"
     });
 }
 
- function confirmarBalance(id) {
+function confirmarBalance(id) {
     if (!confirm("¿Confirmas que el cliente ya pagó el balance restante?")) return;
 
     db.collection("servicios").doc(id).update({
         balance_pagado: true,
+        notificacion_balance: false,
         fecha_pago_balance: new Date().toISOString(),
         metodo_pago_balance: "Confirmado manualmente por Admin"
     });
@@ -1526,7 +1630,7 @@ function cancelarBalance(id) {
         fecha_pago_balance: "",
         metodo_pago_balance: ""
     });
-}       
+}
 
 function cancelarDeposito(id) {
     if (!confirm("¿Quieres marcar este depósito como NO pagado?")) return;
@@ -1535,6 +1639,22 @@ function cancelarDeposito(id) {
         deposito_pagado: false,
         fecha_pago_deposito: "",
         metodo_pago_deposito: ""
+    });
+}
+
+function ignorarNotificacionDeposito(id) {
+    if (!confirm("¿Deseas ocultar esta notificación de depósito?")) return;
+
+    db.collection("servicios").doc(id).update({
+        notificacion_deposito: false
+    });
+}
+
+function ignorarNotificacionBalance(id) {
+    if (!confirm("¿Deseas ocultar esta notificación de balance?")) return;
+
+    db.collection("servicios").doc(id).update({
+        notificacion_balance: false
     });
 }
         function borrar(id) { if(confirm("¿Seguro que quieres borrarlo?")) db.collection("servicios").doc(id).delete(); }
