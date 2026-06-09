@@ -2932,9 +2932,9 @@ function obtenerDatosContabilidad() {
     const mes = document.getElementById("accounting-month")?.value || mesActualInput();
 
     const trabajosPagados = todosLosServicios.filter(s => {
-        return (s.fecha || "").startsWith(mes) && s.balance_pagado === true;
-    });
-
+    return (s.fecha || "").startsWith(mes) && Number(s.precio_total || 0) > 0;
+});
+    
     const gastosMes = gastosContabilidad.filter(g => {
         return (g.fecha || "").startsWith(mes);
     });
