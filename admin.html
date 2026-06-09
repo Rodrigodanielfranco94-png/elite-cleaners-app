@@ -1481,63 +1481,61 @@ s.estado === "completado"
                         </div>
                         <div class="action-buttons">
     <select
-style="
-width:100%;
-padding:10px;
-border-radius:10px;
-background:#000;
-color:white;
-border:1px solid #3b82f6;
-"
-onchange="cambiarEstadoTrabajo('${s.id}', this.value)"
->
-<option value="no_iniciado" ${s.estado === "no_iniciado" ? "selected" : ""}>
-🟣 No iniciado
-</option>
+        style="
+            width:100%;
+            padding:10px;
+            border-radius:10px;
+            background:#000;
+            color:white;
+            border:1px solid #3b82f6;
+        "
+        onchange="cambiarEstadoTrabajo('${s.id}', this.value)"
+    >
+        <option value="no_iniciado" ${s.estado === "no_iniciado" ? "selected" : ""}>
+            🟣 No iniciado
+        </option>
 
-<option value="en_progreso" ${s.estado === "en_progreso" ? "selected" : ""}>
-🟠 En progreso
-</option>
+        <option value="en_progreso" ${s.estado === "en_progreso" ? "selected" : ""}>
+            🟠 En progreso
+        </option>
 
-<option value="completado" ${s.estado === "completado" ? "selected" : ""}>
-🟢 Terminado
-</option>
-</select>
-    
+        <option value="completado" ${s.estado === "completado" ? "selected" : ""}>
+            🟢 Terminado
+        </option>
+    </select>
+
     ${btnFirma}
 
     ${btnDeposito}
-    
+
     ${btnBalance}
 
-    <button class="btn-action btn-whatsapp" onclick="enviarRecordatorio('${s.id}')">Recordatorio 📱</button>
-                            <button class="btn-action btn-review" onclick="solicitarResenaGoogle('${s.cliente}', '${s.whatsapp}')">Reseña ⭐️</button>
-                            <button class="btn-action btn-edit"
-id="edit-btn-${s.id}">
-Editar
-</button>
+    <button class="btn-action btn-whatsapp" onclick="enviarRecordatorio('${s.id}')">
+        Recordatorio 📱
+    </button>
 
-<button class="btn-action btn-review"
-style="background:#ef4444"
-onclick="borrar('${s.id}')">
-Borrar Trabajo
-</button>
+    <button class="btn-action btn-review" onclick="solicitarResenaGoogle('${s.cliente}', '${s.whatsapp}')">
+        Reseña ⭐️
+    </button>
 
-<button class="btn-action"
-style="background:#7f1d1d;"
-onclick="borrarClienteCompleto('${s.cliente}')">
-🚨 ELIMINAR CLIENTE
-</button>
+    <button class="btn-action btn-edit" id="edit-btn-${s.id}">
+        Editar
+    </button>
 
-<button class="btn-action" style="background:#7f1d1d;" onclick="borrarClienteCompleto('${s.cliente}')">
-    Borrar Cliente Completo
-</button>
-                        </div>`;
-                    h.appendChild(card);
-                    document.getElementById(`edit-btn-${s.id}`).onclick = () => editar(s.id, s);
-                }
-            });
-        }
+    <button class="btn-action btn-review" style="background:#ef4444" onclick="borrar('${s.id}')">
+        Borrar Trabajo
+    </button>
+
+    <button class="btn-action" style="background:#f59e0b;" onclick="cancelarCliente('${s.cliente}')">
+        Cancelar Cliente
+    </button>
+
+    <button class="btn-action" style="background:#7f1d1d;" onclick="borrarClienteCompleto('${s.cliente}')">
+        Borrar Cliente Completo
+    </button>
+</div>`;
+h.appendChild(card);
+document.getElementById(`edit-btn-${s.id}`).onclick = () => editar(s.id, s);
 
 function toggleDetalles(id) {
     const box = document.getElementById("detalles-" + id);
