@@ -923,7 +923,17 @@ calcularPrecioAutomatico();
                     <div class="staff-info"><b>${e.nombre}</b><span>$${e.pago_hora || 0}/hr</span></div>
                     <div class="staff-actions">
                         <button class="btn-mini" style="background:#6366f1" onclick="editarStaff('${id}','${e.nombre}','${e.email}','${e.pago_hora||0}')">Editar</button>
-                        <button class="btn-mini" style="background:#ef4444" onclick="borrarStaff('${id}','${e.nombre}')">Borrar</button>
+                        <button class="btn-action btn-review" style="background:#ef4444" onclick="borrar('${s.id}')">
+    Borrar trabajo
+</button>
+
+<button class="btn-action" style="background:#f59e0b" onclick="cancelarCliente('${s.cliente}')">
+    Cancelar cliente
+</button>
+
+<button class="btn-action" style="background:#7f1d1d" onclick="borrarClienteCompleto('${s.cliente}')">
+    Borrar cliente completo
+</button>
                     </div>
                 </div>`;
             });
