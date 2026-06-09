@@ -608,44 +608,47 @@ style="width:100%;"></textarea>
         <button id="cancel-edit" style="display:none; background:none; border:none; color:#ef4444; width:100%; margin-top:10px; font-weight:bold; cursor:pointer;" onclick="location.reload()">CANCELAR EDICIÓN</button>
     </div>
 
-</div>
+        </div>
 
-<div class="search-jobs-box">
-    <span>🔍</span>
-    <input 
-        type="text" 
-        id="buscarTrabajo" 
-        placeholder="Buscar trabajo por cliente, dirección, fecha o staff..."
-        oninput="renderHistorial()"
-    >
-</div>
+        <div class="search-jobs-box">
+            <span>🔍</span>
+            <input 
+                type="text" 
+                id="buscarTrabajo" 
+                placeholder="Buscar trabajo por cliente, dirección, fecha o staff..."
+                oninput="renderHistorial()"
+            >
+        </div>
 
-<div id="historial"></div>
-<div class="payroll-container">
-    <div class="accordion-title" onclick="togglePayroll()">
-        Resumen de Nómina (Payroll)
-        <span>⌄</span>
     </div>
 
-    <div id="payroll-content" style="display:none;">
-        <table class="payroll-table">
-            <thead>
-                <tr>
-                    <th>Staff</th>
-                    <th>Horas</th>
-                    <th>Millas</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
+    <div id="historial"></div>
 
-            <tbody id="lista-nomina"></tbody>
-        </table>
+    <div class="payroll-container">
+        <div class="accordion-title" onclick="togglePayroll()">
+            Resumen de Nómina (Payroll)
+            <span>⌄</span>
+        </div>
 
-        <button class="btn-reset" onclick="reiniciarHorasMes()">
-            Cerrar Mes y Descargar Excel
-        </button>
+        <div id="payroll-content" style="display:none;">
+            <table class="payroll-table">
+                <thead>
+                    <tr>
+                        <th>Staff</th>
+                        <th>Horas</th>
+                        <th>Millas</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+
+                <tbody id="lista-nomina"></tbody>
+            </table>
+
+            <button class="btn-reset" onclick="reiniciarHorasMes()">
+                Cerrar Mes y Descargar Excel
+            </button>
+        </div>
     </div>
-</div>
     <div id="modal-firma">
         <div class="modal-content" id="capture-area">
             <h2 id="modal-title-legal" style="color:#fff; margin-top:0; text-align:center; font-style:italic; font-size:18px;">ELITE CLEANERS <span style="color:#3b82f6;">COMPANY</span></h2>
