@@ -2735,6 +2735,319 @@ window.loginAdmin = async function () {
 };
 
 revisarSesion();
+
+// ================= CONTABILIDAD ELITE =================
+
+let gastosContabilidad = [];
+
+db.collection("gastos_contabilidad").onSnapshot(snap => {
+    gastosContabilidad = [];
+    snap.forEach(doc => gastosContabilidad.push({ id: doc.id, ...doc.data() }));
+    if (document.getElementById("elite-accounting-modal")?.style.display === "block") {
+        renderContabilidadElite();
+    }
+});
+
+function dinero(n) {
+    return "$" + Number(n || 0).toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+function mesActualInput() {
+    const hoy = new Date();
+    return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function abrirContabilidadElite() {
+    const inputMes = document.getElementById("accounting-month");
+    if (!inputMes.value) inputMes.value = mesActualInput();
+
+    document.getElementById("elite-accounting-modal").style.display = "block";
+    renderContabilidadElite();
+}
+
+function cerrarContabilidadElite() {
+    document.getElementById("elite-accounting-modal").style.display = "none";
+}
+
+function calcularPagoEmpleadosServicio(s) {
+    const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
+    const horas = infoTiempo.minutos / 60;
+
+    let pago = 0;
+
+    const emp1 = todosLosEmpleados.find(e => e.email === s.empleado_email || e.nombre === s.empleado_nombre);
+    const emp2 = todosLosEmpleados.find(e => e.email === s.empleado_email_2 || e.nombre === s.empleado_nombre_2);
+
+    if (emp1) pago += horas * Number(emp1.pago_hora || 0);
+    if (emp2) pago += horas * Number(emp2.pago_hora || 0);
+
+    return pago;
+}
+
+function obtenerDatosContabilidad() {
+    const mes = document.getElementById("accounting-month")?.value || mesActualInput();
+
+    const trabajosPagados = todosLosServicios.filter(s => {
+        return (s.fecha || "").startsWith(mes) && s.balance_pagado === true;
+    });
+
+    const gastosMes = gastosContabilidad.filter(g => {
+        return (g.fecha || "").startsWith(mes);
+    });
+
+    const filas = trabajosPagados.map(s => {
+        const ingresos = Number(s.precio_total || 0);
+        const pagoEmpleados = calcularPagoEmpleadosServicio(s);
+        const gananciaNeta = ingresos - pagoEmpleados;
+
+        const rodrigo = gananciaNeta * 0.35;
+        const dayana = gananciaNeta * 0.35;
+        const empresa = gananciaNeta * 0.30;
+
+        return {
+            fecha: s.fecha || "",
+            cliente: s.cliente || "",
+            ingresos,
+            pagoEmpleados,
+            gananciaNeta,
+            rodrigo,
+            dayana,
+            empresa,
+            empresaNeto: empresa
+        };
+    });
+
+    const ingresos = filas.reduce((a, b) => a + b.ingresos, 0);
+    const pagoEmpleados = filas.reduce((a, b) => a + b.pagoEmpleados, 0);
+    const gananciaNeta = filas.reduce((a, b) => a + b.gananciaNeta, 0);
+    const rodrigo = filas.reduce((a, b) => a + b.rodrigo, 0);
+    const dayana = filas.reduce((a, b) => a + b.dayana, 0);
+    const empresa = filas.reduce((a, b) => a + b.empresa, 0);
+    const gastosInversion = gastosMes.reduce((a, b) => a + Number(b.monto || 0), 0);
+    const empresaNeto = empresa - gastosInversion;
+
+    return {
+        mes,
+        filas,
+        gastosMes,
+        ingresos,
+        pagoEmpleados,
+        gastosInversion,
+        gananciaNeta,
+        rodrigo,
+        dayana,
+        empresa,
+        empresaNeto
+    };
+}
+
+function renderContabilidadElite() {
+    const d = obtenerDatosContabilidad();
+
+    document.getElementById("accounting-subtitle").innerText = `Resumen financiero del mes ${d.mes}`;
+
+    document.getElementById("acc-ingresos").innerText = dinero(d.ingresos);
+    document.getElementById("acc-gastos").innerText = dinero(d.gastosInversion);
+    document.getElementById("acc-empleados").innerText = dinero(d.pagoEmpleados);
+    document.getElementById("acc-neta").innerText = dinero(d.gananciaNeta);
+    document.getElementById("acc-rodrigo").innerText = dinero(d.rodrigo);
+    document.getElementById("acc-dayana").innerText = dinero(d.dayana);
+    document.getElementById("acc-empresa").innerText = dinero(d.empresa);
+    document.getElementById("acc-empresa-neto").innerText = dinero(d.empresaNeto);
+
+    renderBarrasIngresosGastos(d);
+    renderBarrasEmpresaNeto(d);
+    renderGastosCategoria(d);
+    renderTablaContabilidad(d);
+}
+
+function crearBarra(label, valor, max, color) {
+    const porcentaje = max > 0 ? Math.min((valor / max) * 100, 100) : 0;
+
+    return `
+        <div class="bar-row">
+            <div class="bar-label">
+                <span>${label}</span>
+                <b>${dinero(valor)}</b>
+            </div>
+            <div class="bar-bg">
+                <div class="bar-fill" style="width:${porcentaje}%; background:${color};"></div>
+            </div>
+        </div>
+    `;
+}
+
+function renderBarrasIngresosGastos(d) {
+    const max = Math.max(d.ingresos, d.gastosInversion, d.pagoEmpleados, 1);
+
+    document.getElementById("bar-ingresos-gastos").innerHTML =
+        crearBarra("Ingresos", d.ingresos, max, "#22c55e") +
+        crearBarra("Gastos", d.gastosInversion, max, "#ef4444") +
+        crearBarra("Empleados", d.pagoEmpleados, max, "#3b82f6");
+}
+
+function renderBarrasEmpresaNeto(d) {
+    const max = Math.max(d.empresa, d.empresaNeto, 1);
+
+    document.getElementById("bar-empresa-neto").innerHTML =
+        crearBarra("Empresa 30%", d.empresa, max, "#06b6d4") +
+        crearBarra("Empresa Neto", d.empresaNeto, max, "#f97316");
+}
+
+function renderGastosCategoria(d) {
+    const contenedor = document.getElementById("gastos-categorias");
+
+    const categorias = {};
+
+    d.gastosMes.forEach(g => {
+        const cat = g.categoria || "Otros";
+        categorias[cat] = (categorias[cat] || 0) + Number(g.monto || 0);
+    });
+
+    const total = Object.values(categorias).reduce((a, b) => a + b, 0);
+
+    if (total === 0) {
+        contenedor.innerHTML = `<p style="color:#9ca3af; margin:0;">No hay gastos registrados este mes.</p>`;
+        return;
+    }
+
+    contenedor.innerHTML = Object.entries(categorias).map(([cat, monto]) => {
+        const porcentaje = total > 0 ? (monto / total) * 100 : 0;
+
+        return `
+            <div class="expense-row">
+                <div>${cat}</div>
+                <div class="bar-bg">
+                    <div class="bar-fill" style="width:${porcentaje}%; background:#22c55e;"></div>
+                </div>
+                <div style="text-align:right;">${dinero(monto)}</div>
+            </div>
+        `;
+    }).join("");
+}
+
+function renderTablaContabilidad(d) {
+    const body = document.getElementById("accounting-table-body");
+    const total = document.getElementById("accounting-table-total");
+
+    body.innerHTML = "";
+
+    d.filas.forEach(f => {
+        body.innerHTML += `
+            <tr>
+                <td>${f.fecha}</td>
+                <td>${f.cliente}</td>
+                <td>${dinero(f.ingresos)}</td>
+                <td>${dinero(f.pagoEmpleados)}</td>
+                <td>${dinero(f.gananciaNeta)}</td>
+                <td>${dinero(f.rodrigo)}</td>
+                <td>${dinero(f.dayana)}</td>
+                <td>${dinero(f.empresaNeto)}</td>
+            </tr>
+        `;
+    });
+
+    total.innerHTML = `
+        <tr>
+            <td colspan="2">TOTALES</td>
+            <td>${dinero(d.ingresos)}</td>
+            <td>${dinero(d.pagoEmpleados)}</td>
+            <td>${dinero(d.gananciaNeta)}</td>
+            <td>${dinero(d.rodrigo)}</td>
+            <td>${dinero(d.dayana)}</td>
+            <td>${dinero(d.empresaNeto)}</td>
+        </tr>
+    `;
+}
+
+function abrirAgregarGasto() {
+    document.getElementById("modal-gasto-contabilidad").style.display = "block";
+    document.getElementById("gasto-fecha").value = new Date().toISOString().slice(0, 10);
+}
+
+function cerrarAgregarGasto() {
+    document.getElementById("modal-gasto-contabilidad").style.display = "none";
+}
+
+async function guardarGastoContabilidad() {
+    const fecha = document.getElementById("gasto-fecha").value;
+    const categoria = document.getElementById("gasto-categoria").value.trim();
+    const monto = Number(document.getElementById("gasto-monto").value || 0);
+    const nota = document.getElementById("gasto-nota").value.trim();
+
+    if (!fecha || !categoria || monto <= 0) {
+        return alert("Completa fecha, categoría y monto.");
+    }
+
+    await db.collection("gastos_contabilidad").add({
+        fecha,
+        categoria,
+        monto,
+        nota,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    document.getElementById("gasto-categoria").value = "";
+    document.getElementById("gasto-monto").value = "";
+    document.getElementById("gasto-nota").value = "";
+
+    cerrarAgregarGasto();
+    renderContabilidadElite();
+}
+
+function exportarContabilidadExcel() {
+    const d = obtenerDatosContabilidad();
+
+    const trabajos = d.filas.map(f => ({
+        Fecha: f.fecha,
+        Cliente: f.cliente,
+        Ingresos: f.ingresos.toFixed(2),
+        "Pago Empleados": f.pagoEmpleados.toFixed(2),
+        "Ganancia Neta": f.gananciaNeta.toFixed(2),
+        "Rodrigo 35%": f.rodrigo.toFixed(2),
+        "Dayana 35%": f.dayana.toFixed(2),
+        "Empresa 30%": f.empresa.toFixed(2),
+        "Empresa Neto": f.empresaNeto.toFixed(2)
+    }));
+
+    trabajos.push({
+        Fecha: "TOTAL",
+        Cliente: "",
+        Ingresos: d.ingresos.toFixed(2),
+        "Pago Empleados": d.pagoEmpleados.toFixed(2),
+        "Ganancia Neta": d.gananciaNeta.toFixed(2),
+        "Rodrigo 35%": d.rodrigo.toFixed(2),
+        "Dayana 35%": d.dayana.toFixed(2),
+        "Empresa 30%": d.empresa.toFixed(2),
+        "Empresa Neto": d.empresaNeto.toFixed(2)
+    });
+
+    const gastos = d.gastosMes.map(g => ({
+        Fecha: g.fecha,
+        Categoria: g.categoria,
+        Monto: Number(g.monto || 0).toFixed(2),
+        Nota: g.nota || ""
+    }));
+
+    const wb = XLSX.utils.book_new();
+
+    const ws1 = XLSX.utils.json_to_sheet(trabajos);
+    const ws2 = XLSX.utils.json_to_sheet(gastos);
+
+    XLSX.utils.book_append_sheet(wb, ws1, "Contabilidad");
+    XLSX.utils.book_append_sheet(wb, ws2, "Gastos");
+
+    XLSX.writeFile(wb, `Elite_Contabilidad_${d.mes}.xlsx`);
+}
+
+function descargarContabilidadPDF() {
+    alert("Se abrirá la pantalla de impresión. En destino elige: Guardar como PDF.");
+    window.print();
+}
+
 </script>
 
 <script src="nico-config.js"></script>
