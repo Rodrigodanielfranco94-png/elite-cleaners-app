@@ -2908,8 +2908,16 @@ function obtenerDatosContabilidad() {
 
 function renderContabilidadElite() {
     const d = obtenerDatosContabilidad();
+const mesesBonitos = [
+  "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+  "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+];
 
-    document.getElementById("accounting-subtitle").innerText = `Resumen financiero del mes ${d.mes}`;
+const [anio, mesNum] = d.mes.split("-");
+const mesBonito = `${mesesBonitos[Number(mesNum)-1]} ${anio}`;
+
+document.getElementById("acc-month-label").innerText = mesBonito;
+document.getElementById("accounting-subtitle").innerText = `Resumen financiero del mes ${mesBonito}`;
 
     document.getElementById("acc-ingresos").innerText = dinero(d.ingresos);
     document.getElementById("acc-gastos").innerText = dinero(d.gastosInversion);
