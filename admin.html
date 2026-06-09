@@ -3030,20 +3030,50 @@ function crearBarra(label, valor, max, color) {
 }
 
 function renderBarrasIngresosGastos(d) {
-    const max = Math.max(d.ingresos, d.gastosInversion, d.pagoEmpleados, 1);
+    const max = Math.max(d.ingresos, d.gastosInversion, 1);
 
-    document.getElementById("bar-ingresos-gastos").innerHTML =
-        crearBarra("Ingresos", d.ingresos, max, "#22c55e") +
-        crearBarra("Gastos", d.gastosInversion, max, "#ef4444") +
-        crearBarra("Empleados", d.pagoEmpleados, max, "#3b82f6");
+    const ingresoH = Math.max((d.ingresos / max) * 120, 2);
+    const gastoH = Math.max((d.gastosInversion / max) * 120, 2);
+
+    document.getElementById("chart-ingresos-gastos").innerHTML = `
+        <div class="vbar-wrap">
+            <div class="vbar-value">${dinero(d.ingresos)}</div>
+            <div class="vbar" style="height:${ingresoH}px;"></div>
+            <div class="vbar-label">Ingresos</div>
+        </div>
+
+        <div class="vbar-wrap">
+            <div class="vbar-value">${dinero(d.gastosInversion)}</div>
+            <div class="vbar red" style="height:${gastoH}px;"></div>
+            <div class="vbar-label">Gastos</div>
+        </div>
+    `;
+
+    document.getElementById("donut-legend-pro").innerHTML = `
+        <div><span><span class="legend-dot" style="background:#facc15;"></span>Rodrigo (35%)</span><b>${dinero(d.rodrigo)}</b></div>
+        <div><span><span class="legend-dot" style="background:#ec4899;"></span>Dayana (35%)</span><b>${dinero(d.dayana)}</b></div>
+        <div><span><span class="legend-dot" style="background:#06b6d4;"></span>Empresa (30%)</span><b>${dinero(d.empresa)}</b></div>
+    `;
 }
 
 function renderBarrasEmpresaNeto(d) {
-    const max = Math.max(d.empresa, d.empresaNeto, 1);
+    const meses = ["Ene", "Feb", "Mar", "Abr", "May"];
+    const valores = [1487, 1533, 1500, 1400, d.empresaNeto];
 
-    document.getElementById("bar-empresa-neto").innerHTML =
-        crearBarra("Empresa 30%", d.empresa, max, "#06b6d4") +
-        crearBarra("Empresa Neto", d.empresaNeto, max, "#f97316");
+    const max = Math.max(...valores, 1);
+
+    document.getElementById("chart-empresa-12").innerHTML = valores.map((v, i) => {
+        const h = Math.max((v / max) * 120, 2);
+        const blue = i === valores.length - 1 ? "blue" : "";
+
+        return `
+            <div class="vbar-wrap">
+                <div class="vbar-value">${dinero(v)}</div>
+                <div class="vbar ${blue}" style="height:${h}px;"></div>
+                <div class="vbar-label">${meses[i]}</div>
+            </div>
+        `;
+    }).join("");
 }
 
 function renderGastosCategoria(d) {
