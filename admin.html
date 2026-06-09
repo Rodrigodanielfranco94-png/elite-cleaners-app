@@ -980,29 +980,23 @@ style="width:100%;"></textarea>
 
   <h3 class="acc-title">GRÁFICOS</h3>
 
-  <div class="charts-grid">
-    <div class="chart-box">
-      <h4>Ingresos vs Gastos</h4>
-      <div id="bar-ingresos-gastos"></div>
-    </div>
-
-    <div class="chart-box">
-      <h4>Distribución de Ganancias</h4>
-      <div id="donut-ganancias" class="donut"></div>
-      <div class="legend">
-        <p><span style="background:#facc15;"></span>Rodrigo 35%</p>
-        <p><span style="background:#ec4899;"></span>Dayana 35%</p>
-        <p><span style="background:#06b6d4;"></span>Empresa 30%</p>
-      </div>
-    </div>
-
-    <div class="chart-box">
-      <h4>Empresa Neto</h4>
-      <div id="bar-empresa-neto"></div>
-    </div>
+ <div class="charts-grid pro-charts">
+  <div class="chart-box">
+    <h4>Ingresos vs Gastos</h4>
+    <div id="chart-ingresos-gastos" class="vertical-chart"></div>
   </div>
 
-  <h3 class="acc-title">GASTOS POR CATEGORÍA</h3>
+  <div class="chart-box">
+    <h4>Distribución de Ganancias</h4>
+    <div id="donut-ganancias" class="donut-pro"></div>
+    <div id="donut-legend-pro" class="legend-pro"></div>
+  </div>
+
+  <div class="chart-box">
+    <h4>Empresa Neto (12 meses)</h4>
+    <div id="chart-empresa-12" class="monthly-chart"></div>
+  </div>
+</div>
   <div class="expense-box" id="gastos-categorias"></div>
 
   <h3 class="acc-title">DETALLE DE TRABAJOS</h3>
