@@ -920,25 +920,24 @@ calcularPrecioAutomatico();
                 const e = doc.data(); const id = doc.id;
                 todosLosEmpleados.push({id, ...e});
                 lv.innerHTML += `<div class="staff-item">
-                    <div class="staff-info"><b>${e.nombre}</b><span>$${e.pago_hora || 0}/hr</span></div>
-                    <div class="staff-actions">
-                        <button class="btn-mini" style="background:#6366f1" onclick="editarStaff('${id}','${e.nombre}','${e.email}','${e.pago_hora||0}')">Editar</button>
-                        <button class="btn-action btn-review" style="background:#ef4444" onclick="borrar('${s.id}')">
-    Borrar trabajo
-</button>
+    <div class="staff-info">
+        <b>${e.nombre}</b>
+        <span>$${e.pago_hora || 0}/hr</span>
+    </div>
 
-<button class="btn-action" style="background:#f59e0b" onclick="cancelarCliente('${s.cliente}')">
-    Cancelar cliente
-</button>
+    <div class="staff-actions">
+        <button class="btn-mini" style="background:#6366f1" onclick="editarStaff('${id}','${e.nombre}','${e.email}','${e.pago_hora||0}')">
+            Editar
+        </button>
 
-<button class="btn-action" style="background:#7f1d1d" onclick="borrarClienteCompleto('${s.cliente}')">
-    Borrar cliente completo
-</button>
-                    </div>
-                </div>`;
-            });
-            generarNomina();
-        });
+        <button class="btn-mini" style="background:#ef4444" onclick="borrarStaff('${id}','${e.nombre}')">
+            Borrar
+        </button>
+    </div>
+</div>`;
+});
+generarNomina();
+});
 
         function filtrarEmpleados(num) {
             const inputId = num === 1 ? 'search-empleado' : 'search-empleado-2';
