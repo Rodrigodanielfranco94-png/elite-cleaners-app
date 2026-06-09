@@ -3030,20 +3030,22 @@ function crearBarra(label, valor, max, color) {
 }
 
 function renderBarrasIngresosGastos(d) {
-    const max = Math.max(d.ingresos, d.gastosInversion, 1);
+    const ingresos = Number(d.ingresos || 0);
+    const gastos = Number(d.gastosInversion || 0);
+    const max = Math.max(ingresos, gastos, 1);
 
-    const ingresoH = Math.max((d.ingresos / max) * 120, 2);
-    const gastoH = Math.max((d.gastosInversion / max) * 120, 2);
+    const ingresoH = Math.max((ingresos / max) * 120, ingresos > 0 ? 8 : 2);
+    const gastoH = Math.max((gastos / max) * 120, gastos > 0 ? 8 : 2);
 
     document.getElementById("chart-ingresos-gastos").innerHTML = `
         <div class="vbar-wrap">
-            <div class="vbar-value">${dinero(d.ingresos)}</div>
+            <div class="vbar-value">${dinero(ingresos)}</div>
             <div class="vbar" style="height:${ingresoH}px;"></div>
             <div class="vbar-label">Ingresos</div>
         </div>
 
         <div class="vbar-wrap">
-            <div class="vbar-value">${dinero(d.gastosInversion)}</div>
+            <div class="vbar-value">${dinero(gastos)}</div>
             <div class="vbar red" style="height:${gastoH}px;"></div>
             <div class="vbar-label">Gastos</div>
         </div>
@@ -3058,18 +3060,17 @@ function renderBarrasIngresosGastos(d) {
 
 function renderBarrasEmpresaNeto(d) {
     const meses = ["Ene", "Feb", "Mar", "Abr", "May"];
-    const valores = [1487, 1533, 1500, 1400, d.empresaNeto];
-
+    const valores = [1487, 1533, 1500, 1400, Number(d.empresaNeto || 0)];
     const max = Math.max(...valores, 1);
 
     document.getElementById("chart-empresa-12").innerHTML = valores.map((v, i) => {
-        const h = Math.max((v / max) * 120, 2);
-        const blue = i === valores.length - 1 ? "blue" : "";
+        const h = Math.max((v / max) * 120, v > 0 ? 8 : 2);
+        const color = i === valores.length - 1 ? "blue" : "";
 
         return `
             <div class="vbar-wrap">
                 <div class="vbar-value">${dinero(v)}</div>
-                <div class="vbar ${blue}" style="height:${h}px;"></div>
+                <div class="vbar ${color}" style="height:${h}px;"></div>
                 <div class="vbar-label">${meses[i]}</div>
             </div>
         `;
