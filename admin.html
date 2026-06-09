@@ -1752,24 +1752,97 @@ function ignorarNotificacionBalance(id) {
         notificacion_balance: false
     });
 }
-        function borrar(id) { if(confirm("¿Seguro que quieres borrarlo?")) db.collection("servicios").doc(id).delete(); }
-        async function borrarClienteCompleto(nombreCliente) {
-
-    if (!nombreCliente) {
-        alert("Cliente no válido.");
-        return;
-    }
+        function borrar(id) {
+    const s = todosLosServicios.find(serv => serv.id === id);
+    const cliente = s?.cliente || "este trabajo";
 
     const confirmar = confirm(
-`🚨 ELIMINAR CLIENTE COMPLETO
+`⚠️ BORRAR TRABAJO
+
+Vas a borrar SOLO este trabajo de:
+
+${cliente}
+
+La información del cliente NO se borrará.
+
+¿Deseas continuar?`
+    );
+
+    if (!confirmar) return;
+
+    db.collection("servicios").doc(id).delete();
+}
+
+async function cancelarCliente(nombreCliente) {
+    if (!nombreCliente) return alert("Cliente no válido.");
+
+    const confirmar = confirm(
+`⚠️ CANCELAR CLIENTE
+
+Cliente: ${nombreCliente}
+
+Se eliminarán SOLO los trabajos futuros de este cliente.
+
+NO se borrará:
+• Información del cliente
+• Datos para autorrelleno
+• Teléfono, email, dirección y detalles de propiedad
+
+¿Deseas continuar?`
+    );
+
+    if (!confirmar) return;
+
+    try {
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+
+        const snap = await db.collection("servicios")
+            .where("cliente", "==", nombreCliente)
+            .get();
+
+        const batch = db.batch();
+        let total = 0;
+
+        snap.forEach(doc => {
+            const s = doc.data();
+            if (!s.fecha) return;
+
+            const fechaTrabajo = new Date(s.fecha + "T00:00:00");
+
+            if (fechaTrabajo >= hoy) {
+                batch.delete(doc.ref);
+                total++;
+            }
+        });
+
+        if (total === 0) {
+            alert("No hay trabajos futuros para cancelar.");
+            return;
+        }
+
+        await batch.commit();
+
+        alert(`✅ Cliente cancelado.\n\nSe eliminaron ${total} trabajos futuros.\nLa información sigue guardada para autorrelleno.`);
+    } catch (error) {
+        console.error("Error cancelando cliente:", error);
+        alert("❌ Error cancelando cliente. Revisa la consola.");
+    }
+}
+
+async function borrarClienteCompleto(nombreCliente) {
+    if (!nombreCliente) return alert("Cliente no válido.");
+
+    const confirmar = confirm(
+`🚨 BORRAR CLIENTE COMPLETO
 
 Cliente: ${nombreCliente}
 
 Se eliminarán:
-
-• Todos los trabajos agendados
-• Todas las repeticiones futuras
-• Toda la información guardada del cliente
+• Todos sus trabajos
+• Todas sus repeticiones futuras
+• Toda su información guardada
+• Sus datos de autorrelleno
 
 Esta acción NO se puede deshacer.
 
@@ -1778,53 +1851,21 @@ Esta acción NO se puede deshacer.
 
     if (!confirmar) return;
 
-    try {
+    const confirmacionFinal = prompt(
+`Para confirmar, escribe exactamente:
 
-        const snapshot = await db.collection("servicios")
-            .where("cliente", "==", nombreCliente)
-            .get();
-
-        const batch = db.batch();
-
-        snapshot.forEach(doc => {
-            batch.delete(doc.ref);
-        });
-
-        batch.delete(
-            db.collection("clientes").doc(nombreCliente)
-        );
-
-        await batch.commit();
-
-        alert(`✅ ${nombreCliente} fue eliminado completamente.`);
-
-    } catch(error) {
-
-        console.error(error);
-
-        alert("❌ Error eliminando cliente.");
-
-    }
-}
-
-async function borrarClienteCompleto(nombreCliente) {
-    if (!nombreCliente) return alert("Cliente no válido.");
-
-    const confirmar = confirm(
-        `¿Seguro que quieres eliminar COMPLETAMENTE a ${nombreCliente}?\n\nEsto borrará todos los trabajos agendados de este cliente.`
+BORRAR ${nombreCliente}`
     );
 
-    if (!confirmar) return;
+    if (confirmacionFinal !== `BORRAR ${nombreCliente}`) {
+        alert("Cancelado. No se borró nada.");
+        return;
+    }
 
     try {
         const snap = await db.collection("servicios")
             .where("cliente", "==", nombreCliente)
             .get();
-
-        if (snap.empty) {
-            alert("No hay trabajos para borrar de este cliente.");
-            return;
-        }
 
         const batch = db.batch();
 
@@ -1836,10 +1877,10 @@ async function borrarClienteCompleto(nombreCliente) {
 
         await batch.commit();
 
-        alert(`Cliente ${nombreCliente} eliminado completamente ✅`);
+        alert(`✅ ${nombreCliente} fue eliminado completamente.`);
     } catch (error) {
         console.error("Error eliminando cliente completo:", error);
-        alert("Error eliminando cliente completo. Revisa la consola.");
+        alert("❌ Error eliminando cliente completo. Revisa la consola.");
     }
 }
         
