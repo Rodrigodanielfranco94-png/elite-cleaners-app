@@ -219,6 +219,207 @@
 #historial {
   margin-top: 0;
 }
+
+.accounting-grid {
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:10px;
+}
+
+.account-card {
+  background:linear-gradient(145deg,#1f2937,#111827);
+  border:1px solid #2c2c2e;
+  border-radius:18px;
+  padding:14px;
+  text-align:center;
+}
+
+.account-card .circle {
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto 8px;
+  font-size:22px;
+  color:white;
+}
+
+.account-card p {
+  margin:0;
+  font-size:10px;
+  color:#c7c7cc;
+}
+
+.account-card h3 {
+  margin:6px 0 0;
+  font-size:20px;
+}
+
+.account-card.green h3 { color:#22c55e; }
+.account-card.green .circle { background:#22c55e; }
+.account-card.red h3 { color:#ef4444; }
+.account-card.red .circle { background:#ef4444; }
+.account-card.blue h3 { color:#3b82f6; }
+.account-card.blue .circle { background:#3b82f6; }
+.account-card.purple h3 { color:#a855f7; }
+.account-card.purple .circle { background:#7c3aed; }
+.account-card.yellow h3 { color:#facc15; }
+.account-card.yellow .circle { background:#eab308; }
+.account-card.pink h3 { color:#ec4899; }
+.account-card.pink .circle { background:#ec4899; }
+.account-card.cyan h3 { color:#06b6d4; }
+.account-card.cyan .circle { background:#06b6d4; }
+.account-card.orange h3 { color:#f97316; }
+.account-card.orange .circle { background:#f97316; }
+
+.acc-title {
+  margin:24px 0 10px;
+  font-size:15px;
+}
+
+.charts-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:10px;
+}
+
+.chart-box, .expense-box {
+  background:linear-gradient(145deg,#1f2937,#111827);
+  border:1px solid #2c2c2e;
+  border-radius:18px;
+  padding:14px;
+}
+
+.chart-box h4 {
+  margin:0 0 12px;
+  text-align:center;
+}
+
+.bar-row {
+  margin-bottom:12px;
+}
+
+.bar-label {
+  display:flex;
+  justify-content:space-between;
+  font-size:12px;
+  margin-bottom:5px;
+}
+
+.bar-bg {
+  height:16px;
+  background:#2c2c2e;
+  border-radius:20px;
+  overflow:hidden;
+}
+
+.bar-fill {
+  height:100%;
+  border-radius:20px;
+}
+
+.donut {
+  width:150px;
+  height:150px;
+  border-radius:50%;
+  margin:8px auto;
+  background:conic-gradient(#facc15 0 35%, #ec4899 35% 70%, #06b6d4 70% 100%);
+  position:relative;
+}
+
+.donut::after {
+  content:"";
+  position:absolute;
+  inset:38px;
+  background:#111827;
+  border-radius:50%;
+}
+
+.legend p {
+  font-size:12px;
+  margin:6px 0;
+}
+
+.legend span {
+  display:inline-block;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  margin-right:6px;
+}
+
+.expense-row {
+  display:grid;
+  grid-template-columns:110px 1fr 90px;
+  align-items:center;
+  gap:10px;
+  margin-bottom:12px;
+  font-size:13px;
+}
+
+.account-table {
+  width:100%;
+  border-collapse:collapse;
+  background:#111827;
+  border-radius:16px;
+  overflow:hidden;
+  font-size:12px;
+}
+
+.account-table th {
+  background:#1f2937;
+  color:#c7c7cc;
+  padding:12px;
+  text-transform:uppercase;
+  font-size:10px;
+}
+
+.account-table td {
+  padding:12px;
+  border-top:1px solid #2c2c2e;
+  text-align:center;
+}
+
+.account-table tfoot td {
+  font-weight:bold;
+  color:#22c55e;
+  background:#1f2937;
+}
+
+.account-actions {
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:10px;
+  margin:18px 0 30px;
+}
+
+.account-actions button {
+  padding:15px;
+  border:none;
+  border-radius:14px;
+  color:white;
+  font-weight:bold;
+  background:#3b82f6;
+}
+
+.account-actions button:first-child { background:#22c55e; }
+.account-actions button:nth-child(2) { background:#7c3aed; }
+
+@media(max-width:700px) {
+  .accounting-grid {
+    grid-template-columns:1fr 1fr;
+  }
+
+  .charts-grid {
+    grid-template-columns:1fr;
+  }
+
+  .account-actions {
+    grid-template-columns:1fr;
+  }
+}
         
     </style>
 </head>
