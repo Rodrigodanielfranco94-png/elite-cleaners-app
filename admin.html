@@ -566,50 +566,56 @@ id="notas_internas"
 placeholder="Notas internas para Rodrigo, Dayana o el equipo..."
 rows="3"
 style="width:100%;"></textarea>
-        
-        <span class="label-text">Información de Venta</span>
-        <input type="number" id="precio_total" placeholder="Precio Total del Servicio ($)">
 
-        <div id="admin-correction" style="display: none;">
-            <span class="label-text" style="color: #f59e0b;">Corrección de Horas Reales</span>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-               <input type="text" id="hora_inicio_real" placeholder="Inicio (Ej: 10:30 am)">
-                <input type="text" id="hora_fin_real" placeholder="Fin (Ej: 2:45 pm)">
-              <input type="number" id="millas_reales" placeholder="Millas reales ida/vuelta" style="grid-column: 1 / 3;">
-            </div>
-        </div>
+<span class="label-text">Información de Venta</span>
+<input type="number" id="precio_total" placeholder="Precio Total del Servicio ($)">
 
-        <span class="label-text">Tipo de Limpieza</span>
-        <div class="type-grid">
-            <button class="type-btn active" id="btn-ESTÁNDAR" onclick="selectType('ESTÁNDAR')">ESTÁNDAR</button>
-            <button class="type-btn" id="btn-PROFUNDA" onclick="selectType('PROFUNDA')">PROFUNDA</button>
-            <button class="type-btn" id="btn-MOVE-IN" onclick="selectType('MOVE-IN')">MOVE-IN</button>
-            <button class="type-btn" id="btn-MOVE-OUT" onclick="selectType('MOVE-OUT')">MOVE-OUT</button>
-            <button class="type-btn" id="btn-PRIMERA" onclick="selectType('PRIMERA')">PRIMERA VEZ</button>
-            <button class="type-btn" id="btn-POST-CONSTRUCCION" onclick="selectType('POST-CONSTRUCCION')">POST-CONSTRUCCIÓN</button>
-        </div>
-        
+<div id="admin-correction" style="display: none;">
+    <span class="label-text" style="color: #f59e0b;">Corrección de Horas Reales</span>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <input type="text" id="hora_inicio_real" placeholder="Inicio (Ej: 10:30 am)">
+        <input type="text" id="hora_fin_real" placeholder="Fin (Ej: 2:45 pm)">
+        <input type="number" id="millas_reales" placeholder="Millas reales ida/vuelta" style="grid-column: 1 / 3;">
     </div>
 </div>
-        
-        <button class="save-btn" id="main-button" onclick="asignarTrabajo()">ASIGNAR TRABAJO</button>
-        <button id="cancel-edit" style="display:none; background:none; border:none; color:#ef4444; width:100%; margin-top:10px; font-weight:bold; cursor:pointer;" onclick="location.reload()">CANCELAR EDICIÓN</button>
-    </div>
 
-        <div class="search-jobs-box">
-            <span>🔍</span>
-            <input 
-                type="text" 
-                id="buscarTrabajo" 
-                placeholder="Buscar trabajo por cliente, dirección, fecha o staff..."
-                oninput="renderHistorial()"
-            >
-        </div>
+<span class="label-text">Tipo de Limpieza</span>
 
-    </div>
+<div class="type-grid">
+    <button class="type-btn active" id="btn-ESTÁNDAR" onclick="selectType('ESTÁNDAR')">ESTÁNDAR</button>
+    <button class="type-btn" id="btn-PROFUNDA" onclick="selectType('PROFUNDA')">PROFUNDA</button>
+    <button class="type-btn" id="btn-MOVE-IN" onclick="selectType('MOVE-IN')">MOVE-IN</button>
+    <button class="type-btn" id="btn-MOVE-OUT" onclick="selectType('MOVE-OUT')">MOVE-OUT</button>
+    <button class="type-btn" id="btn-PRIMERA" onclick="selectType('PRIMERA')">PRIMERA VEZ</button>
+    <button class="type-btn" id="btn-POST-CONSTRUCCION" onclick="selectType('POST-CONSTRUCCION')">POST-CONSTRUCCIÓN</button>
+</div>
 
-    <div id="historial"></div>
+</div> <!-- cierre accordion-content venta -->
 
+</div> <!-- cierre sec-venta -->
+
+<button class="save-btn" id="main-button" onclick="asignarTrabajo()">ASIGNAR TRABAJO</button>
+
+<button id="cancel-edit" style="display:none; background:none; border:none; color:#ef4444; width:100%; margin-top:10px; font-weight:bold; cursor:pointer;" onclick="location.reload()">
+    CANCELAR EDICIÓN
+</button>
+
+</div> <!-- cierre main-form -->
+
+</div> <!-- cierre admin-fixed-top -->
+
+<div class="search-jobs-box">
+    <span>🔍</span>
+    <input 
+        type="text" 
+        id="buscarTrabajo" 
+        placeholder="Buscar trabajo por cliente, dirección, fecha o staff..."
+        oninput="renderHistorial()"
+    >
+</div>
+
+<div id="historial"></div>
     <div class="payroll-container">
         <div class="accordion-title" onclick="togglePayroll()">
             Resumen de Nómina (Payroll)
