@@ -1547,10 +1547,32 @@ function calcularPrecioAutomatico() {
 
     total += valorNumero("millas_servicio") * ELITE_PRICING.extras.milla;
 
-    const precioInput = document.getElementById("precio_total");
-    if (precioInput) {
-        precioInput.value = total.toFixed(2);
-    }
+  const precioInicial = total;
+const repetir = document.getElementById("repetir")?.value || "ninguno";
+
+let precioRecurrente = precioInicial;
+
+if (repetir === "semanal") {
+    precioRecurrente = precioInicial * 0.50;
+}
+
+if (repetir === "quincenal") {
+    precioRecurrente = precioInicial * 0.60;
+}
+
+if (repetir === "mensual") {
+    precioRecurrente = precioInicial * 0.75;
+}
+
+document.getElementById("precio_inicial").value = precioInicial.toFixed(2);
+document.getElementById("precio_recurrente").value = precioRecurrente.toFixed(2);
+
+const precioInput = document.getElementById("precio_total");
+if (precioInput) {
+    precioInput.value = repetir === "ninguno"
+        ? precioInicial.toFixed(2)
+        : precioRecurrente.toFixed(2);
+}
 }
 function activarCalculadoraAutomatica() {
     const campos = [
