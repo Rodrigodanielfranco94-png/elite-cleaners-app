@@ -1501,7 +1501,15 @@ function valorSelect(id) {
 function calcularPrecioAutomatico() {
     let tipo = tipoSeleccionado || "ESTÁNDAR";
 
-    const base = ELITE_PRICING.bases[tipo] || ELITE_PRICING.bases["ESTÁNDAR"];
+    const repetir = document.getElementById("repetir")?.value || "ninguno";
+
+let tipoParaCalculo = tipo;
+
+if (repetir !== "ninguno") {
+    tipoParaCalculo = "ESTÁNDAR";
+}
+
+const base = ELITE_PRICING.bases[tipoParaCalculo] || ELITE_PRICING.bases["ESTÁNDAR"];
 
     let total = base;
 
