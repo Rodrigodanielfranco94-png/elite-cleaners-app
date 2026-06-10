@@ -1625,6 +1625,8 @@ setTimeout(activarCalculadoraAutomatica, 500);
         whatsapp: document.getElementById('whatsapp').value.replace(/\D/g, ''),
         email_cliente: document.getElementById('email_cliente').value || "",
         precio_total: precio,
+        precio_inicial: document.getElementById("precio_inicial").value,
+        precio_recurrente: document.getElementById("precio_recurrente").value,
 
         deposito_requerido: true,
         deposito_monto: precio * 0.5,
