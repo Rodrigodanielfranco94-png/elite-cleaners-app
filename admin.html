@@ -1888,6 +1888,10 @@ function renderNotificacionesPagos() {
                 
                 const textoBusqueda = (document.getElementById('buscarTrabajo')?.value || "").toLowerCase().trim();
 
+const clienteGuardado = todosLosClientes.find(c =>
+    (c.nombre || "").toLowerCase() === (s.cliente || "").toLowerCase()
+);
+
 const contenidoTrabajo = `
     ${s.cliente || ""}
     ${s.direccion || ""}
@@ -1897,6 +1901,14 @@ const contenidoTrabajo = `
     ${s.empleado_nombre || ""}
     ${s.empleado_nombre_2 || ""}
     ${s.precio_total || ""}
+    ${s.whatsapp || ""}
+    ${s.email_cliente || ""}
+    ${s.repetir || ""}
+    ${clienteGuardado?.nombre || ""}
+    ${clienteGuardado?.direccion || ""}
+    ${clienteGuardado?.telefono || ""}
+    ${clienteGuardado?.whatsapp || ""}
+    ${clienteGuardado?.email || ""}
 `.toLowerCase();
 
 if (textoBusqueda && !contenidoTrabajo.includes(textoBusqueda)) return;
