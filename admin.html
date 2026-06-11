@@ -3033,8 +3033,12 @@ function calcularPagoEmpleadosServicio(s) {
 function obtenerDatosContabilidad() {
     const mes = document.getElementById("accounting-month")?.value || mesActualInput();
 
-    const trabajosPagados = todosLosServicios.filter(s => {
-    return (s.fecha || "").startsWith(mes) && Number(s.precio_total || 0) > 0;
+const trabajosPagados = todosLosServicios.filter(s => {
+    return (
+        s.estado === "completado" &&
+        (s.fecha || "").startsWith(mes) &&
+        Number(s.precio_total || 0) > 0
+    );
 });
     
     const gastosMes = gastosContabilidad.filter(g => {
