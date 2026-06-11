@@ -2691,14 +2691,26 @@ async function guardarEditorEvento() {
 
   const estadoCal = document.getElementById("edit-cal-estado").value;
 
-await db.collection("servicios").doc(id).update({
+const ahora = new Date();
+const horaActual =
+    String(ahora.getHours()).padStart(2, "0") +
+    ":" +
+    String(ahora.getMinutes()).padStart(2, "0");
+
+const datosActualizar = {
     fecha: document.getElementById("edit-cal-fecha").value,
     hora: document.getElementById("edit-cal-hora").value,
     hora_final_estimada: document.getElementById("edit-cal-hora-final").value,
     estado_calendario: estadoCal,
     estado: estadoCal === "completado" ? "completado" : "no_iniciado"
-});
+};
 
+if (estadoCal === "completado") {
+    datosActualizar.hora_fin = horaActual;
+    datosActualizar.fecha_completado = new Date().toISOString();
+}
+
+await db.collection("servicios").doc(id).update(datosActualizar);
     cerrarEditorEvento();
     renderCalendarioElite();
 
