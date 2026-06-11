@@ -1586,7 +1586,7 @@ document.getElementById("precio_recurrente").value = precioRecurrente.toFixed(2)
 
 const precioInput = document.getElementById("precio_total");
 if (precioInput) {
-    precioInput.value = repetir === "ninguno"
+    precioInput.value = repetir === "unica"
         ? precioInicial.toFixed(2)
         : precioRecurrente.toFixed(2);
 }
