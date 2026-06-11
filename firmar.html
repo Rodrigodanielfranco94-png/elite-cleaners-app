@@ -379,7 +379,16 @@ await db.collection("servicios").doc(idServicio).update({
   firma_cliente: true,
   contrato_firmado: true,
   firma_imagen: firmaImg,
+
   fecha_firma: fechaFirma,
+  cliente_firma: servicio.cliente || nombreCliente,
+
+  fecha_trabajo_firma: servicio.fecha || "",
+  hora_trabajo_firma: servicio.hora || "",
+
+  empresa_firma: "Elite Cleaners Company",
+  representante_empresa: "Rodrigo Franco / Dayana Pimiento",
+
   estado_contrato: "firmado"
 });
    await fetch("https://enviarcorreonico-cnnxm2vdja-uc.a.run.app", {
