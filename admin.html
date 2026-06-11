@@ -1549,11 +1549,11 @@ function valorSelect(id) {
 function calcularPrecioAutomatico() {
     let tipo = tipoSeleccionado || "ESTÁNDAR";
 
-    const repetir = document.getElementById("repetir")?.value || "unica";
+    const repetir = document.getElementById("repetir")?.value || "ninguno";
 
 let tipoParaCalculo = tipo;
 
-if (repetir !== "unica") {
+if (repetir !== "ninguno") {
     tipoParaCalculo = "ESTÁNDAR";
 }
 
