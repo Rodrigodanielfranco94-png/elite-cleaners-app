@@ -2952,20 +2952,23 @@ CERRAR CALENDARIO
       <option value="cita">🟢 Cita extra</option>
     </select>
 
-    <div class="editor-evento-actions">
-  <button class="save-btn" style="background:#6b7280;" onclick="cerrarEditorEvento()">Cancelar</button>
-  <button class="save-btn" style="background:#3b82f6;" onclick="guardarEditorEvento()">Guardar</button>
+   <div class="editor-evento-actions">
+    <button class="save-btn" style="background:#6b7280;" onclick="cerrarEditorEvento()">
+        Cancelar
+    </button>
+
+    <button class="save-btn" style="background:#3b82f6;" onclick="guardarEditorEvento()">
+        Guardar
+    </button>
 </div>
 
 <button
-  class="save-btn"
-  style="background:#ef4444; margin-top:12px;"
-  onclick="eliminarEventoCalendario()"
+    class="save-btn"
+    style="background:#ef4444; margin-top:12px;"
+    onclick="eliminarEventoCalendario()"
 >
-  🗑️ ELIMINAR ESTE TRABAJO
+    🗑️ ELIMINAR ESTE TRABAJO
 </button>
-  </div>    
-</div>
     
    <script>
 const SUPABASE_URL = "https://wfwojwnbtcpeaumudyjl.supabase.co";
