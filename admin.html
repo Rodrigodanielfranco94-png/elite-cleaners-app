@@ -2702,7 +2702,9 @@ const datosActualizar = {
     hora: document.getElementById("edit-cal-hora").value,
     hora_final_estimada: document.getElementById("edit-cal-hora-final").value,
     estado_calendario: estadoCal,
-    estado: estadoCal === "completado" ? "completado" : "no_iniciado"
+   estado: estadoCal === "completado" ? "completado" : "no_iniciado",
+editado_desde_calendario: true,
+edicion_solo_este_trabajo: true
 };
 
 if (estadoCal === "completado") {
