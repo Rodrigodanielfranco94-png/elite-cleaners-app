@@ -2722,6 +2722,33 @@ await db.collection("servicios").doc(id).update(datosActualizar);
     alert("Evento actualizado ✅");
 }
 
+async function eliminarEventoCalendario() {
+    const id = document.getElementById("edit-cal-id").value;
+    const cliente = document.getElementById("edit-cal-cliente").value || "este cliente";
+
+    if (!id) return alert("No se encontró el trabajo.");
+
+    const confirmar = confirm(
+`⚠️ ELIMINAR SOLO ESTE TRABAJO
+
+Cliente: ${cliente}
+
+Se eliminará únicamente este trabajo del calendario.
+Las futuras repeticiones NO se tocarán.
+
+¿Deseas continuar?`
+    );
+
+    if (!confirmar) return;
+
+    await db.collection("servicios").doc(id).delete();
+
+    cerrarEditorEvento();
+    renderCalendarioElite();
+
+    alert("Trabajo eliminado del calendario ✅");
+}
+        
 function mostrarEventosDia(fecha) {
     const cont = document.getElementById("calendar-day-events");
     const eventos = todosLosServicios.filter(s => s.fecha === fecha);
