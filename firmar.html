@@ -530,8 +530,8 @@ document.querySelectorAll(".payment-row")[1].querySelector("span").innerText = "
 
 } else {
   document.querySelector(".payment-box h3").innerText = "Deposit Payment Required (Zelle or Venmo)";
-  document.querySelector(".payment-row span:nth-child(1)").innerText = "Required Deposit:";
-
+  document.querySelectorAll(".payment-row")[0].querySelector("span").innerText = "Total Service:";
+document.querySelectorAll(".payment-row")[1].querySelector("span").innerText = "Required Deposit:";
   document.querySelector(".notice").style.display = "block";
   document.querySelector(".zelle").style.display = "block";
   document.getElementById("btnVenmo").style.display = "block";
