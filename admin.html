@@ -3220,10 +3220,11 @@ document.getElementById("accounting-subtitle").innerText = `Resumen financiero d
     document.getElementById("acc-empresa").innerText = dinero(d.empresa);
     document.getElementById("acc-empresa-neto").innerText = dinero(d.empresaNeto);
     
-    renderBarrasIngresosGastos(d);
-    renderBarrasEmpresaNeto(d);
-    renderGastosCategoria(d);
-    renderTablaContabilidad(d);
+   renderBarrasIngresosGastos(d);
+renderBarrasEmpresaNeto(d);
+renderGastosCategoria(d);
+renderTablaContabilidad(d);
+activarCarpetasContabilidad();
 }
 
 function activarCarpetasContabilidad() {
