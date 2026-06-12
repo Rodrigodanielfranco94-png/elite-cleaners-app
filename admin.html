@@ -3226,65 +3226,176 @@ document.getElementById("accounting-subtitle").innerText = `Resumen financiero d
     renderTablaContabilidad(d);
 }
 
-function activarDetallesTarjetasContabilidad(d) {
-    const detalles = [
-        {
-            id: "acc-ingresos",
-            titulo: "💵 Ingresos Totales",
-            texto: `Total vendido en trabajos completados este mes: ${dinero(d.ingresos)}`
-        },
-        {
-            id: "acc-gastos",
-            titulo: "🔻 Gastos Totales",
-            texto: `Total de gastos registrados este mes: ${dinero(d.gastosInversion)}`
-        },
-        {
-            id: "acc-empleados",
-            titulo: "👥 Pago Empleados",
-            texto: `Total calculado para empleados según horas trabajadas: ${dinero(d.pagoEmpleados)}`
-        },
-        {
-            id: "acc-neta",
-            titulo: "📈 Ganancia Neta",
-            texto: `Ingresos menos pago de empleados: ${dinero(d.gananciaNeta)}`
-        },
-        {
-            id: "acc-rodrigo",
-            titulo: "👤 Rodrigo 35%",
-            texto: `Parte de Rodrigo: ${dinero(d.rodrigo)}`
-        },
-        {
-            id: "acc-dayana",
-            titulo: "👤 Dayana 35%",
-            texto: `Parte de Dayana: ${dinero(d.dayana)}`
-        },
-        {
-            id: "acc-empresa",
-            titulo: "🏢 Empresa 30%",
-            texto: `Parte de la empresa antes de gastos: ${dinero(d.empresa)}`
-        },
-        {
-            id: "acc-empresa-neto",
-            titulo: "💼 Empresa Neto",
-            texto: `Empresa 30% menos gastos registrados: ${dinero(d.empresaNeto)}`
-        }
+function activarCarpetasContabilidad() {
+    const tarjetas = [
+        { id: "acc-ingresos", tipo: "ingresos" },
+        { id: "acc-gastos", tipo: "gastos" },
+        { id: "acc-empleados", tipo: "empleados" },
+        { id: "acc-neta", tipo: "neta" },
+        { id: "acc-rodrigo", tipo: "rodrigo" },
+        { id: "acc-dayana", tipo: "dayana" },
+        { id: "acc-empresa", tipo: "empresa" },
+        { id: "acc-empresa-neto", tipo: "empresa_neto" }
     ];
 
-    detalles.forEach(item => {
-        const numero = document.getElementById(item.id);
+    tarjetas.forEach(t => {
+        const numero = document.getElementById(t.id);
         if (!numero) return;
 
-        const tarjeta = numero.closest(".account-card");
-        if (!tarjeta) return;
+        const card = numero.closest(".account-card");
+        if (!card) return;
 
-        tarjeta.style.cursor = "pointer";
-
-        tarjeta.onclick = () => {
-            alert(`${item.titulo}\n\n${item.texto}`);
-        };
+        card.onclick = () => abrirCarpetaContabilidad(t.tipo);
+        card.style.cursor = "pointer";
     });
 }
-    
+
+function abrirCarpetaContabilidad(tipo) {
+    const d = obtenerDatosContabilidad();
+    const box = document.getElementById("accounting-folder-view");
+
+    if (!box) return;
+
+    box.style.display = "block";
+
+    let html = `
+        <div style="background:#111827; border:1px solid #3b82f6; border-radius:22px; padding:18px; margin-bottom:18px;">
+        <button onclick="cerrarCarpetaContabilidad()" style="background:#ef4444;color:white;border:none;border-radius:12px;padding:10px 14px;font-weight:bold;margin-bottom:15px;">
+            ← Cerrar carpeta
+        </button>
+    `;
+
+    if (tipo === "ingresos") {
+        html += `
+            <h2>💵 Carpeta de Ingresos</h2>
+            <p><b>Total ingresos:</b> ${dinero(d.ingresos)}</p>
+            <p><b>Trabajos completados:</b> ${d.filas.length}</p>
+            <p><b>Promedio por trabajo:</b> ${dinero(d.ingresos / (d.filas.length || 1))}</p>
+
+            <table class="account-table">
+                <thead><tr><th>Fecha</th><th>Cliente</th><th>Total</th></tr></thead>
+                <tbody>
+                    ${d.filas.map(f => `
+                        <tr>
+                            <td>${f.fecha}</td>
+                            <td>${f.cliente}</td>
+                            <td>${dinero(f.ingresos)}</td>
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
+        `;
+    }
+
+    if (tipo === "gastos") {
+        html += `
+            <h2>🔻 Carpeta de Gastos</h2>
+            <p><b>Total gastos:</b> ${dinero(d.gastosInversion)}</p>
+            <p><b>Cantidad de gastos:</b> ${d.gastosMes.length}</p>
+
+            <table class="account-table">
+                <thead><tr><th>Fecha</th><th>Categoría</th><th>Monto</th><th>Nota</th></tr></thead>
+                <tbody>
+                    ${d.gastosMes.map(g => `
+                        <tr>
+                            <td>${g.fecha || ""}</td>
+                            <td>${g.categoria || "Otros"}</td>
+                            <td>${dinero(g.monto)}</td>
+                            <td>${g.nota || ""}</td>
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
+        `;
+    }
+
+    if (tipo === "empleados") {
+        html += `
+            <h2>👥 Carpeta de Empleados</h2>
+            <p><b>Total pago empleados:</b> ${dinero(d.pagoEmpleados)}</p>
+
+            <table class="account-table">
+                <thead><tr><th>Fecha</th><th>Cliente</th><th>Empleados</th><th>Pago</th></tr></thead>
+                <tbody>
+                    ${d.filas.map(f => `
+                        <tr>
+                            <td>${f.fecha}</td>
+                            <td>${f.cliente}</td>
+                            <td>${f.empleados || ""}</td>
+                            <td>${dinero(f.pagoEmpleados)}</td>
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
+        `;
+    }
+
+    if (tipo === "neta") {
+        html += `
+            <h2>📈 Carpeta de Ganancia Neta</h2>
+            <p><b>Ingresos:</b> ${dinero(d.ingresos)}</p>
+            <p><b>Pago empleados:</b> -${dinero(d.pagoEmpleados)}</p>
+            <p><b>Ganancia neta:</b> ${dinero(d.gananciaNeta)}</p>
+
+            <table class="account-table">
+                <thead><tr><th>Fecha</th><th>Cliente</th><th>Ingreso</th><th>Empleados</th><th>Neta</th></tr></thead>
+                <tbody>
+                    ${d.filas.map(f => `
+                        <tr>
+                            <td>${f.fecha}</td>
+                            <td>${f.cliente}</td>
+                            <td>${dinero(f.ingresos)}</td>
+                            <td>${dinero(f.pagoEmpleados)}</td>
+                            <td>${dinero(f.gananciaNeta)}</td>
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
+        `;
+    }
+
+    if (["rodrigo", "dayana", "empresa", "empresa_neto"].includes(tipo)) {
+        const titulos = {
+            rodrigo: "👤 Carpeta Rodrigo 35%",
+            dayana: "👤 Carpeta Dayana 35%",
+            empresa: "🏢 Carpeta Empresa 30%",
+            empresa_neto: "💼 Carpeta Empresa Neto"
+        };
+
+        html += `
+            <h2>${titulos[tipo]}</h2>
+
+            <table class="account-table">
+                <thead><tr><th>Fecha</th><th>Cliente</th><th>Monto</th></tr></thead>
+                <tbody>
+                    ${d.filas.map(f => `
+                        <tr>
+                            <td>${f.fecha}</td>
+                            <td>${f.cliente}</td>
+                            <td>${dinero(
+                                tipo === "rodrigo" ? f.rodrigo :
+                                tipo === "dayana" ? f.dayana :
+                                tipo === "empresa" ? f.empresa :
+                                f.empresaNeto
+                            )}</td>
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
+        `;
+    }
+
+    html += `</div>`;
+    box.innerHTML = html;
+    box.scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+function cerrarCarpetaContabilidad() {
+    const box = document.getElementById("accounting-folder-view");
+    if (!box) return;
+    box.style.display = "none";
+    box.innerHTML = "";
+}    
 function crearBarra(label, valor, max, color) {
     const porcentaje = max > 0 ? Math.min((valor / max) * 100, 100) : 0;
 
