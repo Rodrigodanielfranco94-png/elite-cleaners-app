@@ -1249,7 +1249,7 @@ Elite Cleaners Company`;
                 fechaTexto = "Firmado digitalmente el: " + f.toLocaleDateString() + " " + f.toLocaleTimeString();
             }
             document.getElementById('modal-fecha').innerText = fechaTexto;
-            document.getElementById("modal-info-firma").innerHTML = `
+           document.getElementById("modal-info-firma").innerHTML = `
 <p><b>📅 Fecha del trabajo:</b> ${servicio.fecha_trabajo_firma || servicio.fecha || "No registrada"}</p>
 
 <p><b>⏰ Hora del trabajo:</b> ${servicio.hora_trabajo_firma || servicio.hora || "No registrada"}</p>
@@ -1258,13 +1258,26 @@ Elite Cleaners Company`;
 
 <p><b>👤 Cliente:</b> ${servicio.cliente_firma || servicio.cliente || "No registrado"}</p>
 
+<p><b>📍 Dirección:</b> ${servicio.direccion || "No registrada"}</p>
+
+<p><b>💵 Total del servicio:</b> $${Number(servicio.precio_total || 0).toFixed(2)}</p>
+
+<p><b>✅ Depósito pagado:</b> $${Number(servicio.deposito_monto || 0).toFixed(2)}</p>
+
+<p><b>💰 Balance restante:</b> $${Number(servicio.balance_restante || 0).toFixed(2)}</p>
+
+<p><b>🧾 Método depósito:</b> ${servicio.metodo_pago_deposito || "No registrado"}</p>
+
+<p><b>📅 Fecha pago depósito:</b> ${servicio.fecha_pago_deposito || "No registrada"}</p>
+
 <p><b>🏢 Empresa:</b> Elite Cleaners Company</p>
 
 <p><b>👥 Representantes:</b> Rodrigo Franco / Dayana Pimiento</p>
 `;
-            document.getElementById('modal-img-firma').src = servicio.firma_imagen || "";
-            document.getElementById('modal-firma').style.display = 'block';
-        }
+
+    document.getElementById('modal-img-firma').src = servicio.firma_imagen || "";
+    document.getElementById('modal-firma').style.display = 'block';
+}         
 
         async function descargarComprobante() {
             const area = document.getElementById('capture-area');
