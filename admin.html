@@ -2271,7 +2271,7 @@ async function cambiarEstadoTrabajo(id, estado) {
         const deposito = Number(servicio.deposito_monto || 0);
         const balance = Number(servicio.balance_restante || (total - deposito));
 
-        const venmoLink = `https://venmo.com/u/Elite-Cleaners-Company?txn=pay&amount=${balance.toFixed(2)}&note=Elite%20Cleaners%20Balance`;
+       const venmoLink = `https://venmo.com/?txn=pay&recipients=Elite-Cleaners-Company&amount=${balance.toFixed(2)}&note=Elite%20Cleaners%20Balance`;
 
 const mensaje =
 `Hello ${servicio.cliente}, your cleaning service has been completed. ✅
