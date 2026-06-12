@@ -2457,7 +2457,7 @@ Esta acción NO se puede deshacer.
 BORRAR ${nombreCliente}`
     );
 
-    if (confirmacionFinal !== `BORRAR ${nombreCliente}`) {
+    if ((confirmacionFinal || "").trim() !== `BORRAR ${nombreCliente}`) {
         alert("Cancelado. No se borró nada.");
         return;
     }
