@@ -1228,13 +1228,14 @@ style="width:100%;"></textarea>
             const urlBase = 'https://rodrigodanielfranco94-png.github.io/elite-cleaners-app'; 
             const urlFirma = `${urlBase}/firmar.html?id=${id}&cliente=${encodeURIComponent(cliente)}`;
             const mensaje =
-`Hello ${cliente}, it's a pleasure to greet you from Elite Cleaners Company. 🌟
+`Hello ${cliente},
 
-To confirm your cleaning service, please tap the secure link below to review and sign your agreement:
+To confirm your cleaning appointment, please review and sign your service agreement using the secure link below:
 
 ${urlFirma}
 
-Thank you for choosing Elite Cleaners Company.`;
+Thank you,
+Elite Cleaners Company`;
             abrirSMS(telefono, mensaje);
         }
 
