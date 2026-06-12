@@ -2114,6 +2114,38 @@ function toggleDetalles(id) {
 
     box.style.display = box.style.display === "none" ? "block" : "none";
 }
+
+async function borrar(id) {
+    const s = todosLosServicios.find(serv => serv.id === id);
+    const cliente = s?.cliente || "este trabajo";
+
+    const confirmar = confirm(
+`⚠️ BORRAR TRABAJO
+
+Vas a borrar SOLO este trabajo de:
+
+${cliente}
+
+La información del cliente NO se borrará.
+
+¿Deseas continuar?`
+    );
+
+    if (!confirmar) return;
+
+    try {
+        await db.collection("servicios").doc(id).delete();
+
+        todosLosServicios = todosLosServicios.filter(serv => serv.id !== id);
+        renderHistorial();
+        generarNomina();
+
+        alert("✅ Trabajo borrado correctamente. El cliente sigue guardado.");
+    } catch (error) {
+        console.error("Error borrando trabajo:", error);
+        alert("❌ No se pudo borrar el trabajo.");
+    }
+}
         
         function generarNomina() {
     const tabla = document.getElementById('lista-nomina');
