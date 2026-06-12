@@ -2477,7 +2477,10 @@ BORRAR ${nombreCliente}`
 
         await batch.commit();
 
-        alert(`✅ ${nombreCliente} fue eliminado completamente.`);
+renderHistorial();
+generarNomina();
+
+alert(`✅ ${nombreCliente} fue eliminado completamente.`);
     } catch (error) {
         console.error("Error eliminando cliente completo:", error);
         alert("❌ Error eliminando cliente completo. Revisa la consola.");
