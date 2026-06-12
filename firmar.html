@@ -500,7 +500,8 @@ if (
 
   document.querySelector(".payment-box h3").innerText = "Balance Payment Required";
   document.querySelector("#deposito-monto").innerText = "$" + balance.toFixed(2);
-  document.querySelector(".payment-row span:nth-child(1)").innerText = "Balance Due:";
+ document.querySelectorAll(".payment-row")[0].querySelector("span").innerText = "Total Service:";
+document.querySelectorAll(".payment-row")[1].querySelector("span").innerText = "Balance Due:";
 
   document.querySelector(".notice").style.display = "block";
   document.querySelector(".zelle").style.display = "block";
