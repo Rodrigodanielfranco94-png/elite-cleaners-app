@@ -3286,6 +3286,20 @@ function renderBarrasEmpresaNeto(d) {
     }).join("");
 }
 
+function iconoGasto(cat) {
+    const c = (cat || "").toLowerCase();
+
+    if (c.includes("gas") || c.includes("combustible")) return "⛽";
+    if (c.includes("walmart")) return "🛒";
+    if (c.includes("costco")) return "🔴";
+    if (c.includes("laundry") || c.includes("lavander")) return "🧺";
+    if (c.includes("home depot")) return "🛠️";
+    if (c.includes("suppl") || c.includes("supply")) return "🧴";
+    if (c.includes("car") || c.includes("auto")) return "🚗";
+
+    return "••";
+}
+
 function renderGastosCategoria(d) {
     const contenedor = document.getElementById("gastos-categorias");
 
@@ -3308,16 +3322,19 @@ function renderGastosCategoria(d) {
 
         return `
             <div class="expense-row">
+                <div class="expense-icon">${iconoGasto(cat)}</div>
                 <div>${cat}</div>
                 <div class="bar-bg">
-                    <div class="bar-fill" style="width:${porcentaje}%; background:#22c55e;"></div>
+                    <div class="bar-fill" style="width:${porcentaje}%;"></div>
                 </div>
-                <div style="text-align:right;">${dinero(monto)}</div>
+                <div class="expense-money">
+                    ${dinero(monto)}
+                    <span>(${porcentaje.toFixed(1)}%)</span>
+                </div>
             </div>
         `;
     }).join("");
 }
-
 function renderTablaContabilidad(d) {
     const body = document.getElementById("accounting-table-body");
     const total = document.getElementById("accounting-table-total");
