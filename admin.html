@@ -3225,6 +3225,65 @@ document.getElementById("accounting-subtitle").innerText = `Resumen financiero d
     renderTablaContabilidad(d);
 }
 
+function activarDetallesTarjetasContabilidad(d) {
+    const detalles = [
+        {
+            id: "acc-ingresos",
+            titulo: "💵 Ingresos Totales",
+            texto: `Total vendido en trabajos completados este mes: ${dinero(d.ingresos)}`
+        },
+        {
+            id: "acc-gastos",
+            titulo: "🔻 Gastos Totales",
+            texto: `Total de gastos registrados este mes: ${dinero(d.gastosInversion)}`
+        },
+        {
+            id: "acc-empleados",
+            titulo: "👥 Pago Empleados",
+            texto: `Total calculado para empleados según horas trabajadas: ${dinero(d.pagoEmpleados)}`
+        },
+        {
+            id: "acc-neta",
+            titulo: "📈 Ganancia Neta",
+            texto: `Ingresos menos pago de empleados: ${dinero(d.gananciaNeta)}`
+        },
+        {
+            id: "acc-rodrigo",
+            titulo: "👤 Rodrigo 35%",
+            texto: `Parte de Rodrigo: ${dinero(d.rodrigo)}`
+        },
+        {
+            id: "acc-dayana",
+            titulo: "👤 Dayana 35%",
+            texto: `Parte de Dayana: ${dinero(d.dayana)}`
+        },
+        {
+            id: "acc-empresa",
+            titulo: "🏢 Empresa 30%",
+            texto: `Parte de la empresa antes de gastos: ${dinero(d.empresa)}`
+        },
+        {
+            id: "acc-empresa-neto",
+            titulo: "💼 Empresa Neto",
+            texto: `Empresa 30% menos gastos registrados: ${dinero(d.empresaNeto)}`
+        }
+    ];
+
+    detalles.forEach(item => {
+        const numero = document.getElementById(item.id);
+        if (!numero) return;
+
+        const tarjeta = numero.closest(".account-card");
+        if (!tarjeta) return;
+
+        tarjeta.style.cursor = "pointer";
+
+        tarjeta.onclick = () => {
+            alert(`${item.titulo}\n\n${item.texto}`);
+        };
+    });
+}
+    
 function crearBarra(label, valor, max, color) {
     const porcentaje = max > 0 ? Math.min((valor / max) * 100, 100) : 0;
 
