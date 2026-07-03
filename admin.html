@@ -823,9 +823,8 @@
 <select id="nevera" style="width:100%; padding:14px; border-radius:12px; border:1px solid #2c2c2e; background:#2c2c2e; color:white;">
 <option value="">Nevera</option>
 <option value="No">No</option>
-<option value="Outside">Outside</option>
-<option value="Inside">Inside</option>
-<option value="Inside & Outside">Inside & Outside</option>
+<option value="1 Puerta">1 puerta</option>
+<option value="2 Puertas">2 puertas</option>
 </select>
 </div>
 
@@ -857,6 +856,14 @@
 <option value="">Baseboards</option>
 <option value="No">No</option>
 <option value="Sí">Sí</option>
+</select>
+</div>
+
+<div>
+<span class="label-text">Perros en la casa</span>
+<select id="perros" style="width:100%; padding:14px; border-radius:12px; border:1px solid #2c2c2e; background:#2c2c2e; color:white;">
+<option value="No">No</option>
+<option value="Sí">Sí (+$50)</option>
 </select>
 </div>
 
@@ -1395,6 +1402,7 @@ function obtenerMillasServicio(s) {
                     document.getElementById('gabinetes').value = c.gabinetes || "";
                     document.getElementById('ventanas').value = c.ventanas || "";
                     document.getElementById('baseboards').value = c.baseboards || "";
+                    document.getElementById('perros').value = c.perros || "No";
                     document.getElementById('lavanderia').value = c.lavanderia || "";
                     document.getElementById('garaje').value = c.garaje || "";
                     document.getElementById('comedor').value = c.comedor || "";
@@ -1509,38 +1517,44 @@ const ELITE_PRICING = {
     },
 
     ambientes: {
-        habitacion: 20,
-        bano: 30,
-        medio_bano: 15,
-        sala: 15,
-        cocina: 25,
+        habitacion: 25,
+        bano: 40,
+        medio_bano: 20,
+        sala: 20,
+        cocina: 35,
         oficina: 20,
         lavanderia: 10,
-        garaje: 20,
-        comedor: 10,
-        sala_juegos: 20
+        garaje: 25,
+        comedor: 15,
+        sala_juegos: 25
+    },
+
+    pies_cuadrados: {
+        "ESTÁNDAR": [0, 0.03, 0.035, 0.04],
+        "PROFUNDA": [0, 0.04, 0.045, 0.05],
+        "PRIMERA": [0, 0.04, 0.045, 0.05],
+        "MOVE-IN": [0, 0.05, 0.055, 0.06],
+        "MOVE-OUT": [0, 0.05, 0.055, 0.06],
+        "POST-CONSTRUCCION": [0, 0.06, 0.065, 0.07]
     },
 
     extras: {
-        nevera_outside: 20,
-        nevera_inside: 60,
-        nevera_inside_outside: 80,
-
-        horno: 85,
-
-        gabinetes_outside: 20,
-        gabinetes_inside: 45,
-        gabinetes_inside_outside: 65,
-
-        ventanas_outside: 50,
-        ventanas_inside: 50,
-        ventanas_inside_outside: 100,
-
-        baseboards: 35,
-
-        alfombra_habitacion: 50,
-        alfombra_ft2: 0.25,
-
+        estandar: {
+            nevera_1_puerta: 65,
+            nevera_2_puertas: 95,
+            horno: 85,
+            gabinetes_inside: 65,
+            gabinetes_outside: 25,
+            gabinetes_inside_outside: 90,
+            ventanas_inside: 40,
+            ventanas_outside: 60,
+            ventanas_inside_outside: 100,
+            baseboards: 50
+        },
+        otros_tipos: 45,
+        perros: 50,
+        alfombra_habitacion: 35,
+        alfombra_ft2: 0.15,
         milla: 0.22
     }
 };
@@ -1553,18 +1567,43 @@ function valorSelect(id) {
     return document.getElementById(id)?.value || "";
 }
 
+function normalizarTipoLimpieza(tipo) {
+    if (tipo === "POST-CONSTRUCCIÓN") return "POST-CONSTRUCCION";
+    return tipo || "ESTÁNDAR";
+}
+
+function obtenerTarifaPieCuadrado(tipo, ft2) {
+    const tarifas = ELITE_PRICING.pies_cuadrados[normalizarTipoLimpieza(tipo)] || ELITE_PRICING.pies_cuadrados["ESTÁNDAR"];
+
+    if (ft2 <= 1500) return 0;
+    if (ft2 <= 2500) return tarifas[1];
+    if (ft2 <= 3500) return tarifas[2];
+    return tarifas[3];
+}
+
+function precioExtraPorTipo(nombreExtra, tipo) {
+    const tipoNormalizado = normalizarTipoLimpieza(tipo);
+
+    if (tipoNormalizado === "ESTÁNDAR") {
+        return ELITE_PRICING.extras.estandar[nombreExtra] || 0;
+    }
+
+    return ELITE_PRICING.extras.otros_tipos;
+}
+
 function calcularPrecioAutomatico() {
-    let tipo = tipoSeleccionado || "ESTÁNDAR";
+    let tipo = normalizarTipoLimpieza(tipoSeleccionado || "ESTÁNDAR");
 
     const repetir = document.getElementById("repetir")?.value || "ninguno";
 
-let tipoParaCalculo = tipo;
+    let tipoParaCalculo = tipo;
 
-if (repetir !== "ninguno") {
-    tipoParaCalculo = "ESTÁNDAR";
-}
+    // Si el servicio es recurrente, el precio recurrente se calcula como limpieza estándar.
+    if (repetir !== "ninguno") {
+        tipoParaCalculo = "ESTÁNDAR";
+    }
 
-const base = ELITE_PRICING.bases[tipoParaCalculo] || ELITE_PRICING.bases["ESTÁNDAR"];
+    const base = ELITE_PRICING.bases[tipoParaCalculo] || ELITE_PRICING.bases["ESTÁNDAR"];
 
     let total = base;
 
@@ -1580,61 +1619,63 @@ const base = ELITE_PRICING.bases[tipoParaCalculo] || ELITE_PRICING.bases["ESTÁN
     total += valorNumero("sala_juegos") * ELITE_PRICING.ambientes.sala_juegos;
 
     const ft2 = valorNumero("pies_cuadrados");
-    if (ft2 > 2500) {
-        total += (ft2 - 2500) * 0.03;
-    }
+    const tarifaFt2 = obtenerTarifaPieCuadrado(tipoParaCalculo, ft2);
+    total += ft2 * tarifaFt2;
 
-    total += valorNumero("horno") * ELITE_PRICING.extras.horno;
+    total += valorNumero("horno") * precioExtraPorTipo("horno", tipoParaCalculo);
 
     const nevera = valorSelect("nevera");
-    if (nevera === "Outside") total += ELITE_PRICING.extras.nevera_outside;
-    if (nevera === "Inside") total += ELITE_PRICING.extras.nevera_inside;
-    if (nevera === "Inside & Outside") total += ELITE_PRICING.extras.nevera_inside_outside;
+    if (nevera === "1 Puerta") total += precioExtraPorTipo("nevera_1_puerta", tipoParaCalculo);
+    if (nevera === "2 Puertas") total += precioExtraPorTipo("nevera_2_puertas", tipoParaCalculo);
 
     const gabinetes = valorSelect("gabinetes");
-    if (gabinetes === "Outside") total += ELITE_PRICING.extras.gabinetes_outside;
-    if (gabinetes === "Inside") total += ELITE_PRICING.extras.gabinetes_inside;
-    if (gabinetes === "Inside & Outside") total += ELITE_PRICING.extras.gabinetes_inside_outside;
+    if (gabinetes === "Outside") total += precioExtraPorTipo("gabinetes_outside", tipoParaCalculo);
+    if (gabinetes === "Inside") total += precioExtraPorTipo("gabinetes_inside", tipoParaCalculo);
+    if (gabinetes === "Inside & Outside") total += precioExtraPorTipo("gabinetes_inside_outside", tipoParaCalculo);
 
     const ventanas = valorSelect("ventanas");
-    if (ventanas === "Outside") total += ELITE_PRICING.extras.ventanas_outside;
-    if (ventanas === "Inside") total += ELITE_PRICING.extras.ventanas_inside;
-    if (ventanas === "Inside & Outside") total += ELITE_PRICING.extras.ventanas_inside_outside;
+    if (ventanas === "Outside") total += precioExtraPorTipo("ventanas_outside", tipoParaCalculo);
+    if (ventanas === "Inside") total += precioExtraPorTipo("ventanas_inside", tipoParaCalculo);
+    if (ventanas === "Inside & Outside") total += precioExtraPorTipo("ventanas_inside_outside", tipoParaCalculo);
 
     const baseboards = valorSelect("baseboards");
-    if (baseboards === "Sí") total += ELITE_PRICING.extras.baseboards;
+    if (baseboards === "Sí") total += precioExtraPorTipo("baseboards", tipoParaCalculo);
+
+    const perros = valorSelect("perros");
+    if (perros === "Sí") total += ELITE_PRICING.extras.perros;
 
     total += valorNumero("alfombra_habitaciones") * ELITE_PRICING.extras.alfombra_habitacion;
     total += valorNumero("alfombra_pies_cuadrados") * ELITE_PRICING.extras.alfombra_ft2;
 
     total += valorNumero("millas_servicio") * ELITE_PRICING.extras.milla;
 
-  const precioInicial = total;
+    const precioInicial = total;
 
-let precioRecurrente = precioInicial;
+    let precioRecurrente = precioInicial;
 
-if (repetir === "semanal") {
-    precioRecurrente = precioInicial * 0.50;
+    if (repetir === "semanal") {
+        precioRecurrente = precioInicial * 0.50;
+    }
+
+    if (repetir === "quincenal") {
+        precioRecurrente = precioInicial * 0.60;
+    }
+
+    if (repetir === "mensual") {
+        precioRecurrente = precioInicial * 0.75;
+    }
+
+    document.getElementById("precio_inicial").value = precioInicial.toFixed(2);
+    document.getElementById("precio_recurrente").value = precioRecurrente.toFixed(2);
+
+    const precioInput = document.getElementById("precio_total");
+    if (precioInput) {
+        precioInput.value = repetir === "ninguno"
+            ? precioInicial.toFixed(2)
+            : precioRecurrente.toFixed(2);
+    }
 }
 
-if (repetir === "quincenal") {
-    precioRecurrente = precioInicial * 0.60;
-}
-
-if (repetir === "mensual") {
-    precioRecurrente = precioInicial * 0.75;
-}
-
-document.getElementById("precio_inicial").value = precioInicial.toFixed(2);
-document.getElementById("precio_recurrente").value = precioRecurrente.toFixed(2);
-
-const precioInput = document.getElementById("precio_total");
-if (precioInput) {
-    precioInput.value = repetir === "ninguno"
-        ? precioInicial.toFixed(2)
-        : precioRecurrente.toFixed(2);
-}
-}
 function activarCalculadoraAutomatica() {
     const campos = [
         "millas_servicio",
@@ -1650,6 +1691,7 @@ function activarCalculadoraAutomatica() {
         "gabinetes",
         "ventanas",
         "baseboards",
+        "perros",
         "lavanderia",
         "garaje",
         "comedor",
@@ -1738,6 +1780,7 @@ gabinetes: document.getElementById('gabinetes').value || "",
 ventanas: document.getElementById('ventanas').value || "",
 
 baseboards: document.getElementById('baseboards').value || "",
+perros: document.getElementById('perros').value || "No",
 lavanderia: document.getElementById('lavanderia').value || "",
 garaje: document.getElementById('garaje').value || "",
 comedor: document.getElementById('comedor').value || "",
@@ -1788,6 +1831,7 @@ notas_internas: document.getElementById('notas_internas').value || "",
     gabinetes: data.gabinetes || "",
     ventanas: data.ventanas || "",
     baseboards: data.baseboards || "",
+    perros: data.perros || "No",
     lavanderia: data.lavanderia || "",
 garaje: data.garaje || "",
 comedor: data.comedor || "",
@@ -1998,6 +2042,7 @@ const btnDeposito = s.deposito_pagado
     <p>🛏️ ${s.habitaciones || 0} Hab | 🚿 ${s.banos || 0} Baños | 🚽 ${s.medios_banos || 0} Medios baños | 🛋️ ${s.salas || 0} Salas</p>
     <p>🍳 Hornos: ${s.horno || 0} | 🧊 Nevera: ${s.nevera || "No"}</p>
     <p>🪟 Ventanas: ${s.ventanas || "No"} | 🚪 Gabinetes: ${s.gabinetes || "No"} | 🧹 Baseboards: ${s.baseboards || "No"}</p>
+    <p>🐶 Perros en la casa: ${s.perros || "No"}</p>
     <p>🧺 Lavandería: ${s.lavanderia || 0} | 🚗 Garaje: ${s.garage || s.garaje || 0}</p>
     <p>🍽️ Comedor: ${s.comedor || 0} | 🎮 Sala de juegos: ${s.sala_juegos || 0}</p> 
     <p>
@@ -2533,6 +2578,7 @@ document.getElementById('gabinetes').value = s.gabinetes || "";
 document.getElementById('ventanas').value = s.ventanas || "";
 
 document.getElementById('baseboards').value = s.baseboards || "";
+document.getElementById('perros').value = s.perros || "No";
 document.getElementById('lavanderia').value = s.lavanderia || "";
 document.getElementById('garaje').value = s.garaje || "";
 document.getElementById('comedor').value = s.comedor || "";
