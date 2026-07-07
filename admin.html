@@ -1372,53 +1372,61 @@ function obtenerMillasServicio(s) {
 
     return 0;
 }
-        function filtrarClientes() {
-            const q = document.getElementById('cliente').value.toLowerCase();
-            const l = document.getElementById('suggestions-clientes');
-            l.innerHTML = "";
-            if (q.length < 1) { l.style.display = "none"; return; }
+       function normalizarTexto(txt) {
+    return (txt || "")
+        .toString()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+}
 
-            const f = todosLosClientes.filter(c => (c.nombre || '').toLowerCase().includes(q));
-            f.forEach(c => {
-                const d = document.createElement('div');
-                d.className = 'suggestion-item';
-                d.innerText = c.nombre || c.id;
-                d.onclick = () => {
-                    document.getElementById('cliente').value = c.nombre || c.id || '';
-                    document.getElementById('direccion').value = c.direccion || '';
-                    document.getElementById('whatsapp').value = c.whatsapp || c.telefono || '';
-                    document.getElementById('email_cliente').value = c.email || '';
-                    document.getElementById('millas_servicio').value = c.millas_servicio || c.millas_total || '';
-                    document.getElementById('repetir').value = c.repetir || "ninguno";
-                    document.getElementById('pies_cuadrados').value = c.pies_cuadrados || "";
-                    document.getElementById('habitaciones').value = c.habitaciones || "";
-                    document.getElementById('banos').value = c.banos || "";
-                    document.getElementById('medios_banos').value = c.medios_banos || "";
-                    document.getElementById('salas').value = c.salas || "";
-                    document.getElementById('cocinas').value = c.cocinas || "";
-                    document.getElementById('oficinas').value = c.oficinas || "";
-                    document.getElementById('horno').value = c.horno || "";
-                    document.getElementById('nevera').value = c.nevera || "";
-                    document.getElementById('gabinetes').value = c.gabinetes || "";
-                    document.getElementById('ventanas').value = c.ventanas || "";
-                    document.getElementById('baseboards').value = c.baseboards || "";
-                    document.getElementById('perros').value = c.perros || "No";
-                    document.getElementById('lavanderia').value = c.lavanderia || "";
-                    document.getElementById('garaje').value = c.garaje || "";
-                    document.getElementById('comedor').value = c.comedor || "";
-                    document.getElementById('sala_juegos').value = c.sala_juegos || "";
-                    document.getElementById('alfombra_habitaciones').value = c.alfombra_habitaciones || "";
-                    document.getElementById('alfombra_pies_cuadrados').value = c.alfombra_pies_cuadrados || "";
-                    document.getElementById('alfombra_notas').value = c.alfombra_notas || "";
-                    document.getElementById('notas_internas').value = c.notas_internas || "";
-l.style.display = "none";
-calcularPrecioAutomatico();
-                };
-                l.appendChild(d);
-            });
-            l.style.display = f.length > 0 ? "block" : "none";
-        }
+function filtrarClientes() {
+    const q = normalizarTexto(document.getElementById("cliente").value);
+    const l = document.getElementById("suggestions-clientes");
 
+    l.innerHTML = "";
+
+    if (q.length < 1) {
+        l.style.display = "none";
+        return;
+    }
+
+    const f = todosLosClientes.filter(c => {
+        const texto = `
+            ${c.nombre || ""}
+            ${c.cliente || ""}
+            ${c.id || ""}
+            ${c.direccion || ""}
+            ${c.whatsapp || ""}
+            ${c.telefono || ""}
+            ${c.email || ""}
+            ${c.email_cliente || ""}
+        `;
+        return normalizarTexto(texto).includes(q);
+    });
+
+    f.forEach(c => {
+        const d = document.createElement("div");
+        d.className = "suggestion-item";
+        d.innerText = c.nombre || c.cliente || c.id;
+
+        d.onclick = () => {
+            document.getElementById("cliente").value = c.nombre || c.cliente || c.id || "";
+            document.getElementById("direccion").value = c.direccion || "";
+            document.getElementById("whatsapp").value = c.whatsapp || c.telefono || "";
+            document.getElementById("email_cliente").value = c.email || c.email_cliente || "";
+            document.getElementById("millas_servicio").value = c.millas_servicio || c.millas_total || "";
+
+            l.style.display = "none";
+            calcularPrecioAutomatico();
+        };
+
+        l.appendChild(d);
+    });
+
+    l.style.display = f.length > 0 ? "block" : "none";
+}
         function registrarStaff() {
             const id = document.getElementById('edit-staff-id').value;
             const n = document.getElementById('reg-nombre').value;
