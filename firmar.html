@@ -456,25 +456,12 @@ function mostrarVenmo() {
 
   const note = encodeURIComponent("Elite Cleaners " + notaTipo + " - " + nombreCliente);
 
-  const venmoApp =
-    "venmo://paycharge?txn=pay&recipients=" + VENMO_USERNAME +
-    "&amount=" + monto +
-    "&note=" + note;
-
   const venmoWeb =
     "https://venmo.com/" + VENMO_USERNAME +
     "?txn=pay&amount=" + monto +
     "&note=" + note;
 
-  const tiempoInicio = Date.now();
-
-  window.location.href = venmoApp;
-
-  setTimeout(() => {
-    if (Date.now() - tiempoInicio < 1800) {
-      window.location.href = venmoWeb;
-    }
-  }, 1500);
+  window.location.href = venmoWeb;
 }
   
 db.collection("servicios").doc(idServicio).onSnapshot((doc) => {
