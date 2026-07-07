@@ -1724,7 +1724,7 @@ setTimeout(activarCalculadoraAutomatica, 500);
         
         function asignarTrabajo() {
     const id = document.getElementById('edit-id').value;
-    const cli_nombre = document.getElementById('cliente').value;
+    const cli_nombre = document.getElementById('cliente').value.trim();
 
     if (!cli_nombre) return alert("Falta el nombre del cliente");
 
