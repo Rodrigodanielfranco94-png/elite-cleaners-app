@@ -462,7 +462,7 @@ function mostrarVenmo() {
     "?txn=pay&amount=" + monto +
     "&note=" + note;
 
-  window.open(venmoWeb, "_self");
+  window.location.href = venmoWeb;
 }
   
 db.collection("servicios").doc(idServicio).onSnapshot((doc) => {
