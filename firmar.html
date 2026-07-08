@@ -454,14 +454,15 @@ function mostrarVenmo() {
     notaTipo = "Balance";
   }
 
+  const username = "Elite-Cleaners-Company";
   const note = encodeURIComponent("Elite Cleaners " + notaTipo + " - " + nombreCliente);
 
   const venmoWeb =
-    "https://venmo.com/" + VENMO_USERNAME +
+    "https://venmo.com/" + username +
     "?txn=pay&amount=" + monto +
     "&note=" + note;
 
-  window.location.href = venmoWeb;
+  window.open(venmoWeb, "_self");
 }
   
 db.collection("servicios").doc(idServicio).onSnapshot((doc) => {
