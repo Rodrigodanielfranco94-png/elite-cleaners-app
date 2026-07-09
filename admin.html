@@ -2018,8 +2018,15 @@ const contenidoTrabajo = `
     ${clienteGuardado?.email || ""}
 `.toLowerCase();
 
-if (textoBusqueda && !contenidoTrabajo.includes(textoBusqueda)) return;
-                if((vistaActual === "pendiente" && s.estado !== "completado") || (vistaActual === "completado" && s.estado === "completado")) {
+if (textoBusqueda && !normalizarTexto(contenidoTrabajo).includes(normalizarTexto(textoBusqueda))) return;
+
+const hayBusqueda = textoBusqueda.length > 0;
+
+if (
+    hayBusqueda ||
+    (vistaActual === "pendiente" && s.estado !== "completado") ||
+    (vistaActual === "completado" && s.estado === "completado")
+) {
                     const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
                     const btnFirma = s.contrato_firmado
     ? `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">✍️ Ver Firma</button>`
