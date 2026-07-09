@@ -2018,7 +2018,13 @@ const contenidoTrabajo = `
     ${clienteGuardado?.email || ""}
 `.toLowerCase();
 
-if (textoBusqueda && !normalizarTexto(contenidoTrabajo).includes(normalizarTexto(textoBusqueda))) return;
+const palabrasBusqueda = normalizarTexto(textoBusqueda).split(" ").filter(Boolean);
+const contenidoNormalizado = normalizarTexto(contenidoTrabajo);
+
+if (
+    palabrasBusqueda.length > 0 &&
+    !palabrasBusqueda.every(palabra => contenidoNormalizado.includes(palabra))
+) return;
 
 const hayBusqueda = textoBusqueda.length > 0;
 
