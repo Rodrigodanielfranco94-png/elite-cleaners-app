@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#000000">
-  <title>Elite Staff v3</title>
+  <title>Elite Staff v3.1</title>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -369,9 +369,7 @@
     const SESSION_KEY = "elite_staff_session_v3";
     const ACTIVE_STATES = new Set([
       "no_iniciado",
-      "en_progreso",
-      "pendiente",
-      "en curso"
+      "en_progreso"
     ]);
 
     let currentUser = null;
@@ -387,6 +385,17 @@
     function safeText(value, fallback = "") {
       const text = String(value ?? "").trim();
       return text || fallback;
+    }
+
+    function hasRealTime(value) {
+      const time = String(value || "").trim().toLowerCase();
+
+      return (
+        time !== "" &&
+        time !== "--:--" &&
+        time !== "null" &&
+        time !== "undefined"
+      );
     }
 
     function setMessage(message = "", type = "info") {
@@ -503,9 +512,7 @@
 
       const possibleFields = [
         "empleado_email",
-        "empleado_email_2",
-        "staff_email",
-        "staff_email_2"
+        "empleado_email_2"
       ];
 
       let completedInitialLoads = 0;
@@ -624,10 +631,59 @@
       notesTitle.textContent = "Instrucciones:";
       notes.appendChild(notesTitle);
       notes.appendChild(document.createElement("br"));
+      const operationalNotes = [
+        safeText(job.notas_internas),
+        job.alfombra_notas ? "Alfombra: " + safeText(job.alfombra_notas) : ""
+      ].filter(Boolean).join("\n\n");
+
       notes.appendChild(document.createTextNode(
-        safeText(job.notas, "Sin notas especiales.")
+        operationalNotes || "Sin instrucciones especiales."
       ));
       card.appendChild(notes);
+
+      const detailItems = [
+        ["Pies cuadrados", job.pies_cuadrados],
+        ["Habitaciones", job.habitaciones],
+        ["Baños", job.banos],
+        ["Medios baños", job.medios_banos],
+        ["Salas", job.salas],
+        ["Cocinas", job.cocinas],
+        ["Oficinas", job.oficinas],
+        ["Lavandería", job.lavanderia],
+        ["Garaje", job.garaje],
+        ["Comedor", job.comedor],
+        ["Sala de juegos", job.sala_juegos],
+        ["Horno", job.horno],
+        ["Nevera", job.nevera],
+        ["Gabinetes", job.gabinetes],
+        ["Ventanas", job.ventanas],
+        ["Baseboards", job.baseboards],
+        ["Perros", job.perros],
+        ["Habitaciones con alfombra", job.alfombra_habitaciones],
+        ["Pies² de alfombra", job.alfombra_pies_cuadrados]
+      ].filter(([, value]) => {
+        const normalized = String(value ?? "").trim().toLowerCase();
+        return normalized !== "" && normalized !== "0" && normalized !== "no";
+      });
+
+      if (detailItems.length) {
+        const details = document.createElement("div");
+        details.className = "notas-box";
+
+        const detailsTitle = document.createElement("b");
+        detailsTitle.textContent = "Detalles del trabajo:";
+        details.appendChild(detailsTitle);
+        details.appendChild(document.createElement("br"));
+
+        detailItems.forEach(([label, value]) => {
+          const row = document.createElement("div");
+          row.textContent = `${label}: ${value}`;
+          row.style.marginTop = "6px";
+          details.appendChild(row);
+        });
+
+        card.appendChild(details);
+      }
 
       if (job.direccion) {
         const maps = document.createElement("a");
@@ -645,8 +701,8 @@
     }
 
     function appendStatusControls(card, job) {
-      const hasStart = Boolean(safeText(job.hora_inicio));
-      const hasEnd = Boolean(safeText(job.hora_fin));
+      const hasStart = hasRealTime(job.hora_inicio);
+      const hasEnd = hasRealTime(job.hora_fin);
       const state = normalize(job.estado);
 
       if (state === "completado" || hasEnd) {
