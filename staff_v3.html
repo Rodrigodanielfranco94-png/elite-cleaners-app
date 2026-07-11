@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#000000">
+  <title>Elite Staff v3</title>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+  <style>
+    :root {
+      --blue: #3b82f6;
+      --green: #22c55e;
+      --red: #ef4444;
+      --orange: #f59e0b;
+      --bg: #000;
+      --panel: #1c1c1e;
+      --panel-soft: #1a2638;
+      --border: #2c2c2e;
+      --muted: #a1a1aa;
+      --text: #fff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    button, input, a { font: inherit; }
+
+    .login-screen {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+    }
+
+    h1 {
+      font-style: italic;
+      font-weight: 900;
+      font-size: 35px;
+      text-transform: uppercase;
+      margin: 0;
+    }
+
+    h1 span { color: var(--blue); }
+
+    .tagline {
+      color: #8e8e93;
+      font-size: 12px;
+      letter-spacing: 2px;
+      margin-bottom: 40px;
+    }
+
+    .input-group {
+      width: 100%;
+      max-width: 380px;
+      margin-bottom: 18px;
+    }
+
+    .label {
+      display: block;
+      font-size: 10px;
+      color: var(--blue);
+      font-weight: 800;
+      text-transform: uppercase;
+      margin: 0 0 6px 10px;
+    }
+
+    input {
+      width: 100%;
+      padding: 18px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: white;
+      font-size: 16px;
+      outline: none;
+    }
+
+    input:focus { border-color: var(--blue); }
+
+    .btn {
+      width: 100%;
+      max-width: 380px;
+      padding: 18px;
+      border: none;
+      border-radius: 16px;
+      font-weight: 800;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .btn-primary { background: var(--blue); color: white; }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+
+    #main-app {
+      display: none;
+      padding: 20px;
+      padding-bottom: 90px;
+      max-width: 760px;
+      margin: auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .logout {
+      background: transparent;
+      border: 1px solid #3f3f46;
+      color: #f87171;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .user-info {
+      background: var(--panel-soft);
+      border: 1px solid var(--blue);
+      padding: 14px;
+      border-radius: 15px;
+      text-align: center;
+      margin-bottom: 18px;
+      font-weight: 800;
+      color: var(--blue);
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    .status-message {
+      display: none;
+      padding: 13px;
+      border-radius: 13px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .status-message.info { display: block; background: #172554; color: #bfdbfe; }
+    .status-message.error { display: block; background: #450a0a; color: #fecaca; }
+    .status-message.success { display: block; background: #052e16; color: #bbf7d0; }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 20px;
+      border-radius: 24px;
+      margin-bottom: 18px;
+    }
+
+    .header-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 15px;
+    }
+
+    .client-info { min-width: 0; }
+
+    .card h3 {
+      color: var(--blue);
+      margin: 0;
+      font-size: 21px;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+
+    .badge-tipo {
+      display: inline-block;
+      background: var(--blue);
+      color: white;
+      padding: 5px 9px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-top: 7px;
+    }
+
+    .date-time-box {
+      text-align: center;
+      background: var(--panel-soft);
+      padding: 10px;
+      border-radius: 14px;
+      border: 1px solid var(--blue);
+      min-width: 112px;
+      flex-shrink: 0;
+    }
+
+    .date-text {
+      color: white;
+      font-weight: 900;
+      font-size: 11px;
+      display: block;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(59,130,246,.25);
+      padding-bottom: 5px;
+      margin-bottom: 5px;
+    }
+
+    .time-text {
+      color: var(--blue);
+      font-weight: 900;
+      font-size: 17px;
+      display: block;
+    }
+
+    .info-row {
+      margin: 12px 0;
+      font-size: 14px;
+      color: #d1d5db;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .notas-box {
+      background: #09090b;
+      padding: 13px;
+      border-radius: 12px;
+      border: 1px dashed #444;
+      margin: 12px 0;
+      font-size: 13px;
+      color: var(--muted);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .notas-box b {
+      color: var(--blue);
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+
+    .btn-gps {
+      background: #27272a;
+      color: #93c5fd;
+      border: 1px solid var(--blue);
+      padding: 15px;
+      border-radius: 12px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      margin: 15px 0;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .btn-status {
+      width: 100%;
+      padding: 17px;
+      border-radius: 14px;
+      border: none;
+      font-weight: 900;
+      color: white;
+      text-transform: uppercase;
+      margin-top: 10px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .btn-start { background: var(--blue); }
+    .btn-finish { background: var(--green); }
+    .btn-done { background: #14532d; cursor: default; }
+
+    .time-label {
+      display: block;
+      font-size: 11px;
+      color: #86efac;
+      margin: 10px 0;
+      text-align: center;
+      font-weight: 800;
+      text-transform: uppercase;
+      background: rgba(34,197,94,.08);
+      padding: 9px;
+      border-radius: 10px;
+    }
+
+    .empty-state {
+      padding: 35px 18px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed #3f3f46;
+      border-radius: 20px;
+    }
+
+    .privacy-note {
+      color: #71717a;
+      font-size: 11px;
+      text-align: center;
+      margin: 28px auto 0;
+      max-width: 400px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 440px) {
+      .header-card { flex-direction: column; }
+      .date-time-box { width: 100%; }
+    }
+  </style>
+</head>
+
+<body>
+  <section id="login-view" class="login-screen">
+    <h1>ELITE <span>STAFF</span></h1>
+    <div class="tagline">ACCESO PERSONALIZADO</div>
+
+    <div class="input-group">
+      <label class="label" for="user-name">Nombre completo</label>
+      <input type="text" id="user-name" autocomplete="name" placeholder="Ej.: Nombre y Apellido">
+    </div>
+
+    <div class="input-group">
+      <label class="label" for="user-email">Correo electrónico</label>
+      <input type="email" id="user-email" autocomplete="email" placeholder="ejemplo@correo.com">
+    </div>
+
+    <button id="login-btn" class="btn btn-primary" type="button" onclick="login()">
+      Ingresar al panel
+    </button>
+
+    <p class="privacy-note">
+      Esta aplicación muestra únicamente la información operativa necesaria para realizar los trabajos asignados.
+      No muestra teléfono ni correo del cliente.
+    </p>
+  </section>
+
+  <main id="main-app">
+    <div class="topbar">
+      <h1 style="font-size:27px;">ELITE <span>STAFF</span></h1>
+      <button class="logout" type="button" onclick="logout()">SALIR</button>
+    </div>
+
+    <div id="welcome-msg" class="user-info"></div>
+    <div id="app-message" class="status-message"></div>
+    <div id="job-list"></div>
+  </main>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
+      authDomain: "elite-cleaners-app.firebaseapp.com",
+      projectId: "elite-cleaners-app",
+      storageBucket: "elite-cleaners-app.appspot.com",
+      messagingSenderId: "826642317319",
+      appId: "1:826642317319:web:cddce7904b590ae"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const SESSION_KEY = "elite_staff_session_v3";
+    const ACTIVE_STATES = new Set([
+      "no_iniciado",
+      "en_progreso",
+      "pendiente",
+      "en curso"
+    ]);
+
+    let currentUser = null;
+    let unsubscribeJobs = [];
+    let jobSources = new Map();
+
+    document.addEventListener("DOMContentLoaded", restoreSession);
+
+    function normalize(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function safeText(value, fallback = "") {
+      const text = String(value ?? "").trim();
+      return text || fallback;
+    }
+
+    function setMessage(message = "", type = "info") {
+      const box = document.getElementById("app-message");
+      box.className = "status-message";
+      box.textContent = "";
+
+      if (!message) return;
+
+      box.textContent = message;
+      box.classList.add(type);
+    }
+
+    function toggleLoginLoading(isLoading) {
+      const btn = document.getElementById("login-btn");
+      btn.disabled = isLoading;
+      btn.textContent = isLoading ? "VERIFICANDO..." : "INGRESAR AL PANEL";
+    }
+
+    async function login() {
+      const name = document.getElementById("user-name").value.trim();
+      const email = normalize(document.getElementById("user-email").value);
+
+      if (!name || !email) {
+        alert("Completa tu nombre y correo electrónico.");
+        return;
+      }
+
+      toggleLoginLoading(true);
+
+      try {
+        const snap = await db.collection("usuarios")
+          .where("email", "==", email)
+          .get();
+
+        if (snap.empty) {
+          alert("No se encontró un empleado activo con ese correo.");
+          return;
+        }
+
+        let matchedUser = null;
+
+        snap.forEach(doc => {
+          const data = doc.data();
+          const sameName = normalize(data.nombre) === normalize(name);
+          const isActive = data.activo !== false;
+
+          if (sameName && isActive) {
+            matchedUser = {
+              id: doc.id,
+              nombre: safeText(data.nombre, name),
+              email: normalize(data.email),
+              rol: safeText(data.rol, "staff")
+            };
+          }
+        });
+
+        if (!matchedUser) {
+          alert("El nombre y el correo no coinciden, o el empleado está desactivado.");
+          return;
+        }
+
+        currentUser = matchedUser;
+        localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+        openApp();
+      } catch (error) {
+        console.error(error);
+        alert("No se pudo iniciar sesión: " + error.message);
+      } finally {
+        toggleLoginLoading(false);
+      }
+    }
+
+    function restoreSession() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(SESSION_KEY));
+        if (saved && saved.email && saved.nombre) {
+          currentUser = saved;
+          openApp();
+        }
+      } catch (error) {
+        localStorage.removeItem(SESSION_KEY);
+      }
+    }
+
+    function openApp() {
+      document.getElementById("login-view").style.display = "none";
+      document.getElementById("main-app").style.display = "block";
+      document.getElementById("welcome-msg").textContent =
+        "BIENVENIDO/A: " + currentUser.nombre;
+
+      setMessage("Cargando trabajos asignados...", "info");
+      subscribeToJobs(currentUser.email);
+    }
+
+    function logout() {
+      unsubscribeAll();
+      localStorage.removeItem(SESSION_KEY);
+      currentUser = null;
+      jobSources.clear();
+      location.reload();
+    }
+
+    function unsubscribeAll() {
+      unsubscribeJobs.forEach(unsub => {
+        try { unsub(); } catch (_) {}
+      });
+      unsubscribeJobs = [];
+    }
+
+    function subscribeToJobs(email) {
+      unsubscribeAll();
+      jobSources.clear();
+
+      const possibleFields = [
+        "empleado_email",
+        "empleado_email_2",
+        "staff_email",
+        "staff_email_2"
+      ];
+
+      let completedInitialLoads = 0;
+
+      possibleFields.forEach(field => {
+        const unsubscribe = db.collection("servicios")
+          .where(field, "==", email)
+          .onSnapshot(snapshot => {
+            const sourceKey = field;
+            const docs = new Map();
+
+            snapshot.forEach(doc => {
+              docs.set(doc.id, { id: doc.id, ...doc.data() });
+            });
+
+            jobSources.set(sourceKey, docs);
+            completedInitialLoads += 1;
+            renderMergedJobs();
+
+            if (completedInitialLoads >= possibleFields.length) {
+              setMessage("", "info");
+            }
+          }, error => {
+            console.warn("No se pudo consultar el campo:", field, error);
+            completedInitialLoads += 1;
+
+            if (completedInitialLoads >= possibleFields.length) {
+              renderMergedJobs();
+            }
+          });
+
+        unsubscribeJobs.push(unsubscribe);
+      });
+    }
+
+    function getMergedJobs() {
+      const merged = new Map();
+
+      jobSources.forEach(sourceMap => {
+        sourceMap.forEach((job, id) => merged.set(id, job));
+      });
+
+      return Array.from(merged.values())
+        .filter(job => ACTIVE_STATES.has(normalize(job.estado)))
+        .sort(compareJobs);
+    }
+
+    function compareJobs(a, b) {
+      const first = `${safeText(a.fecha)} ${safeText(a.hora)}`;
+      const second = `${safeText(b.fecha)} ${safeText(b.hora)}`;
+      return first.localeCompare(second);
+    }
+
+    function renderMergedJobs() {
+      const list = document.getElementById("job-list");
+      const jobs = getMergedJobs();
+
+      list.innerHTML = "";
+
+      if (!jobs.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.textContent = "No tienes trabajos activos asignados.";
+        list.appendChild(empty);
+        setMessage("", "info");
+        return;
+      }
+
+      jobs.forEach(job => list.appendChild(createJobCard(job)));
+      setMessage("", "info");
+    }
+
+    function createJobCard(job) {
+      const card = document.createElement("article");
+      card.className = "card";
+
+      const header = document.createElement("div");
+      header.className = "header-card";
+
+      const clientInfo = document.createElement("div");
+      clientInfo.className = "client-info";
+
+      const title = document.createElement("h3");
+      title.textContent = safeText(job.cliente, "Servicio asignado");
+
+      const typeBadge = document.createElement("div");
+      typeBadge.className = "badge-tipo";
+      typeBadge.textContent = safeText(job.tipo, "ESTÁNDAR");
+
+      clientInfo.append(title, typeBadge);
+
+      const dateBox = document.createElement("div");
+      dateBox.className = "date-time-box";
+
+      const date = document.createElement("span");
+      date.className = "date-text";
+      date.textContent = safeText(job.fecha, "SIN FECHA");
+
+      const time = document.createElement("span");
+      time.className = "time-text";
+      time.textContent = safeText(job.hora, "SIN HORA");
+
+      dateBox.append(date, time);
+      header.append(clientInfo, dateBox);
+      card.appendChild(header);
+
+      const address = document.createElement("div");
+      address.className = "info-row";
+      address.textContent = "📍 " + safeText(job.direccion, "Dirección no disponible");
+      card.appendChild(address);
+
+      const notes = document.createElement("div");
+      notes.className = "notas-box";
+
+      const notesTitle = document.createElement("b");
+      notesTitle.textContent = "Instrucciones:";
+      notes.appendChild(notesTitle);
+      notes.appendChild(document.createElement("br"));
+      notes.appendChild(document.createTextNode(
+        safeText(job.notas, "Sin notas especiales.")
+      ));
+      card.appendChild(notes);
+
+      if (job.direccion) {
+        const maps = document.createElement("a");
+        maps.className = "btn-gps";
+        maps.href = "https://www.google.com/maps/search/?api=1&query=" +
+          encodeURIComponent(job.direccion);
+        maps.target = "_blank";
+        maps.rel = "noopener noreferrer";
+        maps.textContent = "📍 ABRIR EN MAPAS";
+        card.appendChild(maps);
+      }
+
+      appendStatusControls(card, job);
+      return card;
+    }
+
+    function appendStatusControls(card, job) {
+      const hasStart = Boolean(safeText(job.hora_inicio));
+      const hasEnd = Boolean(safeText(job.hora_fin));
+      const state = normalize(job.estado);
+
+      if (state === "completado" || hasEnd) {
+        const done = document.createElement("button");
+        done.className = "btn-status btn-done";
+        done.disabled = true;
+        done.textContent = "✓ TRABAJO COMPLETADO";
+        card.appendChild(done);
+        return;
+      }
+
+      if (!hasStart) {
+        const start = document.createElement("button");
+        start.className = "btn-status btn-start";
+        start.textContent = "▶ INICIAR TRABAJO";
+        start.addEventListener("click", () => registerTime(job.id, "inicio", start));
+        card.appendChild(start);
+        return;
+      }
+
+      const label = document.createElement("span");
+      label.className = "time-label";
+      label.textContent = "TRABAJO INICIADO: " + job.hora_inicio;
+
+      const finish = document.createElement("button");
+      finish.className = "btn-status btn-finish";
+      finish.textContent = "✓ TERMINAR TRABAJO";
+      finish.addEventListener("click", () => registerTime(job.id, "fin", finish));
+
+      card.append(label, finish);
+    }
+
+    async function registerTime(id, type, button) {
+      if (!currentUser) return;
+
+      if (type === "fin" && !confirm("¿Confirmar que el trabajo terminó?")) {
+        return;
+      }
+
+      button.disabled = true;
+      const originalText = button.textContent;
+      button.textContent = "GUARDANDO...";
+
+      try {
+        const position = await getPosition();
+        await saveTime(id, type, position);
+      } catch (gpsError) {
+        const continueWithoutGps = confirm(
+          "No se pudo obtener el GPS. ¿Deseas registrar la hora de todos modos?"
+        );
+
+        if (!continueWithoutGps) {
+          button.disabled = false;
+          button.textContent = originalText;
+          return;
+        }
+
+        try {
+          await saveTime(id, type, null);
+        } catch (error) {
+          console.error(error);
+          alert("No se pudo actualizar el trabajo: " + error.message);
+          button.disabled = false;
+          button.textContent = originalText;
+        }
+      }
+    }
+
+    function getPosition() {
+      return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject(new Error("GPS no disponible"));
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          reject,
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      });
+    }
+
+    async function saveTime(id, type, position) {
+      const now = new Date();
+      const timeText = now.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true
+      }).toLowerCase();
+
+      const coords = position ? {
+        lat: position.coords.latitude,
+        lon: position.coords.longitude,
+        accuracy: position.coords.accuracy
+      } : null;
+
+      const update = {
+        ultima_actualizacion: firebase.firestore.FieldValue.serverTimestamp(),
+        actualizado_por_staff_email: currentUser.email,
+        actualizado_por_staff_nombre: currentUser.nombre
+      };
+
+      if (type === "inicio") {
+        update.hora_inicio = timeText;
+        update.inicio_timestamp = firebase.firestore.FieldValue.serverTimestamp();
+        update.estado = "en_progreso";
+        update.gps_inicio = coords;
+      } else {
+        update.hora_fin = timeText;
+        update.fin_timestamp = firebase.firestore.FieldValue.serverTimestamp();
+        update.estado = "completado";
+        update.gps_fin = coords;
+      }
+
+      await db.collection("servicios").doc(id).update(update);
+    }
+  </script>
+</body>
+</html>
