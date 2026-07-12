@@ -714,7 +714,8 @@
         section.appendChild(empty);
         return section;
       }
-      jobs.forEach(job => section.appendChild(createJobCard(job)));
+      const isTodaySection = title.toLowerCase().includes("hoy");
+      jobs.forEach(job => section.appendChild(createJobCard(job, isTodaySection)));
       return section;
     }
 
@@ -746,7 +747,7 @@
       setMessage("", "info");
     }
 
-    function createJobCard(job) {
+    function createJobCard(job, isToday = false) {
       const card = document.createElement("article");
       card.className = "card";
 
@@ -889,79 +890,124 @@
         card.appendChild(maps);
       }
 
-      appendStatusControls(card, job);
+      appendWorkflowControls(card, job, isToday);
       return card;
     }
 
-    function appendStatusControls(card, job) {
-      const hasStart = hasRealTime(job.hora_inicio);
-      const hasEnd = hasRealTime(job.hora_fin);
-      const state = normalize(job.estado);
-
-      if (state === "completado" || hasEnd) {
-        const done = document.createElement("button");
-        done.className = "btn-status btn-done";
-        done.disabled = true;
-        done.textContent = "✓ TRABAJO COMPLETADO";
-        card.appendChild(done);
-        return;
-      }
-
-      if (!hasStart) {
-        const start = document.createElement("button");
-        start.className = "btn-status btn-start";
-        start.textContent = "▶ INICIAR TRABAJO";
-        start.addEventListener("click", () => registerTime(job.id, "inicio", start));
-        card.appendChild(start);
-        return;
-      }
-
-      const label = document.createElement("span");
-      label.className = "time-label";
-      label.textContent = "TRABAJO INICIADO: " + job.hora_inicio;
-
-      const finish = document.createElement("button");
-      finish.className = "btn-status btn-finish";
-      finish.textContent = "✓ TERMINAR TRABAJO";
-      finish.addEventListener("click", () => registerTime(job.id, "fin", finish));
-
-      card.append(label, finish);
+    function getWorkflowStage(job) {
+      const stage = normalize(job.etapa_staff);
+      if (normalize(job.estado) === "completado" || hasRealTime(job.hora_fin)) return "completado";
+      if (stage) return stage;
+      if (hasRealTime(job.hora_inicio)) return "limpiando";
+      return "asignado";
     }
 
-    async function registerTime(id, type, button) {
-      if (!currentUser) return;
+    function workflowInfo(stage) {
+      const map = {
+        asignado: { label: "Trabajo asignado", progress: 0 },
+        en_camino: { label: "En camino", progress: 20 },
+        llego: { label: "Llegó a la propiedad", progress: 35 },
+        limpiando: { label: "Limpieza en progreso", progress: 55 },
+        pausado: { label: "Trabajo pausado", progress: 55 },
+        completado: { label: "Trabajo completado", progress: 100 }
+      };
+      return map[stage] || map.asignado;
+    }
 
-      if (type === "fin" && !confirm("¿Confirmar que el trabajo terminó?")) {
+    function appendWorkflowControls(card, job, isToday) {
+      const stage = getWorkflowStage(job);
+      const info = workflowInfo(stage);
+      const box = document.createElement("div");
+      box.className = "workflow-box";
+
+      const status = document.createElement("div");
+      status.className = "workflow-status";
+      const statusLabel = document.createElement("span");
+      statusLabel.textContent = "Estado";
+      const statusValue = document.createElement("span");
+      statusValue.textContent = info.label;
+      status.append(statusLabel, statusValue);
+
+      const progress = document.createElement("div");
+      progress.className = "workflow-progress";
+      const fill = document.createElement("div");
+      fill.className = "workflow-progress-fill";
+      fill.style.width = info.progress + "%";
+      progress.appendChild(fill);
+      box.append(status, progress);
+
+      if (!isToday && stage !== "completado") {
+        const upcoming = document.createElement("button");
+        upcoming.className = "btn-status btn-upcoming";
+        upcoming.disabled = true;
+        upcoming.textContent = "Disponible el día del servicio";
+        box.appendChild(upcoming);
+        card.appendChild(box);
         return;
       }
 
-      button.disabled = true;
-      const originalText = button.textContent;
-      button.textContent = "GUARDANDO...";
+      const actions = document.createElement("div");
+      actions.className = "workflow-actions";
 
-      try {
-        const position = await getPosition();
-        await saveTime(id, type, position);
-      } catch (gpsError) {
-        const continueWithoutGps = confirm(
-          "No se pudo obtener el GPS. ¿Deseas registrar la hora de todos modos?"
-        );
-
-        if (!continueWithoutGps) {
-          button.disabled = false;
-          button.textContent = originalText;
-          return;
-        }
-
-        try {
-          await saveTime(id, type, null);
-        } catch (error) {
-          console.error(error);
-          alert("No se pudo actualizar el trabajo: " + error.message);
-          button.disabled = false;
-          button.textContent = originalText;
-        }
+      if (stage === "asignado") actions.appendChild(createWorkflowButton("🚗 EN CAMINO","btn-route",()=>updateWorkflow(job.id,"en_camino")));
+      if (stage === "en_camino") actions.appendChild(createWorkflowButton("📍 LLEGUÉ","btn-arrive",()=>updateWorkflow(job.id,"llego")));
+      if (stage === "llego") actions.appendChild(createWorkflowButton("🧹 INICIAR LIMPIEZA","btn-clean",()=>updateWorkflow(job.id,"limpiando")));
+      if (stage === "limpiando") {
+        actions.classList.add("two");
+        actions.appendChild(createWorkflowButton("☕ PAUSAR","btn-pause",()=>updateWorkflow(job.id,"pausado")));
+        actions.appendChild(createWorkflowButton("✅ TERMINAR","btn-finish",()=>updateWorkflow(job.id,"completado")));
       }
+      if (stage === "pausado") actions.appendChild(createWorkflowButton("▶ REANUDAR","btn-resume",()=>updateWorkflow(job.id,"limpiando")));
+      if (stage === "completado") {
+        const done=document.createElement("button");
+        done.className="btn-status btn-done"; done.disabled=true; done.textContent="✓ TRABAJO COMPLETADO"; actions.appendChild(done);
+      }
+      box.appendChild(actions);
+
+      const lines=[];
+      if(job.hora_en_camino) lines.push("🚗 En camino: "+job.hora_en_camino);
+      if(job.hora_llegada) lines.push("📍 Llegada: "+job.hora_llegada);
+      if(hasRealTime(job.hora_inicio)) lines.push("🧹 Inicio: "+job.hora_inicio);
+      if(job.hora_pausa) lines.push("☕ Última pausa: "+job.hora_pausa);
+      if(job.hora_reanudacion) lines.push("▶ Reanudación: "+job.hora_reanudacion);
+      if(hasRealTime(job.hora_fin)) lines.push("✅ Fin: "+job.hora_fin);
+      if(lines.length){ const times=document.createElement("div"); times.className="workflow-time"; times.textContent=lines.join(" · "); box.appendChild(times); }
+      card.appendChild(box);
+    }
+
+    function createWorkflowButton(label,className,handler){
+      const button=document.createElement("button");
+      button.className="btn-status "+className; button.textContent=label;
+      button.addEventListener("click",async()=>{
+        button.disabled=true; const original=button.textContent; button.textContent="GUARDANDO...";
+        try{ await handler(); }catch(error){ console.error(error); if(error.message!=="Actualización cancelada") alert("No se pudo actualizar el trabajo: "+error.message); button.disabled=false; button.textContent=original; }
+      });
+      return button;
+    }
+
+    async function updateWorkflow(id,nextStage){
+      if(!currentUser) return;
+      if(nextStage==="completado" && !confirm("¿Confirmas que el trabajo terminó?")) throw new Error("Actualización cancelada");
+      let position=null;
+      try{ position=await getPosition(); }
+      catch(_){ if(!confirm("No se pudo obtener el GPS. ¿Deseas continuar sin ubicación?")) throw new Error("Actualización cancelada"); }
+
+      const now=new Date();
+      const timeText=now.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",hour12:true}).toLowerCase();
+      const coords=position?{lat:position.coords.latitude,lon:position.coords.longitude,accuracy:position.coords.accuracy}:null;
+      const update={ etapa_staff:nextStage, ultima_actualizacion:firebase.firestore.FieldValue.serverTimestamp(), actualizado_por_staff_email:currentUser.email, actualizado_por_staff_nombre:currentUser.nombre };
+
+      if(nextStage==="en_camino") Object.assign(update,{estado:"no_iniciado",hora_en_camino:timeText,en_camino_timestamp:firebase.firestore.FieldValue.serverTimestamp(),gps_en_camino:coords});
+      if(nextStage==="llego") Object.assign(update,{estado:"no_iniciado",hora_llegada:timeText,llegada_timestamp:firebase.firestore.FieldValue.serverTimestamp(),gps_llegada:coords});
+      if(nextStage==="limpiando"){
+        update.estado="en_progreso";
+        const doc=await db.collection("servicios").doc(id).get(); const currentData=doc.exists?doc.data():{};
+        if(!hasRealTime(currentData.hora_inicio)) Object.assign(update,{hora_inicio:timeText,inicio_timestamp:firebase.firestore.FieldValue.serverTimestamp(),gps_inicio:coords});
+        else Object.assign(update,{hora_reanudacion:timeText,reanudacion_timestamp:firebase.firestore.FieldValue.serverTimestamp(),gps_reanudacion:coords});
+      }
+      if(nextStage==="pausado") Object.assign(update,{estado:"en_progreso",hora_pausa:timeText,pausa_timestamp:firebase.firestore.FieldValue.serverTimestamp(),gps_pausa:coords});
+      if(nextStage==="completado") Object.assign(update,{estado:"completado",hora_fin:timeText,fin_timestamp:firebase.firestore.FieldValue.serverTimestamp(),gps_fin:coords});
+      await db.collection("servicios").doc(id).update(update);
     }
 
     function getPosition() {
@@ -979,40 +1025,6 @@
       });
     }
 
-    async function saveTime(id, type, position) {
-      const now = new Date();
-      const timeText = now.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true
-      }).toLowerCase();
-
-      const coords = position ? {
-        lat: position.coords.latitude,
-        lon: position.coords.longitude,
-        accuracy: position.coords.accuracy
-      } : null;
-
-      const update = {
-        ultima_actualizacion: firebase.firestore.FieldValue.serverTimestamp(),
-        actualizado_por_staff_email: currentUser.email,
-        actualizado_por_staff_nombre: currentUser.nombre
-      };
-
-      if (type === "inicio") {
-        update.hora_inicio = timeText;
-        update.inicio_timestamp = firebase.firestore.FieldValue.serverTimestamp();
-        update.estado = "en_progreso";
-        update.gps_inicio = coords;
-      } else {
-        update.hora_fin = timeText;
-        update.fin_timestamp = firebase.firestore.FieldValue.serverTimestamp();
-        update.estado = "completado";
-        update.gps_fin = coords;
-      }
-
-      await db.collection("servicios").doc(id).update(update);
-    }
   </script>
 </body>
 </html>
