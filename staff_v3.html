@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#000000">
-  <title>Elite Staff v3.1</title>
+  <title>Elite Staff v3.2</title>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -310,6 +310,11 @@
       line-height: 1.5;
     }
 
+    .jobs-section { margin-bottom: 28px; }
+    .jobs-section-title { margin: 0 0 12px; color: #fff; font-size: 17px; font-weight: 900; text-transform: uppercase; letter-spacing: .3px; }
+    .jobs-section-title span:first-child { color: var(--blue); }
+    .jobs-count { display:inline-flex; align-items:center; justify-content:center; min-width:26px; height:26px; margin-left:7px; padding:0 8px; border-radius:999px; background:var(--panel-soft); border:1px solid var(--blue); color:#93c5fd; font-size:12px; vertical-align:middle; }
+
     @media (max-width: 440px) {
       .header-card { flex-direction: column; }
       .date-time-box { width: 100%; }
@@ -560,28 +565,80 @@
         .sort(compareJobs);
     }
 
+    function parseJobDate(dateText) {
+      const match = String(dateText || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!match) return null;
+      const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+      date.setHours(0, 0, 0, 0);
+      return date;
+    }
+
+    function startOfToday() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return today;
+    }
+
+    function addDays(date, days) {
+      const result = new Date(date);
+      result.setDate(result.getDate() + days);
+      return result;
+    }
+
     function compareJobs(a, b) {
-      const first = `${safeText(a.fecha)} ${safeText(a.hora)}`;
-      const second = `${safeText(b.fecha)} ${safeText(b.hora)}`;
-      return first.localeCompare(second);
+      const firstDate = parseJobDate(a.fecha);
+      const secondDate = parseJobDate(b.fecha);
+      if (firstDate && secondDate && firstDate.getTime() !== secondDate.getTime()) return firstDate - secondDate;
+      return safeText(a.hora).localeCompare(safeText(b.hora));
+    }
+
+    function createJobsSection(title, jobs, emptyText) {
+      const section = document.createElement("section");
+      section.className = "jobs-section";
+      const heading = document.createElement("h2");
+      heading.className = "jobs-section-title";
+      const label = document.createElement("span");
+      label.textContent = title;
+      const count = document.createElement("span");
+      count.className = "jobs-count";
+      count.textContent = jobs.length;
+      heading.append(label, count);
+      section.appendChild(heading);
+      if (!jobs.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.textContent = emptyText;
+        section.appendChild(empty);
+        return section;
+      }
+      jobs.forEach(job => section.appendChild(createJobCard(job)));
+      return section;
     }
 
     function renderMergedJobs() {
       const list = document.getElementById("job-list");
       const jobs = getMergedJobs();
+      const today = startOfToday();
+      const tomorrow = addDays(today, 1);
+      const dayEight = addDays(today, 8);
+      const todayJobs = [];
+      const nextSevenDaysJobs = [];
 
+      jobs.forEach(job => {
+        const jobDate = parseJobDate(job.fecha);
+        if (!jobDate) return;
+        if (jobDate.getTime() === today.getTime()) {
+          todayJobs.push(job);
+        } else if (jobDate >= tomorrow && jobDate < dayEight) {
+          nextSevenDaysJobs.push(job);
+        }
+      });
+
+      todayJobs.sort(compareJobs);
+      nextSevenDaysJobs.sort(compareJobs);
       list.innerHTML = "";
-
-      if (!jobs.length) {
-        const empty = document.createElement("div");
-        empty.className = "empty-state";
-        empty.textContent = "No tienes trabajos activos asignados.";
-        list.appendChild(empty);
-        setMessage("", "info");
-        return;
-      }
-
-      jobs.forEach(job => list.appendChild(createJobCard(job)));
+      list.appendChild(createJobsSection("Tus trabajos de hoy", todayJobs, "No tienes trabajos asignados para hoy."));
+      list.appendChild(createJobsSection("Próximos 7 días", nextSevenDaysJobs, "No tienes trabajos asignados durante los próximos 7 días."));
       setMessage("", "info");
     }
 
