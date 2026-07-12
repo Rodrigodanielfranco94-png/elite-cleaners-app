@@ -412,6 +412,22 @@
       line-height: 1.45;
     }
 
+
+    .assistant-box{margin-top:14px;padding:14px;border-radius:16px;background:linear-gradient(145deg,#172554,#111827);border:1px solid #3b82f6}
+    .assistant-title{color:#93c5fd;font-size:12px;font-weight:900;text-transform:uppercase;margin-bottom:8px}
+    .assistant-text{color:#e5e7eb;font-size:13px;line-height:1.5}
+    .final-inspection-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.92);z-index:999999}
+    .final-inspection-modal{width:100%;max-width:460px;max-height:90vh;overflow-y:auto;background:#111827;border:1px solid #3b82f6;border-radius:22px;padding:18px}
+    .final-inspection-modal h2{margin:0 0 6px;color:#fff;font-size:22px;text-transform:uppercase}
+    .final-inspection-modal p{margin:0 0 16px;color:#9ca3af;font-size:12px;line-height:1.45}
+    .inspection-item{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid rgba(148,163,184,.14)}
+    .inspection-item input{width:21px;height:21px;margin:0;accent-color:#22c55e;flex-shrink:0}
+    .inspection-item label{color:#e5e7eb;font-size:13px;line-height:1.35;cursor:pointer}
+    .inspection-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+    .inspection-actions button{padding:14px;border:none;border-radius:13px;font-weight:900;cursor:pointer;text-transform:uppercase}
+    .inspection-cancel{background:#27272a;color:#d1d5db}
+    .inspection-finish{background:#22c55e;color:#fff}
+
     @media (max-width: 440px) {
       .dashboard-grid { grid-template-columns:1fr 1fr; gap:9px; }
       .dashboard-card { padding:13px; min-height:108px; }
@@ -970,11 +986,121 @@
         card.appendChild(maps);
       }
 
+      appendWorkAssistant(card, job, isToday);
       appendChecklist(card, job, isToday);
       appendWorkflowControls(card, job, isToday);
       return card;
     }
 
+
+
+    let pendingFinalInspection = null;
+
+    function getAssistantMessage(job, isToday) {
+      const stage = getWorkflowStage(job);
+      const type = normalize(job.tipo).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+      if (!isToday) return "Este trabajo está programado para una fecha futura. Revisa la dirección, la hora y las instrucciones con anticipación.";
+      if (stage === "asignado") return "Cuando estés listo para salir, presiona “En camino”. La aplicación registrará la hora y la ubicación.";
+      if (stage === "en_camino") return "Dirígete a la propiedad. Cuando llegues, presiona “Llegué” antes de comenzar.";
+      if (stage === "llego") return "Haz una revisión rápida de la propiedad y luego presiona “Iniciar limpieza”. El checklist ya está disponible.";
+      if (stage === "pausado") return "El trabajo está pausado. Cuando regreses, presiona “Reanudar”.";
+      if (stage === "completado") return "Servicio completado. Verifica que toda la información haya quedado registrada.";
+
+      if (type.includes("post-construccion")) return "Concéntrate en polvo fino, marcos, bordes, repisas y superficies horizontales. Completa el checklist antes de finalizar.";
+      if (type.includes("move-in") || type.includes("move-out")) return "Revisa closets, gabinetes, esquinas y áreas vacías. Completa el checklist y realiza la inspección final.";
+      if (type.includes("profunda") || type.includes("primera")) return "Presta atención a detalles, esquinas, baseboards y extras incluidos. Marca el checklist a medida que avances.";
+      return "Completa el checklist a medida que avances. Antes de salir, realiza la inspección final.";
+    }
+
+    function appendWorkAssistant(card, job, isToday) {
+      const box = document.createElement("div");
+      box.className = "assistant-box";
+      const title = document.createElement("div");
+      title.className = "assistant-title";
+      title.textContent = "Asistente de trabajo";
+      const message = document.createElement("div");
+      message.className = "assistant-text";
+      message.textContent = getAssistantMessage(job, isToday);
+      box.append(title, message);
+      card.appendChild(box);
+    }
+
+    function getInspectionItems(job) {
+      const items = [
+        "Checklist completo",
+        "Herramientas recogidas",
+        "Productos guardados",
+        "Basura retirada",
+        "Puertas cerradas",
+        "Luces apagadas",
+        "Objetos personales revisados"
+      ];
+      if (["si","sí"].includes(normalize(job.perros))) items.push("Puertas y accesos verificados por presencia de mascotas");
+      if (normalize(job.tipo).includes("move")) items.push("Closets, gabinetes y áreas vacías revisados");
+      if (normalize(job.tipo).includes("post")) items.push("Segunda revisión de polvo fino completada");
+      return items;
+    }
+
+    function openFinalInspection(jobId) {
+      const job = getMergedJobs().find(item => item.id === jobId);
+      if (!job) return alert("No se encontró el trabajo.");
+
+      pendingFinalInspection = { jobId, job };
+      const container = document.getElementById("inspection-items");
+      container.innerHTML = "";
+
+      getInspectionItems(job).forEach((item, index) => {
+        const row = document.createElement("div");
+        row.className = "inspection-item";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = "inspection-" + index;
+        const label = document.createElement("label");
+        label.htmlFor = checkbox.id;
+        label.textContent = item;
+        row.append(checkbox, label);
+        container.appendChild(row);
+      });
+
+      document.getElementById("final-inspection-overlay").style.display = "flex";
+    }
+
+    function closeFinalInspection() {
+      document.getElementById("final-inspection-overlay").style.display = "none";
+      pendingFinalInspection = null;
+    }
+
+    async function confirmFinalInspection() {
+      if (!pendingFinalInspection) return;
+
+      const checkboxes = Array.from(document.querySelectorAll("#inspection-items input[type='checkbox']"));
+      if (!checkboxes.every(input => input.checked)) {
+        alert("Debes confirmar todos los puntos de la inspección final.");
+        return;
+      }
+
+      const button = document.getElementById("inspection-finish-btn");
+      button.disabled = true;
+      button.textContent = "FINALIZANDO...";
+
+      try {
+        await updateWorkflow(pendingFinalInspection.jobId, "completado", true);
+        await db.collection("servicios").doc(pendingFinalInspection.jobId).update({
+          inspeccion_final_completada: true,
+          inspeccion_final_timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          inspeccion_final_por: currentUser.email
+        });
+        document.getElementById("final-inspection-overlay").style.display = "none";
+        pendingFinalInspection = null;
+      } catch (error) {
+        console.error(error);
+        alert("No se pudo finalizar el trabajo: " + error.message);
+      } finally {
+        button.disabled = false;
+        button.textContent = "FINALIZAR";
+      }
+    }
 
     function getChecklistTemplate(job) {
       const type = normalize(job.tipo)
@@ -1266,7 +1392,11 @@
       if (stage === "limpiando") {
         actions.classList.add("two");
         actions.appendChild(createWorkflowButton("☕ PAUSAR","btn-pause",()=>updateWorkflow(job.id,"pausado")));
-        actions.appendChild(createWorkflowButton("✅ TERMINAR","btn-finish",()=>updateWorkflow(job.id,"completado")));
+        const finishButton = document.createElement("button");
+        finishButton.className = "btn-status btn-finish";
+        finishButton.textContent = "✅ TERMINAR";
+        finishButton.addEventListener("click", () => openFinalInspection(job.id));
+        actions.appendChild(finishButton);
       }
       if (stage === "pausado") actions.appendChild(createWorkflowButton("▶ REANUDAR","btn-resume",()=>updateWorkflow(job.id,"limpiando")));
       if (stage === "completado") {
@@ -1296,7 +1426,7 @@
       return button;
     }
 
-    async function updateWorkflow(id,nextStage){
+    async function updateWorkflow(id,nextStage,inspectionConfirmed=false){
       if(!currentUser) return;
       if(nextStage==="completado"){
         const docBeforeFinish = await db.collection("servicios").doc(id).get();
@@ -1316,7 +1446,7 @@
           throw new Error("Checklist incompleto");
         }
 
-        if(!confirm("¿Confirmas que el trabajo terminó?")){
+        if(!inspectionConfirmed && !confirm("¿Confirmas que el trabajo terminó?")){
           throw new Error("Actualización cancelada");
         }
       }
@@ -1358,5 +1488,18 @@
     }
 
   </script>
+
+  <div id="final-inspection-overlay" class="final-inspection-overlay">
+    <div class="final-inspection-modal">
+      <h2>Inspección final</h2>
+      <p>Confirma cada punto antes de finalizar el servicio.</p>
+      <div id="inspection-items"></div>
+      <div class="inspection-actions">
+        <button class="inspection-cancel" type="button" onclick="closeFinalInspection()">Cancelar</button>
+        <button id="inspection-finish-btn" class="inspection-finish" type="button" onclick="confirmFinalInspection()">Finalizar</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
