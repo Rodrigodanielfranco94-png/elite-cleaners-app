@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#000000">
-  <title>Elite Staff v3.2</title>
+  <title>Elite Staff v4.0 - Dashboard</title>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -315,7 +315,27 @@
     .jobs-section-title span:first-child { color: var(--blue); }
     .jobs-count { display:inline-flex; align-items:center; justify-content:center; min-width:26px; height:26px; margin-left:7px; padding:0 8px; border-radius:999px; background:var(--panel-soft); border:1px solid var(--blue); color:#93c5fd; font-size:12px; vertical-align:middle; }
 
+    .dashboard { margin-bottom: 26px; }
+    .dashboard-hero { background:linear-gradient(145deg,#172554,#0f172a); border:1px solid var(--blue); border-radius:24px; padding:20px; margin-bottom:14px; }
+    .dashboard-greeting { font-size:23px; font-weight:900; margin:0 0 5px; }
+    .dashboard-date { color:#93c5fd; font-size:13px; text-transform:capitalize; }
+    .dashboard-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+    .dashboard-card { background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:16px; min-height:118px; }
+    .dashboard-card.highlight { border-color:var(--blue); background:var(--panel-soft); }
+    .dashboard-icon { font-size:25px; margin-bottom:8px; }
+    .dashboard-label { color:var(--muted); text-transform:uppercase; font-size:9px; font-weight:900; letter-spacing:.7px; }
+    .dashboard-value { color:#fff; font-size:24px; font-weight:900; margin-top:5px; overflow-wrap:anywhere; }
+    .dashboard-subvalue { color:#d1d5db; font-size:12px; margin-top:4px; line-height:1.35; overflow-wrap:anywhere; }
+    .operational-alerts { display:flex; flex-wrap:wrap; gap:7px; margin:12px 0; }
+    .operational-alert { border-radius:999px; padding:7px 10px; font-size:10px; font-weight:900; text-transform:uppercase; }
+    .operational-alert.warning { background:#451a03; color:#fde68a; border:1px solid #f59e0b; }
+    .operational-alert.info { background:#172554; color:#bfdbfe; border:1px solid #3b82f6; }
+    .operational-alert.task { background:#052e16; color:#bbf7d0; border:1px solid #22c55e; }
+
     @media (max-width: 440px) {
+      .dashboard-grid { grid-template-columns:1fr 1fr; gap:9px; }
+      .dashboard-card { padding:13px; min-height:108px; }
+      .dashboard-value { font-size:20px; }
       .header-card { flex-direction: column; }
       .date-time-box { width: 100%; }
     }
@@ -355,6 +375,44 @@
 
     <div id="welcome-msg" class="user-info"></div>
     <div id="app-message" class="status-message"></div>
+
+    <section id="staff-dashboard" class="dashboard">
+      <div class="dashboard-hero">
+        <div id="dashboard-greeting" class="dashboard-greeting">Buenos días</div>
+        <div id="dashboard-date" class="dashboard-date"></div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="dashboard-card highlight">
+          <div class="dashboard-icon">🏠</div>
+          <div class="dashboard-label">Trabajos de hoy</div>
+          <div id="dashboard-today-count" class="dashboard-value">0</div>
+          <div class="dashboard-subvalue">Servicios asignados</div>
+        </div>
+
+        <div class="dashboard-card">
+          <div class="dashboard-icon">⏰</div>
+          <div class="dashboard-label">Próximo servicio</div>
+          <div id="dashboard-next-time" class="dashboard-value">—</div>
+          <div id="dashboard-next-client" class="dashboard-subvalue">Sin servicios pendientes</div>
+        </div>
+
+        <div class="dashboard-card">
+          <div class="dashboard-icon">📍</div>
+          <div class="dashboard-label">Próxima ubicación</div>
+          <div id="dashboard-next-location" class="dashboard-value" style="font-size:17px;">—</div>
+          <div class="dashboard-subvalue">Dirección del siguiente trabajo</div>
+        </div>
+
+        <div class="dashboard-card">
+          <div class="dashboard-icon">🟢</div>
+          <div class="dashboard-label">Estado</div>
+          <div id="dashboard-status" class="dashboard-value" style="font-size:19px;">Disponible</div>
+          <div id="dashboard-status-detail" class="dashboard-subvalue">Sin trabajo activo</div>
+        </div>
+      </div>
+    </section>
+
     <div id="job-list"></div>
   </main>
 
@@ -491,6 +549,7 @@
       document.getElementById("main-app").style.display = "block";
       document.getElementById("welcome-msg").textContent =
         "BIENVENIDO/A: " + currentUser.nombre;
+      updateDashboardDate();
 
       setMessage("Cargando trabajos asignados...", "info");
       subscribeToJobs(currentUser.email);
@@ -565,6 +624,50 @@
         .sort(compareJobs);
     }
 
+    function getGreeting() {
+      const hour = new Date().getHours();
+      if (hour < 12) return "Buenos días";
+      if (hour < 19) return "Buenas tardes";
+      return "Buenas noches";
+    }
+
+    function updateDashboardDate() {
+      const greeting = document.getElementById("dashboard-greeting");
+      const date = document.getElementById("dashboard-date");
+      if (greeting) greeting.textContent = `${getGreeting()}, ${currentUser?.nombre || ""} 👋`;
+      if (date) {
+        date.textContent = new Intl.DateTimeFormat("es-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        }).format(new Date());
+      }
+    }
+
+    function updateDashboard(todayJobs) {
+      const activeJob = todayJobs.find(job => normalize(job.estado) === "en_progreso");
+      const nextJob = activeJob || todayJobs.find(job => normalize(job.estado) === "no_iniciado") || null;
+
+      document.getElementById("dashboard-today-count").textContent = todayJobs.length;
+      document.getElementById("dashboard-next-time").textContent = nextJob ? safeText(nextJob.hora, "Sin hora") : "—";
+      document.getElementById("dashboard-next-client").textContent = nextJob ? safeText(nextJob.cliente, "Servicio asignado") : "Sin servicios pendientes";
+      document.getElementById("dashboard-next-location").textContent = nextJob ? safeText(nextJob.direccion, "Sin dirección") : "—";
+
+      const status = document.getElementById("dashboard-status");
+      const detail = document.getElementById("dashboard-status-detail");
+      if (activeJob) {
+        status.textContent = "En progreso";
+        detail.textContent = safeText(activeJob.cliente, "Trabajo activo");
+      } else if (todayJobs.length) {
+        status.textContent = "Disponible";
+        detail.textContent = "Próximo trabajo pendiente";
+      } else {
+        status.textContent = "Sin asignación";
+        detail.textContent = "No tienes trabajos hoy";
+      }
+    }
+
     function parseJobDate(dateText) {
       const match = String(dateText || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
       if (!match) return null;
@@ -636,6 +739,7 @@
 
       todayJobs.sort(compareJobs);
       nextSevenDaysJobs.sort(compareJobs);
+      updateDashboard(todayJobs);
       list.innerHTML = "";
       list.appendChild(createJobsSection("Tus trabajos de hoy", todayJobs, "No tienes trabajos asignados para hoy."));
       list.appendChild(createJobsSection("Próximos 7 días", nextSevenDaysJobs, "No tienes trabajos asignados durante los próximos 7 días."));
@@ -697,6 +801,38 @@
         operationalNotes || "Sin instrucciones especiales."
       ));
       card.appendChild(notes);
+
+      const alerts = [];
+      if (normalize(job.perros) === "sí" || normalize(job.perros) === "si") {
+        alerts.push({ text: "🐶 Hay perros en la propiedad", type: "warning" });
+      }
+      if (Number(job.alfombra_habitaciones || 0) > 0) {
+        alerts.push({ text: `🧹 ${job.alfombra_habitaciones} habitación(es) con alfombra`, type: "info" });
+      }
+      if (safeText(job.nevera) && normalize(job.nevera) !== "no") {
+        alerts.push({ text: `🧊 Nevera: ${job.nevera}`, type: "task" });
+      }
+      if (safeText(job.gabinetes) && normalize(job.gabinetes) !== "no") {
+        alerts.push({ text: `🚪 Gabinetes: ${job.gabinetes}`, type: "task" });
+      }
+      if (safeText(job.ventanas) && normalize(job.ventanas) !== "no") {
+        alerts.push({ text: `🪟 Ventanas: ${job.ventanas}`, type: "task" });
+      }
+      if (normalize(job.baseboards) === "sí" || normalize(job.baseboards) === "si") {
+        alerts.push({ text: "🧽 Limpiar baseboards", type: "task" });
+      }
+
+      if (alerts.length) {
+        const alertsBox = document.createElement("div");
+        alertsBox.className = "operational-alerts";
+        alerts.forEach(alert => {
+          const chip = document.createElement("span");
+          chip.className = `operational-alert ${alert.type}`;
+          chip.textContent = alert.text;
+          alertsBox.appendChild(chip);
+        });
+        card.appendChild(alertsBox);
+      }
 
       const detailItems = [
         ["Pies cuadrados", job.pies_cuadrados],
