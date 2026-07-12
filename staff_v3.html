@@ -332,6 +332,86 @@
     .operational-alert.info { background:#172554; color:#bfdbfe; border:1px solid #3b82f6; }
     .operational-alert.task { background:#052e16; color:#bbf7d0; border:1px solid #22c55e; }
 
+
+    .checklist-box {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 16px;
+      background: #0f172a;
+      border: 1px solid #334155;
+    }
+
+    .checklist-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .checklist-title {
+      color: #93c5fd;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .checklist-count {
+      color: #d1d5db;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .checklist-progress {
+      height: 8px;
+      background: #1f2937;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .checklist-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg,#3b82f6,#22c55e);
+      transition: width .2s ease;
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(148,163,184,.14);
+    }
+
+    .checklist-item:last-child { border-bottom: none; }
+
+    .checklist-item input {
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      flex-shrink: 0;
+      accent-color: #22c55e;
+    }
+
+    .checklist-item label {
+      color: #e5e7eb;
+      font-size: 13px;
+      line-height: 1.35;
+      cursor: pointer;
+    }
+
+    .checklist-locked {
+      opacity: .55;
+    }
+
+    .checklist-note {
+      margin-top: 10px;
+      color: #94a3b8;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
     @media (max-width: 440px) {
       .dashboard-grid { grid-template-columns:1fr 1fr; gap:9px; }
       .dashboard-card { padding:13px; min-height:108px; }
@@ -890,8 +970,239 @@
         card.appendChild(maps);
       }
 
+      appendChecklist(card, job, isToday);
       appendWorkflowControls(card, job, isToday);
       return card;
+    }
+
+
+    function getChecklistTemplate(job) {
+      const type = normalize(job.tipo)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+      const common = [
+        "Revisar y recoger basura",
+        "Aspirar o barrer pisos",
+        "Trapear pisos",
+        "Realizar revisión final"
+      ];
+
+      const standard = [
+        "Limpiar cocina y superficies",
+        "Limpiar baños",
+        "Limpiar habitaciones",
+        "Limpiar sala y áreas comunes",
+        "Quitar polvo de superficies accesibles",
+        ...common
+      ];
+
+      const deep = [
+        "Limpiar cocina en detalle",
+        "Limpiar baños en detalle",
+        "Limpiar habitaciones",
+        "Limpiar sala y áreas comunes",
+        "Quitar polvo de superficies, esquinas y bordes",
+        "Revisar baseboards si están incluidos",
+        "Revisar gabinetes si están incluidos",
+        "Revisar ventanas si están incluidas",
+        "Revisar horno si está incluido",
+        "Revisar nevera si está incluida",
+        ...common
+      ];
+
+      const move = [
+        "Revisar habitaciones y closets",
+        "Limpiar cocina completa",
+        "Limpiar baños completos",
+        "Limpiar gabinetes según lo solicitado",
+        "Limpiar electrodomésticos incluidos",
+        "Limpiar ventanas y marcos según lo solicitado",
+        "Limpiar baseboards",
+        "Aspirar closets, esquinas y áreas vacías",
+        ...common
+      ];
+
+      const postConstruction = [
+        "Retirar polvo fino de superficies horizontales",
+        "Limpiar marcos y bordes de ventanas",
+        "Limpiar baseboards y esquinas",
+        "Limpiar gabinetes y closets",
+        "Limpiar cocina",
+        "Limpiar baños",
+        "Aspirar cuidadosamente toda la propiedad",
+        "Trapear y revisar residuos de construcción",
+        "Realizar una segunda revisión de polvo fino",
+        ...common
+      ];
+
+      let items = standard;
+
+      if (type.includes("profunda") || type.includes("primera")) {
+        items = deep;
+      } else if (type.includes("move-in") || type.includes("move-out")) {
+        items = move;
+      } else if (type.includes("post-construccion")) {
+        items = postConstruction;
+      }
+
+      const extras = [];
+
+      if (["si", "sí"].includes(normalize(job.perros))) {
+        extras.push("Verificar puertas y accesos por presencia de mascotas");
+      }
+
+      if (String(job.horno || "").trim() && String(job.horno) !== "0") {
+        extras.push("Completar limpieza de horno");
+      }
+
+      if (String(job.nevera || "").trim() &&
+          normalize(job.nevera) !== "no") {
+        extras.push("Completar limpieza de nevera: " + job.nevera);
+      }
+
+      if (String(job.gabinetes || "").trim() &&
+          normalize(job.gabinetes) !== "no") {
+        extras.push("Completar gabinetes: " + job.gabinetes);
+      }
+
+      if (String(job.ventanas || "").trim() &&
+          normalize(job.ventanas) !== "no") {
+        extras.push("Completar ventanas: " + job.ventanas);
+      }
+
+      if (String(job.baseboards || "").trim() &&
+          normalize(job.baseboards) !== "no") {
+        extras.push("Completar limpieza de baseboards");
+      }
+
+      if (Number(job.alfombra_habitaciones || 0) > 0) {
+        extras.push(
+          "Completar lavado de alfombra en " +
+          job.alfombra_habitaciones +
+          " habitación(es)"
+        );
+      }
+
+      return Array.from(new Set([...items, ...extras]));
+    }
+
+    function getChecklistState(job, items) {
+      const saved = job.checklist_staff || {};
+      const state = {};
+
+      items.forEach((_, index) => {
+        state["item_" + index] = saved["item_" + index] === true;
+      });
+
+      return state;
+    }
+
+    function appendChecklist(card, job, isToday) {
+      const stage = getWorkflowStage(job);
+      const items = getChecklistTemplate(job);
+      const state = getChecklistState(job, items);
+
+      const box = document.createElement("div");
+      box.className = "checklist-box";
+
+      const canEdit = isToday &&
+        ["llego", "limpiando", "pausado"].includes(stage);
+
+      if (!canEdit) box.classList.add("checklist-locked");
+
+      const header = document.createElement("div");
+      header.className = "checklist-header";
+
+      const title = document.createElement("div");
+      title.className = "checklist-title";
+      title.textContent = "Checklist del servicio";
+
+      const count = document.createElement("div");
+      count.className = "checklist-count";
+
+      const progress = document.createElement("div");
+      progress.className = "checklist-progress";
+
+      const fill = document.createElement("div");
+      fill.className = "checklist-progress-fill";
+      progress.appendChild(fill);
+
+      const updateVisual = () => {
+        const completed = Object.values(state).filter(Boolean).length;
+        count.textContent = completed + "/" + items.length;
+        fill.style.width = (
+          items.length ? (completed / items.length) * 100 : 0
+        ) + "%";
+      };
+
+      header.append(title, count);
+      box.append(header, progress);
+
+      items.forEach((item, index) => {
+        const key = "item_" + index;
+        const row = document.createElement("div");
+        row.className = "checklist-item";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = "check-" + job.id + "-" + index;
+        checkbox.checked = state[key] === true;
+        checkbox.disabled = !canEdit;
+
+        const label = document.createElement("label");
+        label.htmlFor = checkbox.id;
+        label.textContent = item;
+
+        checkbox.addEventListener("change", async () => {
+          const previous = state[key];
+          state[key] = checkbox.checked;
+          updateVisual();
+          checkbox.disabled = true;
+
+          try {
+            await db.collection("servicios").doc(job.id).update({
+              checklist_staff: state,
+              checklist_total: items.length,
+              checklist_completado: Object.values(state).filter(Boolean).length,
+              checklist_actualizado:
+                firebase.firestore.FieldValue.serverTimestamp(),
+              checklist_actualizado_por: currentUser.email
+            });
+          } catch (error) {
+            state[key] = previous;
+            checkbox.checked = previous;
+            updateVisual();
+            alert("No se pudo guardar el checklist: " + error.message);
+          } finally {
+            checkbox.disabled = !canEdit;
+          }
+        });
+
+        row.append(checkbox, label);
+        box.appendChild(row);
+      });
+
+      const note = document.createElement("div");
+      note.className = "checklist-note";
+
+      if (!isToday) {
+        note.textContent =
+          "El checklist estará disponible el día del servicio.";
+      } else if (stage === "asignado" || stage === "en_camino") {
+        note.textContent =
+          "El checklist se habilitará cuando marques que llegaste.";
+      } else if (stage === "completado") {
+        note.textContent =
+          "Checklist cerrado porque el trabajo ya fue completado.";
+      } else {
+        note.textContent =
+          "Marca cada tarea a medida que se complete.";
+      }
+
+      box.appendChild(note);
+      updateVisual();
+      card.appendChild(box);
     }
 
     function getWorkflowStage(job) {
@@ -987,7 +1298,28 @@
 
     async function updateWorkflow(id,nextStage){
       if(!currentUser) return;
-      if(nextStage==="completado" && !confirm("¿Confirmas que el trabajo terminó?")) throw new Error("Actualización cancelada");
+      if(nextStage==="completado"){
+        const docBeforeFinish = await db.collection("servicios").doc(id).get();
+        const currentJob = docBeforeFinish.exists ? docBeforeFinish.data() : {};
+        const checklistItems = getChecklistTemplate(currentJob);
+        const checklistState = getChecklistState(currentJob, checklistItems);
+        const pending = checklistItems.filter((_, index) =>
+          checklistState["item_" + index] !== true
+        );
+
+        if(pending.length > 0){
+          alert(
+            "No puedes terminar todavía. Faltan " +
+            pending.length +
+            " tarea(s) del checklist."
+          );
+          throw new Error("Checklist incompleto");
+        }
+
+        if(!confirm("¿Confirmas que el trabajo terminó?")){
+          throw new Error("Actualización cancelada");
+        }
+      }
       let position=null;
       try{ position=await getPosition(); }
       catch(_){ if(!confirm("No se pudo obtener el GPS. ¿Deseas continuar sin ubicación?")) throw new Error("Actualización cancelada"); }
