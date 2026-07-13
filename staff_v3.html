@@ -8,6 +8,8 @@
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
 
   <style>
     :root {
@@ -428,6 +430,162 @@
     .inspection-cancel{background:#27272a;color:#d1d5db}
     .inspection-finish{background:#22c55e;color:#fff}
 
+
+    .photos-box {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 16px;
+      background: #111827;
+      border: 1px solid #475569;
+    }
+
+    .photos-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .photos-title {
+      color: #93c5fd;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .photos-required {
+      color: #fbbf24;
+      font-size: 11px;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .photo-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-bottom: 10px;
+    }
+
+    .photo-controls select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #374151;
+      background: #1f2937;
+      color: #fff;
+      font-size: 13px;
+    }
+
+    .photo-upload-btn {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #3b82f6;
+      border-radius: 13px;
+      background: #1d4ed8;
+      color: white;
+      font-weight: 900;
+      cursor: pointer;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    .photo-upload-btn:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    .photo-file-input {
+      display: none;
+    }
+
+    .photo-status {
+      margin-top: 9px;
+      color: #94a3b8;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .photo-summary {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .photo-summary-card {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 10px 6px;
+      text-align: center;
+    }
+
+    .photo-summary-card strong {
+      display: block;
+      color: #fff;
+      font-size: 18px;
+    }
+
+    .photo-summary-card span {
+      color: #94a3b8;
+      font-size: 9px;
+      text-transform: uppercase;
+    }
+
+    .photo-progress {
+      height: 8px;
+      background: #1f2937;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .photo-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg,#f59e0b,#22c55e);
+      transition: width .25s ease;
+    }
+
+    .photo-gallery {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .photo-thumb {
+      position: relative;
+      aspect-ratio: 1/1;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #334155;
+      background: #0f172a;
+    }
+
+    .photo-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .photo-thumb span {
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      bottom: 4px;
+      padding: 3px 4px;
+      border-radius: 6px;
+      background: rgba(0,0,0,.72);
+      color: #fff;
+      font-size: 8px;
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     @media (max-width: 440px) {
       .dashboard-grid { grid-template-columns:1fr 1fr; gap:9px; }
       .dashboard-card { padding:13px; min-height:108px; }
@@ -517,13 +675,15 @@
       apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucc-lrH",
       authDomain: "elite-cleaners-app.firebaseapp.com",
       projectId: "elite-cleaners-app",
-      storageBucket: "elite-cleaners-app.appspot.com",
+      storageBucket: "elite-cleaners-app.firebasestorage.app",
       messagingSenderId: "826642317319",
       appId: "1:826642317319:web:cddce7904b590ae"
     };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const auth = firebase.auth();
+    const storage = firebase.storage();
 
     const SESSION_KEY = "elite_staff_session_v3";
     const ACTIVE_STATES = new Set([
@@ -535,7 +695,10 @@
     let unsubscribeJobs = [];
     let jobSources = new Map();
 
-    document.addEventListener("DOMContentLoaded", restoreSession);
+    document.addEventListener("DOMContentLoaded", async () => {
+      await ensureStorageAuthentication();
+      restoreSession();
+    });
 
     function normalize(value) {
       return String(value || "").trim().toLowerCase();
@@ -987,12 +1150,375 @@
       }
 
       appendWorkAssistant(card, job, isToday);
+      appendPhotoModule(card, job, isToday);
       appendChecklist(card, job, isToday);
       appendWorkflowControls(card, job, isToday);
       return card;
     }
 
 
+
+
+    async function ensureStorageAuthentication() {
+      if (auth.currentUser) return auth.currentUser;
+
+      try {
+        const credential = await auth.signInAnonymously();
+        return credential.user;
+      } catch (error) {
+        console.error("Anonymous authentication failed:", error);
+        return null;
+      }
+    }
+
+    function getRequiredFinalPhotos(job) {
+      const type = normalize(job.tipo)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+      if (type.includes("post-construccion")) return 12;
+      if (type.includes("move-in") || type.includes("move-out")) return 8;
+      if (type.includes("profunda") || type.includes("primera")) return 6;
+      return 4;
+    }
+
+    function getPhotoCounts(job) {
+      return {
+        before: Number(job.fotos_iniciales_count || 0),
+        evidence: Number(job.fotos_evidencia_count || 0),
+        after: Number(job.fotos_finales_count || 0)
+      };
+    }
+
+    function appendPhotoModule(card, job, isToday) {
+      const stage = getWorkflowStage(job);
+      const requiredFinal = getRequiredFinalPhotos(job);
+      const counts = getPhotoCounts(job);
+
+      const box = document.createElement("div");
+      box.className = "photos-box";
+
+      const header = document.createElement("div");
+      header.className = "photos-header";
+
+      const title = document.createElement("div");
+      title.className = "photos-title";
+      title.textContent = "Evidencia fotográfica";
+
+      const required = document.createElement("div");
+      required.className = "photos-required";
+      required.textContent = "Finales: " + counts.after + "/" + requiredFinal;
+
+      header.append(title, required);
+      box.appendChild(header);
+
+      const controls = document.createElement("div");
+      controls.className = "photo-controls";
+
+      const typeSelect = document.createElement("select");
+      typeSelect.id = "photo-type-" + job.id;
+      [
+        ["before", "Antes (opcional)"],
+        ["evidence", "Durante / evidencia"],
+        ["after", "Después / final"]
+      ].forEach(([value, label]) => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = label;
+        typeSelect.appendChild(option);
+      });
+
+      const areaSelect = document.createElement("select");
+      areaSelect.id = "photo-area-" + job.id;
+      [
+        "Vista general",
+        "Cocina",
+        "Baño",
+        "Habitación",
+        "Sala",
+        "Comedor",
+        "Oficina",
+        "Escalera",
+        "Garaje",
+        "Ventana",
+        "Alfombra",
+        "Daño",
+        "Objeto encontrado",
+        "Otro"
+      ].forEach(area => {
+        const option = document.createElement("option");
+        option.value = area;
+        option.textContent = area;
+        areaSelect.appendChild(option);
+      });
+
+      controls.append(typeSelect, areaSelect);
+      box.appendChild(controls);
+
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = "image/*";
+      fileInput.capture = "environment";
+      fileInput.multiple = true;
+      fileInput.className = "photo-file-input";
+      fileInput.id = "photo-input-" + job.id;
+
+      const uploadButton = document.createElement("button");
+      uploadButton.type = "button";
+      uploadButton.className = "photo-upload-btn";
+      uploadButton.textContent = "📷 TOMAR O ELEGIR FOTOS";
+
+      const canUpload = isToday &&
+        ["llego", "limpiando", "pausado"].includes(stage);
+
+      uploadButton.disabled = !canUpload;
+
+      const status = document.createElement("div");
+      status.className = "photo-status";
+      status.id = "photo-status-" + job.id;
+
+      if (!isToday) {
+        status.textContent = "Las fotografías estarán disponibles el día del servicio.";
+      } else if (!canUpload) {
+        status.textContent = "Marca “Llegué” para habilitar la cámara.";
+      } else {
+        status.textContent = "Las fotos iniciales y de evidencia son opcionales. Las finales son obligatorias.";
+      }
+
+      uploadButton.addEventListener("click", () => fileInput.click());
+
+      fileInput.addEventListener("change", async () => {
+        const files = Array.from(fileInput.files || []);
+        if (!files.length) return;
+
+        const photoType = typeSelect.value;
+        const area = areaSelect.value;
+
+        uploadButton.disabled = true;
+        status.textContent = "Preparando " + files.length + " foto(s)...";
+
+        try {
+          await uploadJobPhotos(job, files, photoType, area, status);
+          fileInput.value = "";
+        } catch (error) {
+          console.error(error);
+          alert("No se pudieron subir las fotografías: " + error.message);
+          status.textContent = "Error al subir fotografías.";
+        } finally {
+          uploadButton.disabled = !canUpload;
+        }
+      });
+
+      box.append(fileInput, uploadButton, status);
+
+      const summary = document.createElement("div");
+      summary.className = "photo-summary";
+
+      [
+        ["Antes", counts.before],
+        ["Evidencia", counts.evidence],
+        ["Finales", counts.after]
+      ].forEach(([label, value]) => {
+        const item = document.createElement("div");
+        item.className = "photo-summary-card";
+
+        const number = document.createElement("strong");
+        number.textContent = value;
+
+        const caption = document.createElement("span");
+        caption.textContent = label;
+
+        item.append(number, caption);
+        summary.appendChild(item);
+      });
+
+      box.appendChild(summary);
+
+      const progress = document.createElement("div");
+      progress.className = "photo-progress";
+
+      const fill = document.createElement("div");
+      fill.className = "photo-progress-fill";
+      fill.style.width = Math.min(100, (counts.after / requiredFinal) * 100) + "%";
+
+      progress.appendChild(fill);
+      box.appendChild(progress);
+
+      const gallery = document.createElement("div");
+      gallery.className = "photo-gallery";
+      gallery.id = "photo-gallery-" + job.id;
+      box.appendChild(gallery);
+
+      loadRecentJobPhotos(job.id, gallery);
+
+      card.appendChild(box);
+    }
+
+    async function compressPhoto(file) {
+      if (!file.type.startsWith("image/")) {
+        throw new Error("Solo se permiten imágenes.");
+      }
+
+      const maxOriginalSize = 20 * 1024 * 1024;
+      if (file.size > maxOriginalSize) {
+        throw new Error("La imagen supera 20 MB.");
+      }
+
+      const imageBitmap = await createImageBitmap(file);
+      const maxDimension = 1600;
+      let width = imageBitmap.width;
+      let height = imageBitmap.height;
+
+      if (width > maxDimension || height > maxDimension) {
+        const ratio = Math.min(maxDimension / width, maxDimension / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const context = canvas.getContext("2d");
+      context.drawImage(imageBitmap, 0, 0, width, height);
+      imageBitmap.close();
+
+      return new Promise((resolve, reject) => {
+        canvas.toBlob(
+          blob => blob ? resolve(blob) : reject(new Error("No se pudo comprimir la imagen.")),
+          "image/jpeg",
+          0.76
+        );
+      });
+    }
+
+    function sanitizePathPart(value) {
+      return String(value || "sin-dato")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9_-]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .toLowerCase();
+    }
+
+    async function uploadJobPhotos(job, files, photoType, area, statusElement) {
+      const user = await ensureStorageAuthentication();
+
+      if (!user) {
+        throw new Error(
+          "Authentication no está habilitado. Activa el proveedor Anónimo en Firebase Authentication."
+        );
+      }
+
+      const uploaded = [];
+
+      for (let index = 0; index < files.length; index++) {
+        statusElement.textContent =
+          "Comprimiendo foto " + (index + 1) + " de " + files.length + "...";
+
+        const blob = await compressPhoto(files[index]);
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).slice(2, 9);
+        const areaSlug = sanitizePathPart(area);
+        const path =
+          "servicios/" + job.id + "/" + photoType + "/" +
+          timestamp + "_" + areaSlug + "_" + random + ".jpg";
+
+        const ref = storage.ref().child(path);
+
+        const metadata = {
+          contentType: "image/jpeg",
+          customMetadata: {
+            servicioId: job.id,
+            tipo: photoType,
+            area: area,
+            staffEmail: currentUser.email,
+            staffNombre: currentUser.nombre
+          }
+        };
+
+        statusElement.textContent =
+          "Subiendo foto " + (index + 1) + " de " + files.length + "...";
+
+        const snapshot = await ref.put(blob, metadata);
+        const url = await snapshot.ref.getDownloadURL();
+
+        const photoDoc = {
+          url,
+          path,
+          tipo: photoType,
+          area,
+          staff_email: currentUser.email,
+          staff_nombre: currentUser.nombre,
+          auth_uid: user.uid,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await db.collection("servicios")
+          .doc(job.id)
+          .collection("fotos")
+          .add(photoDoc);
+
+        uploaded.push(photoDoc);
+      }
+
+      const incrementField = {
+        before: "fotos_iniciales_count",
+        evidence: "fotos_evidencia_count",
+        after: "fotos_finales_count"
+      }[photoType];
+
+      const update = {
+        fotos_ultima_actualizacion:
+          firebase.firestore.FieldValue.serverTimestamp(),
+        fotos_ultimo_staff_email: currentUser.email
+      };
+
+      update[incrementField] =
+        firebase.firestore.FieldValue.increment(uploaded.length);
+
+      await db.collection("servicios").doc(job.id).update(update);
+
+      statusElement.textContent =
+        uploaded.length + " foto(s) subida(s) correctamente.";
+    }
+
+    async function loadRecentJobPhotos(jobId, gallery) {
+      try {
+        const snapshot = await db.collection("servicios")
+          .doc(jobId)
+          .collection("fotos")
+          .orderBy("timestamp", "desc")
+          .limit(6)
+          .get();
+
+        gallery.innerHTML = "";
+
+        snapshot.forEach(doc => {
+          const photo = doc.data();
+
+          const item = document.createElement("a");
+          item.className = "photo-thumb";
+          item.href = photo.url;
+          item.target = "_blank";
+          item.rel = "noopener noreferrer";
+
+          const image = document.createElement("img");
+          image.src = photo.url;
+          image.alt = photo.area || "Fotografía del servicio";
+          image.loading = "lazy";
+
+          const caption = document.createElement("span");
+          caption.textContent =
+            (photo.tipo || "foto") + " · " + (photo.area || "sin área");
+
+          item.append(image, caption);
+          gallery.appendChild(item);
+        });
+      } catch (error) {
+        console.warn("No se pudieron cargar las fotos recientes:", error);
+      }
+    }
 
     let pendingFinalInspection = null;
 
@@ -1029,6 +1555,7 @@
     function getInspectionItems(job) {
       const items = [
         "Checklist completo",
+        "Fotografías finales obligatorias completadas",
         "Herramientas recogidas",
         "Productos guardados",
         "Basura retirada",
@@ -1042,11 +1569,30 @@
       return items;
     }
 
-    function openFinalInspection(jobId) {
+    async function openFinalInspection(jobId) {
       const job = getMergedJobs().find(item => item.id === jobId);
       if (!job) return alert("No se encontró el trabajo.");
 
-      pendingFinalInspection = { jobId, job };
+      try {
+        const freshDoc = await db.collection("servicios").doc(jobId).get();
+        const freshJob = freshDoc.exists ? { id: jobId, ...freshDoc.data() } : job;
+        const requiredFinal = getRequiredFinalPhotos(freshJob);
+        const currentFinal = Number(freshJob.fotos_finales_count || 0);
+
+        if (currentFinal < requiredFinal) {
+          alert(
+            "No puedes abrir la inspección final todavía. Faltan " +
+            (requiredFinal - currentFinal) +
+            " foto(s) finales."
+          );
+          return;
+        }
+
+        pendingFinalInspection = { jobId, job: freshJob };
+      } catch (error) {
+        alert("No se pudo verificar las fotografías: " + error.message);
+        return;
+      }
       const container = document.getElementById("inspection-items");
       container.innerHTML = "";
 
