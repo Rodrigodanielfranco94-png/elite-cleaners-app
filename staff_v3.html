@@ -1430,11 +1430,11 @@
     async function uploadJobPhotos(job, files, photoType, area, statusElement) {
       const user = await ensureStorageAuthentication();
 
-      if (!user) {
-        throw new Error(
-          "Authentication no está habilitado. Activa el proveedor Anónimo en Firebase Authentication."
-        );
-      }
+    if (!user) {
+  throw new Error(
+    "Firebase no pudo crear la sesión necesaria para subir fotografías."
+  );
+}
 
       const uploaded = [];
 
