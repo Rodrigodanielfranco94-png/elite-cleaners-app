@@ -1160,16 +1160,42 @@
 
 
     async function ensureStorageAuthentication() {
-      if (auth.currentUser) return auth.currentUser;
+  if (auth.currentUser) {
+    console.log(
+      "Firebase Authentication activa:",
+      auth.currentUser.uid,
+      auth.currentUser.isAnonymous
+    );
 
-      try {
-        const credential = await auth.signInAnonymously();
-        return credential.user;
-      } catch (error) {
-        console.error("Anonymous authentication failed:", error);
-        return null;
-      }
-    }
+    return auth.currentUser;
+  }
+
+  try {
+    console.log("Intentando autenticación anónima...");
+
+    const credential = await auth.signInAnonymously();
+
+    console.log(
+      "Autenticación anónima completada:",
+      credential.user.uid
+    );
+
+    return credential.user;
+
+  } catch (error) {
+    console.error("ERROR COMPLETO DE FIREBASE AUTH:", error);
+    console.error("Código:", error.code);
+    console.error("Mensaje:", error.message);
+
+    alert(
+      "Error de Firebase Authentication\n\n" +
+      "Código: " + (error.code || "sin código") + "\n\n" +
+      "Mensaje: " + (error.message || "sin mensaje")
+    );
+
+    throw error;
+  }
+}
 
     function getRequiredFinalPhotos(job) {
       const type = normalize(job.tipo)
