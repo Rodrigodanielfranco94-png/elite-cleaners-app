@@ -586,6 +586,177 @@
       white-space: nowrap;
     }
 
+
+    /* ===== FLUJO PROFESIONAL V4.1 ===== */
+    .workflow-box {
+      margin-top: 16px;
+      padding: 15px;
+      border-radius: 18px;
+      background: #111827;
+      border: 1px solid #334155;
+    }
+
+    .workflow-status {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: 13px;
+      border-radius: 14px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      margin-bottom: 11px;
+    }
+
+    .workflow-status span:first-child {
+      color: #93c5fd;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+    }
+
+    .workflow-status span:last-child {
+      color: #fff;
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .workflow-progress {
+      height: 9px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #1f2937;
+      margin-bottom: 12px;
+    }
+
+    .workflow-progress-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg,#2563eb,#22c55e);
+      transition: width .25s ease;
+    }
+
+    .workflow-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .workflow-actions.two {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .workflow-actions .btn-status {
+      margin: 0;
+      min-height: 56px;
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 7px 18px rgba(0,0,0,.28);
+      opacity: 1;
+      -webkit-text-fill-color: #fff;
+    }
+
+    .workflow-actions .btn-status:disabled {
+      opacity: .62;
+      color: #fff !important;
+      -webkit-text-fill-color: #fff !important;
+      background-image: none !important;
+    }
+
+    .btn-route { background: #2563eb !important; }
+    .btn-arrive { background: #ea580c !important; }
+    .btn-clean { background: #16a34a !important; }
+    .btn-pause { background: #b45309 !important; }
+    .btn-resume { background: #0f766e !important; }
+    .btn-finish { background: #15803d !important; }
+    .btn-upcoming { background: #374151 !important; }
+    .btn-done { background: #14532d !important; }
+
+    .workflow-time {
+      display: grid;
+      grid-template-columns: repeat(2,minmax(0,1fr));
+      gap: 8px;
+      margin-top: 12px;
+      color: #d1d5db;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .workflow-time-item {
+      padding: 9px;
+      border-radius: 11px;
+      background: #0f172a;
+      border: 1px solid #334155;
+    }
+
+    .photo-plan {
+      margin: 10px 0 12px;
+      padding: 12px;
+      border-radius: 13px;
+      background: #0f172a;
+      border: 1px solid #334155;
+    }
+
+    .photo-plan-title {
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 9px;
+      text-transform: uppercase;
+    }
+
+    .photo-plan-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 7px;
+    }
+
+    .photo-plan-item {
+      padding: 9px 5px;
+      border-radius: 10px;
+      background: #111827;
+      border: 1px solid #374151;
+      text-align: center;
+    }
+
+    .photo-plan-item strong {
+      display: block;
+      color: #fff;
+      font-size: 15px;
+      margin-bottom: 3px;
+    }
+
+    .photo-plan-item span {
+      color: #94a3b8;
+      font-size: 9px;
+      text-transform: uppercase;
+    }
+
+    .photo-suggestions {
+      margin-top: 9px;
+      color: #cbd5e1;
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
+    .photo-remaining {
+      margin-top: 9px;
+      padding: 9px;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 900;
+      background: #451a03;
+      border: 1px solid #f59e0b;
+      color: #fde68a;
+    }
+
+    .photo-remaining.complete {
+      background: #052e16;
+      border-color: #22c55e;
+      color: #bbf7d0;
+    }
+
+
     @media (max-width: 440px) {
       .dashboard-grid { grid-template-columns:1fr 1fr; gap:9px; }
       .dashboard-card { padding:13px; min-height:108px; }
@@ -672,13 +843,13 @@
 
   <script>
     const firebaseConfig = {
-  apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucclrHyvjpLA",
-  authDomain: "elite-cleaners-app.firebaseapp.com",
-  projectId: "elite-cleaners-app",
-  storageBucket: "elite-cleaners-app.firebasestorage.app",
-  messagingSenderId: "826642317319",
-  appId: "1:826642317319:web:cddce7904b590aea682aa2"
-};
+      apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucclrHyvjpLA",
+      authDomain: "elite-cleaners-app.firebaseapp.com",
+      projectId: "elite-cleaners-app",
+      storageBucket: "elite-cleaners-app.firebasestorage.app",
+      messagingSenderId: "826642317319",
+      appId: "1:826642317319:web:cddce7904b590aea682aa2"
+    };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -1160,52 +1331,58 @@
 
 
     async function ensureStorageAuthentication() {
-  if (auth.currentUser) {
-    console.log(
-      "Firebase Authentication activa:",
-      auth.currentUser.uid,
-      auth.currentUser.isAnonymous
-    );
+      if (auth.currentUser) return auth.currentUser;
 
-    return auth.currentUser;
-  }
+      try {
+        const credential = await auth.signInAnonymously();
+        return credential.user;
+      } catch (error) {
+        console.error("ERROR COMPLETO DE FIREBASE AUTH:", error);
+        throw new Error(
+          (error.code ? error.code + ": " : "") +
+          (error.message || "No se pudo iniciar la sesión necesaria para subir fotos.")
+        );
+      }
+    }
 
-  try {
-    console.log("Intentando autenticación anónima...");
-
-    const credential = await auth.signInAnonymously();
-
-    console.log(
-      "Autenticación anónima completada:",
-      credential.user.uid
-    );
-
-    return credential.user;
-
-  } catch (error) {
-    console.error("ERROR COMPLETO DE FIREBASE AUTH:", error);
-    console.error("Código:", error.code);
-    console.error("Mensaje:", error.message);
-
-    alert(
-      "Error de Firebase Authentication\n\n" +
-      "Código: " + (error.code || "sin código") + "\n\n" +
-      "Mensaje: " + (error.message || "sin mensaje")
-    );
-
-    throw error;
-  }
-}
-
-    function getRequiredFinalPhotos(job) {
+    function getPhotoPlan(job) {
       const type = normalize(job.tipo)
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "");
 
-      if (type.includes("post-construccion")) return 12;
-      if (type.includes("move-in") || type.includes("move-out")) return 8;
-      if (type.includes("profunda") || type.includes("primera")) return 6;
-      return 4;
+      if (type.includes("post-construccion")) {
+        return {
+          before: 4,
+          after: 6,
+          suggested: "Antes: vista general, cocina/área principal, baño y polvo o residuos. Finales: áreas principales ya terminadas."
+        };
+      }
+
+      if (type.includes("move-in") || type.includes("move-out")) {
+        return {
+          before: 3,
+          after: 5,
+          suggested: "Antes: vista general y dos áreas importantes. Finales: cocina, baño, sala, habitación y vista general."
+        };
+      }
+
+      if (type.includes("profunda") || type.includes("primera")) {
+        return {
+          before: 3,
+          after: 4,
+          suggested: "Antes: vista general, cocina y baño. Finales: cocina, baño, sala o habitación y vista general."
+        };
+      }
+
+      return {
+        before: 2,
+        after: 3,
+        suggested: "Antes: vista general y área más sucia. Finales: cocina, baño y vista general."
+      };
+    }
+
+    function getRequiredFinalPhotos(job) {
+      return getPhotoPlan(job).after;
     }
 
     function getPhotoCounts(job) {
@@ -1237,6 +1414,42 @@
 
       header.append(title, required);
       box.appendChild(header);
+
+      const plan = getPhotoPlan(job);
+      const planBox = document.createElement("div");
+      planBox.className = "photo-plan";
+
+      const planTitle = document.createElement("div");
+      planTitle.className = "photo-plan-title";
+      planTitle.textContent = "Plan de fotos para este servicio";
+
+      const planGrid = document.createElement("div");
+      planGrid.className = "photo-plan-grid";
+
+      [
+        ["Antes", plan.before + " recomendadas"],
+        ["Durante", "Opcional"],
+        ["Finales", plan.after + " obligatorias"]
+      ].forEach(([label, value]) => {
+        const item = document.createElement("div");
+        item.className = "photo-plan-item";
+
+        const strong = document.createElement("strong");
+        strong.textContent = value;
+
+        const span = document.createElement("span");
+        span.textContent = label;
+
+        item.append(strong, span);
+        planGrid.appendChild(item);
+      });
+
+      const suggestions = document.createElement("div");
+      suggestions.className = "photo-suggestions";
+      suggestions.textContent = plan.suggested;
+
+      planBox.append(planTitle, planGrid, suggestions);
+      box.appendChild(planBox);
 
       const controls = document.createElement("div");
       controls.className = "photo-controls";
@@ -1308,7 +1521,10 @@
       } else if (!canUpload) {
         status.textContent = "Marca “Llegué” para habilitar la cámara.";
       } else {
-        status.textContent = "Las fotos iniciales y de evidencia son opcionales. Las finales son obligatorias.";
+        const remaining = Math.max(0, requiredFinal - counts.after);
+        status.textContent = remaining > 0
+          ? "Faltan " + remaining + " foto(s) finales para poder terminar."
+          : "Fotografías finales completas. Ya puedes continuar con la inspección final.";
       }
 
       uploadButton.addEventListener("click", () => fileInput.click());
@@ -1370,6 +1586,14 @@
       progress.appendChild(fill);
       box.appendChild(progress);
 
+      const remainingBox = document.createElement("div");
+      const missingFinal = Math.max(0, requiredFinal - counts.after);
+      remainingBox.className = "photo-remaining" + (missingFinal === 0 ? " complete" : "");
+      remainingBox.textContent = missingFinal === 0
+        ? "✓ Fotos finales completas"
+        : "Faltan " + missingFinal + " foto(s) finales";
+      box.appendChild(remainingBox);
+
       const gallery = document.createElement("div");
       gallery.className = "photo-gallery";
       gallery.id = "photo-gallery-" + job.id;
@@ -1430,11 +1654,11 @@
     async function uploadJobPhotos(job, files, photoType, area, statusElement) {
       const user = await ensureStorageAuthentication();
 
-    if (!user) {
-  throw new Error(
-    "Firebase no pudo crear la sesión necesaria para subir fotografías."
-  );
-}
+      if (!user) {
+        throw new Error(
+          "Firebase no pudo crear la sesión necesaria para subir fotografías."
+        );
+      }
 
       const uploaded = [];
 
@@ -1966,7 +2190,15 @@
         actions.appendChild(createWorkflowButton("☕ PAUSAR","btn-pause",()=>updateWorkflow(job.id,"pausado")));
         const finishButton = document.createElement("button");
         finishButton.className = "btn-status btn-finish";
-        finishButton.textContent = "✅ TERMINAR";
+
+        const requiredFinal = getRequiredFinalPhotos(job);
+        const finalCount = Number(job.fotos_finales_count || 0);
+        const missingFinal = Math.max(0, requiredFinal - finalCount);
+
+        finishButton.textContent = missingFinal > 0
+          ? "📷 FALTAN " + missingFinal + " FOTO(S)"
+          : "✅ TERMINAR";
+
         finishButton.addEventListener("click", () => openFinalInspection(job.id));
         actions.appendChild(finishButton);
       }
@@ -1984,7 +2216,19 @@
       if(job.hora_pausa) lines.push("☕ Última pausa: "+job.hora_pausa);
       if(job.hora_reanudacion) lines.push("▶ Reanudación: "+job.hora_reanudacion);
       if(hasRealTime(job.hora_fin)) lines.push("✅ Fin: "+job.hora_fin);
-      if(lines.length){ const times=document.createElement("div"); times.className="workflow-time"; times.textContent=lines.join(" · "); box.appendChild(times); }
+      if (lines.length) {
+        const times = document.createElement("div");
+        times.className = "workflow-time";
+
+        lines.forEach(line => {
+          const item = document.createElement("div");
+          item.className = "workflow-time-item";
+          item.textContent = line;
+          times.appendChild(item);
+        });
+
+        box.appendChild(times);
+      }
       card.appendChild(box);
     }
 
