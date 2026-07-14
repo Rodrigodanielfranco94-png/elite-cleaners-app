@@ -1,9 +1,10 @@
 <!DOCTYPE html>
+<!-- Elite Admin v4.0 | Nico integrado | Archivo único -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin - Elite Cleaners Company</title>
+    <title>Elite Admin v4.0 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3708,6 +3709,566 @@ function descargarContabilidadPDF() {
 <script src="nico-pdf.js"></script>
 <script src="nico-voice.js"></script>
 <script src="nico-admin.js"></script>
-<script src="nico-notifications.js"></script>
+<script>
+// ============================================================
+// NICO NOTIFICATIONS — mantiene intacto el avatar original
+// ============================================================
+
+(() => {
+  "use strict";
+
+  let nicoNotifications = [];
+  let unsubscribeNicoNotifications = null;
+  let initialSnapshotHandled = false;
+  let uiReady = false;
+
+  const ZERO_NOTIFICATION_PHRASES = [
+    "Todo en orden, Rodrigo.",
+    "No hay novedades por ahora.",
+    "El equipo está trabajando sin incidentes.",
+    "Todo marcha bien."
+  ];
+
+  function randomItem(items) {
+    return items[Math.floor(Math.random() * items.length)];
+  }
+
+  function waitForNicoAndFirebase() {
+    const timer = setInterval(() => {
+      const box = document.getElementById("nicoBox");
+
+      if (
+        box &&
+        typeof db !== "undefined" &&
+        typeof firebase !== "undefined"
+      ) {
+        clearInterval(timer);
+        buildNicoNotificationUI(box);
+        subscribeNicoNotifications();
+      }
+    }, 250);
+
+    setTimeout(() => clearInterval(timer), 30000);
+  }
+
+  function buildNicoNotificationUI(nicoBox) {
+    if (uiReady || document.getElementById("nicoNotificationNumber")) return;
+    uiReady = true;
+
+    // Solo se reduce ligeramente el tamaño. Se conservan imagen, assets,
+    // animaciones, botón, colores y comportamiento originales.
+    const existingStyle = document.createElement("style");
+    existingStyle.id = "nicoNotificationsStyle";
+    existingStyle.textContent = `
+      #nicoImg {
+        width: 88px !important;
+      }
+
+      #nicoNotificationNumber {
+        display: none;
+        position: absolute;
+        top: -9px;
+        right: 2px;
+        z-index: 5;
+        padding: 4px;
+        border: none;
+        background: transparent;
+        color: #ef4444;
+        font-size: 19px;
+        line-height: 1;
+        font-weight: 1000;
+        text-shadow:
+          0 1px 1px #000,
+          1px 0 1px #000,
+          -1px 0 1px #000,
+          0 -1px 1px #000;
+        cursor: pointer;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      #nicoStartupMessage {
+        display: none;
+        position: fixed;
+        right: 18px;
+        bottom: 94px;
+        z-index: 100002;
+        width: min(290px, calc(100vw - 36px));
+        padding: 12px 14px;
+        border-radius: 15px 15px 3px 15px;
+        border: 1px solid #3b82f6;
+        background: #111827;
+        color: #fff;
+        box-shadow: 0 10px 28px rgba(0,0,0,.55);
+        font-size: 13px;
+        line-height: 1.45;
+        animation: nicoNoticeIn .25s ease-out;
+      }
+
+      #nicoStartupMessage strong {
+        color: #93c5fd;
+      }
+
+      @keyframes nicoNoticeIn {
+        from { opacity: 0; transform: translateY(10px) scale(.97); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+
+      #nicoReportOverlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1000005;
+        padding: 16px;
+        box-sizing: border-box;
+        background: rgba(0,0,0,.92);
+      }
+
+      #nicoReportPanel {
+        width: 100%;
+        max-width: 520px;
+        max-height: 90vh;
+        overflow-y: auto;
+        margin: 25px auto;
+        padding: 18px;
+        box-sizing: border-box;
+        border-radius: 22px;
+        border: 1px solid #3b82f6;
+        background: #111827;
+        color: #fff;
+      }
+
+      .nico-report-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .nico-report-header h2 {
+        margin: 0;
+        font-size: 21px;
+      }
+
+      .nico-report-header p {
+        margin: 4px 0 0;
+        color: #93c5fd;
+        font-size: 11px;
+      }
+
+      .nico-report-close {
+        border: none;
+        border-radius: 11px;
+        padding: 10px 12px;
+        background: #374151;
+        color: #fff;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .nico-report-intro {
+        margin-bottom: 13px;
+        padding: 12px;
+        border-radius: 13px;
+        border: 1px solid #3b82f6;
+        background: #172554;
+        color: #bfdbfe;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .nico-report-toolbar {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 10px;
+      }
+
+      .nico-report-toolbar button {
+        border: none;
+        border-radius: 10px;
+        padding: 9px 11px;
+        background: #2563eb;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .nico-notification-empty {
+        padding: 28px 14px;
+        border-radius: 14px;
+        border: 1px dashed #374151;
+        color: #9ca3af;
+        text-align: center;
+        font-size: 13px;
+      }
+
+      .nico-notification-item {
+        margin-bottom: 10px;
+        padding: 13px;
+        border-radius: 14px;
+        border: 1px solid #374151;
+        background: #09090b;
+      }
+
+      .nico-notification-item.unread {
+        border-color: #f59e0b;
+        background: #1c1405;
+      }
+
+      .nico-notification-item h4 {
+        margin: 0 0 5px;
+        color: #fbbf24;
+        font-size: 13px;
+      }
+
+      .nico-notification-meta {
+        margin-bottom: 7px;
+        color: #9ca3af;
+        font-size: 10px;
+      }
+
+      .nico-notification-message {
+        color: #e5e7eb;
+        font-size: 13px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+      }
+
+      .nico-notification-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .nico-notification-actions button {
+        border: none;
+        border-radius: 10px;
+        padding: 10px 8px;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 900;
+        cursor: pointer;
+      }
+    `;
+    document.head.appendChild(existingStyle);
+
+    const number = document.createElement("button");
+    number.id = "nicoNotificationNumber";
+    number.type = "button";
+    number.setAttribute("aria-label", "Abrir informe de Nico");
+    number.onclick = openNicoReport;
+    nicoBox.appendChild(number);
+
+    const startupMessage = document.createElement("div");
+    startupMessage.id = "nicoStartupMessage";
+    document.body.appendChild(startupMessage);
+
+    const overlay = document.createElement("div");
+    overlay.id = "nicoReportOverlay";
+    overlay.innerHTML = `
+      <div id="nicoReportPanel">
+        <div class="nico-report-header">
+          <div>
+            <h2>Informe de Nico</h2>
+            <p>Resumen de operaciones de Elite Cleaners</p>
+          </div>
+          <button class="nico-report-close" type="button">Cerrar</button>
+        </div>
+
+        <div id="nicoReportIntro" class="nico-report-intro"></div>
+
+        <div class="nico-report-toolbar">
+          <button id="nicoMarkAllRead" type="button">Marcar todo leído</button>
+        </div>
+
+        <div id="nicoReportList"></div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    overlay.querySelector(".nico-report-close").onclick = closeNicoReport;
+    overlay.addEventListener("click", event => {
+      if (event.target === overlay) closeNicoReport();
+    });
+
+    document.getElementById("nicoMarkAllRead").onclick = markAllNicoNotificationsRead;
+
+    const img = document.getElementById("nicoImg");
+    if (img) {
+      img.style.cursor = "pointer";
+      img.addEventListener("click", event => {
+        event.stopPropagation();
+        openNicoReport();
+      });
+    }
+  }
+
+  function subscribeNicoNotifications() {
+    if (unsubscribeNicoNotifications) {
+      try { unsubscribeNicoNotifications(); } catch (_) {}
+    }
+
+    unsubscribeNicoNotifications = db.collection("notificaciones_admin")
+      .orderBy("fecha", "desc")
+      .limit(100)
+      .onSnapshot(snapshot => {
+        nicoNotifications = [];
+
+        snapshot.forEach(doc => {
+          nicoNotifications.push({
+            id: doc.id,
+            ...doc.data()
+          });
+        });
+
+        updateNicoNotificationNumber();
+
+        const overlay = document.getElementById("nicoReportOverlay");
+        if (overlay?.style.display === "block") {
+          renderNicoReport();
+        }
+
+        // Mensaje exactamente una vez al abrir/cargar la aplicación.
+        // Las actualizaciones posteriores solo cambian el número rojo.
+        if (!initialSnapshotHandled) {
+          initialSnapshotHandled = true;
+          showOneTimeNicoStartupMessage();
+        }
+      }, error => {
+        console.warn("Nico no pudo consultar las notificaciones:", error);
+
+        if (!initialSnapshotHandled) {
+          initialSnapshotHandled = true;
+          showStartupMessage(
+            "<strong>Nico:</strong> Rodrigo, no pude revisar los avisos en este momento."
+          );
+        }
+      });
+  }
+
+  function getUnreadNotifications() {
+    return nicoNotifications.filter(item => item.leida !== true);
+  }
+
+  function updateNicoNotificationNumber() {
+    const number = document.getElementById("nicoNotificationNumber");
+    if (!number) return;
+
+    const unread = getUnreadNotifications().length;
+
+    number.textContent = unread > 99 ? "99+" : String(unread);
+    number.style.display = unread > 0 ? "block" : "none";
+  }
+
+  function showOneTimeNicoStartupMessage() {
+    const unread = getUnreadNotifications().length;
+
+    if (unread > 0) {
+      showStartupMessage(
+        "<strong>Nico:</strong> Rodrigo, tengo " +
+        unread +
+        (unread === 1
+          ? " novedad para mostrarte."
+          : " novedades para mostrarte.")
+      );
+      return;
+    }
+
+    showStartupMessage(
+      "<strong>Nico:</strong> " + randomItem(ZERO_NOTIFICATION_PHRASES)
+    );
+  }
+
+  function showStartupMessage(html) {
+    const message = document.getElementById("nicoStartupMessage");
+    if (!message) return;
+
+    message.innerHTML = html;
+    message.style.display = "block";
+
+    clearTimeout(showStartupMessage.hideTimer);
+    showStartupMessage.hideTimer = setTimeout(() => {
+      message.style.display = "none";
+    }, 5500);
+  }
+
+  function openNicoReport() {
+    const overlay = document.getElementById("nicoReportOverlay");
+    if (!overlay) return;
+
+    overlay.style.display = "block";
+    renderNicoReport();
+  }
+
+  function closeNicoReport() {
+    const overlay = document.getElementById("nicoReportOverlay");
+    if (overlay) overlay.style.display = "none";
+  }
+
+  function formatNotificationDate(timestamp) {
+    try {
+      if (!timestamp) return "Ahora";
+
+      const date = timestamp.toDate
+        ? timestamp.toDate()
+        : new Date(timestamp);
+
+      return date.toLocaleString();
+    } catch (_) {
+      return "Fecha no disponible";
+    }
+  }
+
+  function renderNicoReport() {
+    const intro = document.getElementById("nicoReportIntro");
+    const list = document.getElementById("nicoReportList");
+    const markAllButton = document.getElementById("nicoMarkAllRead");
+
+    if (!intro || !list || !markAllButton) return;
+
+    const unread = getUnreadNotifications().length;
+
+    intro.textContent = unread > 0
+      ? "Rodrigo, encontré " +
+        unread +
+        (unread === 1
+          ? " novedad que deberías revisar."
+          : " novedades que deberías revisar.")
+      : "Rodrigo, por ahora todo está en orden. No hay avisos pendientes.";
+
+    markAllButton.style.display = unread > 0 ? "block" : "none";
+    list.innerHTML = "";
+
+    if (!nicoNotifications.length) {
+      const empty = document.createElement("div");
+      empty.className = "nico-notification-empty";
+      empty.textContent = "No encontré novedades para mostrarte.";
+      list.appendChild(empty);
+      return;
+    }
+
+    nicoNotifications.forEach(notification => {
+      const item = document.createElement("div");
+      item.className =
+        "nico-notification-item" +
+        (notification.leida === true ? "" : " unread");
+
+      const title = document.createElement("h4");
+      title.textContent =
+        notification.tipo === "informe_staff"
+          ? "📝 Informe del servicio"
+          : (notification.titulo || "Aviso de Nico");
+
+      const meta = document.createElement("div");
+      meta.className = "nico-notification-meta";
+      meta.textContent = [
+        notification.cliente || "",
+        notification.empleado_nombre || "",
+        formatNotificationDate(notification.fecha)
+      ].filter(Boolean).join(" · ");
+
+      const message = document.createElement("div");
+      message.className = "nico-notification-message";
+      message.textContent = notification.mensaje || "Sin mensaje.";
+
+      const actions = document.createElement("div");
+      actions.className = "nico-notification-actions";
+
+      const readButton = document.createElement("button");
+      readButton.style.background = "#2563eb";
+      readButton.textContent =
+        notification.leida === true
+          ? "Marcar no leída"
+          : "Marcar leída";
+      readButton.onclick = () =>
+        setNicoNotificationRead(
+          notification.id,
+          notification.leida !== true
+        );
+
+      const viewButton = document.createElement("button");
+      viewButton.style.background = "#16a34a";
+      viewButton.textContent = "Ver trabajo";
+      viewButton.onclick = () => openJobFromNicoNotification(notification);
+
+      actions.append(readButton, viewButton);
+      item.append(title, meta, message, actions);
+      list.appendChild(item);
+    });
+  }
+
+  async function setNicoNotificationRead(id, read) {
+    try {
+      await db.collection("notificaciones_admin").doc(id).update({
+        leida: read,
+        fecha_lectura: read
+          ? firebase.firestore.FieldValue.serverTimestamp()
+          : null
+      });
+    } catch (error) {
+      alert("No se pudo actualizar el aviso: " + error.message);
+    }
+  }
+
+  async function markAllNicoNotificationsRead() {
+    const unread = getUnreadNotifications();
+    if (!unread.length) return;
+
+    const batch = db.batch();
+
+    unread.forEach(notification => {
+      batch.update(
+        db.collection("notificaciones_admin").doc(notification.id),
+        {
+          leida: true,
+          fecha_lectura:
+            firebase.firestore.FieldValue.serverTimestamp()
+        }
+      );
+    });
+
+    try {
+      await batch.commit();
+    } catch (error) {
+      alert("No se pudieron marcar los avisos: " + error.message);
+    }
+  }
+
+  function openJobFromNicoNotification(notification) {
+    closeNicoReport();
+
+    const search = document.getElementById("buscarTrabajo");
+
+    if (search) {
+      search.value =
+        notification.cliente ||
+        notification.empleado_nombre ||
+        "";
+
+      if (typeof renderHistorial === "function") {
+        renderHistorial();
+      }
+
+      const history = document.getElementById("historial");
+      if (history) {
+        window.scrollTo({
+          top: history.offsetTop,
+          behavior: "smooth"
+        });
+      }
+    }
+
+    if (notification.leida !== true) {
+      setNicoNotificationRead(notification.id, true);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", waitForNicoAndFirebase);
+})();
+
+</script>
+
 </body>
 </html>
