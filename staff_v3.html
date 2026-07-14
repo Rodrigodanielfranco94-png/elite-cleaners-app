@@ -757,6 +757,102 @@
     }
 
 
+
+    /* ===== INFORMES DEL SERVICIO ===== */
+    .service-report-box {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 16px;
+      background: #111827;
+      border: 1px solid #6366f1;
+    }
+
+    .service-report-title {
+      color: #c4b5fd;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .service-report-help {
+      color: #94a3b8;
+      font-size: 11px;
+      line-height: 1.45;
+      margin-bottom: 10px;
+    }
+
+    .service-report-textarea {
+      width: 100%;
+      min-height: 92px;
+      resize: vertical;
+      padding: 12px;
+      margin: 0 0 9px;
+      border-radius: 12px;
+      border: 1px solid #374151;
+      background: #0f172a;
+      color: #fff;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .service-report-button {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 12px;
+      background: #4f46e5;
+      color: #fff;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .service-report-button:disabled {
+      opacity: .6;
+      color: #fff !important;
+      -webkit-text-fill-color: #fff !important;
+    }
+
+    .service-report-status {
+      margin-top: 8px;
+      min-height: 16px;
+      color: #a7f3d0;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    .service-report-history {
+      margin-top: 10px;
+      display: grid;
+      gap: 7px;
+    }
+
+    .service-report-entry {
+      padding: 9px;
+      border-radius: 10px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #d1d5db;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .service-report-entry strong {
+      display: block;
+      color: #c4b5fd;
+      margin-bottom: 3px;
+    }
+
+    /* ===== CHECKLIST CONTRATADO ===== */
+    .contracted-checklist-intro {
+      color: #94a3b8;
+      font-size: 11px;
+      line-height: 1.45;
+      margin-bottom: 8px;
+    }
+
+
     @media (max-width: 440px) {
       .dashboard-grid { grid-template-columns:1fr 1fr; gap:9px; }
       .dashboard-card { padding:13px; min-height:108px; }
@@ -1322,6 +1418,7 @@
 
       appendWorkAssistant(card, job, isToday);
       appendPhotoModule(card, job, isToday);
+      appendServiceReport(card, job, isToday);
       appendChecklist(card, job, isToday);
       appendWorkflowControls(card, job, isToday);
       return card;
@@ -1770,6 +1867,149 @@
       }
     }
 
+
+    function appendServiceReport(card, job, isToday) {
+      const stage = getWorkflowStage(job);
+      const canWrite = isToday && stage !== "completado";
+
+      const box = document.createElement("div");
+      box.className = "service-report-box";
+
+      const title = document.createElement("div");
+      title.className = "service-report-title";
+      title.textContent = "📝 Informe del servicio (opcional)";
+
+      const help = document.createElement("div");
+      help.className = "service-report-help";
+      help.textContent =
+        "Escribe en el momento cualquier cosa que Rodrigo y Dayana deban saber, sea positiva o negativa.";
+
+      const textarea = document.createElement("textarea");
+      textarea.className = "service-report-textarea";
+      textarea.id = "service-report-" + job.id;
+      textarea.placeholder =
+        "Ej.: El cliente volvió a usar el baño después de limpiarlo, había un daño previo o quedó muy satisfecho.";
+      textarea.disabled = !canWrite;
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "service-report-button";
+      button.textContent = "Guardar informe";
+      button.disabled = !canWrite;
+
+      const status = document.createElement("div");
+      status.className = "service-report-status";
+
+      const history = document.createElement("div");
+      history.className = "service-report-history";
+
+      button.addEventListener("click", async () => {
+        const message = textarea.value.trim();
+
+        if (!message) {
+          alert("Escribe el informe antes de guardarlo.");
+          return;
+        }
+
+        button.disabled = true;
+        button.textContent = "GUARDANDO...";
+        status.textContent = "";
+
+        try {
+          await saveServiceReport(job, message);
+          textarea.value = "";
+          status.textContent = "Informe guardado y enviado a Admin.";
+          await loadRecentServiceReports(job.id, history);
+        } catch (error) {
+          console.error(error);
+          alert("No se pudo guardar el informe: " + error.message);
+        } finally {
+          button.disabled = !canWrite;
+          button.textContent = "Guardar informe";
+        }
+      });
+
+      box.append(title, help, textarea, button, status, history);
+      card.appendChild(box);
+
+      loadRecentServiceReports(job.id, history);
+    }
+
+    async function saveServiceReport(job, message) {
+      if (!currentUser) throw new Error("No existe una sesión de Staff activa.");
+
+      const batch = db.batch();
+
+      const reportRef = db.collection("servicios")
+        .doc(job.id)
+        .collection("informes_staff")
+        .doc();
+
+      batch.set(reportRef, {
+        mensaje: message,
+        empleado_nombre: currentUser.nombre,
+        empleado_email: currentUser.email,
+        etapa_staff: getWorkflowStage(job),
+        fecha: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      const notificationRef = db.collection("notificaciones_admin").doc();
+
+      batch.set(notificationRef, {
+        tipo: "informe_staff",
+        titulo: "Nuevo informe del servicio",
+        mensaje: message,
+        servicio_id: job.id,
+        cliente: safeText(job.cliente, "Servicio"),
+        empleado_nombre: currentUser.nombre,
+        empleado_email: currentUser.email,
+        etapa_staff: getWorkflowStage(job),
+        leida: false,
+        fecha: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      batch.update(db.collection("servicios").doc(job.id), {
+        ultimo_informe_staff: message,
+        ultimo_informe_staff_por: currentUser.nombre,
+        ultimo_informe_staff_fecha:
+          firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      await batch.commit();
+    }
+
+    async function loadRecentServiceReports(jobId, container) {
+      try {
+        const snapshot = await db.collection("servicios")
+          .doc(jobId)
+          .collection("informes_staff")
+          .orderBy("fecha", "desc")
+          .limit(3)
+          .get();
+
+        container.innerHTML = "";
+
+        snapshot.forEach(doc => {
+          const report = doc.data();
+          const entry = document.createElement("div");
+          entry.className = "service-report-entry";
+
+          const author = document.createElement("strong");
+          author.textContent =
+            safeText(report.empleado_nombre, "Staff") +
+            (report.etapa_staff ? " · " + report.etapa_staff.replaceAll("_", " ") : "");
+
+          const message = document.createElement("div");
+          message.textContent = safeText(report.mensaje);
+
+          entry.append(author, message);
+          container.appendChild(entry);
+        });
+      } catch (error) {
+        console.warn("No se pudieron cargar los informes:", error);
+      }
+    }
+
     let pendingFinalInspection = null;
 
     function getAssistantMessage(job, isToday) {
@@ -1804,18 +2044,16 @@
 
     function getInspectionItems(job) {
       const items = [
-        "Checklist completo",
-        "Fotografías finales obligatorias completadas",
-        "Herramientas recogidas",
-        "Productos guardados",
-        "Basura retirada",
-        "Puertas cerradas",
-        "Luces apagadas",
-        "Objetos personales revisados"
+        "Hice una revisión visual final del resultado",
+        "Recogí herramientas, productos y basura",
+        "Dejé puertas, luces y la propiedad aseguradas"
       ];
-      if (["si","sí"].includes(normalize(job.perros))) items.push("Puertas y accesos verificados por presencia de mascotas");
-      if (normalize(job.tipo).includes("move")) items.push("Closets, gabinetes y áreas vacías revisados");
-      if (normalize(job.tipo).includes("post")) items.push("Segunda revisión de polvo fino completada");
+
+      if (["si", "sí"].includes(normalize(job.perros))) {
+        items[2] =
+          "Dejé puertas, luces, mascotas y la propiedad aseguradas";
+      }
+
       return items;
     }
 
@@ -1899,114 +2137,72 @@
     }
 
     function getChecklistTemplate(job) {
-      const type = normalize(job.tipo)
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
+      const items = [];
 
-      const common = [
-        "Revisar y recoger basura",
-        "Aspirar o barrer pisos",
-        "Trapear pisos",
-        "Realizar revisión final"
-      ];
+      const addCountedArea = (value, singular, plural, icon) => {
+        const amount = Number(value || 0);
+        if (amount <= 0) return;
 
-      const standard = [
-        "Limpiar cocina y superficies",
-        "Limpiar baños",
-        "Limpiar habitaciones",
-        "Limpiar sala y áreas comunes",
-        "Quitar polvo de superficies accesibles",
-        ...common
-      ];
+        items.push(
+          icon + " " + amount + " " + (amount === 1 ? singular : plural)
+        );
+      };
 
-      const deep = [
-        "Limpiar cocina en detalle",
-        "Limpiar baños en detalle",
-        "Limpiar habitaciones",
-        "Limpiar sala y áreas comunes",
-        "Quitar polvo de superficies, esquinas y bordes",
-        "Revisar baseboards si están incluidos",
-        "Revisar gabinetes si están incluidos",
-        "Revisar ventanas si están incluidas",
-        "Revisar horno si está incluido",
-        "Revisar nevera si está incluida",
-        ...common
-      ];
+      addCountedArea(job.habitaciones, "habitación", "habitaciones", "🛏️");
+      addCountedArea(job.banos, "baño", "baños", "🚿");
+      addCountedArea(job.medios_banos, "medio baño", "medios baños", "🚽");
+      addCountedArea(job.cocinas, "cocina", "cocinas", "🍳");
+      addCountedArea(job.salas, "sala", "salas", "🛋️");
+      addCountedArea(job.comedor, "comedor", "comedores", "🍽️");
+      addCountedArea(job.oficinas, "oficina", "oficinas", "💻");
+      addCountedArea(job.lavanderia, "lavandería", "lavanderías", "🧺");
+      addCountedArea(job.garaje, "garaje", "garajes", "🚙");
+      addCountedArea(job.sala_juegos, "sala de juegos", "salas de juegos", "🎮");
 
-      const move = [
-        "Revisar habitaciones y closets",
-        "Limpiar cocina completa",
-        "Limpiar baños completos",
-        "Limpiar gabinetes según lo solicitado",
-        "Limpiar electrodomésticos incluidos",
-        "Limpiar ventanas y marcos según lo solicitado",
-        "Limpiar baseboards",
-        "Aspirar closets, esquinas y áreas vacías",
-        ...common
-      ];
-
-      const postConstruction = [
-        "Retirar polvo fino de superficies horizontales",
-        "Limpiar marcos y bordes de ventanas",
-        "Limpiar baseboards y esquinas",
-        "Limpiar gabinetes y closets",
-        "Limpiar cocina",
-        "Limpiar baños",
-        "Aspirar cuidadosamente toda la propiedad",
-        "Trapear y revisar residuos de construcción",
-        "Realizar una segunda revisión de polvo fino",
-        ...common
-      ];
-
-      let items = standard;
-
-      if (type.includes("profunda") || type.includes("primera")) {
-        items = deep;
-      } else if (type.includes("move-in") || type.includes("move-out")) {
-        items = move;
-      } else if (type.includes("post-construccion")) {
-        items = postConstruction;
-      }
-
-      const extras = [];
-
-      if (["si", "sí"].includes(normalize(job.perros))) {
-        extras.push("Verificar puertas y accesos por presencia de mascotas");
-      }
-
-      if (String(job.horno || "").trim() && String(job.horno) !== "0") {
-        extras.push("Completar limpieza de horno");
+      const ovenCount = Number(job.horno || 0);
+      if (ovenCount > 0) {
+        items.push("🔥 " + ovenCount + " " + (ovenCount === 1 ? "horno" : "hornos"));
       }
 
       if (String(job.nevera || "").trim() &&
           normalize(job.nevera) !== "no") {
-        extras.push("Completar limpieza de nevera: " + job.nevera);
+        items.push("🧊 Nevera: " + job.nevera);
       }
 
       if (String(job.gabinetes || "").trim() &&
           normalize(job.gabinetes) !== "no") {
-        extras.push("Completar gabinetes: " + job.gabinetes);
+        items.push("🚪 Gabinetes: " + job.gabinetes);
       }
 
       if (String(job.ventanas || "").trim() &&
           normalize(job.ventanas) !== "no") {
-        extras.push("Completar ventanas: " + job.ventanas);
+        items.push("🪟 Ventanas: " + job.ventanas);
       }
 
-      if (String(job.baseboards || "").trim() &&
-          normalize(job.baseboards) !== "no") {
-        extras.push("Completar limpieza de baseboards");
+      if (["si", "sí"].includes(normalize(job.baseboards))) {
+        items.push("🧽 Baseboards");
       }
 
-      if (Number(job.alfombra_habitaciones || 0) > 0) {
-        extras.push(
-          "Completar lavado de alfombra en " +
-          job.alfombra_habitaciones +
-          " habitación(es)"
+      const carpetRooms = Number(job.alfombra_habitaciones || 0);
+      const carpetFeet = Number(job.alfombra_pies_cuadrados || 0);
+
+      if (carpetRooms > 0) {
+        items.push(
+          "🧹 Lavado de alfombra: " +
+          carpetRooms +
+          " " +
+          (carpetRooms === 1 ? "habitación" : "habitaciones")
         );
+      } else if (carpetFeet > 0) {
+        items.push("🧹 Lavado de alfombra: " + carpetFeet + " ft²");
       }
 
-      return Array.from(new Set([...items, ...extras]));
+      // En caso de que Admin no tenga áreas cargadas, deja una confirmación simple.
+      if (!items.length) {
+        items.push("✅ Servicio contratado completado");
+      }
+
+      return Array.from(new Set(items));
     }
 
     function getChecklistState(job, items) {
@@ -2038,7 +2234,7 @@
 
       const title = document.createElement("div");
       title.className = "checklist-title";
-      title.textContent = "Checklist del servicio";
+      title.textContent = "Trabajo contratado";
 
       const count = document.createElement("div");
       count.className = "checklist-count";
@@ -2060,6 +2256,12 @@
 
       header.append(title, count);
       box.append(header, progress);
+
+      const intro = document.createElement("div");
+      intro.className = "contracted-checklist-intro";
+      intro.textContent =
+        "Marca únicamente las áreas y extras contratados cuando estén listos.";
+      box.appendChild(intro);
 
       items.forEach((item, index) => {
         const key = "item_" + index;
@@ -2119,7 +2321,7 @@
           "Checklist cerrado porque el trabajo ya fue completado.";
       } else {
         note.textContent =
-          "Marca cada tarea a medida que se complete.";
+          "Marca cada área o extra contratado cuando esté listo.";
       }
 
       box.appendChild(note);
