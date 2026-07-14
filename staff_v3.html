@@ -853,6 +853,55 @@
     }
 
 
+
+    /* ===== HISTORIAL COMPLETO DE PAUSAS ===== */
+    .break-summary {
+      grid-column: 1 / -1;
+      padding: 11px;
+      border-radius: 12px;
+      background: #0f172a;
+      border: 1px solid #475569;
+      color: #e5e7eb;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .break-summary strong {
+      color: #fbbf24;
+    }
+
+    .break-history {
+      grid-column: 1 / -1;
+      display: grid;
+      gap: 7px;
+    }
+
+    .break-history-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      padding: 10px;
+      border-radius: 11px;
+      background: #111827;
+      border: 1px solid #334155;
+      color: #d1d5db;
+      font-size: 11px;
+    }
+
+    .break-history-item strong {
+      color: #fbbf24;
+    }
+
+    .break-history-empty {
+      padding: 10px;
+      border-radius: 11px;
+      color: #94a3b8;
+      background: #0f172a;
+      border: 1px dashed #334155;
+      font-size: 11px;
+      text-align: center;
+    }
+
     @media (max-width: 440px) {
       .dashboard-grid { grid-template-columns:1fr 1fr; gap:9px; }
       .dashboard-card { padding:13px; min-height:108px; }
@@ -1330,80 +1379,28 @@
       card.appendChild(notes);
 
       const alerts = [];
+
       if (normalize(job.perros) === "sí" || normalize(job.perros) === "si") {
-        alerts.push({ text: "🐶 Hay perros en la propiedad", type: "warning" });
-      }
-      if (Number(job.alfombra_habitaciones || 0) > 0) {
-        alerts.push({ text: `🧹 ${job.alfombra_habitaciones} habitación(es) con alfombra`, type: "info" });
-      }
-      if (safeText(job.nevera) && normalize(job.nevera) !== "no") {
-        alerts.push({ text: `🧊 Nevera: ${job.nevera}`, type: "task" });
-      }
-      if (safeText(job.gabinetes) && normalize(job.gabinetes) !== "no") {
-        alerts.push({ text: `🚪 Gabinetes: ${job.gabinetes}`, type: "task" });
-      }
-      if (safeText(job.ventanas) && normalize(job.ventanas) !== "no") {
-        alerts.push({ text: `🪟 Ventanas: ${job.ventanas}`, type: "task" });
-      }
-      if (normalize(job.baseboards) === "sí" || normalize(job.baseboards) === "si") {
-        alerts.push({ text: "🧽 Limpiar baseboards", type: "task" });
+        alerts.push({
+          text: "🐶 Hay perros en la propiedad",
+          type: "warning"
+        });
       }
 
       if (alerts.length) {
         const alertsBox = document.createElement("div");
         alertsBox.className = "operational-alerts";
+
         alerts.forEach(alert => {
           const chip = document.createElement("span");
           chip.className = `operational-alert ${alert.type}`;
           chip.textContent = alert.text;
           alertsBox.appendChild(chip);
         });
+
         card.appendChild(alertsBox);
       }
 
-      const detailItems = [
-        ["Pies cuadrados", job.pies_cuadrados],
-        ["Habitaciones", job.habitaciones],
-        ["Baños", job.banos],
-        ["Medios baños", job.medios_banos],
-        ["Salas", job.salas],
-        ["Cocinas", job.cocinas],
-        ["Oficinas", job.oficinas],
-        ["Lavandería", job.lavanderia],
-        ["Garaje", job.garaje],
-        ["Comedor", job.comedor],
-        ["Sala de juegos", job.sala_juegos],
-        ["Horno", job.horno],
-        ["Nevera", job.nevera],
-        ["Gabinetes", job.gabinetes],
-        ["Ventanas", job.ventanas],
-        ["Baseboards", job.baseboards],
-        ["Perros", job.perros],
-        ["Habitaciones con alfombra", job.alfombra_habitaciones],
-        ["Pies² de alfombra", job.alfombra_pies_cuadrados]
-      ].filter(([, value]) => {
-        const normalized = String(value ?? "").trim().toLowerCase();
-        return normalized !== "" && normalized !== "0" && normalized !== "no";
-      });
-
-      if (detailItems.length) {
-        const details = document.createElement("div");
-        details.className = "notas-box";
-
-        const detailsTitle = document.createElement("b");
-        detailsTitle.textContent = "Detalles del trabajo:";
-        details.appendChild(detailsTitle);
-        details.appendChild(document.createElement("br"));
-
-        detailItems.forEach(([label, value]) => {
-          const row = document.createElement("div");
-          row.textContent = `${label}: ${value}`;
-          row.style.marginTop = "6px";
-          details.appendChild(row);
-        });
-
-        card.appendChild(details);
-      }
 
       if (job.direccion) {
         const maps = document.createElement("a");
@@ -2023,10 +2020,10 @@
       if (stage === "pausado") return "El trabajo está pausado. Cuando regreses, presiona “Reanudar”.";
       if (stage === "completado") return "Servicio completado. Verifica que toda la información haya quedado registrada.";
 
-      if (type.includes("post-construccion")) return "Concéntrate en polvo fino, marcos, bordes, repisas y superficies horizontales. Completa el checklist antes de finalizar.";
-      if (type.includes("move-in") || type.includes("move-out")) return "Revisa closets, gabinetes, esquinas y áreas vacías. Completa el checklist y realiza la inspección final.";
-      if (type.includes("profunda") || type.includes("primera")) return "Presta atención a detalles, esquinas, baseboards y extras incluidos. Marca el checklist a medida que avances.";
-      return "Completa el checklist a medida que avances. Antes de salir, realiza la inspección final.";
+      if (type.includes("post-construccion")) return "Concéntrate en polvo fino y marca únicamente las áreas contratadas cuando estén listas.";
+      if (type.includes("move-in") || type.includes("move-out")) return "Revisa closets, gabinetes y áreas vacías; marca únicamente lo contratado cuando esté listo.";
+      if (type.includes("profunda") || type.includes("primera")) return "Revisa las instrucciones y marca cada área o extra contratado cuando esté listo.";
+      return "Marca cada área contratada cuando esté lista y realiza una revisión visual antes de salir.";
     }
 
     function appendWorkAssistant(card, job, isToday) {
@@ -2415,10 +2412,9 @@
       if(job.hora_en_camino) lines.push("🚗 En camino: "+job.hora_en_camino);
       if(job.hora_llegada) lines.push("📍 Llegada: "+job.hora_llegada);
       if(hasRealTime(job.hora_inicio)) lines.push("🧹 Inicio: "+job.hora_inicio);
-      if(job.hora_pausa) lines.push("☕ Última pausa: "+job.hora_pausa);
-      if(job.hora_reanudacion) lines.push("▶ Reanudación: "+job.hora_reanudacion);
       if(hasRealTime(job.hora_fin)) lines.push("✅ Fin: "+job.hora_fin);
-      if (lines.length) {
+
+      if (lines.length || Number(job.pausas_count || 0) > 0) {
         const times = document.createElement("div");
         times.className = "workflow-time";
 
@@ -2429,6 +2425,25 @@
           times.appendChild(item);
         });
 
+        const pauseSummary = document.createElement("div");
+        pauseSummary.className = "break-summary";
+
+        const pauseCount = Number(job.pausas_count || 0);
+        const totalMinutes = Number(job.pausa_total_minutos || 0);
+
+        pauseSummary.innerHTML =
+          "<strong>☕ Descansos registrados:</strong> " +
+          pauseCount +
+          "<br><strong>Tiempo total en pausa:</strong> " +
+          formatMinutes(totalMinutes);
+
+        times.appendChild(pauseSummary);
+
+        const pauseHistory = document.createElement("div");
+        pauseHistory.className = "break-history";
+        times.appendChild(pauseHistory);
+
+        loadBreakHistory(job.id, pauseHistory);
         box.appendChild(times);
       }
       card.appendChild(box);
@@ -2442,6 +2457,114 @@
         try{ await handler(); }catch(error){ console.error(error); if(error.message!=="Actualización cancelada") alert("No se pudo actualizar el trabajo: "+error.message); button.disabled=false; button.textContent=original; }
       });
       return button;
+    }
+
+
+    function formatMinutes(totalMinutes) {
+      const minutes = Math.max(0, Number(totalMinutes || 0));
+      const hours = Math.floor(minutes / 60);
+      const rest = minutes % 60;
+
+      if (hours <= 0) return rest + " min";
+      if (rest <= 0) return hours + " h";
+      return hours + " h " + rest + " min";
+    }
+
+    async function loadBreakHistory(jobId, container) {
+      try {
+        const snapshot = await db.collection("servicios")
+          .doc(jobId)
+          .collection("pausas_staff")
+          .orderBy("inicio_ms", "asc")
+          .get();
+
+        container.innerHTML = "";
+
+        if (snapshot.empty) {
+          container.innerHTML =
+            '<div class="break-history-empty">Todavía no hay descansos registrados.</div>';
+          return;
+        }
+
+        let number = 0;
+
+        snapshot.forEach(doc => {
+          number += 1;
+          const pause = doc.data();
+
+          const item = document.createElement("div");
+          item.className = "break-history-item";
+
+          const details = document.createElement("div");
+          details.innerHTML =
+            "<strong>Descanso " + number + "</strong><br>" +
+            safeText(pause.inicio_texto, "Sin hora") +
+            " – " +
+            safeText(pause.fin_texto, pause.estado === "abierta" ? "En curso" : "Sin hora");
+
+          const duration = document.createElement("div");
+          duration.textContent =
+            pause.estado === "abierta"
+              ? "En curso"
+              : formatMinutes(pause.duracion_minutos || 0);
+
+          item.append(details, duration);
+          container.appendChild(item);
+        });
+      } catch (error) {
+        console.warn("No se pudo cargar el historial de pausas:", error);
+        container.innerHTML =
+          '<div class="break-history-empty">No se pudo cargar el historial.</div>';
+      }
+    }
+
+    async function startStaffBreak(serviceId, timeText, coords) {
+      const pauseRef = db.collection("servicios")
+        .doc(serviceId)
+        .collection("pausas_staff")
+        .doc();
+
+      const startMs = Date.now();
+
+      await pauseRef.set({
+        inicio_texto: timeText,
+        inicio_ms: startMs,
+        inicio_timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        gps_inicio: coords,
+        empleado_email: currentUser.email,
+        empleado_nombre: currentUser.nombre,
+        estado: "abierta"
+      });
+
+      return {
+        pauseId: pauseRef.id,
+        startMs
+      };
+    }
+
+    async function closeStaffBreak(serviceId, pauseId, startMs, timeText, coords) {
+      if (!pauseId) return 0;
+
+      const endMs = Date.now();
+      const durationMinutes = Math.max(
+        0,
+        Math.round((endMs - Number(startMs || endMs)) / 60000)
+      );
+
+      await db.collection("servicios")
+        .doc(serviceId)
+        .collection("pausas_staff")
+        .doc(pauseId)
+        .update({
+          fin_texto: timeText,
+          fin_ms: endMs,
+          fin_timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          gps_fin: coords,
+          duracion_minutos: durationMinutes,
+          estado: "cerrada"
+        });
+
+      return durationMinutes;
     }
 
     async function updateWorkflow(id,nextStage,inspectionConfirmed=false){
@@ -2481,11 +2604,50 @@
       if(nextStage==="llego") Object.assign(update,{estado:"no_iniciado",hora_llegada:timeText,llegada_timestamp:firebase.firestore.FieldValue.serverTimestamp(),gps_llegada:coords});
       if(nextStage==="limpiando"){
         update.estado="en_progreso";
-        const doc=await db.collection("servicios").doc(id).get(); const currentData=doc.exists?doc.data():{};
-        if(!hasRealTime(currentData.hora_inicio)) Object.assign(update,{hora_inicio:timeText,inicio_timestamp:firebase.firestore.FieldValue.serverTimestamp(),gps_inicio:coords});
-        else Object.assign(update,{hora_reanudacion:timeText,reanudacion_timestamp:firebase.firestore.FieldValue.serverTimestamp(),gps_reanudacion:coords});
+
+        const doc = await db.collection("servicios").doc(id).get();
+        const currentData = doc.exists ? doc.data() : {};
+
+        if(!hasRealTime(currentData.hora_inicio)) {
+          Object.assign(update,{
+            hora_inicio:timeText,
+            inicio_timestamp:firebase.firestore.FieldValue.serverTimestamp(),
+            gps_inicio:coords
+          });
+        } else {
+          const durationMinutes = await closeStaffBreak(
+            id,
+            currentData.pausa_activa_id,
+            currentData.pausa_activa_inicio_ms,
+            timeText,
+            coords
+          );
+
+          Object.assign(update,{
+            hora_reanudacion:timeText,
+            reanudacion_timestamp:firebase.firestore.FieldValue.serverTimestamp(),
+            gps_reanudacion:coords,
+            pausa_activa_id: firebase.firestore.FieldValue.delete(),
+            pausa_activa_inicio_ms: firebase.firestore.FieldValue.delete(),
+            pausa_total_minutos:
+              firebase.firestore.FieldValue.increment(durationMinutes)
+          });
+        }
       }
-      if(nextStage==="pausado") Object.assign(update,{estado:"en_progreso",hora_pausa:timeText,pausa_timestamp:firebase.firestore.FieldValue.serverTimestamp(),gps_pausa:coords});
+
+      if(nextStage==="pausado") {
+        const pause = await startStaffBreak(id, timeText, coords);
+
+        Object.assign(update,{
+          estado:"en_progreso",
+          hora_pausa:timeText,
+          pausa_timestamp:firebase.firestore.FieldValue.serverTimestamp(),
+          gps_pausa:coords,
+          pausa_activa_id: pause.pauseId,
+          pausa_activa_inicio_ms: pause.startMs,
+          pausas_count: firebase.firestore.FieldValue.increment(1)
+        });
+      }
       if(nextStage==="completado") Object.assign(update,{estado:"completado",hora_fin:timeText,fin_timestamp:firebase.firestore.FieldValue.serverTimestamp(),gps_fin:coords});
       await db.collection("servicios").doc(id).update(update);
     }
