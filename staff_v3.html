@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Elite Staff v6.0 | Archivo completo -->
+<!-- Elite Staff v6.1 | GPS y orden operativo actualizado -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -972,7 +972,7 @@
           <div class="dashboard-icon">📍</div>
           <div class="dashboard-label">Próxima ubicación</div>
           <div id="dashboard-next-location" class="dashboard-value" style="font-size:17px;">—</div>
-          <div class="dashboard-subvalue">Dirección del siguiente trabajo</div>
+          <div class="dashboard-subvalue">Ubicación del siguiente trabajo</div>
         </div>
 
         <div class="dashboard-card">
@@ -1228,7 +1228,7 @@
       document.getElementById("dashboard-today-count").textContent = todayJobs.length;
       document.getElementById("dashboard-next-time").textContent = nextJob ? safeText(nextJob.hora, "Sin hora") : "—";
       document.getElementById("dashboard-next-client").textContent = nextJob ? safeText(nextJob.cliente, "Servicio asignado") : "Sin servicios pendientes";
-      document.getElementById("dashboard-next-location").textContent = nextJob ? safeText(nextJob.direccion, "Sin dirección") : "—";
+      document.getElementById("dashboard-next-location").textContent = nextJob && nextJob.direccion ? "GPS disponible" : "—";
 
       const status = document.getElementById("dashboard-status");
       const detail = document.getElementById("dashboard-status-detail");
@@ -1359,7 +1359,9 @@
 
       const address = document.createElement("div");
       address.className = "info-row";
-      address.textContent = "📍 " + safeText(job.direccion, "Dirección no disponible");
+      address.textContent = job.direccion
+        ? "📍 GPS DEL TRABAJO"
+        : "📍 GPS NO DISPONIBLE";
       card.appendChild(address);
 
       const notes = document.createElement("div");
@@ -1415,9 +1417,9 @@
       }
 
       appendWorkAssistant(card, job, isToday);
+      appendChecklist(card, job, isToday);
       appendPhotoModule(card, job, isToday);
       appendServiceReport(card, job, isToday);
-      appendChecklist(card, job, isToday);
       appendWorkflowControls(card, job, isToday);
       return card;
     }
