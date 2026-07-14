@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v4.0 | Nico integrado | Archivo único -->
+<!-- Elite Admin v4.1 | Nico original con burbuja de diálogo -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v4.0 - Elite Cleaners Company</title>
+    <title>Elite Admin v4.1 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3788,24 +3788,50 @@ function descargarContabilidadPDF() {
 
       #nicoStartupMessage {
         display: none;
-        position: fixed;
-        right: 18px;
-        bottom: 94px;
+        position: absolute;
+        right: 74px;
+        bottom: 72px;
         z-index: 100002;
-        width: min(290px, calc(100vw - 36px));
-        padding: 12px 14px;
-        border-radius: 15px 15px 3px 15px;
-        border: 1px solid #3b82f6;
-        background: #111827;
-        color: #fff;
-        box-shadow: 0 10px 28px rgba(0,0,0,.55);
+        width: min(260px, calc(100vw - 145px));
+        padding: 13px 15px;
+        box-sizing: border-box;
+        border: 2px solid #111827;
+        border-radius: 20px;
+        background: #ffffff;
+        color: #111827;
+        box-shadow: 0 10px 28px rgba(0,0,0,.42);
         font-size: 13px;
+        font-weight: 650;
         line-height: 1.45;
         animation: nicoNoticeIn .25s ease-out;
       }
 
+      #nicoStartupMessage::before {
+        content: "";
+        position: absolute;
+        right: -17px;
+        bottom: 22px;
+        width: 0;
+        height: 0;
+        border-top: 12px solid transparent;
+        border-bottom: 12px solid transparent;
+        border-left: 18px solid #111827;
+      }
+
+      #nicoStartupMessage::after {
+        content: "";
+        position: absolute;
+        right: -13px;
+        bottom: 24px;
+        width: 0;
+        height: 0;
+        border-top: 10px solid transparent;
+        border-bottom: 10px solid transparent;
+        border-left: 15px solid #ffffff;
+      }
+
       #nicoStartupMessage strong {
-        color: #93c5fd;
+        color: #2563eb;
       }
 
       @keyframes nicoNoticeIn {
@@ -3963,7 +3989,7 @@ function descargarContabilidadPDF() {
 
     const startupMessage = document.createElement("div");
     startupMessage.id = "nicoStartupMessage";
-    document.body.appendChild(startupMessage);
+    nicoBox.appendChild(startupMessage);
 
     const overlay = document.createElement("div");
     overlay.id = "nicoReportOverlay";
@@ -4062,10 +4088,104 @@ function descargarContabilidadPDF() {
     number.style.display = unread > 0 ? "block" : "none";
   }
 
+
+  let nicoOriginalImageSrc = "";
+  let nicoExpressionRestoreTimer = null;
+
+  function getNicoAssetBasePath() {
+    const img = document.getElementById("nicoImg");
+    if (!img) return "";
+
+    const currentSrc = img.getAttribute("src") || "";
+    const lastSlash = currentSrc.lastIndexOf("/");
+    return lastSlash >= 0 ? currentSrc.slice(0, lastSlash + 1) : "";
+  }
+
+  function chooseNicoExpression(type = "normal") {
+    const img = document.getElementById("nicoImg");
+    if (!img) return;
+
+    if (!nicoOriginalImageSrc) {
+      nicoOriginalImageSrc = img.getAttribute("src") || img.src || "";
+    }
+
+    const candidates = {
+      normal: ["saluda.png", "bien.png", "alegre.png"],
+      notice: ["celular.png", "piensa.png", "saluda.png"],
+      success: ["alegre.png", "bien.png", "saluda.png"],
+      attention: ["piensa.png", "celular.png", "reposo.png"]
+    }[type] || ["saluda.png"];
+
+    const base = getNicoAssetBasePath();
+    let index = 0;
+
+    const tryNext = () => {
+      if (index >= candidates.length) {
+        img.onerror = null;
+        if (nicoOriginalImageSrc) img.src = nicoOriginalImageSrc;
+        return;
+      }
+
+      const candidate = base + candidates[index++];
+      img.onerror = tryNext;
+      img.onload = () => {
+        img.onerror = null;
+        img.onload = null;
+      };
+      img.src = candidate;
+    };
+
+    tryNext();
+
+    clearTimeout(nicoExpressionRestoreTimer);
+    nicoExpressionRestoreTimer = setTimeout(() => {
+      img.onerror = null;
+      img.onload = null;
+      if (nicoOriginalImageSrc) img.src = nicoOriginalImageSrc;
+    }, 6000);
+  }
+
+  function getNotificationExpressionType(notification) {
+    const type = String(notification?.tipo || "").toLowerCase();
+    const text = (
+      String(notification?.titulo || "") + " " +
+      String(notification?.mensaje || "")
+    ).toLowerCase();
+
+    if (
+      type.includes("problema") ||
+      type.includes("incidente") ||
+      text.includes("problema") ||
+      text.includes("daño") ||
+      text.includes("urgente")
+    ) {
+      return "attention";
+    }
+
+    if (
+      type.includes("completado") ||
+      type.includes("terminado") ||
+      text.includes("completado") ||
+      text.includes("terminado") ||
+      text.includes("satisfecho")
+    ) {
+      return "success";
+    }
+
+    return "notice";
+  }
+
   function showOneTimeNicoStartupMessage() {
-    const unread = getUnreadNotifications().length;
+    const unreadItems = getUnreadNotifications();
+    const unread = unreadItems.length;
 
     if (unread > 0) {
+      chooseNicoExpression(
+        unreadItems.some(item => getNotificationExpressionType(item) === "attention")
+          ? "attention"
+          : "notice"
+      );
+
       showStartupMessage(
         "<strong>Nico:</strong> Rodrigo, tengo " +
         unread +
@@ -4076,6 +4196,7 @@ function descargarContabilidadPDF() {
       return;
     }
 
+    chooseNicoExpression("normal");
     showStartupMessage(
       "<strong>Nico:</strong> " + randomItem(ZERO_NOTIFICATION_PHRASES)
     );
@@ -4097,6 +4218,13 @@ function descargarContabilidadPDF() {
   function openNicoReport() {
     const overlay = document.getElementById("nicoReportOverlay");
     if (!overlay) return;
+
+    const unreadItems = getUnreadNotifications();
+    chooseNicoExpression(
+      unreadItems.length
+        ? getNotificationExpressionType(unreadItems[0])
+        : "normal"
+    );
 
     overlay.style.display = "block";
     renderNicoReport();
