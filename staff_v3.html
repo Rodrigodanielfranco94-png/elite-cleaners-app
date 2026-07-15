@@ -2709,5 +2709,131 @@
 })();
 
 </script>
+
+<style>
+/* Elite Staff v7.0.1 DEV — resumen compacto */
+.service-briefing{padding:14px;background:linear-gradient(145deg,#172554,#111827)}
+.briefing-title{margin-bottom:3px;font-size:16px}
+.briefing-subtitle{margin:0 0 13px;color:#bfdbfe;font-size:11px;line-height:1.4}
+.compact-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.compact-fact{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;padding:9px 10px;border:1px solid #334155;border-radius:11px;background:#111827}
+.compact-fact-label{min-width:0;color:#cbd5e1;font-size:11px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.compact-fact-value{flex-shrink:0;color:#fff;font-size:13px;font-weight:950;text-align:right}
+.compact-section{margin-top:13px;padding-top:11px;border-top:1px solid rgba(147,197,253,.22)}
+.compact-section-title{margin-bottom:8px;color:#93c5fd;font-size:10px;font-weight:900;letter-spacing:.7px;text-transform:uppercase}
+.briefing-chips{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 11px}
+.briefing-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid #22c55e;border-radius:999px;background:#052e16;color:#bbf7d0;font-size:10px;font-weight:900;line-height:1.2}
+.briefing-chip.warning{border-color:#f59e0b;background:#451a03;color:#fde68a}
+.briefing-chip.info{border-color:#3b82f6;background:#172554;color:#bfdbfe}
+.briefing-observation{margin-top:8px;padding:10px 11px;border:1px solid #f59e0b;border-radius:11px;background:#451a03;color:#fde68a;font-size:11px;line-height:1.45}
+.btn-gps{min-height:58px;margin:13px 0 0;background:#2563eb;color:#fff;border-color:#60a5fa;font-size:13px;box-shadow:0 8px 22px rgba(37,99,235,.2)}
+.future-control-note{margin-top:9px;color:#94a3b8;font-size:10px;text-align:center}
+.future-card .future-details{display:none}
+.future-card.expanded .future-details{display:block}
+.future-summary-toggle{width:100%;margin-top:13px;padding:14px;border:1px solid #3b82f6;border-radius:13px;background:#172554;color:#bfdbfe;font-weight:900;text-transform:uppercase;cursor:pointer}
+.future-card.expanded .future-summary-toggle{background:#27272a;border-color:#52525b;color:#d4d4d8}
+.future-quick-location{margin-top:11px;color:#d1d5db;font-size:12px}
+.journey-box.future-single-line{margin-top:8px;padding:0;border:0;background:transparent}
+.journey-box.future-single-line .journey-status{margin:0;color:#94a3b8;font-size:10px}
+@media(max-width:440px){.compact-facts{grid-template-columns:1fr 1fr}.compact-fact{padding:8px}.compact-fact-label{font-size:10px}.compact-fact-value{font-size:12px}}
+</style>
+<script>
+(function(){
+  function fact(icon,label,value){
+    const el=document.createElement('div');el.className='compact-fact';
+    const l=document.createElement('span');l.className='compact-fact-label';l.textContent=icon+' '+label;
+    const v=document.createElement('span');v.className='compact-fact-value';v.textContent=value;
+    el.append(l,v);return el;
+  }
+  function chip(icon,text,type=''){
+    const el=document.createElement('span');el.className='briefing-chip'+(type?' '+type:'');el.textContent=icon+' '+text;return el;
+  }
+  function section(box,title,items){
+    if(!items.length)return;
+    const s=document.createElement('div');s.className='compact-section';
+    const h=document.createElement('div');h.className='compact-section-title';h.textContent=title;
+    const g=document.createElement('div');g.className='compact-facts';items.forEach(x=>g.appendChild(x));
+    s.append(h,g);box.appendChild(s);
+  }
+  function estimated(job){
+    if(!job.hora||!job.hora_final_estimada)return'';
+    const parse=x=>{const a=String(x).split(':').map(Number);return a.length===2&&!a.some(Number.isNaN)?a[0]*60+a[1]:null};
+    let a=parse(job.hora),b=parse(job.hora_final_estimada);if(a===null||b===null)return'';let m=b-a;if(m<0)m+=1440;return formatMinutes(m);
+  }
+  function compactBriefing(card,job){
+    const box=document.createElement('section');box.className='service-briefing';
+    const title=document.createElement('h4');title.className='briefing-title';title.textContent='🏠 Resumen del servicio';
+    const sub=document.createElement('p');sub.className='briefing-subtitle';sub.textContent='Información rápida para preparar el servicio.';
+    box.append(title,sub);
+
+    const chips=document.createElement('div');chips.className='briefing-chips';
+    if(['si','sí'].includes(normalize(job.perros)))chips.appendChild(chip('🐶','Hay perros','warning'));
+    const cr=Number(job.alfombra_habitaciones||0),cf=Number(job.alfombra_pies_cuadrados||0);
+    if(cr>0)chips.appendChild(chip('🧹',cr+(cr===1?' habitación con alfombra':' habitaciones con alfombra'),'info'));
+    else if(cf>0)chips.appendChild(chip('🧹',cf+' ft² de alfombra','info'));
+    if(safeText(job.nevera)&&normalize(job.nevera)!=='no')chips.appendChild(chip('🧊','Nevera: '+job.nevera));
+    if(safeText(job.gabinetes)&&normalize(job.gabinetes)!=='no')chips.appendChild(chip('🚪','Gabinetes: '+job.gabinetes));
+    if(safeText(job.ventanas)&&normalize(job.ventanas)!=='no')chips.appendChild(chip('🪟','Ventanas: '+job.ventanas));
+    if(Number(job.horno||0)>0)chips.appendChild(chip('🔥','Horno'));
+    if(['si','sí'].includes(normalize(job.baseboards)))chips.appendChild(chip('🪵','Baseboards'));
+    if(chips.children.length)box.appendChild(chips);
+
+    const general=[fact('🧹','Limpieza',safeText(job.tipo,'No especificado'))];
+    const pt=safeText(job.tipo_propiedad||job.propiedad_tipo||job.property_type);if(pt)general.push(fact('🏡','Propiedad',pt));
+    if(Number(job.pies_cuadrados||0)>0)general.push(fact('📐','Pies²',Number(job.pies_cuadrados).toLocaleString()));
+    const dur=estimated(job);if(dur)general.push(fact('⏱️','Tiempo',dur));
+    section(box,'Información general',general);
+
+    const areas=[];const add=(v,i,l)=>{const n=Number(v||0);if(n>0)areas.push(fact(i,l,String(n)))};
+    add(job.habitaciones,'🛏️','Habitaciones');add(job.banos,'🚿','Baños');add(job.medios_banos,'🚽','Medios baños');add(job.salas,'🛋️','Salas');add(job.cocinas,'🍳','Cocinas');add(job.comedor,'🍽️','Comedores');add(job.oficinas,'💼','Oficinas');add(job.lavanderia,'🧺','Lavanderías');add(job.garaje,'🚗','Garajes');add(job.sala_juegos,'🎮','Sala juegos');
+    section(box,'Áreas a limpiar',areas);
+
+    const notes=safeText(job.notas_internas);if(notes){const o=document.createElement('div');o.className='briefing-observation';o.textContent='⚠️ Observación: '+notes;box.appendChild(o)}
+    card.appendChild(box);
+  }
+  async function beginNavigation(id,stage){
+    if(stage!=='asignado')return;
+    const u={etapa_staff:'en_camino',estado:'no_iniciado',hora_en_camino:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true}).toLowerCase(),en_camino_timestamp:firebase.firestore.FieldValue.serverTimestamp(),actualizado_por_staff_email:currentUser?.email||'',actualizado_por_staff_nombre:currentUser?.nombre||''};
+    try{const p=await getPosition();u.gps_en_camino={lat:p.coords.latitude,lon:p.coords.longitude,accuracy:p.coords.accuracy}}catch(_){}
+    try{await db.collection('servicios').doc(id).update(u)}catch(e){console.warn('No se pudo registrar navegación',e)}
+  }
+  function journeyCompact(card,job,isToday){
+    const stage=getWorkflowStage(job);
+    if(!isToday){const n=document.createElement('div');n.className='future-control-note';n.textContent='Los controles aparecerán el día del servicio.';card.appendChild(n);return}
+    if(stage==='asignado'){const n=document.createElement('div');n.className='future-control-note';n.textContent='Abre el GPS para registrar que vas en camino.';card.appendChild(n);return}
+    if(stage==='en_camino'){
+      const b=document.createElement('div');b.className='journey-box';const s=document.createElement('div');s.className='journey-status';s.textContent='Navegación iniciada. Confirma cuando estés en la propiedad.';
+      const a=document.createElement('button');a.className='journey-arrive-btn';a.textContent='📍 YA LLEGUÉ';a.onclick=async()=>{a.disabled=true;a.textContent='REGISTRANDO...';try{await updateWorkflow(job.id,'llego')}catch(e){alert('No se pudo registrar la llegada: '+e.message);a.disabled=false;a.textContent='📍 YA LLEGUÉ'}};
+      b.append(s,a);card.appendChild(b)
+    }
+  }
+  function makeBriefingContent(container,job,isToday,stage){
+    compactBriefing(container,job);
+    if(job.direccion){const m=document.createElement('a');m.className='btn-gps';m.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(job.direccion);m.target='_blank';m.rel='noopener noreferrer';m.textContent='📍 ABRIR GPS';if(isToday)m.addEventListener('click',()=>beginNavigation(job.id,stage));container.appendChild(m)}
+    journeyCompact(container,job,isToday);
+  }
+  createJobCard=function(job,isToday=false){
+    const card=document.createElement('article');card.className='card'+(!isToday?' future-card':'');
+    const stage=getWorkflowStage(job),oper=['llego','limpiando','pausado','completado'].includes(stage);
+    const head=document.createElement('div');head.className='header-card';
+    const ci=document.createElement('div');ci.className='client-info';const h=document.createElement('h3');h.textContent=safeText(job.cliente,'Servicio asignado');const badge=document.createElement('div');badge.className='badge-tipo';badge.textContent=safeText(job.tipo,'ESTÁNDAR');ci.append(h,badge);
+    const dbx=document.createElement('div');dbx.className='date-time-box';const dt=document.createElement('span');dt.className='date-text';dt.textContent=safeText(job.fecha,'SIN FECHA');const tm=document.createElement('span');tm.className='time-text';tm.textContent=safeText(job.hora,'SIN HORA');dbx.append(dt,tm);head.append(ci,dbx);card.appendChild(head);
+    if(!oper){
+      if(!isToday){
+        const loc=document.createElement('div');loc.className='future-quick-location';loc.textContent=job.direccion?'📍 GPS listo':'📍 GPS no disponible';card.appendChild(loc);
+        const toggle=document.createElement('button');toggle.className='future-summary-toggle';toggle.textContent='VER RESUMEN';
+        const details=document.createElement('div');details.className='future-details';makeBriefingContent(details,job,false,stage);
+        toggle.onclick=()=>{card.classList.toggle('expanded');toggle.textContent=card.classList.contains('expanded')?'OCULTAR RESUMEN':'VER RESUMEN'};
+        card.append(toggle,details);return card;
+      }
+      makeBriefingContent(card,job,true,stage);return card;
+    }
+    const ok=document.createElement('div');ok.className='operation-unlocked';ok.textContent='✓ Modo operación habilitado';card.appendChild(ok);
+    const notes=document.createElement('div');notes.className='notas-box';const nt=document.createElement('b');nt.textContent='Instrucciones:';notes.append(nt,document.createElement('br'));const op=[safeText(job.notas_internas),job.alfombra_notas?'Alfombra: '+safeText(job.alfombra_notas):''].filter(Boolean).join('\n\n');notes.appendChild(document.createTextNode(op||'Sin instrucciones especiales.'));card.appendChild(notes);
+    appendWorkAssistant(card,job,isToday);appendChecklist(card,job,isToday);appendPhotoModule(card,job,isToday);appendServiceReport(card,job,isToday);appendWorkflowControls(card,job,isToday);return card;
+  };
+  if(currentUser){renderMergedJobs()}
+})();
+</script>
 </body>
 </html>
