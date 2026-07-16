@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<!-- Elite Admin v4.1 | Nico original con burbuja de diálogo -->
+<!-- Elite Admin v5.0 | Plataforma Empresarial -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v4.1 - Elite Cleaners Company</title>
+    <title>Elite Admin v5.0 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     
     <style>
         body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; padding-bottom: 100px; }
@@ -217,376 +218,174 @@
   margin-top:0;
 }
 
-/* ================= CONTABILIDAD ELITE PRO ================= */
+/* ================= CONTABILIDAD ELITE v4.1 FINAL ================= */
+#elite-accounting-modal{background:#f8fafc!important;color:#0f172a!important;padding:0!important;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.acc-shell{min-height:100vh;display:grid;grid-template-columns:190px 1fr;background:#f8fafc}
+.acc-sidebar{background:linear-gradient(180deg,#071a2c,#061525);color:#fff;padding:18px 10px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.acc-brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;border-bottom:1px solid rgba(255,255,255,.09);margin-bottom:16px}.acc-brand strong{font-size:19px}.acc-brand small{display:block;text-align:right;color:#cbd5e1;font-size:9px}
+.acc-nav{display:flex;align-items:center;gap:11px;padding:11px;border-radius:9px;color:#e2e8f0;font-size:13px;margin-bottom:4px}.acc-nav.active{background:#12385d;color:#60a5fa}.acc-side-spacer{flex:1}.acc-company{display:flex;gap:10px;align-items:center;padding:10px}.acc-company-logo{width:38px;height:38px;border-radius:10px;background:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:20px}.acc-company small{display:block;color:#cbd5e1;font-size:10px}
+.acc-main{padding:18px 20px 28px;min-width:0}.acc-topbar{display:flex;justify-content:space-between;gap:15px;align-items:flex-start;margin-bottom:18px}.acc-heading h2{margin:0;font-size:34px;line-height:1}.acc-heading p{color:#334155;margin:6px 0 0;font-size:13px}.acc-controls{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end}.acc-control{border:1px solid #e2e8f0;background:#fff;border-radius:9px;padding:11px 13px;color:#0f172a;margin:0;width:auto}.acc-btn{border:0;border-radius:9px;padding:11px 14px;font-weight:800;color:#fff;cursor:pointer}.acc-btn.green{background:#16a34a}.acc-btn.blue{background:#2563eb}.acc-btn.red{background:#dc2626}.acc-btn.gray{background:#475569}
+.acc-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:14px}.acc-card{background:#fff;border:1px solid #e2e8f0;border-radius:11px;box-shadow:0 8px 24px rgba(15,23,42,.06)}.acc-metric{padding:16px;min-height:122px;position:relative}.acc-metric h3{font-size:13px;margin:0 0 6px}.acc-metric p{font-size:11px;color:#64748b;margin:0}.acc-metric strong{display:block;font-size:22px;margin-top:24px}.acc-icon{position:absolute;right:16px;top:16px;width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:21px}.acc-green{color:#16a34a}.acc-orange{color:#f97316}.acc-red{color:#dc2626}.acc-purple{color:#7c3aed}.acc-blue{color:#2563eb}.acc-icon.acc-green{background:#dcfce7}.acc-icon.acc-orange{background:#ffedd5}.acc-icon.acc-red{background:#fee2e2}.acc-icon.acc-purple{background:#ede9fe}
+.acc-row3{display:grid;grid-template-columns:1.05fr 1.45fr 1.15fr;gap:14px;margin-bottom:14px}.acc-panel{padding:18px}.acc-panel h3{font-size:14px;margin:0 0 18px}.acc-summary-line,.acc-receivable-line{display:flex;justify-content:space-between;gap:15px;padding:8px 0;font-size:13px}.acc-summary-line.total{border-top:1px solid #e2e8f0;margin-top:8px;padding-top:15px;font-weight:900}.acc-subline{padding-left:14px;font-size:12px}.acc-distribution{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.acc-split{padding:18px;text-align:center;border:1px solid #e2e8f0;border-radius:9px;background:#f8fafc}.acc-split b{font-size:13px}.acc-split strong{display:block;font-size:22px;margin-top:14px}.acc-company-money{margin-top:18px;background:#ecfdf5;border:1px solid #bbf7d0;color:#15803d;border-radius:9px;padding:17px 20px;display:flex;justify-content:space-between;font-weight:900}.acc-progress{height:13px;background:#e2e8f0;border-radius:20px;overflow:hidden;margin-top:14px}.acc-progress>div{height:100%;background:#10b981;border-radius:20px}.acc-progress-label{text-align:right;font-size:10px;color:#16a34a;margin-top:5px}
+.acc-lower{display:grid;grid-template-columns:1fr 2.3fr;gap:14px}.acc-left-stack{display:grid;gap:14px}.acc-chart-wrap{height:205px}.acc-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.acc-mini-chart{height:220px}.acc-table-card{overflow:hidden}.acc-table-title{padding:17px 18px;border-bottom:1px solid #e2e8f0;font-weight:900;font-size:14px}.acc-table-scroll{overflow:auto}.acc-table{width:100%;border-collapse:collapse;min-width:1020px;font-size:11px;background:#fff;color:#0f172a}.acc-table th,.acc-table td{padding:10px;border-bottom:1px solid #e2e8f0;text-align:left;white-space:nowrap}.acc-table th{background:#f8fafc;color:#334155;font-size:10px}.acc-table tfoot td{font-weight:900;background:#f8fafc}.acc-status{display:inline-block;padding:5px 9px;border-radius:7px;font-weight:800;font-size:10px}.acc-status.paid{background:#dcfce7;color:#15803d}.acc-status.deposit{background:#dbeafe;color:#1d4ed8}.acc-status.partial{background:#f1f5f9;color:#475569}.acc-status.unpaid{background:#fee2e2;color:#b91c1c}.acc-empty{padding:30px;text-align:center;color:#64748b}.acc-footer{text-align:center;color:#64748b;font-size:10px;margin-top:25px}
+#modal-gasto-contabilidad{color:#fff}.acc-gasto-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.acc-close-mobile{display:none}
+@media(max-width:1100px){.acc-shell{grid-template-columns:1fr}.acc-sidebar{display:none}.acc-metrics{grid-template-columns:repeat(2,1fr)}.acc-row3,.acc-lower{grid-template-columns:1fr}.acc-close-mobile{display:block}}
+@media(max-width:650px){.acc-main{padding:14px}.acc-topbar{display:block}.acc-controls{justify-content:flex-start;margin-top:16px}.acc-heading h2{font-size:28px}.acc-metrics{grid-template-columns:1fr}.acc-mini-grid{grid-template-columns:1fr}.acc-distribution{grid-template-columns:1fr}.acc-company-money{font-size:13px}}
+@media print{body>*:not(#elite-accounting-modal){display:none!important}#elite-accounting-modal{display:block!important;position:static!important;overflow:visible!important}.acc-sidebar,.acc-controls,.acc-close-mobile{display:none!important}.acc-shell{display:block}.acc-main{padding:0}.acc-card{box-shadow:none}}
 
-#elite-accounting-modal {
-  background:#000 !important;
+    
+
+/* ================= ELITE ADMIN v5.0 — MENÚ EMPRESARIAL ================= */
+:root{
+  --elite-nav:#071a2c;
+  --elite-nav2:#0b2a46;
+  --elite-blue:#3b82f6;
 }
 
-.accounting-grid {
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:8px;
+body.elite-v5-body{
+  padding-left:215px;
+  transition:padding-left .25s ease;
 }
 
-.account-card {
-  background:linear-gradient(145deg,#20242c,#10131a);
-  border:1px solid #2c2c2e;
-  border-radius:16px;
-  padding:10px 6px;
-  text-align:center;
-  min-height:100px;
-  box-shadow:inset 0 1px 1px rgba(255,255,255,.08),0 8px 20px rgba(0,0,0,.45);
-}
-
-.account-card .circle {
-  width:42px;
-  height:42px;
-  border-radius:50%;
-  margin:0 auto 7px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:22px;
+#elite-v5-sidebar{
+  position:fixed;
+  inset:0 auto 0 0;
+  width:195px;
+  z-index:90000;
+  background:linear-gradient(180deg,var(--elite-nav),#061524 75%,#071a2c);
+  border-right:1px solid rgba(255,255,255,.1);
   color:white;
-}
-
-.account-card.green .circle { background:linear-gradient(#52d447,#219b36); }
-.account-card.red .circle { background:linear-gradient(#ff4b4b,#c91f1f); }
-.account-card.blue .circle { background:linear-gradient(#5b7cff,#2563eb); }
-.account-card.purple .circle { background:linear-gradient(#b35cff,#7e22ce); }
-.account-card.yellow .circle { background:linear-gradient(#facc15,#ca8a04); }
-.account-card.pink .circle { background:linear-gradient(#ff4fa3,#db2777); }
-.account-card.cyan .circle { background:linear-gradient(#22d3ee,#0891b2); }
-.account-card.orange .circle { background:linear-gradient(#fb923c,#c2410c); }
-
-.account-card.green h3 { color:#22c55e; }
-.account-card.red h3 { color:#ef4444; }
-.account-card.blue h3 { color:#3b82f6; }
-.account-card.purple h3 { color:#a855f7; }
-.account-card.yellow h3 { color:#f59e0b; }
-.account-card.pink h3 { color:#ec4899; }
-.account-card.cyan h3 { color:#06b6d4; }
-.account-card.orange h3 { color:#fb923c; }
-
-.account-card p {
-  font-size:8px;
-  margin:4px 0;
-  color:#c7c7cc;
-  text-transform:uppercase;
-}
-
-.account-card h3 {
-  font-size:15px;
-  margin:0;
-  font-weight:900;
-}
-
-.acc-title {
-  margin:18px 0 10px;
-  font-size:16px;
-  font-weight:900;
-  text-transform:uppercase;
-}
-
-.charts-grid {
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:8px;
-}
-
-.chart-box,
-.expense-box {
-  background:linear-gradient(145deg,#20242c,#10131a);
-  border:1px solid #2c2c2e;
-  border-radius:18px;
-  padding:12px;
-  box-shadow:0 8px 20px rgba(0,0,0,.4);
-}
-
-.chart-box {
-  min-height:210px;
-}
-
-.chart-box h4 {
-  font-size:10px;
-  margin:0 0 8px;
-  text-align:center;
-}
-
-.vertical-chart,
-.monthly-chart {
-  height:145px;
-  display:flex;
-  align-items:flex-end;
-  justify-content:space-around;
-  border-left:1px solid #374151;
-  border-bottom:1px solid #374151;
-  padding:8px 5px 0;
-  gap:5px;
-  box-sizing:border-box;
-}
-
-.vbar-wrap {
-  height:100%;
   display:flex;
   flex-direction:column;
-  justify-content:flex-end;
-  align-items:center;
-  flex:1;
+  padding:15px 9px;
+  box-sizing:border-box;
+  box-shadow:8px 0 30px rgba(0,0,0,.28);
 }
 
-.vbar-value {
-  font-size:8px;
-  font-weight:900;
-  margin-bottom:4px;
-  white-space:nowrap;
-}
-
-.vbar {
-  width:24px;
-  min-height:3px;
-  border-radius:6px 6px 0 0;
-  background:linear-gradient(#65d84f,#22c55e,#15803d);
-}
-
-.vbar.blue {
-  background:linear-gradient(#60a5fa,#3b82f6,#0284c7);
-}
-
-.vbar.red {
-  background:linear-gradient(#f87171,#ef4444,#991b1b);
-}
-
-.vbar-label {
-  font-size:8px;
-  color:#d1d5db;
-  margin-top:5px;
-}
-
-.donut-pro {
-  width:105px;
-  height:105px;
-  border-radius:50%;
-  margin:12px auto;
-  background:conic-gradient(#facc15 0 35%, #ec4899 35% 70%, #06b6d4 70% 100%);
-  position:relative;
-}
-
-.donut-pro::after {
-  content:"";
-  position:absolute;
-  inset:30px;
-  background:#111827;
-  border-radius:50%;
-}
-
-.donut-center {
-  position:absolute;
-  inset:0;
-  z-index:2;
+.elite-v5-brand{
   display:flex;
   align-items:center;
-  justify-content:center;
-  color:white;
-  font-size:11px;
-  font-weight:900;
-}
-
-.legend-pro {
-  font-size:7px;
-}
-
-.legend-pro div {
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:3px;
-  margin:3px 0;
-}
-
-.legend-dot {
-  width:8px;
-  height:8px;
-  border-radius:50%;
-  display:inline-block;
-  margin-right:3px;
-}
-
-.expense-box {
-  margin-top:10px;
-}
-
-.expense-row {
-  display:grid;
-  grid-template-columns:34px 120px 1fr 82px;
-  align-items:center;
-  gap:8px;
+  gap:9px;
+  padding:5px 8px 17px;
+  border-bottom:1px solid rgba(255,255,255,.09);
   margin-bottom:12px;
-  font-size:13px;
 }
+.elite-v5-brand-crown{font-size:26px}
+.elite-v5-brand-title{font-size:17px;font-weight:900;line-height:1}
+.elite-v5-brand-version{font-size:9px;color:#cbd5e1;text-align:right;margin-top:3px}
 
-.expense-icon {
-  font-size:20px;
-  text-align:center;
+.elite-v5-nav{
+  overflow-y:auto;
+  padding-right:2px;
 }
-
-.bar-bg {
-  height:13px;
-  background:#2c2c2e;
-  border-radius:20px;
-  overflow:hidden;
-}
-
-.bar-fill {
-  height:100%;
-  border-radius:20px;
-  background:linear-gradient(90deg,#22c55e,#65d84f);
-}
-
-.expense-money {
-  text-align:right;
-  font-size:12px;
-}
-
-.expense-money span {
-  color:#8e8e93;
-  font-size:10px;
-  margin-left:4px;
-}
-
-.account-table {
+.elite-v5-nav-btn{
   width:100%;
-  border-collapse:collapse;
-  font-size:10px;
-  background:#111827;
-  border-radius:14px;
-  overflow:hidden;
-}
-
-.account-table th {
-  background:#18181b;
-  color:#9ca3af;
-  text-transform:uppercase;
-  font-size:9px;
-}
-
-.account-table th,
-.account-table td {
-  padding:8px 6px;
-  border-bottom:1px solid #2c2c2e;
-}
-
-.account-table tfoot td {
-  font-weight:900;
-}
-
-.account-actions {
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:10px;
-  margin-top:20px;
-}
-
-.account-actions button {
-  padding:14px 8px;
-  font-size:11px;
   border:none;
-  border-radius:14px;
+  background:transparent;
+  color:#e5e7eb;
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:11px 10px;
+  border-radius:9px;
+  font-size:12px;
+  text-align:left;
+  cursor:pointer;
+  margin-bottom:3px;
+  transition:.2s;
+}
+.elite-v5-nav-btn:hover{background:rgba(59,130,246,.14);color:white}
+.elite-v5-nav-btn.active{background:#12385d;color:#60a5fa;box-shadow:inset 3px 0 #3b82f6}
+.elite-v5-nav-icon{width:18px;text-align:center;font-size:15px}
+.elite-v5-spacer{flex:1}
+.elite-v5-company{
+  border-top:1px solid rgba(255,255,255,.09);
+  padding:15px 8px 5px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+.elite-v5-company-logo{
+  width:34px;height:34px;border-radius:9px;background:linear-gradient(145deg,#60a5fa,#2563eb);
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+}
+.elite-v5-company b{font-size:13px;display:block}
+.elite-v5-company small{font-size:9px;color:#cbd5e1}
+
+#elite-v5-mobile-toggle{
+  display:none;
+  position:fixed;
+  top:10px;
+  left:10px;
+  z-index:90002;
+  width:43px;
+  height:43px;
+  border:none;
+  border-radius:12px;
+  background:#0b2a46;
   color:white;
-  font-weight:900;
+  font-size:22px;
+  box-shadow:0 8px 25px rgba(0,0,0,.4);
+}
+#elite-v5-sidebar-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:89999;
+  background:rgba(0,0,0,.62);
 }
 
-.account-actions button:nth-child(1){background:#22c55e;}
-.account-actions button:nth-child(2){background:#7c3aed;}
-.account-actions button:nth-child(3){background:#2563eb;}
-
-@media(max-width:700px) {
-  .accounting-grid {
-    grid-template-columns:repeat(4,1fr);
-    gap:6px;
-  }
-
-  .account-card {
-    min-height:88px;
-    padding:7px 4px;
-    border-radius:13px;
-  }
-
-  .account-card .circle {
-    width:32px;
-    height:32px;
-    font-size:17px;
-  }
-
-  .account-card p {
-    font-size:6px;
-  }
-
-  .account-card h3 {
-    font-size:11px;
-  }
-
-  .charts-grid {
-    grid-template-columns:1fr 1fr 2fr;
-    gap:6px;
-  }
-
-  .chart-box {
-    min-height:245px;
-    padding:8px;
-  }
-
-  .chart-box h4 {
-    font-size:8px;
-  }
-
-  .vertical-chart,
-  .monthly-chart {
-    height:155px;
-    padding:8px 4px 0;
-  }
-
-  .vbar {
-    width:21px;
-  }
-
-  .vbar-value {
-    font-size:7px;
-  }
-
-  .vbar-label {
-    font-size:7px;
-  }
-
-  .donut-pro {
-    width:85px;
-    height:85px;
-  }
-
-  .donut-pro::after {
-    inset:25px;
-  }
-
-  .legend-pro {
-    font-size:5px;
-  }
-
-  .expense-row {
-    grid-template-columns:28px 95px 1fr 75px;
-    font-size:12px;
-    gap:6px;
-  }
-
-  .account-table {
-    font-size:8px;
-  }
-
-  .account-actions button {
-    font-size:9px;
-    padding:11px 4px;
-  }
+.elite-v5-highlight{
+  animation:eliteV5Highlight 1.6s ease;
 }
-    </style>
+@keyframes eliteV5Highlight{
+  0%,100%{box-shadow:none}
+  35%{box-shadow:0 0 0 3px #3b82f6,0 0 30px rgba(59,130,246,.65)}
+}
+
+#elite-v5-module-modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:1000002;
+  background:rgba(0,0,0,.9);
+  padding:18px;
+  box-sizing:border-box;
+  overflow-y:auto;
+}
+.elite-v5-module-box{
+  max-width:700px;
+  margin:35px auto;
+  background:#111827;
+  border:1px solid #3b82f6;
+  border-radius:22px;
+  padding:20px;
+  color:white;
+}
+.elite-v5-module-box h2{margin:0 0 8px;color:#60a5fa}
+.elite-v5-module-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px}
+.elite-v5-module-card{background:#000;border:1px solid #374151;border-radius:14px;padding:14px}
+.elite-v5-module-card b{color:#93c5fd;display:block;margin-bottom:5px}
+
+@media(max-width:800px){
+  body.elite-v5-body{padding-left:15px;padding-top:60px}
+  #elite-v5-sidebar{
+    transform:translateX(-105%);
+    transition:transform .25s ease;
+    width:220px;
+    z-index:90001;
+  }
+  #elite-v5-sidebar.open{transform:translateX(0)}
+  #elite-v5-sidebar-overlay.open{display:block}
+  #elite-v5-mobile-toggle{display:block}
+}
+
+@media print{
+  #elite-v5-sidebar,#elite-v5-mobile-toggle,#elite-v5-sidebar-overlay{display:none!important}
+  body.elite-v5-body{padding-left:0!important;padding-top:0!important}
+}
+
+</style>
 </head>
 <body>
 <div id="loginBox" style="position:fixed; inset:0; background:#000; z-index:99999; display:flex; align-items:center; justify-content:center; padding:20px;">
@@ -602,6 +401,50 @@
     </button>
 
     <p id="loginError" style="color:#ef4444; font-size:13px; margin-top:12px;"></p>
+  </div>
+</div>
+
+
+<button id="elite-v5-mobile-toggle" type="button" onclick="toggleEliteV5Menu()">☰</button>
+<div id="elite-v5-sidebar-overlay" onclick="cerrarEliteV5Menu()"></div>
+<aside id="elite-v5-sidebar">
+  <div class="elite-v5-brand">
+    <div class="elite-v5-brand-crown">👑</div>
+    <div>
+      <div class="elite-v5-brand-title">Elite Admin</div>
+      <div class="elite-v5-brand-version">v5.0</div>
+    </div>
+  </div>
+
+  <nav class="elite-v5-nav">
+    <button class="elite-v5-nav-btn active" data-module="dashboard" onclick="eliteV5Navigate('dashboard',this)"><span class="elite-v5-nav-icon">⌂</span>Dashboard</button>
+    <button class="elite-v5-nav-btn" data-module="agenda" onclick="eliteV5Navigate('agenda',this)"><span class="elite-v5-nav-icon">▣</span>Agenda</button>
+    <button class="elite-v5-nav-btn" data-module="clientes" onclick="eliteV5Navigate('clientes',this)"><span class="elite-v5-nav-icon">♙</span>Clientes</button>
+    <button class="elite-v5-nav-btn" data-module="empleados" onclick="eliteV5Navigate('empleados',this)"><span class="elite-v5-nav-icon">♙</span>Empleados</button>
+    <button class="elite-v5-nav-btn" data-module="servicios" onclick="eliteV5Navigate('servicios',this)"><span class="elite-v5-nav-icon">♧</span>Servicios</button>
+    <button class="elite-v5-nav-btn" data-module="mensajes" onclick="eliteV5Navigate('mensajes',this)"><span class="elite-v5-nav-icon">▢</span>Mensajes</button>
+    <button class="elite-v5-nav-btn" data-module="resenas" onclick="eliteV5Navigate('resenas',this)"><span class="elite-v5-nav-icon">☆</span>Reseñas</button>
+    <button class="elite-v5-nav-btn" data-module="contabilidad" onclick="eliteV5Navigate('contabilidad',this)"><span class="elite-v5-nav-icon">▣</span>Contabilidad</button>
+    <button class="elite-v5-nav-btn" data-module="gastos" onclick="eliteV5Navigate('gastos',this)"><span class="elite-v5-nav-icon">▱</span>Gastos</button>
+    <button class="elite-v5-nav-btn" data-module="inventario" onclick="eliteV5Navigate('inventario',this)"><span class="elite-v5-nav-icon">▤</span>Inventario</button>
+    <button class="elite-v5-nav-btn" data-module="informes" onclick="eliteV5Navigate('informes',this)"><span class="elite-v5-nav-icon">▥</span>Informes</button>
+    <button class="elite-v5-nav-btn" data-module="configuracion" onclick="eliteV5Navigate('configuracion',this)"><span class="elite-v5-nav-icon">⚙</span>Configuración</button>
+    <button class="elite-v5-nav-btn" data-module="logout" onclick="eliteV5Navigate('logout',this)"><span class="elite-v5-nav-icon">↪</span>Cerrar sesión</button>
+  </nav>
+
+  <div class="elite-v5-spacer"></div>
+  <div class="elite-v5-company">
+    <div class="elite-v5-company-logo">◈</div>
+    <div><b>Elite Cleaners</b><small>Limpieza de Calidad</small></div>
+  </div>
+</aside>
+
+<div id="elite-v5-module-modal">
+  <div class="elite-v5-module-box">
+    <button onclick="cerrarEliteV5ModuleModal()" style="float:right;background:#ef4444;color:white;border:none;border-radius:10px;padding:9px 12px;font-weight:bold;">Cerrar</button>
+    <h2 id="elite-v5-module-title">Módulo</h2>
+    <p id="elite-v5-module-description" style="color:#cbd5e1;margin-top:5px;"></p>
+    <div id="elite-v5-module-content"></div>
   </div>
 </div>
 
@@ -1078,104 +921,38 @@ style="width:100%;"></textarea>
         </div>
     </div>
 
-<!-- ================= CONTABILIDAD ELITE ================= -->
-<div id="elite-accounting-modal" style="display:none; position:fixed; inset:0; background:#000; z-index:999999; overflow-y:auto; padding:18px; box-sizing:border-box;">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
-    <h1 style="margin:0;">ELITE <span>ADMIN</span></h1>
-    <button onclick="cerrarContabilidadElite()" style="background:#111827; color:white; border:1px solid #3b82f6; border-radius:12px; padding:10px 14px; font-weight:bold;">← Volver</button>
-  </div>
-
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-    <div>
-      <h2 style="margin:0; font-size:26px;">💰 CONTABILIDAD</h2>
-      <p id="accounting-subtitle" style="margin:4px 0 0; color:#9ca3af;">Resumen financiero</p>
-    </div>
-
-    <input type="month" id="accounting-month" onchange="renderContabilidadElite()" style="width:150px; margin:0;">
-  </div>
-
-  <div class="accounting-grid">
-    <div class="account-card green"><div class="circle">💵</div><p>INGRESOS TOTALES</p><h3 id="acc-ingresos">$0.00</h3></div>
-    <div class="account-card red"><div class="circle">↓</div><p>GASTOS TOTALES</p><h3 id="acc-gastos">$0.00</h3></div>
-    <div class="account-card blue"><div class="circle">👥</div><p>PAGO EMPLEADOS</p><h3 id="acc-empleados">$0.00</h3></div>
-    <div class="account-card purple"><div class="circle">↗</div><p>GANANCIA NETA</p><h3 id="acc-neta">$0.00</h3></div>
-    <div class="account-card yellow"><div class="circle">👤</div><p>RODRIGO (35%)</p><h3 id="acc-rodrigo">$0.00</h3></div>
-    <div class="account-card pink"><div class="circle">👤</div><p>DAYANA (35%)</p><h3 id="acc-dayana">$0.00</h3></div>
-    <div class="account-card cyan"><div class="circle">🏢</div><p>EMPRESA (30%)</p><h3 id="acc-empresa">$0.00</h3></div>
-    <div class="account-card orange"><div class="circle">💼</div><p>EMPRESA NETO</p><h3 id="acc-empresa-neto">$0.00</h3></div>
-  </div>
-
-<div id="accounting-folder-view" style="display:none; margin-top:15px;"></div>
-
-<h3 class="acc-title">GRÁFICOS</h3>
-
- <div class="charts-grid pro-charts">
-  <div class="chart-box">
-    <h4>Ingresos vs Gastos</h4>
-    <div id="chart-ingresos-gastos" class="vertical-chart"></div>
-  </div>
-
-  <div class="chart-box">
-    <h4>Distribución de Ganancias</h4>
-    <div id="donut-ganancias" class="donut-pro">
-  <div class="donut-center">35%</div>
-</div>
-    <div id="donut-legend-pro" class="legend-pro"></div>
-  </div>
-
-  <div class="chart-box">
-    <h4>Empresa Neto (12 meses)</h4>
-    <div id="chart-empresa-12" class="monthly-chart"></div>
+<!-- ================= CONTABILIDAD ELITE v4.1 FINAL ================= -->
+<div id="elite-accounting-modal" style="display:none;position:fixed;inset:0;z-index:999999;overflow-y:auto;box-sizing:border-box;">
+  <div class="acc-shell">
+    <aside class="acc-sidebar">
+      <div class="acc-brand"><span style="font-size:27px">👑</span><div><strong>Elite Admin</strong><small>v4.1</small></div></div>
+      <div class="acc-nav">⌂ Dashboard</div><div class="acc-nav">▣ Agenda</div><div class="acc-nav">♙ Clientes</div><div class="acc-nav">♙ Empleados</div><div class="acc-nav">♧ Servicios</div><div class="acc-nav">▢ Mensajes</div><div class="acc-nav">☆ Reseñas</div><div class="acc-nav active">▣ Contabilidad</div><div class="acc-nav" onclick="abrirAgregarGasto()">▱ Gastos</div><div class="acc-nav">▣ Inventario</div><div class="acc-nav">▥ Informes</div><div class="acc-nav">⚙ Configuración</div><div class="acc-nav" onclick="cerrarContabilidadElite()">↪ Volver al Admin</div>
+      <div class="acc-side-spacer"></div><div class="acc-company"><div class="acc-company-logo">◈</div><div><b>Elite Cleaners</b><small>Limpieza de Calidad</small></div></div>
+    </aside>
+    <main class="acc-main" id="accounting-capture-area">
+      <button class="acc-btn gray acc-close-mobile" onclick="cerrarContabilidadElite()">← Volver</button>
+      <header class="acc-topbar"><div class="acc-heading"><h2>Contabilidad</h2><p id="accounting-subtitle">Resumen financiero y contable de tu empresa</p></div><div class="acc-controls"><select class="acc-control" id="accounting-month-name" onchange="sincronizarMesContable()"></select><select class="acc-control" id="accounting-year" onchange="sincronizarMesContable()"></select><button class="acc-btn green" onclick="cerrarMesContable()">🔒 Cerrar Mes Contable</button><button class="acc-btn blue" onclick="exportarContabilidadExcel()">⇩ Exportar Excel</button><button class="acc-btn gray" onclick="descargarContabilidadPDF()">PDF</button><button class="acc-btn red" onclick="abrirAgregarGasto()">＋ Gasto</button></div></header>
+      <input type="month" id="accounting-month" onchange="sincronizarSelectoresDesdeMes()" style="display:none">
+      <section class="acc-metrics">
+        <div class="acc-card acc-metric"><h3>Servicios Vendidos</h3><p>Total del mes</p><div class="acc-icon acc-green">🛒</div><strong id="acc-vendido" class="acc-green">$0.00</strong></div>
+        <div class="acc-card acc-metric"><h3>Dinero Cobrado</h3><p>Depósitos + balances</p><div class="acc-icon acc-green">👛</div><strong id="acc-cobrado" class="acc-green">$0.00</strong></div>
+        <div class="acc-card acc-metric"><h3>Pendiente por Cobrar</h3><p>Cuentas por cobrar</p><div class="acc-icon acc-orange">◷</div><strong id="acc-pendiente" class="acc-orange">$0.00</strong></div>
+        <div class="acc-card acc-metric"><h3>Gastos Operativos</h3><p>Combustible, productos, etc.</p><div class="acc-icon acc-red">🛒</div><strong id="acc-gastos" class="acc-red">$0.00</strong></div>
+        <div class="acc-card acc-metric"><h3>Pago de Empleados</h3><p>Nómina del mes</p><div class="acc-icon acc-purple">♙</div><strong id="acc-empleados" class="acc-purple">$0.00</strong></div>
+      </section>
+      <section class="acc-row3">
+        <div class="acc-card acc-panel"><h3>Resumen Financiero del Mes</h3><div class="acc-summary-line"><span>Dinero Cobrado</span><b class="acc-green" id="acc-res-cobrado">$0.00</b></div><div class="acc-summary-line"><span>(−) Pago de Empleados</span><b class="acc-red" id="acc-res-nomina">-$0.00</b></div><div class="acc-summary-line"><span>(−) Gastos Operativos</span><b class="acc-red" id="acc-res-gastos">-$0.00</b></div><div class="acc-summary-line total"><span>= Ganancia Real</span><b class="acc-green" id="acc-neta">$0.00</b></div></div>
+        <div class="acc-card acc-panel"><h3>Distribución de Ganancia (35% / 35% / 30%)</h3><div class="acc-distribution"><div class="acc-split"><b class="acc-blue">Rodrigo 35%</b><strong class="acc-blue" id="acc-rodrigo">$0.00</strong></div><div class="acc-split"><b class="acc-purple">Dayana 35%</b><strong class="acc-purple" id="acc-dayana">$0.00</strong></div><div class="acc-split"><b class="acc-green">Empresa 30%</b><strong class="acc-green" id="acc-empresa">$0.00</strong></div></div><div class="acc-company-money"><span>Dinero Disponible para Empresa</span><span id="acc-empresa-neto">$0.00</span></div></div>
+        <div class="acc-card acc-panel"><h3>Cuentas por Cobrar</h3><div class="acc-receivable-line"><span>Total Vendido</span><b class="acc-blue" id="acc-cxc-vendido">$0.00</b></div><div class="acc-receivable-line"><span>Total Cobrado</span><b class="acc-green" id="acc-cxc-cobrado">$0.00</b></div><div class="acc-receivable-line acc-subline"><span>• Depósitos Recibidos</span><b class="acc-blue" id="acc-depositos">$0.00</b></div><div class="acc-receivable-line acc-subline"><span>• Balances Recibidos</span><b class="acc-blue" id="acc-balances">$0.00</b></div><div class="acc-receivable-line"><b>Pendiente por Cobrar</b><b class="acc-orange" id="acc-cxc-pendiente">$0.00</b></div><div class="acc-progress"><div id="acc-progress-bar" style="width:0%"></div></div><div class="acc-progress-label" id="acc-progress-label">0% cobrado</div></div>
+      </section>
+      <section class="acc-lower"><div class="acc-left-stack"><div class="acc-card acc-panel"><h3>Ganancia Neta de los Últimos 12 Meses (Empresa)</h3><div class="acc-chart-wrap"><canvas id="acc-company-chart"></canvas></div></div><div class="acc-mini-grid"><div class="acc-card acc-panel"><h3>Estado de Trabajos del Mes</h3><div class="acc-mini-chart"><canvas id="acc-status-chart"></canvas></div></div><div class="acc-card acc-panel"><h3>Gastos Operativos del Mes</h3><div class="acc-mini-chart"><canvas id="acc-expense-chart"></canvas></div><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;margin-top:10px"><span>Total Gastos</span><span id="acc-total-gastos">$0.00</span></div></div></div></div>
+        <div class="acc-card acc-table-card"><div class="acc-table-title">Detalle de Servicios / Trabajos</div><div class="acc-table-scroll"><table class="acc-table"><thead><tr><th>Fecha</th><th>Cliente</th><th>Servicio</th><th>Vendido</th><th>Cobrado</th><th>Pendiente</th><th>Empleado(s)</th><th>Rodrigo 35%</th><th>Dayana 35%</th><th>Empresa 30%</th><th>Estado Pago</th></tr></thead><tbody id="accounting-table-body"></tbody><tfoot id="accounting-table-total"></tfoot></table></div></div>
+      </section><div class="acc-footer">Elite Admin v4.1 • Contabilidad Profesional para tu Empresa</div>
+    </main>
   </div>
 </div>
-  <div class="expense-box" id="gastos-categorias"></div>
+<div id="modal-gasto-contabilidad" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:1000000;padding:20px;box-sizing:border-box"><div style="background:#111827;border:1px solid #3b82f6;border-radius:20px;padding:20px;max-width:420px;margin:40px auto"><h2 style="margin-top:0">➕ Agregar gasto</h2><span class="label-text">Fecha</span><input type="date" id="gasto-fecha"><span class="label-text">Categoría</span><select id="gasto-categoria" style="width:100%;padding:14px;margin-bottom:10px;border-radius:12px;background:#2c2c2e;color:#fff;border:1px solid #374151"><option>Combustible</option><option>Productos / Insumos</option><option>Lavandería</option><option>Máquinas / Equipos</option><option>Vehículo</option><option>Publicidad</option><option>Seguro</option><option>Otros</option></select><span class="label-text">Monto</span><input type="number" step="0.01" id="gasto-monto" placeholder="0.00"><span class="label-text">Nota</span><textarea id="gasto-nota" placeholder="Descripción del gasto"></textarea><div class="acc-gasto-actions"><button class="save-btn" onclick="guardarGastoContabilidad()">Guardar</button><button class="save-btn" style="background:#ef4444" onclick="cerrarAgregarGasto()">Cancelar</button></div></div></div>
 
-  <h3 class="acc-title">DETALLE DE TRABAJOS</h3>
-  <div style="overflow-x:auto;">
-    <table class="account-table">
-      <thead>
-        <tr>
-          <th>Fecha</th>
-          <th>Cliente</th>
-          <th>Ingresos</th>
-          <th>Empleados</th>
-          <th>Ganancia Neta</th>
-          <th>Rodrigo</th>
-          <th>Dayana</th>
-          <th>Empresa Neto</th>
-        </tr>
-      </thead>
-      <tbody id="accounting-table-body"></tbody>
-      <tfoot id="accounting-table-total"></tfoot>
-    </table>
-  </div>
-
-  <div class="account-actions">
-    <button onclick="exportarContabilidadExcel()">📗 EXPORTAR EXCEL</button>
-    <button onclick="descargarContabilidadPDF()">📄 DESCARGAR PDF</button>
-    <button onclick="abrirAgregarGasto()">＋ AGREGAR GASTO</button>
-  </div>
-</div>
-
-<div id="modal-gasto-contabilidad" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.92); z-index:1000000; padding:20px;">
-  <div style="background:#111827; border:1px solid #3b82f6; border-radius:20px; padding:20px; max-width:420px; margin:60px auto;">
-    <h2 style="margin-top:0;">➕ Agregar gasto</h2>
-    <span class="label-text">Fecha</span>
-    <input type="date" id="gasto-fecha">
-    <span class="label-text">Categoría</span>
-    <input type="text" id="gasto-categoria" placeholder="Combustible, Walmart, Costco, Laundry...">
-    <span class="label-text">Monto</span>
-    <input type="number" id="gasto-monto" placeholder="0.00">
-    <span class="label-text">Nota</span>
-    <textarea id="gasto-nota" placeholder="Descripción del gasto"></textarea>
-
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-      <button class="save-btn" onclick="guardarGastoContabilidad()">Guardar</button>
-      <button class="save-btn" style="background:#ef4444;" onclick="cerrarAgregarGasto()">Cancelar</button>
-    </div>
-  </div>
-</div>
-    
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucclrHyvjpLA",
@@ -2236,52 +2013,12 @@ La información del cliente NO se borrará.
 
     async function reiniciarHorasMes() {
     const completados = todosLosServicios.filter(s => s.estado === "completado");
-    if (completados.length === 0 || !confirm("¿Deseas cerrar el mes actual?")) return;
-
-    const data = completados.map(s => ({
-        Customer: s.cliente,
-        Date: s.fecha,
-        Price: s.precio_total || 0,
-        Staff_1: s.empleado_nombre || "",
-        Staff_2: s.empleado_nombre_2 || "",
-        Time: calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).texto,
-        Service_Miles: s.millas_servicio || 0,
-        Real_Miles: s.millas_reales || 0,
-        Total_Miles: obtenerMillasServicio(s)
-    }));
-
-    const payrollData = todosLosEmpleados.map(emp => {
-        let min = 0;
-        let millas = 0;
-
-        completados
-            .filter(s => s.empleado_email === emp.email || s.empleado_email_2 === emp.email)
-            .forEach(s => {
-                min += calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).minutos;
-                millas += Number(obtenerMillasServicio(s));
-            });
-
-        return {
-            Staff: emp.nombre,
-            Hours: `${Math.floor(min/60)}h ${min%60}m`,
-            Miles: millas.toFixed(1),
-            Pay: ((min/60) * emp.pago_hora).toFixed(2)
-        };
-    }).filter(r => r.Hours !== "0h 0m" || Number(r.Miles) > 0);
-
-    const wb = XLSX.utils.book_new();
-
-    const ws1 = XLSX.utils.json_to_sheet(data);
-    XLSX.utils.book_append_sheet(wb, ws1, "Jobs");
-
-    const ws2 = XLSX.utils.json_to_sheet(payrollData);
-    XLSX.utils.book_append_sheet(wb, ws2, "Payroll");
-
-    XLSX.writeFile(wb, "Elite_Report.xlsx");
-
-    const batch = db.batch();
-    completados.forEach(s => batch.delete(db.collection("servicios").doc(s.id)));
-    await batch.commit();
+    if (completados.length === 0) return alert("No hay trabajos completados para exportar.");
+    if (!confirm("¿Descargar el reporte de nómina? Los trabajos NO serán eliminados.")) return;
+    const data = completados.map(s => ({Customer:s.cliente,Date:s.fecha,Price:s.precio_total||0,Staff_1:s.empleado_nombre||"",Staff_2:s.empleado_nombre_2||"",Time:calcularTiempoTrabajado(s.hora_inicio,s.hora_fin).texto,Service_Miles:s.millas_servicio||0,Real_Miles:s.millas_reales||0,Total_Miles:obtenerMillasServicio(s)}));
+    const payrollData = todosLosEmpleados.map(emp => {let min=0,millas=0;completados.filter(s=>s.empleado_email===emp.email||s.empleado_email_2===emp.email).forEach(s=>{min+=calcularTiempoTrabajado(s.hora_inicio,s.hora_fin).minutos;millas+=Number(obtenerMillasServicio(s));});return {Staff:emp.nombre,Hours:`${Math.floor(min/60)}h ${min%60}m`,Miles:millas.toFixed(1),Pay:((min/60)*emp.pago_hora).toFixed(2)};}).filter(r=>r.Hours!=="0h 0m"||Number(r.Miles)>0);
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(data),"Jobs");XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(payrollData),"Payroll");XLSX.writeFile(wb,"Elite_Report.xlsx");
+    alert("Reporte descargado. El historial fue conservado.");
 }
 
         function abrirChat(num) {
@@ -3150,553 +2887,100 @@ window.loginAdmin = async function () {
 
 revisarSesion();
 
-// ================= CONTABILIDAD ELITE =================
-
+// ================= CONTABILIDAD ELITE v4.1 FINAL =================
 let gastosContabilidad = [];
+let cierresContables = [];
+let graficosContabilidad = {};
+const MESES_CONTABILIDAD = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
 db.collection("gastos_contabilidad").onSnapshot(snap => {
-    gastosContabilidad = [];
-    snap.forEach(doc => gastosContabilidad.push({ id: doc.id, ...doc.data() }));
-    if (document.getElementById("elite-accounting-modal")?.style.display === "block") {
-        renderContabilidadElite();
-    }
+  gastosContabilidad = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  if (document.getElementById("elite-accounting-modal")?.style.display === "block") renderContabilidadElite();
+});
+db.collection("cierres_contables").onSnapshot(snap => {
+  cierresContables = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 });
 
-function dinero(n) {
-    return "$" + Number(n || 0).toLocaleString("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
+function dinero(n){return Number(n||0).toLocaleString("en-US",{style:"currency",currency:"USD",minimumFractionDigits:2,maximumFractionDigits:2});}
+function mesActualInput(){const h=new Date();return `${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,"0")}`;}
+function inicializarSelectoresContabilidad(){
+  const m=document.getElementById("accounting-month-name"), y=document.getElementById("accounting-year"), hidden=document.getElementById("accounting-month");
+  if(!m||!y||!hidden)return;
+  m.innerHTML=MESES_CONTABILIDAD.map((x,i)=>`<option value="${i}">${x}</option>`).join("");
+  const years=new Set([new Date().getFullYear()]);
+  todosLosServicios.forEach(s=>{const n=Number(String(s.fecha||"").slice(0,4));if(n)years.add(n)});
+  gastosContabilidad.forEach(g=>{const n=Number(String(g.fecha||"").slice(0,4));if(n)years.add(n)});
+  y.innerHTML=[...years].sort((a,b)=>b-a).map(n=>`<option value="${n}">${n}</option>`).join("");
+  hidden.value=hidden.value||mesActualInput(); sincronizarSelectoresDesdeMes(false);
 }
-
-function mesActualInput() {
-    const hoy = new Date();
-    return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`;
+function sincronizarMesContable(){
+  const m=Number(document.getElementById("accounting-month-name").value), y=document.getElementById("accounting-year").value;
+  document.getElementById("accounting-month").value=`${y}-${String(m+1).padStart(2,"0")}`;renderContabilidadElite();
 }
-
-function abrirContabilidadElite() {
-    const inputMes = document.getElementById("accounting-month");
-    if (!inputMes.value) inputMes.value = mesActualInput();
-
-    document.getElementById("elite-accounting-modal").style.display = "block";
-    renderContabilidadElite();
+function sincronizarSelectoresDesdeMes(render=true){
+  const val=document.getElementById("accounting-month")?.value||mesActualInput();const [y,m]=val.split("-");
+  if(document.getElementById("accounting-year"))document.getElementById("accounting-year").value=y;
+  if(document.getElementById("accounting-month-name"))document.getElementById("accounting-month-name").value=String(Number(m)-1);
+  if(render)renderContabilidadElite();
 }
+function abrirContabilidadElite(){document.getElementById("elite-accounting-modal").style.display="block";inicializarSelectoresContabilidad();renderContabilidadElite();}
+function cerrarContabilidadElite(){document.getElementById("elite-accounting-modal").style.display="none";}
 
-function cerrarContabilidadElite() {
-    document.getElementById("elite-accounting-modal").style.display = "none";
+function datosPagoServicio(s){
+  const vendido=Math.max(0,Number(s.precio_total||0));
+  const depositoMonto=Math.max(0,Number(s.deposito_monto||vendido*.5));
+  const balanceMonto=Math.max(0,Number(s.balance_restante!==undefined&&s.balance_restante!==""?s.balance_restante:vendido-depositoMonto));
+  let depositos=s.deposito_pagado===true?Math.min(depositoMonto,vendido):0;
+  let balances=s.balance_pagado===true?Math.min(balanceMonto,Math.max(vendido-depositos,0)):0;
+  if(s.estado_pago==="pagado_completo"&&depositos+balances<vendido)balances=Math.max(vendido-depositos,0);
+  const cobrado=Math.min(vendido,depositos+balances), pendiente=Math.max(vendido-cobrado,0);
+  let estadoPago="No pagado";
+  if(vendido>0&&cobrado>=vendido)estadoPago="Pagado";else if(depositos>0&&balances<=0)estadoPago="Depósito";else if(cobrado>0)estadoPago="Parcial";
+  return{vendido,depositos,balances,cobrado,pendiente,estadoPago};
 }
-
-function calcularPagoEmpleadosServicio(s) {
-    const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
-    const horas = infoTiempo.minutos / 60;
-
-    let pago = 0;
-
-    const emp1 = todosLosEmpleados.find(e => e.email === s.empleado_email || e.nombre === s.empleado_nombre);
-    const emp2 = todosLosEmpleados.find(e => e.email === s.empleado_email_2 || e.nombre === s.empleado_nombre_2);
-
-    if (emp1) pago += horas * Number(emp1.pago_hora || 0);
-    if (emp2) pago += horas * Number(emp2.pago_hora || 0);
-
-    return pago;
+function calcularPagoEmpleadosServicio(s){
+  if(s.estado!=="completado")return 0;
+  const horas=calcularTiempoTrabajado(s.hora_inicio,s.hora_fin).minutos/60;if(horas<=0)return 0;
+  const e1=todosLosEmpleados.find(e=>(s.empleado_email&&e.email===s.empleado_email)||(s.empleado_nombre&&e.nombre===s.empleado_nombre));
+  const e2=todosLosEmpleados.find(e=>(s.empleado_email_2&&e.email===s.empleado_email_2)||(s.empleado_nombre_2&&e.nombre===s.empleado_nombre_2));
+  return horas*(Number(e1?.pago_hora||0)+Number(e2?.pago_hora||0));
 }
-
-function obtenerDatosContabilidad() {
-    const mes = document.getElementById("accounting-month")?.value || mesActualInput();
-
-const trabajosPagados = todosLosServicios.filter(s => {
-    return (
-        s.estado === "completado" &&
-        (s.fecha || "").startsWith(mes) &&
-        Number(s.precio_total || 0) > 0
-    );
-});
-    
-    const gastosMes = gastosContabilidad.filter(g => {
-        return (g.fecha || "").startsWith(mes);
-    });
-
-    const filas = trabajosPagados.map(s => {
-        const ingresos = Number(s.precio_total || 0);
-        const pagoEmpleados = calcularPagoEmpleadosServicio(s);
-        const gananciaNeta = ingresos - pagoEmpleados;
-
-        const rodrigo = gananciaNeta * 0.35;
-        const dayana = gananciaNeta * 0.35;
-        const empresa = gananciaNeta * 0.30;
-
-        return {
-            fecha: s.fecha || "",
-            cliente: s.cliente || "",
-            ingresos,
-            pagoEmpleados,
-            gananciaNeta,
-            rodrigo,
-            dayana,
-            empresa,
-            empresaNeto: empresa
-        };
-    });
-
-    const ingresos = filas.reduce((a, b) => a + b.ingresos, 0);
-    const pagoEmpleados = filas.reduce((a, b) => a + b.pagoEmpleados, 0);
-    const gananciaNeta = filas.reduce((a, b) => a + b.gananciaNeta, 0);
-    const rodrigo = filas.reduce((a, b) => a + b.rodrigo, 0);
-    const dayana = filas.reduce((a, b) => a + b.dayana, 0);
-    const empresa = filas.reduce((a, b) => a + b.empresa, 0);
-    const gastosInversion = gastosMes.reduce((a, b) => a + Number(b.monto || 0), 0);
-    const empresaNeto = empresa - gastosInversion;
-
-    return {
-        mes,
-        filas,
-        gastosMes,
-        ingresos,
-        pagoEmpleados,
-        gastosInversion,
-        gananciaNeta,
-        rodrigo,
-        dayana,
-        empresa,
-        empresaNeto
-    };
+function obtenerDatosContabilidad(mesForzado){
+  const mes=mesForzado||document.getElementById("accounting-month")?.value||mesActualInput();
+  const trabajos=todosLosServicios.filter(s=>(s.fecha||"").startsWith(mes)&&s.estado!=="cancelado"&&Number(s.precio_total||0)>0);
+  const gastosMes=gastosContabilidad.filter(g=>(g.fecha||"").startsWith(mes));
+  const filas=trabajos.map(s=>{const p=datosPagoServicio(s),pagoEmpleados=calcularPagoEmpleadosServicio(s),baseDistribucion=Math.max(p.cobrado-pagoEmpleados,0);return{id:s.id,fecha:s.fecha||"",cliente:s.cliente||"",servicio:s.tipo||"Servicio",empleados:[s.empleado_nombre,s.empleado_nombre_2].filter(Boolean).join(" & "),pagoEmpleados,...p,rodrigo:baseDistribucion*.35,dayana:baseDistribucion*.35,empresa:baseDistribucion*.30};});
+  const vendido=filas.reduce((a,b)=>a+b.vendido,0),depositos=filas.reduce((a,b)=>a+b.depositos,0),balances=filas.reduce((a,b)=>a+b.balances,0),cobrado=filas.reduce((a,b)=>a+b.cobrado,0),pendiente=filas.reduce((a,b)=>a+b.pendiente,0),pagoEmpleados=filas.reduce((a,b)=>a+b.pagoEmpleados,0),gastos=gastosMes.reduce((a,b)=>a+Number(b.monto||0),0);
+  const gananciaReal=Math.max(cobrado-pagoEmpleados-gastos,0),rodrigo=gananciaReal*.35,dayana=gananciaReal*.35,empresa=gananciaReal*.30;
+  return{mes,trabajos,gastosMes,filas,vendido,depositos,balances,cobrado,pendiente,pagoEmpleados,gastos,gananciaReal,rodrigo,dayana,empresa};
 }
-
-function renderContabilidadElite() {
-    const d = obtenerDatosContabilidad();
-const mesesBonitos = [
-  "Enero","Febrero","Marzo","Abril","Mayo","Junio",
-  "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
-];
-
-const [anio, mesNum] = d.mes.split("-");
-const mesBonito = `${mesesBonitos[Number(mesNum)-1]} ${anio}`;
-
-const monthLabel = document.getElementById("acc-month-label");
-if (monthLabel) {
-    monthLabel.innerText = mesBonito;
+function renderContabilidadElite(){
+  const d=obtenerDatosContabilidad(),[y,m]=d.mes.split("-");document.getElementById("accounting-subtitle").innerText=`Resumen financiero y contable de ${MESES_CONTABILIDAD[Number(m)-1]} ${y}`;
+  const ids={"acc-vendido":d.vendido,"acc-cobrado":d.cobrado,"acc-pendiente":d.pendiente,"acc-gastos":d.gastos,"acc-empleados":d.pagoEmpleados,"acc-res-cobrado":d.cobrado,"acc-neta":d.gananciaReal,"acc-rodrigo":d.rodrigo,"acc-dayana":d.dayana,"acc-empresa":d.empresa,"acc-empresa-neto":d.empresa,"acc-cxc-vendido":d.vendido,"acc-cxc-cobrado":d.cobrado,"acc-depositos":d.depositos,"acc-balances":d.balances,"acc-cxc-pendiente":d.pendiente,"acc-total-gastos":d.gastos};Object.entries(ids).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.innerText=dinero(v)});
+  document.getElementById("acc-res-nomina").innerText="-"+dinero(d.pagoEmpleados);document.getElementById("acc-res-gastos").innerText="-"+dinero(d.gastos);
+  const pct=d.vendido>0?Math.min(d.cobrado/d.vendido*100,100):0;document.getElementById("acc-progress-bar").style.width=pct.toFixed(1)+"%";document.getElementById("acc-progress-label").innerText=pct.toFixed(1)+"% cobrado";
+  renderTablaContabilidad(d);renderGraficosContabilidad(d);
 }
-
-document.getElementById("accounting-subtitle").innerText = `Resumen financiero del mes ${mesBonito}`;
-
-    document.getElementById("acc-ingresos").innerText = dinero(d.ingresos);
-    document.getElementById("acc-gastos").innerText = dinero(d.gastosInversion);
-    document.getElementById("acc-empleados").innerText = dinero(d.pagoEmpleados);
-    document.getElementById("acc-neta").innerText = dinero(d.gananciaNeta);
-    document.getElementById("acc-rodrigo").innerText = dinero(d.rodrigo);
-    document.getElementById("acc-dayana").innerText = dinero(d.dayana);
-    document.getElementById("acc-empresa").innerText = dinero(d.empresa);
-    document.getElementById("acc-empresa-neto").innerText = dinero(d.empresaNeto);
-    
-   renderBarrasIngresosGastos(d);
-renderBarrasEmpresaNeto(d);
-renderGastosCategoria(d);
-renderTablaContabilidad(d);
-activarCarpetasContabilidad();
+function renderTablaContabilidad(d){
+  const body=document.getElementById("accounting-table-body"),foot=document.getElementById("accounting-table-total");
+  body.innerHTML=d.filas.length?d.filas.sort((a,b)=>a.fecha.localeCompare(b.fecha)).map(f=>{const cls=f.estadoPago==="Pagado"?"paid":f.estadoPago==="Depósito"?"deposit":f.estadoPago==="Parcial"?"partial":"unpaid";return `<tr><td>${f.fecha}</td><td>${f.cliente}</td><td>${f.servicio}</td><td>${dinero(f.vendido)}</td><td>${dinero(f.cobrado)}</td><td>${dinero(f.pendiente)}</td><td>${f.empleados||"—"}</td><td>${dinero(f.rodrigo)}</td><td>${dinero(f.dayana)}</td><td>${dinero(f.empresa)}</td><td><span class="acc-status ${cls}">${f.estadoPago}</span></td></tr>`}).join(""):`<tr><td colspan="11" class="acc-empty">No hay servicios registrados en este mes.</td></tr>`;
+  foot.innerHTML=`<tr><td colspan="3">TOTALES</td><td>${dinero(d.vendido)}</td><td>${dinero(d.cobrado)}</td><td>${dinero(d.pendiente)}</td><td></td><td>${dinero(d.rodrigo)}</td><td>${dinero(d.dayana)}</td><td>${dinero(d.empresa)}</td><td></td></tr>`;
 }
-
-function activarCarpetasContabilidad() {
-    const tarjetas = [
-        { id: "acc-ingresos", tipo: "ingresos" },
-        { id: "acc-gastos", tipo: "gastos" },
-        { id: "acc-empleados", tipo: "empleados" },
-        { id: "acc-neta", tipo: "neta" },
-        { id: "acc-rodrigo", tipo: "rodrigo" },
-        { id: "acc-dayana", tipo: "dayana" },
-        { id: "acc-empresa", tipo: "empresa" },
-        { id: "acc-empresa-neto", tipo: "empresa_neto" }
-    ];
-
-    tarjetas.forEach(t => {
-        const numero = document.getElementById(t.id);
-        if (!numero) return;
-
-        const card = numero.closest(".account-card");
-        if (!card) return;
-
-        card.onclick = () => abrirCarpetaContabilidad(t.tipo);
-        card.style.cursor = "pointer";
-    });
+function destruirGrafico(n){if(graficosContabilidad[n])graficosContabilidad[n].destroy();}
+function renderGraficosContabilidad(d){
+  if(typeof Chart==="undefined")return;["empresa","estado","gastos"].forEach(destruirGrafico);
+  const base=new Date(d.mes+"-01T00:00:00"),keys=[];for(let i=11;i>=0;i--){const x=new Date(base.getFullYear(),base.getMonth()-i,1);keys.push(`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}`)}
+  graficosContabilidad.empresa=new Chart(document.getElementById("acc-company-chart"),{type:"bar",data:{labels:keys.map(k=>MESES_CONTABILIDAD[Number(k.slice(5,7))-1].slice(0,3)),datasets:[{data:keys.map(k=>obtenerDatosContabilidad(k).empresa),backgroundColor:"#60a5fa",borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:v=>"$"+v}}}}});
+  const c={pagado:0,deposito:0,parcial:0,nopagado:0};d.filas.forEach(f=>{if(f.estadoPago==="Pagado")c.pagado++;else if(f.estadoPago==="Depósito")c.deposito++;else if(f.estadoPago==="Parcial")c.parcial++;else c.nopagado++});
+  graficosContabilidad.estado=new Chart(document.getElementById("acc-status-chart"),{type:"doughnut",data:{labels:["Pagados completos","Con balance pendiente","Solo depósito","No pagados"],datasets:[{data:[c.pagado,c.parcial,c.deposito,c.nopagado],backgroundColor:["#16a34a","#2563eb","#f97316","#dc2626"]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{boxWidth:9,font:{size:9}}}}}});
+  const cats={};d.gastosMes.forEach(g=>{const c=g.categoria||"Otros";cats[c]=(cats[c]||0)+Number(g.monto||0)});graficosContabilidad.gastos=new Chart(document.getElementById("acc-expense-chart"),{type:"pie",data:{labels:Object.keys(cats).length?Object.keys(cats):["Sin gastos"],datasets:[{data:Object.keys(cats).length?Object.values(cats):[1],backgroundColor:["#16a34a","#f97316","#2563eb","#7c3aed","#dc2626","#0ea5e9","#eab308","#64748b"]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{boxWidth:9,font:{size:8}}}}}});
 }
+function abrirAgregarGasto(){document.getElementById("modal-gasto-contabilidad").style.display="block";document.getElementById("gasto-fecha").value=new Date().toISOString().slice(0,10)}function cerrarAgregarGasto(){document.getElementById("modal-gasto-contabilidad").style.display="none"}
+async function guardarGastoContabilidad(){const fecha=document.getElementById("gasto-fecha").value,categoria=document.getElementById("gasto-categoria").value,monto=Number(document.getElementById("gasto-monto").value||0),nota=document.getElementById("gasto-nota").value.trim();if(!fecha||monto<=0)return alert("Completa fecha y monto válido.");await db.collection("gastos_contabilidad").add({fecha,categoria,monto,nota,timestamp:firebase.firestore.FieldValue.serverTimestamp()});document.getElementById("gasto-monto").value="";document.getElementById("gasto-nota").value="";cerrarAgregarGasto();}
+async function cerrarMesContable(){const d=obtenerDatosContabilidad();if(cierresContables.some(c=>c.mes===d.mes&&c.cerrado===true))return alert("Este mes ya está cerrado.");if(!confirm(`¿Cerrar contablemente ${d.mes}? Los trabajos NO serán eliminados.`))return;await db.collection("cierres_contables").doc(d.mes).set({mes:d.mes,cerrado:true,fecha_cierre:new Date().toISOString(),resumen:{vendido:d.vendido,cobrado:d.cobrado,pendiente:d.pendiente,nomina:d.pagoEmpleados,gastos:d.gastos,ganancia_real:d.gananciaReal,rodrigo:d.rodrigo,dayana:d.dayana,empresa:d.empresa},timestamp:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});const batch=db.batch();d.trabajos.forEach(s=>batch.update(db.collection("servicios").doc(s.id),{mes_contable:d.mes,mes_cerrado:true}));await batch.commit();alert("Mes cerrado correctamente. No se eliminó ningún trabajo.");}
+function exportarContabilidadExcel(){const d=obtenerDatosContabilidad(),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([{Mes:d.mes,Vendido:d.vendido,Cobrado:d.cobrado,Pendiente:d.pendiente,Depósitos:d.depositos,Balances:d.balances,Nómina:d.pagoEmpleados,Gastos:d.gastos,"Ganancia Real":d.gananciaReal,"Rodrigo 35%":d.rodrigo,"Dayana 35%":d.dayana,"Empresa 30%":d.empresa}]),"Resumen");XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(d.filas.map(f=>({Fecha:f.fecha,Cliente:f.cliente,Servicio:f.servicio,Vendido:f.vendido,Cobrado:f.cobrado,Pendiente:f.pendiente,Empleados:f.empleados,Nómina:f.pagoEmpleados,"Rodrigo 35%":f.rodrigo,"Dayana 35%":f.dayana,"Empresa 30%":f.empresa,"Estado Pago":f.estadoPago}))),"Servicios");XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(d.gastosMes.map(g=>({Fecha:g.fecha,Categoría:g.categoria,Monto:Number(g.monto||0),Nota:g.nota||""}))),"Gastos");XLSX.writeFile(wb,`Elite_Contabilidad_${d.mes}.xlsx`);}
+function descargarContabilidadPDF(){window.print();}
 
-function abrirCarpetaContabilidad(tipo) {
-    const d = obtenerDatosContabilidad();
-    const box = document.getElementById("accounting-folder-view");
-
-    if (!box) return;
-
-    box.style.display = "block";
-
-    let html = `
-        <div style="background:#111827; border:1px solid #3b82f6; border-radius:22px; padding:18px; margin-bottom:18px;">
-        <button onclick="cerrarCarpetaContabilidad()" style="background:#ef4444;color:white;border:none;border-radius:12px;padding:10px 14px;font-weight:bold;margin-bottom:15px;">
-            ← Cerrar carpeta
-        </button>
-    `;
-
-    if (tipo === "ingresos") {
-        html += `
-            <h2>💵 Carpeta de Ingresos</h2>
-            <p><b>Total ingresos:</b> ${dinero(d.ingresos)}</p>
-            <p><b>Trabajos completados:</b> ${d.filas.length}</p>
-            <p><b>Promedio por trabajo:</b> ${dinero(d.ingresos / (d.filas.length || 1))}</p>
-
-            <table class="account-table">
-                <thead><tr><th>Fecha</th><th>Cliente</th><th>Total</th></tr></thead>
-                <tbody>
-                    ${d.filas.map(f => `
-                        <tr>
-                            <td>${f.fecha}</td>
-                            <td>${f.cliente}</td>
-                            <td>${dinero(f.ingresos)}</td>
-                        </tr>
-                    `).join("")}
-                </tbody>
-            </table>
-        `;
-    }
-
-    if (tipo === "gastos") {
-        html += `
-            <h2>🔻 Carpeta de Gastos</h2>
-            <p><b>Total gastos:</b> ${dinero(d.gastosInversion)}</p>
-            <p><b>Cantidad de gastos:</b> ${d.gastosMes.length}</p>
-
-            <table class="account-table">
-                <thead><tr><th>Fecha</th><th>Categoría</th><th>Monto</th><th>Nota</th></tr></thead>
-                <tbody>
-                    ${d.gastosMes.map(g => `
-                        <tr>
-                            <td>${g.fecha || ""}</td>
-                            <td>${g.categoria || "Otros"}</td>
-                            <td>${dinero(g.monto)}</td>
-                            <td>${g.nota || ""}</td>
-                        </tr>
-                    `).join("")}
-                </tbody>
-            </table>
-        `;
-    }
-
-    if (tipo === "empleados") {
-        html += `
-            <h2>👥 Carpeta de Empleados</h2>
-            <p><b>Total pago empleados:</b> ${dinero(d.pagoEmpleados)}</p>
-
-            <table class="account-table">
-                <thead><tr><th>Fecha</th><th>Cliente</th><th>Empleados</th><th>Pago</th></tr></thead>
-                <tbody>
-                    ${d.filas.map(f => `
-                        <tr>
-                            <td>${f.fecha}</td>
-                            <td>${f.cliente}</td>
-                            <td>${f.empleados || ""}</td>
-                            <td>${dinero(f.pagoEmpleados)}</td>
-                        </tr>
-                    `).join("")}
-                </tbody>
-            </table>
-        `;
-    }
-
-    if (tipo === "neta") {
-        html += `
-            <h2>📈 Carpeta de Ganancia Neta</h2>
-            <p><b>Ingresos:</b> ${dinero(d.ingresos)}</p>
-            <p><b>Pago empleados:</b> -${dinero(d.pagoEmpleados)}</p>
-            <p><b>Ganancia neta:</b> ${dinero(d.gananciaNeta)}</p>
-
-            <table class="account-table">
-                <thead><tr><th>Fecha</th><th>Cliente</th><th>Ingreso</th><th>Empleados</th><th>Neta</th></tr></thead>
-                <tbody>
-                    ${d.filas.map(f => `
-                        <tr>
-                            <td>${f.fecha}</td>
-                            <td>${f.cliente}</td>
-                            <td>${dinero(f.ingresos)}</td>
-                            <td>${dinero(f.pagoEmpleados)}</td>
-                            <td>${dinero(f.gananciaNeta)}</td>
-                        </tr>
-                    `).join("")}
-                </tbody>
-            </table>
-        `;
-    }
-
-    if (["rodrigo", "dayana", "empresa", "empresa_neto"].includes(tipo)) {
-        const titulos = {
-            rodrigo: "👤 Carpeta Rodrigo 35%",
-            dayana: "👤 Carpeta Dayana 35%",
-            empresa: "🏢 Carpeta Empresa 30%",
-            empresa_neto: "💼 Carpeta Empresa Neto"
-        };
-
-        html += `
-            <h2>${titulos[tipo]}</h2>
-
-            <table class="account-table">
-                <thead><tr><th>Fecha</th><th>Cliente</th><th>Monto</th></tr></thead>
-                <tbody>
-                    ${d.filas.map(f => `
-                        <tr>
-                            <td>${f.fecha}</td>
-                            <td>${f.cliente}</td>
-                            <td>${dinero(
-                                tipo === "rodrigo" ? f.rodrigo :
-                                tipo === "dayana" ? f.dayana :
-                                tipo === "empresa" ? f.empresa :
-                                f.empresaNeto
-                            )}</td>
-                        </tr>
-                    `).join("")}
-                </tbody>
-            </table>
-        `;
-    }
-
-    html += `</div>`;
-    box.innerHTML = html;
-    box.scrollIntoView({ behavior:"smooth", block:"start" });
-}
-
-function cerrarCarpetaContabilidad() {
-    const box = document.getElementById("accounting-folder-view");
-    if (!box) return;
-    box.style.display = "none";
-    box.innerHTML = "";
-}    
-function crearBarra(label, valor, max, color) {
-    const porcentaje = max > 0 ? Math.min((valor / max) * 100, 100) : 0;
-
-    return `
-        <div class="bar-row">
-            <div class="bar-label">
-                <span>${label}</span>
-                <b>${dinero(valor)}</b>
-            </div>
-            <div class="bar-bg">
-                <div class="bar-fill" style="width:${porcentaje}%; background:${color};"></div>
-            </div>
-        </div>
-    `;
-}
-
-function renderBarrasIngresosGastos(d) {
-    const ingresos = Number(d.ingresos || 0);
-    const gastos = Number(d.gastosInversion || 0);
-    const max = Math.max(ingresos, gastos, 1);
-
-    const ingresoH = Math.max((ingresos / max) * 120, ingresos > 0 ? 8 : 2);
-    const gastoH = Math.max((gastos / max) * 120, gastos > 0 ? 8 : 2);
-
-    document.getElementById("chart-ingresos-gastos").innerHTML = `
-        <div class="vbar-wrap">
-            <div class="vbar-value">${dinero(ingresos)}</div>
-            <div class="vbar" style="height:${ingresoH}px;"></div>
-            <div class="vbar-label">Ingresos</div>
-        </div>
-
-        <div class="vbar-wrap">
-            <div class="vbar-value">${dinero(gastos)}</div>
-            <div class="vbar red" style="height:${gastoH}px;"></div>
-            <div class="vbar-label">Gastos</div>
-        </div>
-    `;
-
-    document.getElementById("donut-legend-pro").innerHTML = `
-        <div><span><span class="legend-dot" style="background:#facc15;"></span>Rodrigo (35%)</span><b>${dinero(d.rodrigo)}</b></div>
-        <div><span><span class="legend-dot" style="background:#ec4899;"></span>Dayana (35%)</span><b>${dinero(d.dayana)}</b></div>
-        <div><span><span class="legend-dot" style="background:#06b6d4;"></span>Empresa (30%)</span><b>${dinero(d.empresa)}</b></div>
-    `;
-}
-
-function renderBarrasEmpresaNeto(d) {
-    const meses = ["Ene", "Feb", "Mar", "Abr", "May"];
-    const valores = [1487, 1533, 1500, 1400, Number(d.empresaNeto || 0)];
-    const max = Math.max(...valores, 1);
-
-    document.getElementById("chart-empresa-12").innerHTML = valores.map((v, i) => {
-        const h = Math.max((v / max) * 120, v > 0 ? 8 : 2);
-        const color = i === valores.length - 1 ? "blue" : "";
-
-        return `
-            <div class="vbar-wrap">
-                <div class="vbar-value">${dinero(v)}</div>
-                <div class="vbar ${color}" style="height:${h}px;"></div>
-                <div class="vbar-label">${meses[i]}</div>
-            </div>
-        `;
-    }).join("");
-}
-
-function iconoGasto(cat) {
-    const c = (cat || "").toLowerCase();
-
-    if (c.includes("gas") || c.includes("combustible")) return "⛽";
-    if (c.includes("walmart")) return "🛒";
-    if (c.includes("costco")) return "🔴";
-    if (c.includes("laundry") || c.includes("lavander")) return "🧺";
-    if (c.includes("home depot")) return "🛠️";
-    if (c.includes("suppl") || c.includes("supply")) return "🧴";
-    if (c.includes("car") || c.includes("auto")) return "🚗";
-
-    return "••";
-}
-
-function renderGastosCategoria(d) {
-    const contenedor = document.getElementById("gastos-categorias");
-
-    const categorias = {};
-
-    d.gastosMes.forEach(g => {
-        const cat = g.categoria || "Otros";
-        categorias[cat] = (categorias[cat] || 0) + Number(g.monto || 0);
-    });
-
-    const total = Object.values(categorias).reduce((a, b) => a + b, 0);
-
-    if (total === 0) {
-        contenedor.innerHTML = `<p style="color:#9ca3af; margin:0;">No hay gastos registrados este mes.</p>`;
-        return;
-    }
-
-    contenedor.innerHTML = Object.entries(categorias).map(([cat, monto]) => {
-        const porcentaje = total > 0 ? (monto / total) * 100 : 0;
-
-        return `
-            <div class="expense-row">
-                <div class="expense-icon">${iconoGasto(cat)}</div>
-                <div>${cat}</div>
-                <div class="bar-bg">
-                    <div class="bar-fill" style="width:${porcentaje}%;"></div>
-                </div>
-                <div class="expense-money">
-                    ${dinero(monto)}
-                    <span>(${porcentaje.toFixed(1)}%)</span>
-                </div>
-            </div>
-        `;
-    }).join("");
-}
-function renderTablaContabilidad(d) {
-    const body = document.getElementById("accounting-table-body");
-    const total = document.getElementById("accounting-table-total");
-
-    body.innerHTML = "";
-
-    d.filas.forEach(f => {
-        body.innerHTML += `
-            <tr>
-                <td>${f.fecha}</td>
-                <td>${f.cliente}</td>
-                <td>${dinero(f.ingresos)}</td>
-                <td>${dinero(f.pagoEmpleados)}</td>
-                <td>${dinero(f.gananciaNeta)}</td>
-                <td>${dinero(f.rodrigo)}</td>
-                <td>${dinero(f.dayana)}</td>
-                <td>${dinero(f.empresaNeto)}</td>
-            </tr>
-        `;
-    });
-
-    total.innerHTML = `
-        <tr>
-            <td colspan="2">TOTALES</td>
-            <td>${dinero(d.ingresos)}</td>
-            <td>${dinero(d.pagoEmpleados)}</td>
-            <td>${dinero(d.gananciaNeta)}</td>
-            <td>${dinero(d.rodrigo)}</td>
-            <td>${dinero(d.dayana)}</td>
-            <td>${dinero(d.empresaNeto)}</td>
-        </tr>
-    `;
-}
-
-function abrirAgregarGasto() {
-    document.getElementById("modal-gasto-contabilidad").style.display = "block";
-    document.getElementById("gasto-fecha").value = new Date().toISOString().slice(0, 10);
-}
-
-function cerrarAgregarGasto() {
-    document.getElementById("modal-gasto-contabilidad").style.display = "none";
-}
-
-async function guardarGastoContabilidad() {
-    const fecha = document.getElementById("gasto-fecha").value;
-    const categoria = document.getElementById("gasto-categoria").value.trim();
-    const monto = Number(document.getElementById("gasto-monto").value || 0);
-    const nota = document.getElementById("gasto-nota").value.trim();
-
-    if (!fecha || !categoria || monto <= 0) {
-        return alert("Completa fecha, categoría y monto.");
-    }
-
-    await db.collection("gastos_contabilidad").add({
-        fecha,
-        categoria,
-        monto,
-        nota,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    document.getElementById("gasto-categoria").value = "";
-    document.getElementById("gasto-monto").value = "";
-    document.getElementById("gasto-nota").value = "";
-
-    cerrarAgregarGasto();
-    renderContabilidadElite();
-}
-
-function exportarContabilidadExcel() {
-    const d = obtenerDatosContabilidad();
-
-    const trabajos = d.filas.map(f => ({
-        Fecha: f.fecha,
-        Cliente: f.cliente,
-        Ingresos: f.ingresos.toFixed(2),
-        "Pago Empleados": f.pagoEmpleados.toFixed(2),
-        "Ganancia Neta": f.gananciaNeta.toFixed(2),
-        "Rodrigo 35%": f.rodrigo.toFixed(2),
-        "Dayana 35%": f.dayana.toFixed(2),
-        "Empresa 30%": f.empresa.toFixed(2),
-        "Empresa Neto": f.empresaNeto.toFixed(2)
-    }));
-
-    trabajos.push({
-        Fecha: "TOTAL",
-        Cliente: "",
-        Ingresos: d.ingresos.toFixed(2),
-        "Pago Empleados": d.pagoEmpleados.toFixed(2),
-        "Ganancia Neta": d.gananciaNeta.toFixed(2),
-        "Rodrigo 35%": d.rodrigo.toFixed(2),
-        "Dayana 35%": d.dayana.toFixed(2),
-        "Empresa 30%": d.empresa.toFixed(2),
-        "Empresa Neto": d.empresaNeto.toFixed(2)
-    });
-
-    const gastos = d.gastosMes.map(g => ({
-        Fecha: g.fecha,
-        Categoria: g.categoria,
-        Monto: Number(g.monto || 0).toFixed(2),
-        Nota: g.nota || ""
-    }));
-
-    const wb = XLSX.utils.book_new();
-
-    const ws1 = XLSX.utils.json_to_sheet(trabajos);
-    const ws2 = XLSX.utils.json_to_sheet(gastos);
-
-    XLSX.utils.book_append_sheet(wb, ws1, "Contabilidad");
-    XLSX.utils.book_append_sheet(wb, ws2, "Gastos");
-
-    XLSX.writeFile(wb, `Elite_Contabilidad_${d.mes}.xlsx`);
-}
-
-function descargarContabilidadPDF() {
-    alert("Se abrirá la pantalla de impresión. En destino elige: Guardar como PDF.");
-    window.print();
-}
-       
 </script>
 
 <script src="nico-config.js"></script>
@@ -4396,6 +3680,153 @@ function descargarContabilidadPDF() {
   document.addEventListener("DOMContentLoaded", waitForNicoAndFirebase);
 })();
 
+</script>
+
+
+<script>
+// ============================================================
+// ELITE ADMIN v5.0 — NAVEGACIÓN EMPRESARIAL
+// ============================================================
+document.body.classList.add("elite-v5-body");
+
+function toggleEliteV5Menu(){
+  document.getElementById("elite-v5-sidebar")?.classList.toggle("open");
+  document.getElementById("elite-v5-sidebar-overlay")?.classList.toggle("open");
+}
+function cerrarEliteV5Menu(){
+  document.getElementById("elite-v5-sidebar")?.classList.remove("open");
+  document.getElementById("elite-v5-sidebar-overlay")?.classList.remove("open");
+}
+function eliteV5SetActive(module,button){
+  document.querySelectorAll(".elite-v5-nav-btn").forEach(b=>b.classList.remove("active"));
+  const target=button || document.querySelector(`.elite-v5-nav-btn[data-module="${module}"]`);
+  if(target) target.classList.add("active");
+}
+function eliteV5ScrollTo(elementId, openSectionId=""){
+  const el=document.getElementById(elementId);
+  if(!el) return false;
+  if(openSectionId){
+    const section=document.getElementById(openSectionId);
+    if(section && !section.classList.contains("open")) section.classList.add("open");
+  }
+  el.classList.remove("elite-v5-highlight");
+  void el.offsetWidth;
+  el.classList.add("elite-v5-highlight");
+  el.scrollIntoView({behavior:"smooth",block:"start"});
+  return true;
+}
+function eliteV5Navigate(module,button){
+  eliteV5SetActive(module,button);
+  cerrarEliteV5Menu();
+
+  if(module==="dashboard"){
+    window.scrollTo({top:0,behavior:"smooth"});
+    return;
+  }
+  if(module==="agenda"){
+    if(typeof abrirCalendarioElite==="function") abrirCalendarioElite();
+    return;
+  }
+  if(module==="clientes"){
+    eliteV5ScrollTo("sec-cliente","sec-cliente");
+    return;
+  }
+  if(module==="empleados"){
+    eliteV5ScrollTo("sec-gestion-staff","sec-gestion-staff");
+    return;
+  }
+  if(module==="servicios"){
+    eliteV5ScrollTo("historial");
+    return;
+  }
+  if(module==="mensajes"){
+    const box=document.getElementById("centro-notificaciones-pagos");
+    if(box && box.style.display!=="none") eliteV5ScrollTo("centro-notificaciones-pagos");
+    else abrirEliteV5ModuleModal("Mensajes","Centro de comunicaciones de Elite Cleaners.",`
+      <div class="elite-v5-module-grid">
+        <div class="elite-v5-module-card"><b>Recordatorios</b>Usa el botón Recordatorio de cada trabajo para preparar el SMS.</div>
+        <div class="elite-v5-module-card"><b>Balances</b>Al terminar un servicio se prepara el mensaje de balance pendiente.</div>
+        <div class="elite-v5-module-card"><b>Contratos</b>Usa Acuerdo para enviar el enlace seguro de firma.</div>
+        <div class="elite-v5-module-card"><b>Pagos</b>Las notificaciones de depósitos y balances aparecen en el Dashboard.</div>
+      </div>`);
+    return;
+  }
+  if(module==="resenas"){
+    abrirEliteV5ModuleModal("Reseñas","Las solicitudes son manuales para no molestar a clientes frecuentes.",`
+      <div class="elite-v5-module-card"><b>Solicitud manual</b>Busca el trabajo del cliente y presiona el botón “Reseña ⭐️”. La aplicación nunca la enviará automáticamente.</div>
+      <button onclick="cerrarEliteV5ModuleModal(); eliteV5ScrollTo('historial');" style="width:100%;margin-top:14px;padding:13px;border:none;border-radius:12px;background:#3b82f6;color:white;font-weight:bold;">IR A SERVICIOS</button>`);
+    return;
+  }
+  if(module==="contabilidad"){
+    if(typeof abrirContabilidadElite==="function") abrirContabilidadElite();
+    return;
+  }
+  if(module==="gastos"){
+    if(typeof abrirContabilidadElite==="function") abrirContabilidadElite();
+    setTimeout(()=>{ if(typeof abrirAgregarGasto==="function") abrirAgregarGasto(); },250);
+    return;
+  }
+  if(module==="inventario"){
+    abrirEliteV5ModuleModal("Inventario","Control de productos, herramientas y máquinas de Elite Cleaners.",`
+      <div class="elite-v5-module-grid">
+        <div class="elite-v5-module-card"><b>Productos químicos</b>Registrar cantidad, costo y nivel mínimo.</div>
+        <div class="elite-v5-module-card"><b>Máquinas</b>Controlar ubicación, condición y mantenimiento.</div>
+        <div class="elite-v5-module-card"><b>Herramientas</b>Asignar equipos al personal responsable.</div>
+        <div class="elite-v5-module-card"><b>Alertas</b>Avisar cuando un producto esté por terminarse.</div>
+      </div><p style="color:#f59e0b;margin-top:15px;">Módulo preparado para la siguiente fase de desarrollo.</p>`);
+    return;
+  }
+  if(module==="informes"){
+    abrirEliteV5ModuleModal("Informes","Accesos rápidos a reportes disponibles.",`
+      <div class="elite-v5-module-grid">
+        <div class="elite-v5-module-card"><b>Reporte contable</b>Abre Contabilidad y exporta el mes a Excel o PDF.</div>
+        <div class="elite-v5-module-card"><b>Nómina</b>Consulta horas, millas y pago del personal.</div>
+        <div class="elite-v5-module-card"><b>Servicios</b>Consulta trabajos pendientes y completados.</div>
+        <div class="elite-v5-module-card"><b>Clientes</b>Usa la búsqueda para revisar su historial.</div>
+      </div>
+      <button onclick="cerrarEliteV5ModuleModal(); eliteV5ScrollTo('payroll-content'); if(document.getElementById('payroll-content').style.display==='none') togglePayroll();" style="width:100%;margin-top:14px;padding:13px;border:none;border-radius:12px;background:#16a34a;color:white;font-weight:bold;">VER NÓMINA</button>`);
+    return;
+  }
+  if(module==="configuracion"){
+    eliteV5ScrollTo("sec-venta","sec-venta");
+    return;
+  }
+  if(module==="logout"){
+    eliteV5Logout();
+  }
+}
+function abrirEliteV5ModuleModal(title,description,content){
+  document.getElementById("elite-v5-module-title").textContent=title;
+  document.getElementById("elite-v5-module-description").textContent=description;
+  document.getElementById("elite-v5-module-content").innerHTML=content || "";
+  document.getElementById("elite-v5-module-modal").style.display="block";
+}
+function cerrarEliteV5ModuleModal(){
+  document.getElementById("elite-v5-module-modal").style.display="none";
+}
+async function eliteV5Logout(){
+  if(!confirm("¿Deseas cerrar sesión de Elite Admin?")) return;
+  try{
+    if(typeof supabaseClient!=="undefined") await supabaseClient.auth.signOut();
+  }catch(e){console.warn(e)}
+  location.reload();
+}
+
+// Cuando se cierran módulos principales, vuelve a marcar Dashboard.
+const _eliteOriginalCloseAccounting=window.cerrarContabilidadElite;
+if(typeof _eliteOriginalCloseAccounting==="function"){
+  window.cerrarContabilidadElite=function(){
+    _eliteOriginalCloseAccounting();
+    eliteV5SetActive("dashboard");
+  };
+}
+const _eliteOriginalCloseCalendar=window.cerrarCalendarioElite;
+if(typeof _eliteOriginalCloseCalendar==="function"){
+  window.cerrarCalendarioElite=function(){
+    _eliteOriginalCloseCalendar();
+    eliteV5SetActive("dashboard");
+  };
+}
 </script>
 
 </body>
