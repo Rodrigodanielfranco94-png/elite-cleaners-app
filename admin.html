@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.0 | Centro de Operaciones -->
+<!-- Elite Admin v5.1 | Plataforma Empresarial Mejorada -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -7,7 +7,6 @@
     <title>Elite Admin v5.1 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -443,8 +442,6 @@ body.elite-v5-body{
 .elite-v53-action-edit{background:#f59e0b!important;color:#111!important}
 @media(max-width:700px){.elite-v53-client-edit-grid{grid-template-columns:1fr}}
 </style>
-
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
 <div id="loginBox" style="position:fixed; inset:0; background:#000; z-index:99999; display:flex; align-items:center; justify-content:center; padding:20px;">
@@ -2720,76 +2717,113 @@ Please let us know if you have any questions.`;
             abrirSMS(s.whatsapp, mensaje);
         }
 </script> 
-<div id="elite-calendar-modal" class="ops-modal">
-  <div class="ops-shell">
-    <header class="ops-header">
-      <div>
-        <h2>Calendario</h2>
-        <p>Centro de Operaciones</p>
-      </div>
-      <div class="ops-view-tabs">
-        <button data-view="month" onclick="setOpsView('month')">Mes</button>
-        <button data-view="week" onclick="setOpsView('week')">Semana</button>
-        <button data-view="day" class="active" onclick="setOpsView('day')">Día</button>
-        <button data-view="agenda" onclick="setOpsView('agenda')">Agenda</button>
-      </div>
-      <div class="ops-date-nav">
-        <button onclick="moveOpsDate(-1)">‹</button>
-        <button onclick="goOpsToday()">Hoy</button>
-        <button onclick="moveOpsDate(1)">›</button>
-        <strong id="ops-date-title">—</strong>
-      </div>
-      <button class="ops-close" onclick="cerrarCalendarioElite()">✕</button>
-    </header>
+<div id="elite-calendar-modal" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#ffffff;
+z-index:999999;
+overflow-y:auto;
+padding:8px;
+box-sizing:border-box;
+zoom:0.82;
+">
 
-    <section class="ops-metrics">
-      <button class="ops-metric" onclick="filterOpsMetric('all')"><span>📅</span><b id="ops-jobs-count">0</b><small>Trabajos hoy</small></button>
-      <button class="ops-metric" onclick="filterOpsMetric('sold')"><span>💵</span><b id="ops-sold">$0</b><small>Ventas del día</small></button>
-      <button class="ops-metric" onclick="filterOpsMetric('collected')"><span>💳</span><b id="ops-collected">$0</b><small>Cobrado</small></button>
-      <button class="ops-metric" onclick="filterOpsMetric('pending')"><span>🧾</span><b id="ops-pending">$0</b><small>Pendiente</small></button>
-      <button class="ops-metric" onclick="filterOpsMetric('staff')"><span>👥</span><b id="ops-staff-count">0</b><small>Empleados activos</small></button>
-      <div class="ops-metric ops-progress-card"><span>📈</span><b id="ops-progress">0%</b><small>Progreso del día</small><div class="ops-progress"><i id="ops-progress-bar"></i></div></div>
-    </section>
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+">
 
-    <section id="ops-calendar-content" class="ops-layout">
-      <div class="ops-card ops-timeline-card">
-        <div class="ops-card-title"><span id="ops-list-title">Agenda del día</span><b id="ops-list-badge">0</b></div>
-        <div id="ops-timeline" class="ops-timeline"></div>
-      </div>
+<button onclick="cambiarMes(-1)" style="
+background:#1c1c1e;
+border:none;
+color:white;
+padding:12px 18px;
+border-radius:12px;
+font-size:18px;
+cursor:pointer;
+">
+←
+</button>
 
-      <div class="ops-card ops-detail-card">
-        <div id="ops-job-detail" class="ops-job-detail">
-          <div class="ops-empty">Selecciona un trabajo para ver todos sus detalles.</div>
-        </div>
-      </div>
+<h2 id="calendar-title" style="
+margin:0;
+color:#f59e0b;
+font-size:22px;
+font-weight:900;
+text-align:center;
+">
+MAY 2026
+</h2>
 
-      <aside class="ops-side">
-        <div class="ops-card">
-          <div class="ops-card-title">Ruta del día</div>
-          <div id="ops-route-map" class="ops-map-placeholder">
-            <div class="ops-route-line">📍</div>
-            <strong>Ruta operativa</strong>
-            <small>Abre cada dirección en Google Maps</small>
-          </div>
-          <div id="ops-route-list" class="ops-route-list"></div>
-        </div>
-        <div class="ops-card">
-          <div class="ops-card-title">Estado del equipo</div>
-          <div id="ops-team-status"></div>
-        </div>
-        <div class="ops-card">
-          <div class="ops-card-title">Alertas importantes</div>
-          <div id="ops-alerts"></div>
-        </div>
-      </aside>
-    </section>
+<button onclick="cambiarMes(1)" style="
+background:#1c1c1e;
+border:none;
+color:white;
+padding:12px 18px;
+border-radius:12px;
+font-size:18px;
+cursor:pointer;
+">
+→
+</button>
 
-    <section class="ops-card ops-inventory-strip">
-      <div class="ops-card-title">Inventario necesario / crítico</div>
-      <div id="ops-inventory-today" class="ops-inventory-items"></div>
-    </section>
-  </div>
 </div>
+
+<div id="calendar-weekdays" style="
+display:grid;
+grid-template-columns:repeat(7,minmax(0,1fr));
+gap:6px;
+margin-bottom:8px;
+padding:0 2px;
+box-sizing:border-box;
+text-align:center;
+font-weight:900;
+font-size:13px;
+color:#111827;
+width:100%;
+">
+    <div style="color:#ef4444;">Dom</div>
+    <div>Lun</div>
+    <div>Mar</div>
+    <div>Mié</div>
+    <div>Jue</div>
+    <div>Vie</div>
+    <div>Sáb</div>
+</div>
+
+<div id="calendar-grid" style="
+display:grid;
+grid-template-columns:repeat(7,minmax(0,1fr));
+gap:6px;
+margin-bottom:20px;
+width:100%;
+box-sizing:border-box;
+"></div>
+
+<div id="calendar-day-events"></div>
+
+<button onclick="cerrarCalendarioElite()" style="
+width:100%;
+padding:16px;
+background:#ef4444;
+border:none;
+border-radius:14px;
+color:white;
+font-weight:bold;
+font-size:16px;
+margin-top:20px;
+cursor:pointer;
+">
+CERRAR CALENDARIO
+</button>
+
+</div> 
     <div id="modal-editar-evento">
   <div class="editor-evento-box">
     <h2>Editar evento</h2>
@@ -4141,275 +4175,5 @@ window.eliteV51OpenInventory=function(){
   },20);
 };
 </script>
-
-<style id="elite-v54-inventory-style">
-.elite-v54-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}.elite-v54-tab{padding:12px 8px;border:1px solid #334155;border-radius:12px;background:#0f172a;color:#cbd5e1;font-weight:900;font-size:11px}.elite-v54-tab.active{background:#2563eb;color:#fff;border-color:#60a5fa}.elite-v54-card{background:#05080d;border:1px solid #334155;border-radius:16px;padding:14px;margin-bottom:11px}.elite-v54-card h4{margin:0 0 7px;color:#60a5fa;font-size:17px}.elite-v54-meta{color:#cbd5e1;font-size:12px;line-height:1.55}.elite-v54-badge{display:inline-block;padding:5px 9px;border-radius:999px;font-size:9px;font-weight:900;text-transform:uppercase;margin:6px 4px 6px 0}.elite-v54-pending{background:#451a03;color:#fde68a}.elite-v54-approved{background:#172554;color:#bfdbfe}.elite-v54-purchased{background:#3b0764;color:#e9d5ff}.elite-v54-delivered{background:#052e16;color:#bbf7d0}.elite-v54-rejected{background:#450a0a;color:#fecaca}.elite-v54-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}.elite-v54-actions button{padding:10px;border:none;border-radius:10px;color:white;font-weight:900;font-size:10px}.elite-v54-photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}.elite-v54-photo{aspect-ratio:1;border-radius:10px;overflow:hidden;border:1px solid #334155;background:#111827}.elite-v54-photo img{width:100%;height:100%;object-fit:cover}.elite-v54-field{margin-bottom:10px}.elite-v54-field label{display:block;color:#93c5fd;font-size:10px;font-weight:900;text-transform:uppercase;margin:0 0 5px 4px}.elite-v54-field input,.elite-v54-field select,.elite-v54-field textarea{width:100%;padding:12px;border-radius:11px;border:1px solid #334155;background:#0f172a;color:#fff}.elite-v54-warning{padding:10px;border-radius:11px;background:#451a03;border:1px solid #f59e0b;color:#fde68a;font-size:11px;margin-top:9px}.elite-v54-ok{padding:10px;border-radius:11px;background:#052e16;border:1px solid #22c55e;color:#bbf7d0;font-size:11px;margin-top:9px}@media(max-width:560px){.elite-v54-tabs{grid-template-columns:1fr}.elite-v54-actions{grid-template-columns:1fr 1fr}.elite-v54-photo-grid{grid-template-columns:repeat(2,1fr)}}
-</style>
-<script id="elite-v54-inventory-control">
-// ============================================================
-// ELITE ADMIN v5.4 — CONTROL TOTAL DE INVENTARIO
-// ============================================================
-let eliteV54Requests=[];let eliteV54ReqUnsub=null;let eliteV54ActiveTab='solicitudes';
-function eliteV54Esc(v){return String(v??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]))}
-function eliteV54Date(v){try{if(!v)return 'Sin fecha';const d=v.toDate?v.toDate():new Date(v);return d.toLocaleString('es-US')}catch(e){return 'Sin fecha'}}
-function eliteV54StatusClass(s){return ({pendiente:'elite-v54-pending',aprobada:'elite-v54-approved',comprada:'elite-v54-purchased',lista_entrega:'elite-v54-purchased',entregada:'elite-v54-delivered',confirmada:'elite-v54-delivered',rechazada:'elite-v54-rejected'})[s]||'elite-v54-pending'}
-function eliteV54SubscribeRequests(){if(eliteV54ReqUnsub)return;eliteV54ReqUnsub=db.collection('solicitudes_inventario').orderBy('creado','desc').onSnapshot(s=>{eliteV54Requests=s.docs.map(d=>({id:d.id,...d.data()}));if(document.getElementById('elite-v54-request-list'))eliteV54RenderRequests()})}
-window.eliteV51OpenInventory=function(){
-  eliteV51SubscribeInventory();eliteV54SubscribeRequests();
-  abrirEliteV5ModuleModal('Inventario','Control general, solicitudes, compras, recibos y entregas.',`
-  <div class="elite-v54-tabs">
-   <button id="v54-tab-solicitudes" class="elite-v54-tab active" onclick="eliteV54SwitchTab('solicitudes')">Solicitudes</button>
-   <button id="v54-tab-general" class="elite-v54-tab" onclick="eliteV54SwitchTab('general')">Inventario general</button>
-   <button id="v54-tab-agregar" class="elite-v54-tab" onclick="eliteV54SwitchTab('agregar')">Agregar artículo</button>
-  </div>
-  <div id="elite-v54-tab-content"></div>`);
-  setTimeout(()=>eliteV54SwitchTab('solicitudes'),80)
-}
-function eliteV54SwitchTab(tab){eliteV54ActiveTab=tab;['solicitudes','general','agregar'].forEach(x=>document.getElementById('v54-tab-'+x)?.classList.toggle('active',x===tab));const c=document.getElementById('elite-v54-tab-content');if(!c)return;if(tab==='solicitudes'){c.innerHTML='<div id="elite-v54-request-list"></div>';eliteV54RenderRequests()}else if(tab==='general'){c.innerHTML='<div id="elite-v51-inventory-list"></div>';eliteV51RenderInventory()}else{c.innerHTML=`<div class="elite-v51-settings-section"><h3>Agregar artículo</h3><div class="elite-v51-form-grid"><input id="inv-name" placeholder="Nombre del artículo"><select id="inv-type" style="background:#0f172a;color:#fff;border:1px solid #3b82f6"><option>Producto químico</option><option>Herramienta</option><option>Máquina</option></select><input id="inv-qty" type="number" placeholder="Cantidad"><input id="inv-min" type="number" placeholder="Mínimo"><input id="inv-cost" type="number" step="0.01" placeholder="Costo unitario"><input id="inv-location" placeholder="Ubicación"></div><button class="elite-v51-action" style="background:#16a34a;width:100%;margin-top:12px" onclick="eliteV51SaveInventory()">Guardar artículo</button></div>`}}
-function eliteV54RenderRequests(){const box=document.getElementById('elite-v54-request-list');if(!box)return;if(!eliteV54Requests.length){box.innerHTML='<div class="elite-v51-empty">No hay solicitudes de inventario.</div>';return}box.innerHTML=eliteV54Requests.map(r=>{const diff=Number(r.cantidad_comprada||0)-Number(r.cantidad_entregada||0);const photos=[r.foto_producto_url,r.foto_recibo_url,r.foto_compra_url,r.foto_entrega_url].filter(Boolean);return `<div class="elite-v54-card"><h4>${eliteV54Esc(r.producto_nombre||'Producto')}</h4><span class="elite-v54-badge ${eliteV54StatusClass(r.estado)}">${eliteV54Esc(r.estado||'pendiente')}</span><div class="elite-v54-meta"><b>Empleado:</b> ${eliteV54Esc(r.empleado_nombre||'Sin nombre')}<br><b>Tipo:</b> ${eliteV54Esc(r.tipo||'Sin tipo')}<br><b>Solicitado:</b> ${Number(r.cantidad_solicitada||r.cantidad||0)}<br><b>Ubicación:</b> ${eliteV54Esc(r.ubicacion||'Sin ubicación')}<br><b>Solicitud:</b> ${eliteV54Date(r.creado||r.fecha)}${r.nota?`<br><b>Nota:</b> ${eliteV54Esc(r.nota)}`:''}${r.precio_unitario?`<br><b>Precio unitario:</b> $${Number(r.precio_unitario).toFixed(2)}`:''}${r.total_pagado?`<br><b>Total pagado:</b> $${Number(r.total_pagado).toFixed(2)}`:''}</div>${photos.length?`<div class="elite-v54-photo-grid">${photos.map(u=>`<a class="elite-v54-photo" href="${u}" target="_blank"><img src="${u}"></a>`).join('')}</div>`:''}${r.estado==='comprada'||r.estado==='lista_entrega'||r.estado==='entregada'||r.estado==='confirmada'?`${diff!==0?`<div class="elite-v54-warning">⚠ Diferencia entre comprado y entregado: ${diff}</div>`:`<div class="elite-v54-ok">✅ Cantidades conciliadas</div>`}`:''}<div class="elite-v54-actions">${r.estado==='pendiente'?`<button style="background:#2563eb" onclick="eliteV54Approve('${r.id}')">Aprobar</button><button style="background:#dc2626" onclick="eliteV54Reject('${r.id}')">Rechazar</button>`:''}${r.estado==='aprobada'?`<button style="background:#7c3aed" onclick="eliteV54Purchase('${r.id}')">Registrar compra</button>`:''}${r.estado==='comprada'||r.estado==='lista_entrega'?`<button style="background:#16a34a" onclick="eliteV54Deliver('${r.id}')">Registrar entrega</button>`:''}<button style="background:#475569" onclick="eliteV54History('${r.id}')">Historial</button></div></div>`}).join('')}
-async function eliteV54Audit(id,accion,detalle={}){await db.collection('solicitudes_inventario').doc(id).collection('auditoria').add({accion,detalle,usuario:window.usuarioActual?.nombre||currentUser?.email||'Admin',fecha:firebase.firestore.FieldValue.serverTimestamp()})}
-async function eliteV54Approve(id){const r=eliteV54Requests.find(x=>x.id===id);const q=prompt('Cantidad aprobada:',r?.cantidad_solicitada||r?.cantidad||1);if(q===null)return;await db.collection('solicitudes_inventario').doc(id).update({estado:'aprobada',cantidad_aprobada:Number(q),aprobado_por:window.usuarioActual?.nombre||'Admin',fecha_aprobacion:firebase.firestore.FieldValue.serverTimestamp()});await eliteV54Audit(id,'aprobada',{cantidad:Number(q)})}
-async function eliteV54Reject(id){const motivo=prompt('Motivo del rechazo:');if(motivo===null)return;await db.collection('solicitudes_inventario').doc(id).update({estado:'rechazada',motivo_rechazo:motivo,rechazado_por:window.usuarioActual?.nombre||'Admin',fecha_rechazo:firebase.firestore.FieldValue.serverTimestamp()});await eliteV54Audit(id,'rechazada',{motivo})}
-async function eliteV54Upload(file,path){if(!file)return '';if(!firebase.storage)return alert('Firebase Storage no está disponible.'),'';const ref=firebase.storage().ref(path);await ref.put(file);return await ref.getDownloadURL()}
-function eliteV54Purchase(id){const r=eliteV54Requests.find(x=>x.id===id);abrirEliteV5ModuleModal('Registrar compra','Recibo y foto de compra obligatorios.',`<div class="elite-v54-field"><label>Tienda</label><input id="v54-store"></div><div class="elite-v54-field"><label>Cantidad comprada</label><input id="v54-buyqty" type="number" value="${r?.cantidad_aprobada||r?.cantidad_solicitada||1}"></div><div class="elite-v54-field"><label>Precio unitario</label><input id="v54-unit" type="number" step="0.01"></div><div class="elite-v54-field"><label>Método de pago</label><input id="v54-method" placeholder="Tarjeta, efectivo..."></div><div class="elite-v54-field"><label>Foto del recibo (obligatoria)</label><input id="v54-receipt" type="file" accept="image/*" capture="environment"></div><div class="elite-v54-field"><label>Foto de los productos comprados (obligatoria)</label><input id="v54-buypic" type="file" accept="image/*" capture="environment"></div><button class="elite-v51-action" style="background:#7c3aed;width:100%" onclick="eliteV54SavePurchase('${id}')">Guardar compra</button>`)}
-async function eliteV54SavePurchase(id){const qty=Number(document.getElementById('v54-buyqty').value||0),unit=Number(document.getElementById('v54-unit').value||0),receipt=document.getElementById('v54-receipt').files[0],pic=document.getElementById('v54-buypic').files[0];if(qty<=0||unit<0||!receipt||!pic)return alert('Completa cantidad, precio y ambas fotos.');const base=`inventario_solicitudes/${id}/${Date.now()}`;const [receiptUrl,picUrl]=await Promise.all([eliteV54Upload(receipt,base+'_recibo'),eliteV54Upload(pic,base+'_compra')]);const total=qty*unit;await db.collection('solicitudes_inventario').doc(id).update({estado:'comprada',tienda:document.getElementById('v54-store').value.trim(),cantidad_comprada:qty,precio_unitario:unit,total_pagado:total,metodo_pago:document.getElementById('v54-method').value.trim(),foto_recibo_url:receiptUrl,foto_compra_url:picUrl,comprado_por:window.usuarioActual?.nombre||'Admin',fecha_compra:firebase.firestore.FieldValue.serverTimestamp()});await db.collection('gastos_contabilidad').add({fecha:new Date().toISOString().slice(0,10),categoria:'Inventario',monto:total,nota:`Compra ${id}`,solicitud_inventario_id:id,recibo_url:receiptUrl,timestamp:firebase.firestore.FieldValue.serverTimestamp()});await eliteV54Audit(id,'comprada',{cantidad:qty,total});document.querySelector('#elite-v5-module-modal .elite-v5-close')?.click();eliteV51OpenInventory()}
-function eliteV54Deliver(id){const r=eliteV54Requests.find(x=>x.id===id);abrirEliteV5ModuleModal('Registrar entrega','La foto de entrega es obligatoria.',`<div class="elite-v54-field"><label>Cantidad entregada</label><input id="v54-delqty" type="number" value="${r?.cantidad_comprada||1}"></div><div class="elite-v54-field"><label>Ubicación asignada</label><input id="v54-delloc" value="${eliteV54Esc(r?.ubicacion||'')}"></div><div class="elite-v54-field"><label>Nombre de quien recibe</label><input id="v54-receiver" value="${eliteV54Esc(r?.empleado_nombre||'')}"></div><div class="elite-v54-field"><label>Foto del producto entregado</label><input id="v54-delpic" type="file" accept="image/*" capture="environment"></div><button class="elite-v51-action" style="background:#16a34a;width:100%" onclick="eliteV54SaveDelivery('${id}')">Guardar entrega</button>`)}
-async function eliteV54SaveDelivery(id){const qty=Number(document.getElementById('v54-delqty').value||0),pic=document.getElementById('v54-delpic').files[0];if(qty<=0||!pic)return alert('Completa cantidad y foto.');const url=await eliteV54Upload(pic,`inventario_solicitudes/${id}/${Date.now()}_entrega`);await db.collection('solicitudes_inventario').doc(id).update({estado:'entregada',cantidad_entregada:qty,ubicacion_entrega:document.getElementById('v54-delloc').value.trim(),recibido_por:document.getElementById('v54-receiver').value.trim(),entregado_por:window.usuarioActual?.nombre||'Admin',foto_entrega_url:url,fecha_entrega:firebase.firestore.FieldValue.serverTimestamp(),confirmacion_empleado:false});await eliteV54Audit(id,'entregada',{cantidad:qty});document.querySelector('#elite-v5-module-modal .elite-v5-close')?.click();eliteV51OpenInventory()}
-async function eliteV54History(id){const s=await db.collection('solicitudes_inventario').doc(id).collection('auditoria').orderBy('fecha','desc').get();alert(s.docs.map(d=>{const x=d.data();return `${eliteV54Date(x.fecha)} — ${x.accion} — ${x.usuario||''}`}).join('\n')||'Sin historial')}
-</script>
-
-
-<style id="elite-v55-catalog-style">
-.elite-v55-toolbar{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}.elite-v55-primary{border:0;border-radius:12px;padding:13px;color:#fff;font-weight:900;background:#2563eb}.elite-v55-secondary{border:1px solid #334155;border-radius:12px;padding:13px;color:#fff;font-weight:900;background:#0f172a}.elite-v55-product-card{background:#05080d;border:1px solid #334155;border-radius:16px;padding:13px;margin-bottom:10px;display:grid;grid-template-columns:72px 1fr;gap:12px}.elite-v55-product-photo{width:72px;height:72px;border-radius:12px;object-fit:cover;background:#111827;border:1px solid #334155}.elite-v55-product-card h4{margin:0 0 5px;color:#60a5fa;font-size:16px}.elite-v55-product-card p{margin:3px 0;color:#cbd5e1;font-size:11px;line-height:1.4}.elite-v55-card-actions{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.elite-v55-card-actions button{border:0;border-radius:9px;padding:9px;color:#fff;font-size:9px;font-weight:900}.elite-v55-scan-box{display:none;background:#020617;border:1px solid #3b82f6;border-radius:15px;padding:12px;margin-bottom:12px}.elite-v55-scan-reader{width:100%;overflow:hidden;border-radius:11px}.elite-v55-code-row{display:grid;grid-template-columns:1fr auto;gap:8px}.elite-v55-code-row button{margin-bottom:10px;border:0;border-radius:11px;background:#7c3aed;color:#fff;font-weight:900;padding:0 14px}.elite-v55-price-history{background:#0f172a;border:1px solid #334155;border-radius:12px;padding:10px;margin-top:9px;font-size:11px;color:#cbd5e1}.elite-v55-help{padding:11px;border-radius:11px;background:#172554;color:#bfdbfe;border:1px solid #2563eb;font-size:11px;line-height:1.45;margin-bottom:12px}@media(max-width:560px){.elite-v55-toolbar,.elite-v55-card-actions{grid-template-columns:1fr}.elite-v55-product-card{grid-template-columns:58px 1fr}.elite-v55-product-photo{width:58px;height:58px}}
-</style>
-<script id="elite-v55-catalog-scanner">
-// ============================================================
-// ELITE ADMIN v5.5 — CATÁLOGO MAESTRO + ESCÁNER DE BARRAS
-// ============================================================
-let eliteV55Catalog=[];
-let eliteV55CatalogUnsub=null;
-let eliteV55Scanner=null;
-let eliteV55EditingId='';
-let eliteV55PhotoExisting='';
-
-function eliteV55SubscribeCatalog(){
-  if(eliteV55CatalogUnsub)return;
-  eliteV55CatalogUnsub=db.collection('catalogo_productos').onSnapshot(s=>{
-    eliteV55Catalog=s.docs.map(d=>({id:d.id,...d.data()}));
-    if(document.getElementById('elite-v55-catalog-list'))eliteV55RenderCatalog();
-  });
-}
-
-window.eliteV51OpenInventory=function(){
-  eliteV51SubscribeInventory();
-  eliteV54SubscribeRequests();
-  eliteV55SubscribeCatalog();
-  abrirEliteV5ModuleModal('Inventario','Catálogo, existencias, solicitudes, compras, recibos y entregas.',`
-    <div class="elite-v54-tabs" style="grid-template-columns:repeat(4,1fr)">
-      <button id="v54-tab-catalogo" class="elite-v54-tab active" onclick="eliteV55SwitchTab('catalogo')">Catálogo</button>
-      <button id="v54-tab-solicitudes" class="elite-v54-tab" onclick="eliteV55SwitchTab('solicitudes')">Solicitudes</button>
-      <button id="v54-tab-general" class="elite-v54-tab" onclick="eliteV55SwitchTab('general')">Inventario</button>
-      <button id="v54-tab-agregar" class="elite-v54-tab" onclick="eliteV55SwitchTab('agregar')">Ajustar stock</button>
-    </div>
-    <div id="elite-v54-tab-content"></div>`);
-  setTimeout(()=>eliteV55SwitchTab('catalogo'),80);
-};
-
-function eliteV55SwitchTab(tab){
-  ['catalogo','solicitudes','general','agregar'].forEach(x=>document.getElementById('v54-tab-'+x)?.classList.toggle('active',x===tab));
-  const c=document.getElementById('elite-v54-tab-content');if(!c)return;
-  if(tab==='catalogo'){
-    c.innerHTML=`<div class="elite-v55-toolbar"><button class="elite-v55-primary" onclick="eliteV55OpenProductForm()">＋ Agregar producto</button><button class="elite-v55-secondary" onclick="eliteV55OpenQuickScan()">▣ Escanear producto</button></div><input id="elite-v55-search" placeholder="Buscar por nombre, marca, código o tienda..." oninput="eliteV55RenderCatalog()"><div id="elite-v55-catalog-list"></div>`;
-    eliteV55RenderCatalog();
-  }else if(tab==='solicitudes'){
-    c.innerHTML='<div id="elite-v54-request-list"></div>';eliteV54RenderRequests();
-  }else if(tab==='general'){
-    c.innerHTML='<div id="elite-v51-inventory-list"></div>';eliteV51RenderInventory();
-  }else{
-    c.innerHTML=`<div class="elite-v51-settings-section"><h3>Ajustar inventario físico</h3><div class="elite-v55-help">Este formulario cambia la cantidad disponible. No crea un gasto ni agrega un producto al catálogo.</div><div class="elite-v51-form-grid"><input id="inv-name" placeholder="Nombre del artículo"><select id="inv-type" style="background:#0f172a;color:#fff;border:1px solid #3b82f6"><option>Producto químico</option><option>Herramienta</option><option>Máquina</option></select><input id="inv-qty" type="number" placeholder="Cantidad"><input id="inv-min" type="number" placeholder="Mínimo"><input id="inv-cost" type="number" step="0.01" placeholder="Costo unitario"><input id="inv-location" placeholder="Ubicación"></div><button class="elite-v51-action" style="background:#16a34a;width:100%;margin-top:12px" onclick="eliteV51SaveInventory()">Guardar ajuste</button></div>`;
-  }
-}
-
-function eliteV55RenderCatalog(){
-  const box=document.getElementById('elite-v55-catalog-list');if(!box)return;
-  const q=normalizarTexto(document.getElementById('elite-v55-search')?.value||'');
-  const rows=eliteV55Catalog.filter(p=>normalizarTexto(`${p.nombre||''} ${p.marca||''} ${p.codigo_barras||''} ${p.tienda||''} ${p.tipo||''}`).includes(q)).sort((a,b)=>String(a.nombre||'').localeCompare(String(b.nombre||'')));
-  if(!rows.length){box.innerHTML='<div class="elite-v51-empty">Todavía no hay productos guardados en el catálogo.</div>';return;}
-  box.innerHTML=rows.map(p=>`<div class="elite-v55-product-card">
-    ${p.foto_url?`<img class="elite-v55-product-photo" src="${eliteV54Esc(p.foto_url)}">`:`<div class="elite-v55-product-photo" style="display:flex;align-items:center;justify-content:center;font-size:25px">📦</div>`}
-    <div><h4>${eliteV54Esc(p.nombre||'Producto')}</h4><p><b>Código:</b> ${eliteV54Esc(p.codigo_barras||'Sin código')}</p><p><b>${eliteV54Esc(p.marca||'Sin marca')}</b> · ${eliteV54Esc(p.tipo||'Sin tipo')} · ${eliteV54Esc(p.tamano||'Sin tamaño')}</p><p><b>Último precio:</b> $${Number(p.precio_actual||0).toFixed(2)} · ${eliteV54Esc(p.tienda||'Sin tienda')}</p></div>
-    <div class="elite-v55-card-actions"><button style="background:#2563eb" onclick="eliteV55EditProduct('${p.id}')">Editar</button><button style="background:#7c3aed" onclick="eliteV55ShowPriceHistory('${p.id}')">Precios</button><button style="background:#dc2626" onclick="eliteV55DeleteProduct('${p.id}')">Eliminar</button></div>
-  </div>`).join('');
-}
-
-function eliteV55OpenProductForm(id=''){
-  const p=id?eliteV55Catalog.find(x=>x.id===id)||{}:{};
-  eliteV55EditingId=id;eliteV55PhotoExisting=p.foto_url||'';
-  abrirEliteV5ModuleModal(id?'Editar producto':'Agregar producto al catálogo','Este registro memoriza el producto. No crea un gasto.',`
-    <div class="elite-v55-help">Escanea el código y completa los datos una sola vez. Después la aplicación reconocerá el producto automáticamente.</div>
-    <div id="elite-v55-scan-box" class="elite-v55-scan-box"><div id="elite-v55-reader" class="elite-v55-scan-reader"></div><button class="elite-v51-action" style="background:#dc2626;width:100%;margin-top:8px" onclick="eliteV55StopScanner()">Cerrar cámara</button></div>
-    <div class="elite-v54-field"><label>Código de barras UPC / EAN</label><div class="elite-v55-code-row"><input id="v55-code" inputmode="numeric" value="${eliteV54Esc(p.codigo_barras||'')}" placeholder="Escanea o escribe el código"><button onclick="eliteV55StartScanner('v55-code')">📷 Escanear</button></div></div>
-    <div class="elite-v54-field"><label>Nombre del producto</label><input id="v55-name" value="${eliteV54Esc(p.nombre||'')}" placeholder="Ej: Fabuloso Lavender 1 galón"></div>
-    <div class="elite-v54-field"><label>Marca</label><input id="v55-brand" value="${eliteV54Esc(p.marca||'')}" placeholder="Ej: Fabuloso"></div>
-    <div class="elite-v54-field"><label>Tipo</label><select id="v55-type"><option ${p.tipo==='Producto químico'?'selected':''}>Producto químico</option><option ${p.tipo==='Herramienta'?'selected':''}>Herramienta</option><option ${p.tipo==='Máquina'?'selected':''}>Máquina</option></select></div>
-    <div class="elite-v54-field"><label>Tamaño / presentación</label><input id="v55-size" value="${eliteV54Esc(p.tamano||'')}" placeholder="Ej: 1 galón, 32 oz, paquete de 12"></div>
-    <div class="elite-v54-field"><label>Precio actual</label><input id="v55-price" type="number" min="0" step="0.01" value="${Number(p.precio_actual||0)}" placeholder="0.00"></div>
-    <div class="elite-v54-field"><label>Tienda / proveedor</label><input id="v55-store" value="${eliteV54Esc(p.tienda||'')}" placeholder="Ej: Home Depot, Costco, Walmart"></div>
-    <div class="elite-v54-field"><label>Ubicación habitual</label><input id="v55-location" value="${eliteV54Esc(p.ubicacion||'')}" placeholder="Ej: Storage, Van 1, Casa"></div>
-    <div class="elite-v54-field"><label>Cantidad mínima recomendada</label><input id="v55-min" type="number" min="0" value="${Number(p.minimo||0)}"></div>
-    <div class="elite-v54-field"><label>Foto del producto</label><input id="v55-photo" type="file" accept="image/*" capture="environment">${p.foto_url?`<img src="${eliteV54Esc(p.foto_url)}" style="width:90px;height:90px;object-fit:cover;border-radius:12px;margin-top:8px">`:''}</div>
-    <button class="elite-v51-action" style="background:#16a34a;width:100%;padding:14px" onclick="eliteV55SaveProduct()">Guardar producto</button>`);
-}
-
-async function eliteV55SaveProduct(){
-  const code=document.getElementById('v55-code').value.trim();
-  const name=document.getElementById('v55-name').value.trim();
-  const price=Number(document.getElementById('v55-price').value||0);
-  if(!name)return alert('Escribe el nombre del producto.');
-  if(code){const duplicate=eliteV55Catalog.find(p=>p.codigo_barras===code&&p.id!==eliteV55EditingId);if(duplicate)return alert('Ese código ya pertenece a: '+duplicate.nombre);}
-  let photoUrl=eliteV55PhotoExisting;
-  const file=document.getElementById('v55-photo').files[0];
-  if(file)photoUrl=await eliteV54Upload(file,`catalogo_productos/${code||Date.now()}/${Date.now()}_producto`);
-  const data={codigo_barras:code,nombre:name,marca:document.getElementById('v55-brand').value.trim(),tipo:document.getElementById('v55-type').value,tamano:document.getElementById('v55-size').value.trim(),precio_actual:price,tienda:document.getElementById('v55-store').value.trim(),ubicacion:document.getElementById('v55-location').value.trim(),minimo:Number(document.getElementById('v55-min').value||0),foto_url:photoUrl,actualizado:firebase.firestore.FieldValue.serverTimestamp(),actualizado_por:window.usuarioActual?.nombre||currentUser?.email||'Admin'};
-  let ref;
-  if(eliteV55EditingId){ref=db.collection('catalogo_productos').doc(eliteV55EditingId);const old=eliteV55Catalog.find(x=>x.id===eliteV55EditingId);await ref.update(data);if(Number(old?.precio_actual||0)!==price||String(old?.tienda||'')!==data.tienda)await ref.collection('historial_precios').add({precio:price,tienda:data.tienda,fecha:firebase.firestore.FieldValue.serverTimestamp(),usuario:data.actualizado_por});}
-  else{data.creado=firebase.firestore.FieldValue.serverTimestamp();ref=await db.collection('catalogo_productos').add(data);await ref.collection('historial_precios').add({precio:price,tienda:data.tienda,fecha:firebase.firestore.FieldValue.serverTimestamp(),usuario:data.actualizado_por});}
-  eliteV55StopScanner();document.querySelector('#elite-v5-module-modal .elite-v5-close')?.click();eliteV51OpenInventory();setTimeout(()=>eliteV55SwitchTab('catalogo'),100);
-}
-
-function eliteV55EditProduct(id){eliteV55OpenProductForm(id)}
-async function eliteV55DeleteProduct(id){if(!confirm('¿Eliminar este producto del catálogo? No se borrarán gastos ni movimientos anteriores.'))return;await db.collection('catalogo_productos').doc(id).delete()}
-async function eliteV55ShowPriceHistory(id){const p=eliteV55Catalog.find(x=>x.id===id);const s=await db.collection('catalogo_productos').doc(id).collection('historial_precios').orderBy('fecha','desc').get();alert(`${p?.nombre||'Producto'}\n\n`+(s.docs.map(d=>{const x=d.data();return `${eliteV54Date(x.fecha)} — $${Number(x.precio||0).toFixed(2)} — ${x.tienda||'Sin tienda'}`}).join('\n')||'Sin historial de precios'))}
-
-function eliteV55OpenQuickScan(){
-  abrirEliteV5ModuleModal('Escanear producto','Busca un producto guardado por su código de barras.',`<div id="elite-v55-scan-box" class="elite-v55-scan-box" style="display:block"><div id="elite-v55-reader" class="elite-v55-scan-reader"></div></div><div class="elite-v54-field"><label>Código detectado</label><input id="v55-quick-code" readonly></div><div id="v55-quick-result" class="elite-v55-price-history">Apunta la cámara al código del producto.</div><button class="elite-v51-action" style="background:#dc2626;width:100%;margin-top:10px" onclick="eliteV55StopScanner()">Cerrar cámara</button>`);
-  setTimeout(()=>eliteV55StartScanner('v55-quick-code',true),150);
-}
-
-async function eliteV55StartScanner(targetId,quick=false){
-  const box=document.getElementById('elite-v55-scan-box');if(box)box.style.display='block';
-  if(typeof Html5Qrcode==='undefined')return alert('No se pudo cargar el escáner. Revisa la conexión a internet.');
-  await eliteV55StopScanner();
-  eliteV55Scanner=new Html5Qrcode('elite-v55-reader');
-  try{
-    await eliteV55Scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:280,height:130},formatsToSupport:[Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.UPC_E,Html5QrcodeSupportedFormats.CODE_128]},decoded=>{
-      const input=document.getElementById(targetId);if(input)input.value=decoded;
-      if(quick)eliteV55ShowScannedProduct(decoded);
-      else{const found=eliteV55Catalog.find(p=>p.codigo_barras===decoded);if(found){document.getElementById('v55-name').value=found.nombre||'';document.getElementById('v55-brand').value=found.marca||'';document.getElementById('v55-type').value=found.tipo||'Producto químico';document.getElementById('v55-size').value=found.tamano||'';document.getElementById('v55-price').value=Number(found.precio_actual||0);document.getElementById('v55-store').value=found.tienda||'';document.getElementById('v55-location').value=found.ubicacion||'';document.getElementById('v55-min').value=Number(found.minimo||0);eliteV55EditingId=found.id;eliteV55PhotoExisting=found.foto_url||'';alert('Producto reconocido: '+found.nombre);}}
-      eliteV55StopScanner();
-    },()=>{});
-  }catch(e){console.error(e);alert('No se pudo abrir la cámara. Usa HTTPS y permite acceso a la cámara.');}
-}
-
-function eliteV55ShowScannedProduct(code){
-  const p=eliteV55Catalog.find(x=>x.codigo_barras===code);const box=document.getElementById('v55-quick-result');if(!box)return;
-  box.innerHTML=p?`<b>${eliteV54Esc(p.nombre)}</b><br>${eliteV54Esc(p.marca||'')} · ${eliteV54Esc(p.tamano||'')}<br>Precio: $${Number(p.precio_actual||0).toFixed(2)} · ${eliteV54Esc(p.tienda||'Sin tienda')}`:`Código ${eliteV54Esc(code)} no está registrado. <button class="elite-v51-action" style="background:#16a34a;margin-top:9px;width:100%" onclick="eliteV55OpenProductForm();setTimeout(()=>document.getElementById('v55-code').value='${eliteV54Esc(code)}',50)">Agregar al catálogo</button>`;
-}
-
-async function eliteV55StopScanner(){
-  if(eliteV55Scanner){try{if(eliteV55Scanner.isScanning)await eliteV55Scanner.stop();await eliteV55Scanner.clear()}catch(e){}eliteV55Scanner=null;}
-  const box=document.getElementById('elite-v55-scan-box');if(box&&document.getElementById('v55-code'))box.style.display='none';
-}
-</script>
-
-
-<style id="ops-calendar-v6-css">
-.ops-modal{display:none;position:fixed;inset:0;z-index:999999;background:#f4f7fb;color:#0f172a;overflow:auto;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-.ops-shell{min-height:100vh;padding:18px 20px 28px;max-width:1800px;margin:auto}
-.ops-header{display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;gap:18px;background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:16px 18px;position:sticky;top:0;z-index:20;box-shadow:0 8px 30px rgba(15,23,42,.08)}
-.ops-header h2{font-size:27px;margin:0}.ops-header p{margin:3px 0 0;color:#64748b;font-size:13px}
-.ops-view-tabs{display:flex;background:#f1f5f9;padding:4px;border-radius:12px}.ops-view-tabs button,.ops-date-nav button{border:0;background:transparent;padding:9px 15px;border-radius:9px;color:#334155;font-weight:700}.ops-view-tabs button.active{background:#2563eb;color:#fff;box-shadow:0 5px 12px rgba(37,99,235,.25)}
-.ops-date-nav{display:flex;align-items:center;justify-content:center;gap:6px}.ops-date-nav strong{margin-left:12px;font-size:15px}.ops-close{border:0;background:#ef4444;color:#fff;width:42px;height:42px;border-radius:12px;font-size:18px}
-.ops-metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin:14px 0}.ops-metric{border:1px solid #e2e8f0;background:#fff;border-radius:15px;padding:14px;text-align:left;min-height:92px;box-shadow:0 5px 18px rgba(15,23,42,.05);color:#0f172a}.ops-metric span{font-size:20px}.ops-metric b{display:block;font-size:22px;margin-top:7px}.ops-metric small{color:#64748b}.ops-progress{height:7px;background:#e2e8f0;border-radius:10px;margin-top:9px;overflow:hidden}.ops-progress i{display:block;height:100%;background:#22c55e;width:0;border-radius:10px}
-.ops-layout{display:grid;grid-template-columns:minmax(300px,.9fr) minmax(470px,1.65fr) minmax(280px,.85fr);gap:14px;align-items:start}.ops-card{background:#fff;border:1px solid #e2e8f0;border-radius:17px;box-shadow:0 5px 20px rgba(15,23,42,.05);overflow:hidden}.ops-card-title{padding:15px 17px;border-bottom:1px solid #e2e8f0;font-weight:900;display:flex;justify-content:space-between;align-items:center}.ops-card-title b{background:#2563eb;color:#fff;border-radius:20px;padding:4px 9px;font-size:11px}
-.ops-timeline{padding:14px;max-height:760px;overflow:auto}.ops-event{display:grid;grid-template-columns:62px 1fr;gap:10px;margin-bottom:10px;cursor:pointer}.ops-event-time{font-size:11px;color:#64748b;padding-top:10px}.ops-event-box{border:1px solid #cbd5e1;border-left:5px solid #8b5cf6;border-radius:12px;padding:12px;background:#fafafa}.ops-event-box.completed{border-left-color:#22c55e;background:#f0fdf4}.ops-event-box.progress{border-left-color:#f97316;background:#fff7ed}.ops-event-box.pending{border-left-color:#8b5cf6;background:#faf5ff}.ops-event-box h4{margin:0 0 4px;font-size:14px}.ops-event-box p{margin:3px 0;color:#475569;font-size:11px}.ops-tag{display:inline-block;padding:3px 7px;border-radius:6px;font-size:9px;background:#dcfce7;color:#15803d;font-weight:800}
-.ops-job-detail{min-height:520px}.ops-detail-head{padding:17px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;gap:10px;align-items:center}.ops-detail-head h3{margin:0;font-size:19px}.ops-status-select{padding:9px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:#111827}.ops-detail-tabs{display:flex;gap:4px;padding:10px 14px;border-bottom:1px solid #e2e8f0;overflow:auto}.ops-detail-tabs button{border:0;background:transparent;padding:8px 10px;color:#64748b;font-weight:700;white-space:nowrap}.ops-detail-tabs button.active{color:#2563eb;border-bottom:2px solid #2563eb}.ops-detail-body{padding:17px}.ops-detail-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px}.ops-info-list{border:1px solid #e2e8f0;border-radius:12px;overflow:hidden}.ops-info-row{display:grid;grid-template-columns:150px 1fr;padding:11px;border-bottom:1px solid #e2e8f0;font-size:12px}.ops-info-row:last-child{border-bottom:0}.ops-info-row b{color:#475569}.ops-payment-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.ops-payment{padding:11px;border:1px solid #e2e8f0;border-radius:10px;text-align:center}.ops-payment small{display:block;color:#64748b}.ops-payment strong{display:block;margin-top:5px}.ops-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:15px}.ops-actions button{border:0;border-radius:9px;padding:11px;font-weight:800;color:#fff}.ops-actions .start{background:#2563eb}.ops-actions .edit{background:#10b981}.ops-actions .reschedule{background:#f59e0b}.ops-actions .cancel{background:#ef4444}.ops-mini-map{min-height:190px;border-radius:12px;background:linear-gradient(135deg,#dbeafe,#ecfeff);display:flex;align-items:center;justify-content:center;text-align:center;padding:15px}.ops-mini-map a{color:#2563eb;font-weight:900;text-decoration:none}
-.ops-side{display:grid;gap:14px}.ops-map-placeholder{height:150px;margin:12px;border-radius:12px;background:linear-gradient(135deg,#dcfce7,#dbeafe);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#334155}.ops-route-line{font-size:35px}.ops-route-list,.ops-team-status,#ops-alerts{padding:8px 13px 13px}.ops-route-item,.ops-team-item,.ops-alert{display:grid;grid-template-columns:auto 1fr auto;gap:8px;padding:9px 3px;border-bottom:1px solid #eef2f7;font-size:11px;align-items:center}.ops-route-item:last-child,.ops-team-item:last-child,.ops-alert:last-child{border-bottom:0}.ops-route-item a{color:#2563eb;text-decoration:none;font-weight:800}.ops-dot{width:9px;height:9px;border-radius:50%;background:#8b5cf6}.ops-dot.green{background:#22c55e}.ops-dot.orange{background:#f97316}.ops-alert.warning{color:#b45309}.ops-alert.danger{color:#dc2626}.ops-alert.info{color:#2563eb}
-.ops-inventory-strip{margin-top:14px}.ops-inventory-items{display:flex;gap:10px;overflow:auto;padding:14px}.ops-inventory-item{min-width:180px;padding:11px;border:1px solid #e2e8f0;border-radius:12px;display:flex;gap:9px;align-items:center}.ops-inventory-item span{font-size:25px}.ops-inventory-item b{font-size:12px}.ops-inventory-item small{display:block;color:#64748b;margin-top:3px}.ops-empty{padding:70px 20px;text-align:center;color:#94a3b8}
-.ops-month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;padding:14px}.ops-month-day{min-height:115px;border:1px solid #e2e8f0;border-radius:11px;padding:8px;background:#fff;cursor:pointer}.ops-month-day.muted{opacity:.4}.ops-month-day.today{border:2px solid #2563eb}.ops-month-num{font-weight:900;margin-bottom:7px}.ops-month-job{font-size:9px;padding:4px 5px;border-radius:5px;background:#ede9fe;margin:3px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ops-agenda-list{padding:14px}.ops-agenda-date{font-size:14px;font-weight:900;margin:16px 0 8px;color:#1d4ed8}
-@media(max-width:1100px){.ops-header{grid-template-columns:1fr auto}.ops-view-tabs,.ops-date-nav{grid-column:1/-1;justify-content:flex-start;overflow:auto}.ops-metrics{grid-template-columns:repeat(3,1fr)}.ops-layout{grid-template-columns:1fr}.ops-side{grid-template-columns:repeat(3,1fr)}.ops-timeline{max-height:none}}
-@media(max-width:700px){.ops-shell{padding:8px}.ops-header{padding:12px}.ops-header h2{font-size:22px}.ops-view-tabs button{padding:8px 11px}.ops-date-nav strong{font-size:12px}.ops-metrics{grid-template-columns:repeat(2,1fr)}.ops-layout{display:block}.ops-card{margin-bottom:10px}.ops-side{display:block}.ops-detail-grid{grid-template-columns:1fr}.ops-actions{grid-template-columns:1fr 1fr}.ops-info-row{grid-template-columns:110px 1fr}.ops-month-grid{gap:4px;padding:7px}.ops-month-day{min-height:75px;padding:5px}.ops-month-job{font-size:7px}.ops-inventory-items{padding:10px}.ops-inventory-item{min-width:155px}}
-</style>
-
-<script id="ops-calendar-v6-js">
-let opsCalendarDate = new Date();
-let opsCalendarView = 'day';
-let opsSelectedJobId = null;
-
-function opsDateKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
-function opsMoney(n){return Number(n||0).toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0})}
-function opsMinutes(t){if(!t||t==='--:--')return 0;const p=String(t).split(':');return Number(p[0]||0)*60+Number(p[1]||0)}
-function opsEndTime(s){if(s.hora_final_estimada)return s.hora_final_estimada;const start=opsMinutes(s.hora);const mins=120;return `${String(Math.floor((start+mins)/60)%24).padStart(2,'0')}:${String((start+mins)%60).padStart(2,'0')}`}
-function opsPayment(s){const total=Number(s.precio_total||0);const dep=s.deposito_pagado?Number(s.deposito_monto||total*.5):0;const bal=s.balance_pagado?Math.max(total-dep,0):0;return {total,collected:Math.min(total,dep+bal),pending:Math.max(total-dep-bal,0),dep,bal}}
-function opsJobsForDate(key){return todosLosServicios.filter(s=>s.fecha===key).sort((a,b)=>(a.hora||'').localeCompare(b.hora||''))}
-function opsStateClass(s){return s.estado==='completado'?'completed':s.estado==='en_progreso'?'progress':'pending'}
-function opsStateLabel(s){return s.estado==='completado'?'Completado':s.estado==='en_progreso'?'En progreso':'No iniciado'}
-
-function abrirCalendarioElite(){document.getElementById('elite-calendar-modal').style.display='block';document.body.style.overflow='hidden';opsCalendarDate=new Date();opsCalendarView='day';renderCalendarioElite()}
-function cerrarCalendarioElite(){document.getElementById('elite-calendar-modal').style.display='none';document.body.style.overflow=''}
-function setOpsView(v){opsCalendarView=v;document.querySelectorAll('.ops-view-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.view===v));renderCalendarioElite()}
-function goOpsToday(){opsCalendarDate=new Date();renderCalendarioElite()}
-function moveOpsDate(dir){if(opsCalendarView==='month')opsCalendarDate.setMonth(opsCalendarDate.getMonth()+dir);else if(opsCalendarView==='week')opsCalendarDate.setDate(opsCalendarDate.getDate()+7*dir);else opsCalendarDate.setDate(opsCalendarDate.getDate()+dir);renderCalendarioElite()}
-function cambiarMes(dir){opsCalendarDate.setMonth(opsCalendarDate.getMonth()+dir);renderCalendarioElite()}
-
-function renderCalendarioElite(){
-  document.querySelectorAll('.ops-view-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.view===opsCalendarView));
-  const title=document.getElementById('ops-date-title');
-  title.textContent=opsCalendarView==='month'?opsCalendarDate.toLocaleDateString('es-US',{month:'long',year:'numeric'}):opsCalendarDate.toLocaleDateString('es-US',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  if(opsCalendarView==='month')return renderOpsMonth();
-  if(opsCalendarView==='week')return renderOpsWeek();
-  if(opsCalendarView==='agenda')return renderOpsAgenda();
-  renderOpsDay();
-}
-
-function updateOpsMetrics(jobs){
- const sold=jobs.reduce((a,s)=>a+Number(s.precio_total||0),0);let collected=0,pending=0;const staff=new Set();
- jobs.forEach(s=>{const p=opsPayment(s);collected+=p.collected;pending+=p.pending;[s.empleado_nombre,s.empleado_nombre_2].filter(Boolean).forEach(x=>staff.add(x))});
- const completed=jobs.filter(s=>s.estado==='completado').length;const pct=jobs.length?Math.round(completed/jobs.length*100):0;
- document.getElementById('ops-jobs-count').textContent=jobs.length;document.getElementById('ops-sold').textContent=opsMoney(sold);document.getElementById('ops-collected').textContent=opsMoney(collected);document.getElementById('ops-pending').textContent=opsMoney(pending);document.getElementById('ops-staff-count').textContent=staff.size;document.getElementById('ops-progress').textContent=pct+'%';document.getElementById('ops-progress-bar').style.width=pct+'%';
-}
-
-function renderOpsDay(){
- const key=opsDateKey(opsCalendarDate),jobs=opsJobsForDate(key);updateOpsMetrics(jobs);
- document.getElementById('ops-list-title').textContent=opsCalendarDate.toLocaleDateString('es-US',{weekday:'long',day:'numeric',month:'long'});document.getElementById('ops-list-badge').textContent=jobs.length;
- const timeline=document.getElementById('ops-timeline');
- timeline.innerHTML=jobs.length?jobs.map(s=>`<div class="ops-event" onclick="selectOpsJob('${s.id}')"><div class="ops-event-time">${formatAMPM(s.hora||'00:00')}</div><div class="ops-event-box ${opsStateClass(s)}"><h4>${s.cliente||'Cliente'}</h4><span class="ops-tag">${s.tipo||'Servicio'}</span><p>${formatAMPM(s.hora||'00:00')} – ${formatAMPM(opsEndTime(s))}</p><p>👥 ${[s.empleado_nombre,s.empleado_nombre_2].filter(Boolean).join(' • ')||'Sin asignar'}</p><p>📍 ${s.direccion||'Sin dirección'}</p></div></div>`).join(''):'<div class="ops-empty">No hay trabajos programados para este día.</div>';
- renderOpsRoute(jobs);renderOpsTeam(jobs);renderOpsAlerts(jobs);renderOpsInventory();
- if(!opsSelectedJobId||!jobs.some(s=>s.id===opsSelectedJobId))opsSelectedJobId=jobs[0]?.id||null;
- renderOpsJobDetail();
-}
-
-function selectOpsJob(id){opsSelectedJobId=id;renderOpsJobDetail()}
-function renderOpsJobDetail(){
- const box=document.getElementById('ops-job-detail'),s=todosLosServicios.find(x=>x.id===opsSelectedJobId);if(!s){box.innerHTML='<div class="ops-empty">Selecciona un trabajo para ver todos sus detalles.</div>';return}
- const p=opsPayment(s);const staff=[s.empleado_nombre,s.empleado_nombre_2].filter(Boolean).join(' • ')||'Sin asignar';
- box.innerHTML=`<div class="ops-detail-head"><div><small style="color:#8b5cf6">● Servicio</small><h3>${s.cliente||'Cliente'}</h3></div><select class="ops-status-select" onchange="cambiarEstadoTrabajo('${s.id}',this.value).then(()=>setTimeout(renderCalendarioElite,300))"><option value="no_iniciado" ${s.estado==='no_iniciado'?'selected':''}>No iniciado</option><option value="en_progreso" ${s.estado==='en_progreso'?'selected':''}>En progreso</option><option value="completado" ${s.estado==='completado'?'selected':''}>Completado</option></select></div>
- <div class="ops-detail-tabs"><button class="active">Resumen</button><button onclick="abrirEditorEvento('${s.id}')">Detalles</button><button>Checklist</button><button>Fotos</button><button>Inventario</button><button>Notas</button><button>Historial</button></div>
- <div class="ops-detail-body"><div class="ops-detail-grid"><div><div class="ops-info-list">
- <div class="ops-info-row"><b>📍 Dirección</b><span>${s.direccion||'Sin dirección'}</span></div><div class="ops-info-row"><b>📅 Fecha y hora</b><span>${s.fecha||''}<br>${formatAMPM(s.hora||'00:00')} – ${formatAMPM(opsEndTime(s))}</span></div><div class="ops-info-row"><b>🧽 Tipo</b><span>${s.tipo||'Servicio'}</span></div><div class="ops-info-row"><b>⏱ Tiempo</b><span>Estimado: ${s.hora_final_estimada?calcularTiempoTrabajado(s.hora,s.hora_final_estimada).texto:'2h aprox.'} · Real: ${calcularTiempoTrabajado(s.hora_inicio,s.hora_fin).texto}</span></div><div class="ops-info-row"><b>👥 Empleados</b><span>${staff}</span></div><div class="ops-info-row"><b>📝 Notas</b><span>${s.notas_internas||'Sin notas especiales'}</span></div></div>
- <div class="ops-payment-grid" style="margin-top:12px"><div class="ops-payment"><small>Precio</small><strong>${opsMoney(p.total)}</strong></div><div class="ops-payment"><small>Cobrado</small><strong style="color:#16a34a">${opsMoney(p.collected)}</strong></div><div class="ops-payment"><small>Balance</small><strong style="color:#f97316">${opsMoney(p.pending)}</strong></div></div></div>
- <div><div class="ops-mini-map"><div><div style="font-size:35px">🗺️</div><a target="_blank" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.direccion||'')}">Abrir ubicación en Google Maps</a><p style="font-size:11px;color:#64748b">${s.direccion||'Sin dirección'}</p></div></div><div class="ops-info-list" style="margin-top:12px"><div class="ops-info-row"><b>📞 Teléfono</b><span>${s.whatsapp||'Sin teléfono'}</span></div><div class="ops-info-row"><b>✉️ Correo</b><span>${s.email_cliente||'Sin email'}</span></div><div class="ops-info-row"><b>📄 Contrato</b><span>${s.contrato_firmado?'Firmado':'Pendiente'}</span></div></div></div></div>
- <div class="ops-actions"><button class="start" onclick="cambiarEstadoTrabajo('${s.id}','en_progreso').then(()=>setTimeout(renderCalendarioElite,300))">▶ Iniciar</button><button class="edit" onclick="abrirEditorEvento('${s.id}')">✎ Editar</button><button class="reschedule" onclick="abrirEditorEvento('${s.id}')">↻ Reprogramar</button><button class="cancel" onclick="cancelarCliente('${String(s.cliente||'').replace(/'/g,"\\'")}')">✕ Cancelar</button></div></div>`;
-}
-
-function renderOpsRoute(jobs){const box=document.getElementById('ops-route-list');box.innerHTML=jobs.length?jobs.map((s,i)=>`<div class="ops-route-item"><span class="ops-dot ${s.estado==='completado'?'green':s.estado==='en_progreso'?'orange':''}"></span><a target="_blank" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.direccion||'')}">${i+1}. ${s.cliente||'Cliente'}</a><span>${formatAMPM(s.hora||'')}</span></div>`).join(''):'<div class="ops-empty" style="padding:20px">Sin ruta para este día.</div>'}
-function renderOpsTeam(jobs){const map={};jobs.forEach(s=>[s.empleado_nombre,s.empleado_nombre_2].filter(Boolean).forEach(n=>{map[n]=map[n]||{state:'No iniciado',time:s.hora};if(s.estado==='en_progreso')map[n]={state:'En progreso',time:s.hora_inicio};if(s.estado==='completado'&&map[n].state!=='En progreso')map[n]={state:'Completado',time:s.hora_fin}}));document.getElementById('ops-team-status').innerHTML=Object.keys(map).length?Object.entries(map).map(([n,v])=>`<div class="ops-team-item"><span class="ops-dot ${v.state==='Completado'?'green':v.state==='En progreso'?'orange':''}"></span><b>${n}</b><span>${v.state}<br><small>${formatAMPM(v.time||'')}</small></span></div>`).join(''):'<div class="ops-empty" style="padding:20px">No hay empleados asignados.</div>'}
-function renderOpsAlerts(jobs){const alerts=[];jobs.forEach(s=>{const p=opsPayment(s);if(p.pending>0)alerts.push(['danger','Depósito o balance pendiente',s.cliente]);if(!s.contrato_firmado)alerts.push(['warning','Contrato pendiente',s.cliente]);if(!s.empleado_nombre)alerts.push(['info','Trabajo sin empleado',s.cliente])});document.getElementById('ops-alerts').innerHTML=alerts.length?alerts.slice(0,8).map(a=>`<div class="ops-alert ${a[0]}"><span>⚠️</span><b>${a[1]}</b><span>${a[2]}</span></div>`).join(''):'<div class="ops-alert info"><span>✅</span><b>Sin alertas críticas</b><span>Todo en orden</span></div>'}
-function renderOpsInventory(){const box=document.getElementById('ops-inventory-today');const items=(window.inventarioItems||window.inventarioGeneral||[]).filter(x=>Number(x.cantidad||0)<=Number(x.minimo||0));box.innerHTML=items.length?items.slice(0,8).map(x=>`<div class="ops-inventory-item"><span>📦</span><div><b>${x.nombre||'Producto'}</b><small>${x.cantidad||0} disponibles · mínimo ${x.minimo||0}</small></div></div>`).join(''):'<div class="ops-inventory-item"><span>✅</span><div><b>Inventario sin alertas</b><small>No hay productos críticos registrados.</small></div></div>'}
-
-function renderOpsMonth(){
- const y=opsCalendarDate.getFullYear(),m=opsCalendarDate.getMonth();const first=new Date(y,m,1),start=new Date(y,m,1-first.getDay());let html='<div class="ops-month-grid">';const all=[];
- for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const key=opsDateKey(d),jobs=opsJobsForDate(key);all.push(...jobs);html+=`<div class="ops-month-day ${d.getMonth()!==m?'muted':''} ${key===opsDateKey(new Date())?'today':''}" onclick="opsCalendarDate=new Date('${key}T12:00:00');setOpsView('day')"><div class="ops-month-num">${d.getDate()}</div>${jobs.slice(0,3).map(s=>`<div class="ops-month-job">${s.hora||''} ${s.cliente||''}</div>`).join('')}${jobs.length>3?`<small>+${jobs.length-3} más</small>`:''}</div>`}html+='</div>';
- document.getElementById('ops-timeline').innerHTML=html;document.getElementById('ops-list-title').textContent='Vista mensual';document.getElementById('ops-list-badge').textContent=all.length;document.querySelector('.ops-timeline-card').style.gridColumn='1 / 3';document.querySelector('.ops-detail-card').style.display='none';updateOpsMetrics(all);renderOpsRoute([]);renderOpsTeam([]);renderOpsAlerts(all);renderOpsInventory();
-}
-function renderOpsWeek(){const d=new Date(opsCalendarDate);d.setDate(d.getDate()-d.getDay());let html='';let all=[];for(let i=0;i<7;i++){const x=new Date(d);x.setDate(d.getDate()+i);const jobs=opsJobsForDate(opsDateKey(x));all.push(...jobs);html+=`<div class="ops-agenda-date">${x.toLocaleDateString('es-US',{weekday:'long',day:'numeric',month:'short'})}</div>${jobs.length?jobs.map(s=>`<div class="ops-event" onclick="opsCalendarDate=new Date('${s.fecha}T12:00:00');opsSelectedJobId='${s.id}';setOpsView('day')"><div class="ops-event-time">${formatAMPM(s.hora||'')}</div><div class="ops-event-box ${opsStateClass(s)}"><h4>${s.cliente}</h4><p>${s.tipo||''} · ${[s.empleado_nombre,s.empleado_nombre_2].filter(Boolean).join(' • ')}</p></div></div>`).join(''):'<p style="color:#94a3b8;font-size:11px">Sin trabajos</p>'} `}document.getElementById('ops-timeline').innerHTML=html;document.getElementById('ops-list-title').textContent='Semana operativa';document.getElementById('ops-list-badge').textContent=all.length;document.querySelector('.ops-timeline-card').style.gridColumn='1 / 3';document.querySelector('.ops-detail-card').style.display='none';updateOpsMetrics(all);renderOpsRoute(all.filter(s=>s.fecha===opsDateKey(new Date())));renderOpsTeam(all);renderOpsAlerts(all);renderOpsInventory()}
-function renderOpsAgenda(){const start=opsDateKey(opsCalendarDate);const jobs=todosLosServicios.filter(s=>s.fecha>=start).sort((a,b)=>(a.fecha+a.hora).localeCompare(b.fecha+b.hora)).slice(0,60);let last='';let html='<div class="ops-agenda-list">';jobs.forEach(s=>{if(s.fecha!==last){last=s.fecha;html+=`<div class="ops-agenda-date">${new Date(s.fecha+'T12:00:00').toLocaleDateString('es-US',{weekday:'long',day:'numeric',month:'long'})}</div>`}html+=`<div class="ops-event" onclick="opsCalendarDate=new Date('${s.fecha}T12:00:00');opsSelectedJobId='${s.id}';setOpsView('day')"><div class="ops-event-time">${formatAMPM(s.hora||'')}</div><div class="ops-event-box ${opsStateClass(s)}"><h4>${s.cliente}</h4><p>${s.tipo||''} · ${s.direccion||''}</p></div></div>`});html+='</div>';document.getElementById('ops-timeline').innerHTML=html||'<div class="ops-empty">No hay próximos trabajos.</div>';document.getElementById('ops-list-title').textContent='Próximos servicios';document.getElementById('ops-list-badge').textContent=jobs.length;document.querySelector('.ops-timeline-card').style.gridColumn='1 / 3';document.querySelector('.ops-detail-card').style.display='none';updateOpsMetrics(jobs);renderOpsRoute([]);renderOpsTeam([]);renderOpsAlerts(jobs);renderOpsInventory()}
-
-const _opsOriginalRender=renderCalendarioElite;
-function renderCalendarioElite(){document.querySelector('.ops-timeline-card').style.gridColumn='';document.querySelector('.ops-detail-card').style.display='block';return _opsOriginalRender()}
-function mostrarEventosDia(fecha){opsCalendarDate=new Date(fecha+'T12:00:00');opsCalendarView='day';renderCalendarioElite()}
-function filterOpsMetric(type){if(type==='all')return;const msg={sold:'Ventas del día calculadas desde precio total.',collected:'Cobros confirmados por depósito y balance.',pending:'Balances o depósitos aún pendientes.',staff:'Empleados asignados a los trabajos del día.'}[type];if(msg)alert(msg)}
-</script>
-
 </body>
 </html>
