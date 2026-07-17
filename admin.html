@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.0.6 | Centro de Operaciones principal integrado -->
+<!-- Elite Admin v6.0.7 | Centro de Operaciones principal integrado -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.0.6 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.0.7 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -4803,6 +4803,256 @@ body.elite-v606-operations-home #ops-center-modal-v601.elite-v606-home{display:b
   }
 
   document.addEventListener('DOMContentLoaded',()=>setTimeout(restaurarTarjetasOcultadasPorVersionAnterior,1800));
+})();
+</script>
+
+
+
+<style id="elite-v607-permanent-sidebar-css">
+/* =========================================================
+   ELITE ADMIN v6.0.7 — navegación lateral permanente
+   ========================================================= */
+@media (min-width:801px){
+  /* Los módulos generales dejan de ser ventanas flotantes. */
+  #elite-v5-module-modal{
+    position:relative!important;
+    inset:auto!important;
+    z-index:auto!important;
+    width:100%!important;
+    min-height:calc(100vh - 30px)!important;
+    padding:0!important;
+    margin:0!important;
+    overflow:visible!important;
+    background:transparent!important;
+  }
+  #elite-v5-module-modal .elite-v5-module-box{
+    width:100%!important;
+    max-width:none!important;
+    min-height:calc(100vh - 30px)!important;
+    margin:0!important;
+    border-radius:20px!important;
+    padding:22px!important;
+  }
+
+  /* Ya no son necesarios porque el menú queda visible. */
+  #elite-v5-module-modal .elite-v5-module-box > button[onclick*="cerrarEliteV5ModuleModal"]{
+    display:none!important;
+  }
+
+  /* Contabilidad se integra en el área principal, sin menú duplicado. */
+  #elite-accounting-modal{
+    position:relative!important;
+    inset:auto!important;
+    z-index:auto!important;
+    width:100%!important;
+    min-height:calc(100vh - 30px)!important;
+    overflow:visible!important;
+    padding:0!important;
+    margin:0!important;
+  }
+  #elite-accounting-modal .acc-shell{
+    display:block!important;
+    min-height:calc(100vh - 30px)!important;
+  }
+  #elite-accounting-modal .acc-sidebar{
+    display:none!important;
+  }
+  #elite-accounting-modal .acc-main{
+    width:100%!important;
+    padding:20px!important;
+  }
+  #elite-v603-inline-exit,
+  #elite-v603-accounting-exit,
+  #elite-accounting-modal .acc-close-mobile,
+  #elite-accounting-modal [onclick*="cerrarContabilidadElite"],
+  #elite-accounting-modal .acc-nav:last-child{
+    display:none!important;
+  }
+
+  /* Cuando un módulo está abierto, solo se reemplaza el contenido derecho. */
+  body.elite-v607-module-active #ops-center-modal-v601,
+  body.elite-v607-module-active #admin-fixed-top,
+  body.elite-v607-module-active > .search-jobs-box,
+  body.elite-v607-module-active > #historial,
+  body.elite-v607-module-active > .payroll-container{
+    display:none!important;
+  }
+  body.elite-v607-accounting-active #ops-center-modal-v601,
+  body.elite-v607-accounting-active #admin-fixed-top,
+  body.elite-v607-accounting-active > .search-jobs-box,
+  body.elite-v607-accounting-active > #historial,
+  body.elite-v607-accounting-active > .payroll-container,
+  body.elite-v607-accounting-active #elite-v5-module-modal{
+    display:none!important;
+  }
+}
+
+/* En teléfono el menú sigue siendo desplegable, pero permanece siempre accesible. */
+@media (max-width:800px){
+  #elite-v5-module-modal,
+  #elite-accounting-modal{
+    z-index:85000!important;
+  }
+  #elite-v5-mobile-toggle{z-index:90002!important}
+  #elite-v5-sidebar{z-index:90001!important}
+  #elite-v5-sidebar-overlay{z-index:89999!important}
+
+  #elite-v5-module-modal .elite-v5-module-box > button[onclick*="cerrarEliteV5ModuleModal"],
+  #elite-v603-inline-exit,
+  #elite-v603-accounting-exit,
+  #elite-accounting-modal [onclick*="cerrarContabilidadElite"]{
+    display:none!important;
+  }
+
+  /* Espacio para el botón hamburguesa. */
+  #elite-v5-module-modal{padding-top:65px!important}
+  #elite-accounting-modal{padding-top:58px!important}
+}
+</style>
+
+<script id="elite-v607-permanent-sidebar-script">
+(function(){
+  'use strict';
+  const body=document.body;
+  const byId=id=>document.getElementById(id);
+
+  function cleanClasses(){
+    body.classList.remove('elite-v607-module-active','elite-v607-accounting-active');
+  }
+
+  function hideGeneralModule(){
+    const modal=byId('elite-v5-module-modal');
+    if(modal) modal.style.display='none';
+    body.classList.remove('elite-v607-module-active');
+  }
+
+  function hideAccounting(){
+    const gastos=byId('modal-gasto-contabilidad');
+    const acc=byId('elite-accounting-modal');
+    if(gastos) gastos.style.display='none';
+    if(acc) acc.style.display='none';
+    body.classList.remove('elite-v607-accounting-active','elite-v603-accounting-open');
+    body.style.overflow='';
+  }
+
+  function removeObsoleteButtons(){
+    byId('elite-v603-inline-exit')?.remove();
+    byId('elite-v603-accounting-exit')?.remove();
+
+    document.querySelectorAll('#elite-accounting-modal .acc-nav').forEach(el=>{
+      const text=(el.textContent||'').toLowerCase();
+      if(text.includes('volver al admin')) el.remove();
+    });
+  }
+
+  function patchModuleOpen(){
+    const original=window.abrirEliteV5ModuleModal;
+    if(typeof original!=='function' || original.__eliteV607) return;
+    const wrapped=function(title,description,content){
+      hideAccounting();
+      body.classList.remove('elite-v606-operations-home');
+      const ops=byId('ops-center-modal-v601');
+      if(ops) ops.style.display='none';
+      body.classList.add('elite-v607-module-active');
+      const result=original.apply(this,arguments);
+      const modal=byId('elite-v5-module-modal');
+      if(modal) modal.style.display='block';
+      window.scrollTo({top:0,behavior:'smooth'});
+      return result;
+    };
+    wrapped.__eliteV607=true;
+    window.abrirEliteV5ModuleModal=wrapped;
+  }
+
+  function patchModuleClose(){
+    const original=window.cerrarEliteV5ModuleModal;
+    const wrapped=function(){
+      try{if(typeof original==='function') original.apply(this,arguments)}catch(_){ }
+      hideGeneralModule();
+      if(typeof window.eliteV605ShowOperations==='function') window.eliteV605ShowOperations();
+    };
+    wrapped.__eliteV607=true;
+    window.cerrarEliteV5ModuleModal=wrapped;
+  }
+
+  function patchAccounting(){
+    const openOriginal=window.abrirContabilidadElite;
+    window.abrirContabilidadElite=function(){
+      hideGeneralModule();
+      body.classList.remove('elite-v606-operations-home');
+      const ops=byId('ops-center-modal-v601');
+      if(ops) ops.style.display='none';
+      body.classList.add('elite-v607-accounting-active');
+      const result=typeof openOriginal==='function' ? openOriginal.apply(this,arguments) : undefined;
+      const acc=byId('elite-accounting-modal');
+      if(acc) acc.style.display='block';
+      removeObsoleteButtons();
+      window.scrollTo({top:0,behavior:'smooth'});
+      return result;
+    };
+
+    const closeOriginal=window.cerrarContabilidadElite;
+    window.cerrarContabilidadElite=function(){
+      try{if(typeof closeOriginal==='function') closeOriginal.apply(this,arguments)}catch(_){ }
+      hideAccounting();
+      if(typeof window.eliteV605ShowOperations==='function') window.eliteV605ShowOperations();
+    };
+
+    const gastoOriginal=window.abrirAgregarGasto;
+    window.abrirAgregarGasto=function(){
+      body.classList.add('elite-v607-accounting-active');
+      if(typeof gastoOriginal==='function') return gastoOriginal.apply(this,arguments);
+    };
+  }
+
+  function patchOperations(){
+    const original=window.eliteV605ShowOperations;
+    if(typeof original!=='function'||original.__eliteV607) return;
+    const wrapped=function(){
+      hideGeneralModule();
+      hideAccounting();
+      cleanClasses();
+      const result=original.apply(this,arguments);
+      body.classList.add('elite-v606-operations-home');
+      return result;
+    };
+    wrapped.__eliteV607=true;
+    window.eliteV605ShowOperations=wrapped;
+  }
+
+  function patchNavigation(){
+    const original=window.eliteV5Navigate;
+    if(typeof original!=='function'||original.__eliteV607) return;
+    const wrapped=function(module,button){
+      // Antes de abrir otra sección se limpia cualquier panel anterior.
+      if(module!=='contabilidad'&&module!=='gastos') hideAccounting();
+      if(module!=='mensajes'&&module!=='resenas'&&module!=='clientes'&&module!=='inventario'&&module!=='informes'&&module!=='configuracion') hideGeneralModule();
+      return original.apply(this,arguments);
+    };
+    wrapped.__eliteV607=true;
+    window.eliteV5Navigate=wrapped;
+  }
+
+  function init(){
+    removeObsoleteButtons();
+    patchModuleOpen();
+    patchModuleClose();
+    patchAccounting();
+    patchOperations();
+    patchNavigation();
+
+    // Mantiene el logo como acceso directo al Centro de Operaciones.
+    document.querySelectorAll('#elite-v5-sidebar img,.elite-v5-brand').forEach(el=>{
+      el.style.cursor='pointer';
+      el.onclick=function(e){
+        e?.preventDefault?.();
+        if(typeof window.eliteV605ShowOperations==='function') window.eliteV605ShowOperations();
+      };
+    });
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(init,350));
+  else setTimeout(init,350);
 })();
 </script>
 
