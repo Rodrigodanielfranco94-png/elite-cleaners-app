@@ -471,6 +471,10 @@ body.elite-v5-body{
       Entrar
     </button>
 
+    <button type="button" onclick="recuperarPasswordAdmin()" style="width:100%; margin-top:10px; padding:12px; border:1px solid #3b82f6; border-radius:10px; background:transparent; color:#60a5fa; font-weight:bold;">
+      ¿Olvidaste tu contraseña?
+    </button>
+
     <p id="loginError" style="color:#ef4444; font-size:13px; margin-top:12px;"></p>
   </div>
 </div>
@@ -2872,6 +2876,39 @@ function detectarUsuario(user) {
   console.log("Usuario detectado:", window.usuarioActual);
 }
 
+
+window.recuperarPasswordAdmin = async function () {
+  const emailInput = document.getElementById("loginEmail");
+  const errorBox = document.getElementById("loginError");
+  const email = (emailInput?.value || "").trim().toLowerCase();
+
+  if (!email) {
+    errorBox.style.color = "#f59e0b";
+    errorBox.textContent = "Escribe primero tu correo electrónico.";
+    emailInput?.focus();
+    return;
+  }
+
+  errorBox.style.color = "#93c5fd";
+  errorBox.textContent = "Enviando enlace de recuperación...";
+
+  const redirectTo = window.location.origin + window.location.pathname;
+
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo
+  });
+
+  if (error) {
+    console.error("Error de recuperación:", error);
+    errorBox.style.color = "#ef4444";
+    errorBox.textContent = "No se pudo enviar el enlace. Revisa el correo e inténtalo nuevamente.";
+    return;
+  }
+
+  errorBox.style.color = "#22c55e";
+  errorBox.textContent = "Enlace enviado. Revisa tu correo y la carpeta de spam.";
+};
+
 async function revisarSesion() {
   const { data } = await supabaseClient.auth.getUser();
 
@@ -4077,18 +4114,87 @@ window.eliteV51RenderDashboard=function(){
 
 // Clientes: editar y borrar perfil sin eliminar trabajos históricos.
 window.eliteV51FilterClients=function(){
-  const q=normalizarTexto(eliteV51Get('elite-v51-client-search')?.value||'');
-  const rows=(todosLosClientes||[]).filter(c=>normalizarTexto(`${c.nombre||c.id} ${c.direccion||''} ${c.telefono||c.whatsapp||''} ${c.email||c.email_cliente||''}`).includes(q));
-  const target=eliteV51Get('elite-v51-client-results'); if(!target)return;
-  target.innerHTML=rows.length?`<div class="elite-v51-module-list">${rows.map(c=>{
-    const id=eliteV53Js(c.id); const name=eliteV53Js(c.nombre||c.id);
-    return `<div class="elite-v51-row"><div><h4>${eliteV53Html(c.nombre||c.id)}</h4><p>📍 ${eliteV53Html(c.direccion||'Sin dirección')}</p><p>📱 ${eliteV53Html(c.telefono||c.whatsapp||'Sin teléfono')} · ✉️ ${eliteV53Html(c.email||c.email_cliente||'Sin email')}</p></div><div class="elite-v51-actions"><button class="elite-v51-action" style="background:#2563eb" onclick="cerrarEliteV5ModuleModal();eliteV51SetLayout('servicios');eliteV5SetActive('servicios');document.getElementById('cliente').value='${name}';">Crear servicio</button><button class="elite-v51-action elite-v53-action-edit" onclick="eliteV53OpenClientEditor('${id}')">Editar</button><button class="elite-v51-action elite-v53-action-danger" onclick="eliteV53DeleteClient('${id}','${name}')">Eliminar</button></div></div>`
-  }).join('')}</div>`:`<div class="elite-v51-empty">No se encontraron clientes.</div>`;
+  const input = document.getElementById('elite-v51-client-search');
+  const target = document.getElementById('elite-v51-client-results');
+  if (!target) return;
+
+  const q = normalizarTexto(input?.value || '');
+
+  const rows = [...(todosLosClientes || [])]
+    .filter(c => {
+      if (!q) return true;
+
+      const searchable = [
+        c.nombre,
+        c.cliente,
+        c.id,
+        c.direccion,
+        c.telefono,
+        c.whatsapp,
+        c.email,
+        c.email_cliente
+      ]
+        .filter(Boolean)
+        .map(normalizarTexto)
+        .join(' ');
+
+      return searchable.includes(q);
+    })
+    .sort((a, b) =>
+      String(a.nombre || a.cliente || a.id || '')
+        .localeCompare(String(b.nombre || b.cliente || b.id || ''), 'es', {
+          sensitivity: 'base'
+        })
+    );
+
+  target.innerHTML = rows.length
+    ? `<div class="elite-v51-module-list">${rows.map(c => {
+        const id = eliteV53Js(c.id);
+        const name = eliteV53Js(c.nombre || c.cliente || c.id);
+        return `<div class="elite-v51-row">
+          <div>
+            <h4>${eliteV53Html(c.nombre || c.cliente || c.id)}</h4>
+            <p>📍 ${eliteV53Html(c.direccion || 'Sin dirección')}</p>
+            <p>📱 ${eliteV53Html(c.telefono || c.whatsapp || 'Sin teléfono')} · ✉️ ${eliteV53Html(c.email || c.email_cliente || 'Sin email')}</p>
+          </div>
+          <div class="elite-v51-actions">
+            <button class="elite-v51-action" style="background:#2563eb" onclick="cerrarEliteV5ModuleModal();eliteV51SetLayout('servicios');eliteV5SetActive('servicios');document.getElementById('cliente').value='${name}';filtrarClientes();">Crear servicio</button>
+            <button class="elite-v51-action elite-v53-action-edit" onclick="eliteV53OpenClientEditor('${id}')">Editar</button>
+            <button class="elite-v51-action elite-v53-action-danger" onclick="eliteV53DeleteClient('${id}','${name}')">Eliminar</button>
+          </div>
+        </div>`;
+      }).join('')}</div>`
+    : `<div class="elite-v51-empty">No se encontraron clientes para “${eliteV53Html(input?.value || '')}”.</div>`;
 };
 
 window.eliteV51OpenClients=function(){
-  abrirEliteV5ModuleModal('Clientes','Directorio real de clientes guardados en Firebase.',`<input id="elite-v51-client-search" placeholder="Buscar cliente..." oninput="eliteV51FilterClients()"><div id="elite-v51-client-results"></div>`);
-  eliteV51FilterClients();
+  abrirEliteV5ModuleModal(
+    'Clientes',
+    'Directorio real de clientes guardados en Firebase.',
+    `<input id="elite-v51-client-search"
+            type="search"
+            placeholder="Buscar por nombre, teléfono, email o dirección..."
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            style="width:100%;margin-bottom:12px">
+     <div id="elite-v51-client-results"></div>`
+  );
+
+  const input = document.getElementById('elite-v51-client-search');
+
+  if (input) {
+    const ejecutarFiltro = () => window.eliteV51FilterClients();
+
+    input.addEventListener('input', ejecutarFiltro);
+    input.addEventListener('keyup', ejecutarFiltro);
+    input.addEventListener('search', ejecutarFiltro);
+    input.addEventListener('change', ejecutarFiltro);
+
+    setTimeout(() => input.focus(), 80);
+  }
+
+  window.eliteV51FilterClients();
 };
 
 function eliteV53OpenClientEditor(id){
@@ -5252,154 +5358,3 @@ body.elite-v606-operations-home #ops-center-modal-v601.elite-v606-home{display:b
   .elite-v608-selection-toolbar>*{max-width:100%}
 }
 </style>
-
-<script id="elite-v608-final-fixes-script">
-(function(){
-  'use strict';
-  const byId=id=>document.getElementById(id);
-  const services=()=>{
-    try{return typeof todosLosServicios!=='undefined' && Array.isArray(todosLosServicios) ? todosLosServicios : []}
-    catch(_){return []}
-  };
-
-  function esc(v){
-    if(typeof eliteV53Html==='function') return eliteV53Html(v||'');
-    return String(v||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-  }
-  function js(v){
-    if(typeof eliteV53Js==='function') return eliteV53Js(v||'');
-    return String(v||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,' ');
-  }
-
-  function toolbar(kind,total){
-    return `<div class="elite-v608-selection-toolbar">
-      <label><input type="checkbox" id="elite-v608-${kind}-all" onchange="eliteV608ToggleAll('${kind}',this.checked)"> Seleccionar todos</label>
-      <button type="button" class="elite-v608-clear" onclick="eliteV608ToggleAll('${kind}',false)">Deseleccionar todos</button>
-      <span id="elite-v608-${kind}-count">0 de ${total} seleccionados</span>
-      <button type="button" class="elite-v608-delete" onclick="eliteV608DeleteSelected('${kind}')">Eliminar seleccionados</button>
-    </div>`;
-  }
-
-  window.eliteV608UpdateCount=function(kind){
-    const checks=[...document.querySelectorAll(`.elite-v608-${kind}-check`)];
-    const selected=checks.filter(c=>c.checked).length;
-    const count=byId(`elite-v608-${kind}-count`);
-    if(count) count.textContent=`${selected} de ${checks.length} seleccionados`;
-    const master=byId(`elite-v608-${kind}-all`);
-    if(master){
-      master.checked=checks.length>0 && selected===checks.length;
-      master.indeterminate=selected>0 && selected<checks.length;
-    }
-  };
-
-  window.eliteV608ToggleAll=function(kind,value){
-    document.querySelectorAll(`.elite-v608-${kind}-check`).forEach(c=>c.checked=!!value);
-    eliteV608UpdateCount(kind);
-  };
-
-  window.eliteV608DeleteSelected=async function(kind){
-    const ids=[...document.querySelectorAll(`.elite-v608-${kind}-check:checked`)].map(c=>c.value);
-    if(!ids.length) return alert('Primero selecciona por lo menos una tarjeta.');
-    const label=kind==='message'?'Mensajes':'Reseñas';
-    if(!confirm(`¿Ocultar ${ids.length} tarjeta(s) seleccionada(s) de ${label}?\n\nNo se borrarán clientes, trabajos, contratos, pagos ni contabilidad.`)) return;
-    try{
-      const batch=db.batch();
-      ids.forEach(id=>batch.update(db.collection('servicios').doc(id),kind==='message'?{oculto_mensajes:true}:{oculto_resenas:true}));
-      await batch.commit();
-      if(kind==='message') eliteV51OpenMessages(); else eliteV51OpenReviews();
-    }catch(error){
-      console.error(error);
-      alert('No fue posible ocultar las tarjetas seleccionadas.');
-    }
-  };
-
-  /* Sustituye las dos listas. La corrección importante es leer la variable real
-     todosLosServicios, no window.todosLosServicios. */
-  window.eliteV51OpenMessages=function(){
-    const jobs=services().filter(s=>s.oculto_mensajes!==true)
-      .sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));
-    abrirEliteV5ModuleModal(
-      'Mensajes',
-      'Selecciona manualmente las tarjetas que quieras quitar. Nada se elimina automáticamente.',
-      '<div id="elite-v51-message-list"></div>'
-    );
-    const target=byId('elite-v51-message-list');
-    if(!target) return;
-    if(!jobs.length){target.innerHTML='<div class="elite-v51-empty">No hay mensajes para mostrar.</div>';return;}
-    target.innerHTML=toolbar('message',jobs.length)+`<div class="elite-v51-module-list">${jobs.map(s=>`<div class="elite-v51-row">
-      <div class="elite-v608-select-content">
-        <input class="elite-v608-card-check elite-v608-message-check" type="checkbox" value="${s.id}" onchange="eliteV608UpdateCount('message')">
-        <div><h4>${esc(s.cliente||'Cliente')}</h4><p>${esc(s.fecha||'')} · ${esc(s.tipo||'Servicio')} · ${esc(s.estado||'')}</p><p>${s.whatsapp?'📱 '+esc(s.whatsapp):'Sin teléfono'}</p></div>
-      </div>
-      <div class="elite-v51-actions">
-        <button class="elite-v51-action" style="background:#2563eb" onclick="enviarRecordatorio('${s.id}')">Recordatorio</button>
-        <button class="elite-v51-action" style="background:#7c3aed" onclick="enviarContrato('${s.id}','${js(s.whatsapp||'')}','${js(s.cliente||'')}')">Contrato</button>
-        ${s.estado==='completado'?`<button class="elite-v51-action" style="background:#16a34a" onclick="cambiarEstadoTrabajo('${s.id}','completado')">Balance</button>`:''}
-      </div>
-    </div>`).join('')}</div>`;
-  };
-
-  window.eliteV51OpenReviews=function(){
-    const jobs=services().filter(s=>s.estado==='completado' && s.whatsapp && s.oculto_resenas!==true)
-      .sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));
-    abrirEliteV5ModuleModal(
-      'Reseñas',
-      'Selecciona manualmente las tarjetas que quieras quitar. Nada se elimina automáticamente.',
-      '<div id="elite-v51-review-list"></div>'
-    );
-    const target=byId('elite-v51-review-list');
-    if(!target) return;
-    if(!jobs.length){target.innerHTML='<div class="elite-v51-empty">No hay solicitudes de reseña pendientes.</div>';return;}
-    target.innerHTML=toolbar('review',jobs.length)+`<div class="elite-v51-module-list">${jobs.map(s=>`<div class="elite-v51-row">
-      <div class="elite-v608-select-content">
-        <input class="elite-v608-card-check elite-v608-review-check" type="checkbox" value="${s.id}" onchange="eliteV608UpdateCount('review')">
-        <div><h4>${esc(s.cliente||'Cliente')}</h4><p>${esc(s.fecha||'')} · ${esc(s.tipo||'Servicio')}</p></div>
-      </div>
-      <div class="elite-v51-actions"><button class="elite-v51-action" style="background:#f59e0b" onclick="solicitarResenaGoogle('${js(s.cliente||'')}','${js(s.whatsapp||'')}')">Solicitar reseña ⭐</button></div>
-    </div>`).join('')}</div>`;
-  };
-
-  /* Restauración única adicional porque la migración v6.0.6 pudo marcarse antes
-     de que las tarjetas fueran realmente restauradas. */
-  async function restorePreviouslyHidden(){
-    try{
-      if(typeof db==='undefined'||typeof firebase==='undefined') return;
-      const marker=db.collection('migraciones_app').doc('v608_restauracion_real_mensajes_resenas');
-      const old=await marker.get();
-      if(old.exists && old.data()?.completada===true) return;
-      const snap=await db.collection('servicios').get();
-      let batch=db.batch(),count=0,ops=0;
-      for(const doc of snap.docs){
-        const data=doc.data()||{};
-        if(data.oculto_mensajes===true || data.oculto_resenas===true){
-          batch.update(doc.ref,{
-            oculto_mensajes:firebase.firestore.FieldValue.delete(),
-            oculto_resenas:firebase.firestore.FieldValue.delete()
-          });
-          count++;ops++;
-          if(ops===400){await batch.commit();batch=db.batch();ops=0;}
-        }
-      }
-      if(ops) await batch.commit();
-      await marker.set({completada:true,restauradas:count,fecha:firebase.firestore.FieldValue.serverTimestamp()});
-      console.log('v6.0.9 tarjetas restauradas:',count);
-    }catch(error){console.error('Restauración v6.0.9 falló:',error);}
-  }
-
-  /* Mientras Gastos esté abierto, el menú debe seguir siendo navegable. */
-  const oldOpenExpense=window.abrirAgregarGasto;
-  if(typeof oldOpenExpense==='function'){
-    window.abrirAgregarGasto=function(){
-      const result=oldOpenExpense.apply(this,arguments);
-      const sidebar=byId('elite-v5-sidebar');
-      if(sidebar) sidebar.style.display='flex';
-      return result;
-    };
-  }
-
-  document.addEventListener('DOMContentLoaded',()=>setTimeout(restorePreviouslyHidden,1400));
-})();
-</script>
-
-</body>
-</html>
