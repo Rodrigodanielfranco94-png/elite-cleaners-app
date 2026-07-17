@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.0.8 | Centro de Operaciones principal integrado -->
+<!-- Elite Admin v6.0.9 | Centro de Operaciones principal integrado -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.0.8 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.0.9 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -448,6 +448,15 @@ body.elite-v5-body{
 </style>
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<style id="elite-v609-scanner-gallery-css">
+.elite-v55-scan-actions,.elite-v55-photo-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}
+.elite-v55-scan-actions button,.elite-v55-photo-actions button{border:0;border-radius:11px;padding:12px 10px;color:#fff;background:#7c3aed;font-weight:800;cursor:pointer}
+.elite-v55-photo-actions button:last-child,.elite-v55-scan-actions button:last-child{background:#2563eb}
+.elite-v55-file-name{margin-top:9px;padding:10px 12px;border:1px dashed #475569;border-radius:10px;color:#cbd5e1;font-size:12px}
+#elite-v55-reader{min-height:180px;background:#020617;border-radius:12px;overflow:hidden}
+@media(max-width:600px){.elite-v55-scan-actions,.elite-v55-photo-actions{grid-template-columns:1fr}.elite-v55-scan-actions button,.elite-v55-photo-actions button{min-height:48px}}
+</style>
 </head>
 <body>
 <div id="loginBox" style="position:fixed; inset:0; background:#000; z-index:99999; display:flex; align-items:center; justify-content:center; padding:20px;">
@@ -4192,6 +4201,7 @@ async function eliteV54History(id){const s=await db.collection('solicitudes_inve
 let eliteV55Catalog=[];
 let eliteV55CatalogUnsub=null;
 let eliteV55Scanner=null;
+let eliteV55SelectedPhotoFile=null;
 let eliteV55EditingId='';
 let eliteV55PhotoExisting='';
 
@@ -4247,11 +4257,18 @@ function eliteV55RenderCatalog(){
 
 function eliteV55OpenProductForm(id=''){
   const p=id?eliteV55Catalog.find(x=>x.id===id)||{}:{};
-  eliteV55EditingId=id;eliteV55PhotoExisting=p.foto_url||'';
+  eliteV55EditingId=id;eliteV55PhotoExisting=p.foto_url||'';eliteV55SelectedPhotoFile=null;
   abrirEliteV5ModuleModal(id?'Editar producto':'Agregar producto al catálogo','Este registro memoriza el producto. No crea un gasto.',`
     <div class="elite-v55-help">Escanea el código y completa los datos una sola vez. Después la aplicación reconocerá el producto automáticamente.</div>
     <div id="elite-v55-scan-box" class="elite-v55-scan-box"><div id="elite-v55-reader" class="elite-v55-scan-reader"></div><button class="elite-v51-action" style="background:#dc2626;width:100%;margin-top:8px" onclick="eliteV55StopScanner()">Cerrar cámara</button></div>
-    <div class="elite-v54-field"><label>Código de barras UPC / EAN</label><div class="elite-v55-code-row"><input id="v55-code" inputmode="numeric" value="${eliteV54Esc(p.codigo_barras||'')}" placeholder="Escanea o escribe el código"><button onclick="eliteV55StartScanner('v55-code')">📷 Escanear</button></div></div>
+    <div class="elite-v54-field"><label>Código de barras UPC / EAN</label>
+      <input id="v55-code" inputmode="numeric" value="${eliteV54Esc(p.codigo_barras||'')}" placeholder="Escanea o escribe el código">
+      <div class="elite-v55-scan-actions">
+        <button type="button" onclick="eliteV55StartScanner('v55-code')">📷 Escanear con cámara</button>
+        <button type="button" onclick="document.getElementById('v55-barcode-image').click()">🖼️ Leer desde galería</button>
+      </div>
+      <input id="v55-barcode-image" type="file" accept="image/*" style="display:none" onchange="eliteV55ScanBarcodeImage(this,'v55-code')">
+    </div>
     <div class="elite-v54-field"><label>Nombre del producto</label><input id="v55-name" value="${eliteV54Esc(p.nombre||'')}" placeholder="Ej: Fabuloso Lavender 1 galón"></div>
     <div class="elite-v54-field"><label>Marca</label><input id="v55-brand" value="${eliteV54Esc(p.marca||'')}" placeholder="Ej: Fabuloso"></div>
     <div class="elite-v54-field"><label>Tipo</label><select id="v55-type"><option ${p.tipo==='Producto químico'?'selected':''}>Producto químico</option><option ${p.tipo==='Herramienta'?'selected':''}>Herramienta</option><option ${p.tipo==='Máquina'?'selected':''}>Máquina</option></select></div>
@@ -4260,7 +4277,17 @@ function eliteV55OpenProductForm(id=''){
     <div class="elite-v54-field"><label>Tienda / proveedor</label><input id="v55-store" value="${eliteV54Esc(p.tienda||'')}" placeholder="Ej: Home Depot, Costco, Walmart"></div>
     <div class="elite-v54-field"><label>Ubicación habitual</label><input id="v55-location" value="${eliteV54Esc(p.ubicacion||'')}" placeholder="Ej: Storage, Van 1, Casa"></div>
     <div class="elite-v54-field"><label>Cantidad mínima recomendada</label><input id="v55-min" type="number" min="0" value="${Number(p.minimo||0)}"></div>
-    <div class="elite-v54-field"><label>Foto del producto</label><input id="v55-photo" type="file" accept="image/*" capture="environment">${p.foto_url?`<img src="${eliteV54Esc(p.foto_url)}" style="width:90px;height:90px;object-fit:cover;border-radius:12px;margin-top:8px">`:''}</div>
+    <div class="elite-v54-field"><label>Foto del producto</label>
+      <div class="elite-v55-photo-actions">
+        <button type="button" onclick="document.getElementById('v55-photo-camera').click()">📷 Tomar foto</button>
+        <button type="button" onclick="document.getElementById('v55-photo-gallery').click()">🖼️ Elegir de galería</button>
+      </div>
+      <input id="v55-photo-camera" type="file" accept="image/*" capture="environment" style="display:none" onchange="eliteV55SelectProductPhoto(this)">
+      <input id="v55-photo-gallery" type="file" accept="image/*" style="display:none" onchange="eliteV55SelectProductPhoto(this)">
+      <input id="v55-photo" type="file" style="display:none">
+      <div id="v55-photo-name" class="elite-v55-file-name">Ninguna foto seleccionada</div>
+      <img id="v55-photo-preview" src="${eliteV54Esc(p.foto_url||'')}" style="${p.foto_url?'':'display:none;'}width:110px;height:110px;object-fit:cover;border-radius:12px;margin-top:8px;border:1px solid #334155">
+    </div>
     <button class="elite-v51-action" style="background:#16a34a;width:100%;padding:14px" onclick="eliteV55SaveProduct()">Guardar producto</button>`);
 }
 
@@ -4271,7 +4298,7 @@ async function eliteV55SaveProduct(){
   if(!name)return alert('Escribe el nombre del producto.');
   if(code){const duplicate=eliteV55Catalog.find(p=>p.codigo_barras===code&&p.id!==eliteV55EditingId);if(duplicate)return alert('Ese código ya pertenece a: '+duplicate.nombre);}
   let photoUrl=eliteV55PhotoExisting;
-  const file=document.getElementById('v55-photo').files[0];
+  const file=eliteV55SelectedPhotoFile || document.getElementById('v55-photo-camera')?.files?.[0] || document.getElementById('v55-photo-gallery')?.files?.[0] || null;
   if(file)photoUrl=await eliteV54Upload(file,`catalogo_productos/${code||Date.now()}/${Date.now()}_producto`);
   const data={codigo_barras:code,nombre:name,marca:document.getElementById('v55-brand').value.trim(),tipo:document.getElementById('v55-type').value,tamano:document.getElementById('v55-size').value.trim(),precio_actual:price,tienda:document.getElementById('v55-store').value.trim(),ubicacion:document.getElementById('v55-location').value.trim(),minimo:Number(document.getElementById('v55-min').value||0),foto_url:photoUrl,actualizado:firebase.firestore.FieldValue.serverTimestamp(),actualizado_por:window.usuarioActual?.nombre||currentUser?.email||'Admin'};
   let ref;
@@ -4290,18 +4317,122 @@ function eliteV55OpenQuickScan(){
 }
 
 async function eliteV55StartScanner(targetId,quick=false){
-  const box=document.getElementById('elite-v55-scan-box');if(box)box.style.display='block';
-  if(typeof Html5Qrcode==='undefined')return alert('No se pudo cargar el escáner. Revisa la conexión a internet.');
-  await eliteV55StopScanner();
+  if(typeof Html5Qrcode==='undefined'){
+    return alert('No se pudo cargar el lector de códigos. Revisa la conexión a internet y vuelve a abrir la aplicación.');
+  }
+
+  // Primero cerramos cualquier lector anterior; después mostramos el nuevo.
+  await eliteV55StopScanner(false);
+  const box=document.getElementById('elite-v55-scan-box');
+  const reader=document.getElementById('elite-v55-reader');
+  if(!box || !reader) return alert('No se encontró el área del escáner.');
+  box.style.display='block';
+  reader.innerHTML='';
+
   eliteV55Scanner=new Html5Qrcode('elite-v55-reader');
   try{
-    await eliteV55Scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:280,height:130},formatsToSupport:[Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.UPC_E,Html5QrcodeSupportedFormats.CODE_128]},decoded=>{
-      const input=document.getElementById(targetId);if(input)input.value=decoded;
-      if(quick)eliteV55ShowScannedProduct(decoded);
-      else{const found=eliteV55Catalog.find(p=>p.codigo_barras===decoded);if(found){document.getElementById('v55-name').value=found.nombre||'';document.getElementById('v55-brand').value=found.marca||'';document.getElementById('v55-type').value=found.tipo||'Producto químico';document.getElementById('v55-size').value=found.tamano||'';document.getElementById('v55-price').value=Number(found.precio_actual||0);document.getElementById('v55-store').value=found.tienda||'';document.getElementById('v55-location').value=found.ubicacion||'';document.getElementById('v55-min').value=Number(found.minimo||0);eliteV55EditingId=found.id;eliteV55PhotoExisting=found.foto_url||'';alert('Producto reconocido: '+found.nombre);}}
-      eliteV55StopScanner();
-    },()=>{});
-  }catch(e){console.error(e);alert('No se pudo abrir la cámara. Usa HTTPS y permite acceso a la cámara.');}
+    const cameras=await Html5Qrcode.getCameras();
+    if(!cameras || !cameras.length) throw new Error('No camera found');
+    const back=cameras.find(c=>/back|rear|environment|trasera/i.test(c.label)) || cameras[cameras.length-1];
+
+    await eliteV55Scanner.start(
+      back.id,
+      {
+        fps:12,
+        qrbox:{width:Math.min(300,Math.max(220,window.innerWidth-120)),height:140},
+        aspectRatio:1.7778,
+        formatsToSupport:[
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.CODE_39
+        ]
+      },
+      decoded=>{
+        eliteV55ApplyDetectedCode(decoded,targetId,quick);
+        eliteV55StopScanner();
+      },
+      ()=>{}
+    );
+  }catch(e){
+    console.error('Scanner camera error:',e);
+    await eliteV55StopScanner();
+    alert('No se pudo abrir la cámara. En Safari toca AA → Configuración del sitio → Cámara → Permitir. También puedes usar “Leer desde galería”.');
+  }
+}
+
+function eliteV55ApplyDetectedCode(decoded,targetId,quick=false){
+  const code=String(decoded||'').trim();
+  const input=document.getElementById(targetId);
+  if(input) input.value=code;
+
+  if(quick){
+    eliteV55ShowScannedProduct(code);
+    return;
+  }
+
+  const found=eliteV55Catalog.find(p=>String(p.codigo_barras||'').trim()===code);
+  if(found){
+    document.getElementById('v55-name').value=found.nombre||'';
+    document.getElementById('v55-brand').value=found.marca||'';
+    document.getElementById('v55-type').value=found.tipo||'Producto químico';
+    document.getElementById('v55-size').value=found.tamano||'';
+    document.getElementById('v55-price').value=Number(found.precio_actual||0);
+    document.getElementById('v55-store').value=found.tienda||'';
+    document.getElementById('v55-location').value=found.ubicacion||'';
+    document.getElementById('v55-min').value=Number(found.minimo||0);
+    eliteV55EditingId=found.id;
+    eliteV55PhotoExisting=found.foto_url||'';
+    const preview=document.getElementById('v55-photo-preview');
+    if(preview && found.foto_url){preview.src=found.foto_url;preview.style.display='block';}
+    alert('Producto reconocido: '+found.nombre);
+  }
+}
+
+async function eliteV55ScanBarcodeImage(input,targetId){
+  const file=input?.files?.[0];
+  if(!file) return;
+  if(typeof Html5Qrcode==='undefined'){
+    input.value='';
+    return alert('No se pudo cargar el lector de códigos.');
+  }
+
+  await eliteV55StopScanner(false);
+  const box=document.getElementById('elite-v55-scan-box');
+  const reader=document.getElementById('elite-v55-reader');
+  if(box) box.style.display='block';
+  if(reader) reader.innerHTML='';
+
+  const scanner=new Html5Qrcode('elite-v55-reader');
+  eliteV55Scanner=scanner;
+  try{
+    const decoded=await scanner.scanFile(file,true);
+    eliteV55ApplyDetectedCode(decoded,targetId,false);
+    alert('Código detectado: '+decoded);
+  }catch(e){
+    console.error('Barcode image error:',e);
+    alert('No pude leer el código en esa foto. Usa una imagen nítida, con buena luz y el código completo.');
+  }finally{
+    try{await scanner.clear()}catch(_){ }
+    eliteV55Scanner=null;
+    if(box) box.style.display='none';
+    input.value='';
+  }
+}
+
+function eliteV55SelectProductPhoto(input){
+  const file=input?.files?.[0];
+  if(!file) return;
+  eliteV55SelectedPhotoFile=file;
+  const name=document.getElementById('v55-photo-name');
+  if(name) name.textContent=file.name || 'Foto seleccionada';
+  const preview=document.getElementById('v55-photo-preview');
+  if(preview){
+    preview.src=URL.createObjectURL(file);
+    preview.style.display='block';
+  }
 }
 
 function eliteV55ShowScannedProduct(code){
@@ -4309,9 +4440,13 @@ function eliteV55ShowScannedProduct(code){
   box.innerHTML=p?`<b>${eliteV54Esc(p.nombre)}</b><br>${eliteV54Esc(p.marca||'')} · ${eliteV54Esc(p.tamano||'')}<br>Precio: $${Number(p.precio_actual||0).toFixed(2)} · ${eliteV54Esc(p.tienda||'Sin tienda')}`:`Código ${eliteV54Esc(code)} no está registrado. <button class="elite-v51-action" style="background:#16a34a;margin-top:9px;width:100%" onclick="eliteV55OpenProductForm();setTimeout(()=>document.getElementById('v55-code').value='${eliteV54Esc(code)}',50)">Agregar al catálogo</button>`;
 }
 
-async function eliteV55StopScanner(){
-  if(eliteV55Scanner){try{if(eliteV55Scanner.isScanning)await eliteV55Scanner.stop();await eliteV55Scanner.clear()}catch(e){}eliteV55Scanner=null;}
-  const box=document.getElementById('elite-v55-scan-box');if(box&&document.getElementById('v55-code'))box.style.display='none';
+async function eliteV55StopScanner(hideBox=true){
+  if(eliteV55Scanner){
+    try{if(eliteV55Scanner.isScanning)await eliteV55Scanner.stop();await eliteV55Scanner.clear()}catch(e){}
+    eliteV55Scanner=null;
+  }
+  const box=document.getElementById('elite-v55-scan-box');
+  if(box && hideBox) box.style.display='none';
 }
 </script>
 
@@ -4810,7 +4945,7 @@ body.elite-v606-operations-home #ops-center-modal-v601.elite-v606-home{display:b
 
 <style id="elite-v607-permanent-sidebar-css">
 /* =========================================================
-   ELITE ADMIN v6.0.8 — navegación lateral permanente
+   ELITE ADMIN v6.0.9 — navegación lateral permanente
    ========================================================= */
 @media (min-width:801px){
   /* Los módulos generales dejan de ser ventanas flotantes. */
@@ -5059,7 +5194,7 @@ body.elite-v606-operations-home #ops-center-modal-v601.elite-v606-home{display:b
 
 <style id="elite-v608-final-fixes-css">
 /* =========================================================
-   ELITE ADMIN v6.0.8 — selección manual, contabilidad ordenada
+   ELITE ADMIN v6.0.9 — selección manual, contabilidad ordenada
    y menú visible también al registrar gastos
    ========================================================= */
 
@@ -5247,8 +5382,8 @@ body.elite-v606-operations-home #ops-center-modal-v601.elite-v606-home{display:b
       }
       if(ops) await batch.commit();
       await marker.set({completada:true,restauradas:count,fecha:firebase.firestore.FieldValue.serverTimestamp()});
-      console.log('v6.0.8 tarjetas restauradas:',count);
-    }catch(error){console.error('Restauración v6.0.8 falló:',error);}
+      console.log('v6.0.9 tarjetas restauradas:',count);
+    }catch(error){console.error('Restauración v6.0.9 falló:',error);}
   }
 
   /* Mientras Gastos esté abierto, el menú debe seguir siendo navegable. */
