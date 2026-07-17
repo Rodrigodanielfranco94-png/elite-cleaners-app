@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.0.2 | Contabilidad y logo corregidos -->
+<!-- Elite Admin v6.0.3 | Contabilidad y logo corregidos -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.0.2 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.0.3 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -998,7 +998,7 @@ style="width:100%;"></textarea>
       </section>
       <section class="acc-lower"><div class="acc-left-stack"><div class="acc-card acc-panel"><h3>Ganancia Neta de los Últimos 12 Meses (Empresa)</h3><div class="acc-chart-wrap"><canvas id="acc-company-chart"></canvas></div></div><div class="acc-mini-grid"><div class="acc-card acc-panel"><h3>Estado de Trabajos del Mes</h3><div class="acc-mini-chart"><canvas id="acc-status-chart"></canvas></div></div><div class="acc-card acc-panel"><h3>Gastos Operativos del Mes</h3><div class="acc-mini-chart"><canvas id="acc-expense-chart"></canvas></div><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;margin-top:10px"><span>Total Gastos</span><span id="acc-total-gastos">$0.00</span></div></div></div></div>
         <div class="acc-card acc-table-card"><div class="acc-table-title">Detalle de Servicios / Trabajos</div><div class="acc-table-scroll"><table class="acc-table"><thead><tr><th>Fecha</th><th>Cliente</th><th>Servicio</th><th>Vendido</th><th>Cobrado</th><th>Pendiente</th><th>Empleado(s)</th><th>Rodrigo 35%</th><th>Dayana 35%</th><th>Empresa 30%</th><th>Estado Pago</th></tr></thead><tbody id="accounting-table-body"></tbody><tfoot id="accounting-table-total"></tfoot></table></div></div>
-      </section><div class="acc-footer">Elite Admin v6.0.2 • Contabilidad Profesional para tu Empresa</div>
+      </section><div class="acc-footer">Elite Admin v6.0.3 • Contabilidad Profesional para tu Empresa</div>
     </main>
   </div>
 </div>
@@ -4413,5 +4413,144 @@ function mostrarEventosDiaV601(fecha){opsCalendarDate=new Date(fecha+'T12:00:00'
 function filterOpsMetric(type){if(type==='all')return;const msg={sold:'Ventas del día calculadas desde precio total.',collected:'Cobros confirmados por depósito y balance.',pending:'Balances o depósitos aún pendientes.',staff:'Empleados asignados a los trabajos del día.'}[type];if(msg)alert(msg)}
 </script>
 
+
+
+<style id="elite-v603-fixes-style">
+/* Elite Admin v6.0.3 — navegación contable + selección masiva */
+.elite-v603-bulkbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#0b1220;border:1px solid #334155;border-radius:14px;padding:11px 12px;margin:0 0 12px;color:#e2e8f0}
+.elite-v603-bulkbar label{display:flex;align-items:center;gap:8px;font-weight:800;font-size:12px;cursor:pointer}
+.elite-v603-bulkbar input[type="checkbox"],.elite-v603-item-check{width:20px;height:20px;margin:0;accent-color:#3b82f6;flex:0 0 auto}
+.elite-v603-bulk-delete{margin-left:auto;padding:10px 14px;border:0;border-radius:10px;background:#ef4444;color:#fff;font-weight:900;cursor:pointer}
+.elite-v603-select-wrap{display:flex;align-items:flex-start;gap:12px;min-width:0;flex:1}
+.elite-v603-select-wrap>div{min-width:0}
+#elite-v603-accounting-exit{position:fixed;top:14px;right:18px;z-index:1000002;border:0;border-radius:12px;background:#ef4444;color:#fff;padding:12px 16px;font-weight:900;box-shadow:0 8px 24px rgba(0,0,0,.28);cursor:pointer;display:none}
+#elite-accounting-modal[style*="display: block"]~#elite-v603-accounting-exit{display:block}
+body.elite-v603-accounting-open #elite-v603-accounting-exit{display:block}
+@media(max-width:700px){.elite-v603-bulk-delete{width:100%;margin-left:0}.elite-v603-select-wrap{gap:8px}#elite-v603-accounting-exit{top:10px;right:10px;padding:10px 12px;font-size:11px}}
+</style>
+
+<button id="elite-v603-accounting-exit" type="button" onclick="eliteV603ExitAccounting()">← VOLVER A ADMIN</button>
+
+<script id="elite-v603-fixes-script">
+(function(){
+  'use strict';
+
+  function byId(id){return document.getElementById(id)}
+  function isAccountingOpen(){return byId('elite-accounting-modal')?.style.display==='block'}
+
+  window.eliteV603ExitAccounting=function(){
+    const gasto=byId('modal-gasto-contabilidad');
+    const acc=byId('elite-accounting-modal');
+    if(gasto) gasto.style.display='none';
+    if(acc) acc.style.display='none';
+    document.body.classList.remove('elite-v603-accounting-open');
+    document.body.style.overflow='';
+    try{ if(typeof eliteV5SetActive==='function') eliteV5SetActive('dashboard'); }catch(_){ }
+  };
+
+  // Envuelve abrir/cerrar Contabilidad y garantiza que nunca bloquee el Admin.
+  const openAccounting=window.abrirContabilidadElite;
+  if(typeof openAccounting==='function'){
+    window.abrirContabilidadElite=function(){
+      openAccounting.apply(this,arguments);
+      document.body.classList.add('elite-v603-accounting-open');
+    };
+  }
+  const closeAccounting=window.cerrarContabilidadElite;
+  window.cerrarContabilidadElite=function(){
+    try{ if(typeof closeAccounting==='function') closeAccounting.apply(this,arguments); }catch(_){ }
+    eliteV603ExitAccounting();
+  };
+
+  // Antes de navegar a cualquier módulo, cierra capas financieras anteriores.
+  const originalNavigate=window.eliteV5Navigate;
+  if(typeof originalNavigate==='function'){
+    window.eliteV5Navigate=function(module,button){
+      if(module!=='contabilidad' && module!=='gastos') eliteV603ExitAccounting();
+      return originalNavigate.call(this,module,button);
+    };
+  }
+
+  // También protege clics del menú principal, aunque Contabilidad haya quedado abierta.
+  document.addEventListener('click',function(e){
+    const nav=e.target.closest?.('.elite-v5-nav-btn');
+    if(nav && isAccountingOpen() && !['contabilidad','gastos'].includes(nav.dataset.module)){
+      eliteV603ExitAccounting();
+    }
+  },true);
+
+  function toolbar(kind,count){
+    return `<div class="elite-v603-bulkbar">
+      <label><input type="checkbox" id="elite-v603-${kind}-all" onchange="eliteV603ToggleAll('${kind}',this.checked)"> Marcar todo</label>
+      <span id="elite-v603-${kind}-count">0 de ${count} marcados</span>
+      <button class="elite-v603-bulk-delete" onclick="eliteV603DeleteSelected('${kind}')">Eliminar marcados</button>
+    </div>`;
+  }
+
+  window.eliteV603UpdateCount=function(kind){
+    const all=[...document.querySelectorAll(`.elite-v603-${kind}-check`)];
+    const marked=all.filter(x=>x.checked).length;
+    const label=byId(`elite-v603-${kind}-count`);
+    if(label) label.textContent=`${marked} de ${all.length} marcados`;
+    const master=byId(`elite-v603-${kind}-all`);
+    if(master){master.checked=all.length>0&&marked===all.length;master.indeterminate=marked>0&&marked<all.length}
+  };
+  window.eliteV603ToggleAll=function(kind,checked){
+    document.querySelectorAll(`.elite-v603-${kind}-check`).forEach(x=>x.checked=checked);
+    eliteV603UpdateCount(kind);
+  };
+
+  window.eliteV603DeleteSelected=async function(kind){
+    const ids=[...document.querySelectorAll(`.elite-v603-${kind}-check:checked`)].map(x=>x.value);
+    if(!ids.length) return alert('Primero marca por lo menos una tarjeta.');
+    const nombre=kind==='message'?'Mensajes':'Reseñas';
+    if(!confirm(`¿Ocultar ${ids.length} tarjeta(s) de ${nombre}?\n\nLos trabajos y la contabilidad NO se eliminarán.`)) return;
+    try{
+      const batch=db.batch();
+      ids.forEach(id=>batch.update(db.collection('servicios').doc(id),kind==='message'?{oculto_mensajes:true}:{oculto_resenas:true}));
+      await batch.commit();
+      if(kind==='message') eliteV51OpenMessages(); else eliteV51OpenReviews();
+    }catch(error){console.error(error);alert('No se pudieron eliminar las tarjetas seleccionadas.');}
+  };
+
+  // Reemplaza Mensajes con selección individual y masiva.
+  window.eliteV51OpenMessages=function(){
+    const jobs=(window.todosLosServicios||[]).filter(s=>s.oculto_mensajes!==true).sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));
+    abrirEliteV5ModuleModal('Mensajes','Acciones reales para recordatorios, contratos y balances. Marca varias tarjetas para ocultarlas juntas.',`<div id="elite-v51-message-list"></div>`);
+    const target=byId('elite-v51-message-list');
+    if(!target)return;
+    if(!jobs.length){target.innerHTML='<div class="elite-v51-empty">No hay mensajes para mostrar.</div>';return;}
+    target.innerHTML=toolbar('message',jobs.length)+`<div class="elite-v51-module-list">${jobs.map(s=>`<div class="elite-v51-row">
+      <div class="elite-v603-select-wrap"><input class="elite-v603-item-check elite-v603-message-check" type="checkbox" value="${s.id}" onchange="eliteV603UpdateCount('message')"><div><h4>${eliteV53Html(s.cliente||'Cliente')}</h4><p>${eliteV53Html(s.fecha||'')} · ${eliteV53Html(s.tipo||'Servicio')} · ${eliteV53Html(s.estado||'')}</p><p>${s.whatsapp?'📱 '+eliteV53Html(s.whatsapp):'Sin teléfono'}</p></div></div>
+      <div class="elite-v51-actions"><button class="elite-v51-action" style="background:#2563eb" onclick="enviarRecordatorio('${s.id}')">Recordatorio</button><button class="elite-v51-action" style="background:#7c3aed" onclick="enviarContrato('${s.id}','${eliteV53Js(s.whatsapp||'')}','${eliteV53Js(s.cliente||'')}')">Contrato</button>${s.estado==='completado'?`<button class="elite-v51-action" style="background:#16a34a" onclick="cambiarEstadoTrabajo('${s.id}','completado')">Balance</button>`:''}<button class="elite-v51-action elite-v53-action-danger" onclick="eliteV53HideMessage('${s.id}')">Eliminar</button></div>
+    </div>`).join('')}</div>`;
+  };
+
+  // Reemplaza Reseñas con selección individual y masiva.
+  window.eliteV51OpenReviews=function(){
+    const jobs=(window.todosLosServicios||[]).filter(s=>s.estado==='completado'&&s.whatsapp&&s.oculto_resenas!==true).sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));
+    abrirEliteV5ModuleModal('Reseñas','Solicitudes manuales para clientes seleccionados. Marca varias tarjetas para ocultarlas juntas.',`<div id="elite-v51-review-list"></div>`);
+    const target=byId('elite-v51-review-list');
+    if(!target)return;
+    if(!jobs.length){target.innerHTML='<div class="elite-v51-empty">No hay solicitudes de reseña pendientes.</div>';return;}
+    target.innerHTML=toolbar('review',jobs.length)+`<div class="elite-v51-module-list">${jobs.map(s=>`<div class="elite-v51-row">
+      <div class="elite-v603-select-wrap"><input class="elite-v603-item-check elite-v603-review-check" type="checkbox" value="${s.id}" onchange="eliteV603UpdateCount('review')"><div><h4>${eliteV53Html(s.cliente||'')}</h4><p>${eliteV53Html(s.fecha||'')} · ${eliteV53Html(s.tipo||'')}</p></div></div>
+      <div class="elite-v51-actions"><button class="elite-v51-action" style="background:#f59e0b" onclick="solicitarResenaGoogle('${eliteV53Js(s.cliente||'')}','${eliteV53Js(s.whatsapp||'')}')">Solicitar reseña ⭐</button><button class="elite-v51-action elite-v53-action-danger" onclick="eliteV53HideReview('${s.id}')">Eliminar</button></div>
+    </div>`).join('')}</div>`;
+  };
+
+  document.addEventListener('DOMContentLoaded',function(){
+    // Inserta botón dentro de Contabilidad para escritorio y móvil.
+    const acc=byId('elite-accounting-modal');
+    if(acc && !byId('elite-v603-inline-exit')){
+      const b=document.createElement('button');
+      b.id='elite-v603-inline-exit';b.type='button';b.textContent='← Volver a Admin';
+      b.onclick=eliteV603ExitAccounting;
+      b.style.cssText='position:sticky;top:8px;float:right;z-index:1000001;margin:8px 10px 0 0;padding:11px 14px;border:0;border-radius:11px;background:#ef4444;color:white;font-weight:900;cursor:pointer';
+      acc.prepend(b);
+    }
+  });
+})();
+</script>
 </body>
 </html>
