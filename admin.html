@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.0.3 | Contabilidad y logo corregidos -->
+<!-- Elite Admin v6.0.5 | Centro de Operaciones principal integrado -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.0.3 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.0.5 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -4552,5 +4552,203 @@ body.elite-v603-accounting-open #elite-v603-accounting-exit{display:block}
   });
 })();
 </script>
+
+<style id="elite-v605-primary-operations-css">
+/* Centro de Operaciones integrado: ya no funciona como modal de pantalla completa. */
+#ops-center-modal-v601.elite-v605-home{
+  display:none;
+  position:relative!important;
+  inset:auto!important;
+  z-index:auto!important;
+  width:100%;
+  min-height:0;
+  overflow:visible!important;
+  background:#f4f7fb;
+  border-radius:24px;
+  color:#0f172a;
+  margin:0 0 24px;
+  box-sizing:border-box;
+}
+#ops-center-modal-v601.elite-v605-home .ops-shell{
+  min-height:0!important;
+  max-width:none!important;
+  width:100%;
+  padding:18px 20px 28px;
+  box-sizing:border-box;
+}
+#ops-center-modal-v601.elite-v605-home .ops-close{display:none!important}
+#elite-v5-sidebar .elite-v5-brand,
+#elite-v5-sidebar .elite-v5-brand img,
+#elite-v5-sidebar img{
+  cursor:pointer;
+}
+#elite-v5-sidebar .elite-v5-brand,
+#elite-v5-sidebar .elite-v5-brand-logo,
+#elite-v5-sidebar .elite-v51-brand-logo{
+  background:transparent!important;
+  box-shadow:none!important;
+}
+body.elite-v605-operations-home{background:#eef3f9!important}
+body.elite-v605-operations-home #admin-fixed-top,
+body.elite-v605-operations-home > .search-jobs-box,
+body.elite-v605-operations-home > #historial,
+body.elite-v605-operations-home > .payroll-container{
+  display:none!important;
+}
+body.elite-v605-operations-home #ops-center-modal-v601.elite-v605-home{display:block!important}
+@media(max-width:700px){
+  #ops-center-modal-v601.elite-v605-home{border-radius:0;margin:0;}
+  #ops-center-modal-v601.elite-v605-home .ops-shell{padding:8px!important}
+}
+</style>
+<script id="elite-v605-primary-operations-script">
+(function(){
+  'use strict';
+  const HOME_MODULE='agenda';
+
+  function q(sel){return document.querySelector(sel)}
+  function qa(sel){return [...document.querySelectorAll(sel)]}
+
+  function prepareSidebar(){
+    const dashboard=q('.elite-v5-nav-btn[data-module="dashboard"]');
+    if(dashboard) dashboard.remove();
+
+    const ops=q('.elite-v5-nav-btn[data-module="agenda"]');
+    if(ops){
+      ops.innerHTML='<span class="elite-v5-nav-icon">▣</span>Centro de Operaciones';
+      ops.setAttribute('onclick',"eliteV605ShowOperations(this)");
+    }
+
+    const brand=q('#elite-v5-sidebar .elite-v5-brand');
+    if(brand){
+      brand.setAttribute('role','button');
+      brand.setAttribute('tabindex','0');
+      brand.title='Volver al Centro de Operaciones';
+      brand.onclick=()=>eliteV605ShowOperations(ops);
+      brand.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();eliteV605ShowOperations(ops)}};
+    }
+
+    // Cualquier logo adicional del menú también vuelve al inicio.
+    qa('#elite-v5-sidebar img').forEach(img=>{
+      img.title='Volver al Centro de Operaciones';
+      img.onclick=e=>{e.stopPropagation();eliteV605ShowOperations(ops)};
+    });
+  }
+
+  function hideFinancialLayers(){
+    const gasto=document.getElementById('modal-gasto-contabilidad');
+    const acc=document.getElementById('elite-accounting-modal');
+    if(gasto) gasto.style.display='none';
+    if(acc) acc.style.display='none';
+    document.body.classList.remove('elite-v603-accounting-open');
+    document.body.style.overflow='';
+  }
+
+  function closeGeneralModal(){
+    const modal=document.getElementById('elite-v5-module-modal');
+    if(modal) modal.style.display='none';
+  }
+
+  window.eliteV605ShowOperations=function(button){
+    hideFinancialLayers();
+    closeGeneralModal();
+    try{ if(typeof cerrarEliteV5Menu==='function') cerrarEliteV5Menu(); }catch(_){ }
+
+    const ops=document.getElementById('ops-center-modal-v601');
+    if(!ops) return alert('No se encontró el Centro de Operaciones.');
+    ops.classList.add('elite-v605-home');
+    document.body.classList.add('elite-v605-operations-home');
+    ops.style.display='block';
+
+    try{
+      if(typeof eliteV5SetActive==='function') eliteV5SetActive(HOME_MODULE,button||q('.elite-v5-nav-btn[data-module="agenda"]'));
+    }catch(_){ }
+
+    if(!window.opsCalendarDate) window.opsCalendarDate=new Date();
+    if(!window.opsCalendarView) window.opsCalendarView='day';
+    try{ if(typeof renderCentroOperacionesV601==='function') renderCentroOperacionesV601(); }catch(err){console.error(err)}
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+
+  window.eliteV605LeaveOperations=function(){
+    document.body.classList.remove('elite-v605-operations-home');
+    const ops=document.getElementById('ops-center-modal-v601');
+    if(ops) ops.style.display='none';
+  };
+
+  // Sustituye la apertura modal anterior por la pantalla principal integrada.
+  window.abrirCentroOperacionesV601=function(){eliteV605ShowOperations(q('.elite-v5-nav-btn[data-module="agenda"]'))};
+  window.cerrarCentroOperacionesV601=function(){eliteV605ShowOperations(q('.elite-v5-nav-btn[data-module="agenda"]'))};
+
+  function wrapNavigation(){
+    const current=window.eliteV5Navigate;
+    if(typeof current!=='function'||current.__eliteV605Wrapped) return;
+    const wrapped=function(module,button){
+      if(module==='dashboard'||module==='agenda') return eliteV605ShowOperations(button||q('.elite-v5-nav-btn[data-module="agenda"]'));
+      eliteV605LeaveOperations();
+      return current.call(this,module,button);
+    };
+    wrapped.__eliteV605Wrapped=true;
+    window.eliteV5Navigate=wrapped;
+  }
+
+  function patchCloseBehavior(){
+    const closeAccounting=window.cerrarContabilidadElite;
+    window.cerrarContabilidadElite=function(){
+      try{if(typeof closeAccounting==='function') closeAccounting.apply(this,arguments)}catch(_){ }
+      setTimeout(()=>eliteV605ShowOperations(),0);
+    };
+
+    const closeModule=window.cerrarEliteV5ModuleModal;
+    window.cerrarEliteV5ModuleModal=function(){
+      try{if(typeof closeModule==='function') closeModule.apply(this,arguments)}catch(_){ }
+      setTimeout(()=>eliteV605ShowOperations(),0);
+    };
+  }
+
+  function initializeHome(){
+    prepareSidebar();
+    wrapNavigation();
+    patchCloseBehavior();
+    const ops=document.getElementById('ops-center-modal-v601');
+    if(ops) ops.classList.add('elite-v605-home');
+
+    // Espera a que Supabase termine de decidir si debe mostrar el login.
+    let attempts=0;
+    const timer=setInterval(()=>{
+      attempts++;
+      const login=document.getElementById('loginBox');
+      if(login&&login.style.display==='none'){
+        clearInterval(timer);
+        eliteV605ShowOperations();
+      } else if(attempts>80){
+        clearInterval(timer);
+      }
+    },150);
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(initializeHome,100));
+
+  // Después de iniciar sesión, entra directamente al Centro de Operaciones.
+  const loginWatcher=setInterval(()=>{
+    if(typeof window.loginAdmin==='function'&&!window.loginAdmin.__eliteV605Wrapped){
+      clearInterval(loginWatcher);
+      const original=window.loginAdmin;
+      const wrapped=async function(){
+        const result=await original.apply(this,arguments);
+        setTimeout(()=>{
+          const login=document.getElementById('loginBox');
+          if(login&&login.style.display==='none') eliteV605ShowOperations();
+        },200);
+        return result;
+      };
+      wrapped.__eliteV605Wrapped=true;
+      window.loginAdmin=wrapped;
+    }
+  },100);
+  setTimeout(()=>clearInterval(loginWatcher),15000);
+})();
+</script>
+
 </body>
 </html>
