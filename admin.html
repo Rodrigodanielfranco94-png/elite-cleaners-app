@@ -475,8 +475,7 @@ body.elite-v5-body{
   </div>
 
   <nav class="elite-v5-nav">
-    <button class="elite-v5-nav-btn active" data-module="dashboard" onclick="eliteV5Navigate('dashboard',this)"><span class="elite-v5-nav-icon">⌂</span>Dashboard</button>
-    <button class="elite-v5-nav-btn" data-module="agenda" onclick="abrirCentroOperacionesV601();eliteV5CloseSidebar()"><span class="elite-v5-nav-icon">▣</span>Centro de Operaciones</button>
+    <button class="elite-v5-nav-btn active" data-module="agenda" onclick="eliteV5Navigate('agenda',this)"><span class="elite-v5-nav-icon">▣</span>Centro de Operaciones</button>
     <button class="elite-v5-nav-btn" data-module="clientes" onclick="eliteV5Navigate('clientes',this)"><span class="elite-v5-nav-icon">♙</span>Clientes</button>
     <button class="elite-v5-nav-btn" data-module="empleados" onclick="eliteV5Navigate('empleados',this)"><span class="elite-v5-nav-icon">♙</span>Empleados</button>
     <button class="elite-v5-nav-btn" data-module="servicios" onclick="eliteV5Navigate('servicios',this)"><span class="elite-v5-nav-icon">♧</span>Servicios</button>
@@ -4552,5 +4551,90 @@ body.elite-v603-accounting-open #elite-v603-accounting-exit{display:block}
   });
 })();
 </script>
+
+
+<style id="elite-v604-home-style">
+/* Elite Admin v6.0.4 — Centro de Operaciones como pantalla principal */
+.ops-close{display:none!important}
+#elite-v51-page-header,
+#admin-fixed-top > h1,
+#admin-fixed-top > .stats-grid,
+#elite-v51-dashboard-extra{display:none!important}
+</style>
+
+<script id="elite-v604-home-script">
+(function(){
+  const oldGenericClose = window.cerrarEliteV5ModuleModal;
+  const oldAccountingClose = window.cerrarContabilidadElite;
+
+  function showOperationsHome(){
+    try{
+      if(typeof eliteV5SetActive==='function') eliteV5SetActive('agenda');
+      const ops=document.getElementById('ops-center-modal-v601');
+      if(ops && ops.style.display!=='block' && typeof abrirCentroOperacionesV601==='function'){
+        abrirCentroOperacionesV601();
+      }
+    }catch(error){console.warn('No se pudo abrir Centro de Operaciones:',error)}
+  }
+
+  function closeOperationsSilently(){
+    const ops=document.getElementById('ops-center-modal-v601');
+    if(ops) ops.style.display='none';
+    document.body.style.overflow='';
+  }
+
+  const previousNavigate = window.eliteV5Navigate;
+  window.eliteV5Navigate=function(module,button){
+    if(module==='dashboard') module='agenda';
+    if(module==='agenda'){
+      if(typeof eliteV5SetActive==='function') eliteV5SetActive('agenda',button);
+      if(typeof cerrarEliteV5Menu==='function') cerrarEliteV5Menu();
+      return showOperationsHome();
+    }
+    closeOperationsSilently();
+    return previousNavigate ? previousNavigate(module,button) : undefined;
+  };
+
+  window.cerrarCentroOperacionesV601=function(){
+    /* El Centro de Operaciones es ahora la pantalla principal y no se cierra. */
+    showOperationsHome();
+  };
+
+  if(typeof oldGenericClose==='function'){
+    window.cerrarEliteV5ModuleModal=function(){
+      oldGenericClose();
+      setTimeout(showOperationsHome,80);
+    };
+  }
+
+  if(typeof oldAccountingClose==='function'){
+    window.cerrarContabilidadElite=function(){
+      oldAccountingClose();
+      setTimeout(showOperationsHome,100);
+    };
+  }
+
+  function openAfterLogin(){
+    const login=document.getElementById('loginBox');
+    if(!login || login.style.display==='none') showOperationsHome();
+  }
+
+  document.addEventListener('DOMContentLoaded',function(){
+    document.querySelector('[data-module="dashboard"]')?.remove();
+    setTimeout(openAfterLogin,900);
+    setTimeout(openAfterLogin,1800);
+  });
+
+  const oldLogin=window.loginAdmin;
+  if(typeof oldLogin==='function'){
+    window.loginAdmin=async function(){
+      const result=await oldLogin.apply(this,arguments);
+      setTimeout(showOperationsHome,250);
+      return result;
+    };
+  }
+})();
+</script>
+
 </body>
 </html>
