@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.0.9 | Centro de Operaciones principal integrado -->
+<!-- Elite Admin v6.0.11 | Agenda editable y reinicio único con respaldo -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.0.9 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.0.11 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -2546,7 +2546,7 @@ function renderCalendarioElite() {
         eventos.slice(0,3).forEach(ev => {
 
             html += `
-            <div style="
+            <div onclick="event.stopPropagation(); abrirEditorEvento('${ev.id}')" style="
             background:${obtenerColorEvento(ev.estado_calendario, ev.estado)};
             padding:3px 5px;
             border-radius:6px;
@@ -2557,6 +2557,7 @@ function renderCalendarioElite() {
             overflow:hidden;
             white-space:nowrap;
             text-overflow:ellipsis;
+            cursor:pointer;
             ">
             ${ev.repetir && ev.repetir !== "ninguno" ? "🔁 " : ""}${ev.cliente}
             </div>
@@ -2671,11 +2672,26 @@ function mostrarEventosDia(fecha) {
     const eventos = todosLosServicios.filter(s => s.fecha === fecha);
 
     cont.innerHTML = `
-        <h3 style="color:#f59e0b; margin-bottom:15px;">${fecha}</h3>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:15px;">
+          <h3 style="color:#f59e0b;margin:0;">${fecha}</h3>
+          <button type="button"
+                  onclick="agregarTrabajoDesdeCalendario('${fecha}')"
+                  style="border:0;border-radius:10px;background:#2563eb;color:white;padding:10px 13px;font-weight:800;cursor:pointer;">
+            + Agregar trabajo
+          </button>
+        </div>
     `;
 
     if (eventos.length === 0) {
-        cont.innerHTML += `<p style="color:#8e8e93;">No hay trabajos este día.</p>`;
+        cont.innerHTML += `
+          <div style="background:#f3f4f6;border:1px dashed #94a3b8;border-radius:14px;padding:18px;text-align:center;color:#475569;">
+            No hay trabajos este día.<br>
+            <button type="button"
+                    onclick="agregarTrabajoDesdeCalendario('${fecha}')"
+                    style="margin-top:12px;border:0;border-radius:10px;background:#2563eb;color:white;padding:11px 14px;font-weight:800;cursor:pointer;">
+              Agendar aquí
+            </button>
+          </div>`;
         return;
     }
 
@@ -2708,6 +2724,28 @@ ${ev.hora_fin && ev.hora_fin !== "--:--" ? `
     });
 }
         
+
+window.agregarTrabajoDesdeCalendario = function(fecha) {
+    cerrarEliteV5ModuleModal?.();
+    if (typeof eliteV51SetLayout === "function") eliteV51SetLayout("servicios");
+    if (typeof eliteV5SetActive === "function") eliteV5SetActive("servicios");
+
+    setTimeout(() => {
+        const fechaInput = document.getElementById("fecha");
+        if (fechaInput) {
+            fechaInput.value = fecha;
+            fechaInput.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+
+        const clienteInput = document.getElementById("cliente");
+        clienteInput?.focus();
+
+        const form = document.getElementById("formulario-servicio") ||
+                     document.querySelector(".form-container");
+        form?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 120);
+};
+
         function enviarRecordatorio(id) {
             const s = todosLosServicios.find(serv => serv.id === id);
             if (!s) return;
@@ -4043,9 +4081,28 @@ function eliteV51OpenSettings(){
   </div>
   <div class="elite-v51-percent-total" id="cfg-percent-total">La suma debe ser exactamente 100%.</div>
 </div>
+
+<div class="elite-v51-settings-section" id="elite-reset-operations-section" style="border-color:#dc2626;">
+  <h3 style="color:#f87171;">Reinicio único de operaciones</h3>
+  <p style="color:#cbd5e1;font-size:12px;line-height:1.55;">
+    Descarga un respaldo y elimina todos los trabajos, agenda, pagos, estados pendientes,
+    gastos y cierres contables. Los clientes, sus direcciones, teléfonos, dimensiones,
+    habitaciones, baños y demás datos permanentes se conservarán.
+  </p>
+  <div style="background:#450a0a;border:1px solid #dc2626;color:#fecaca;border-radius:11px;padding:11px;font-size:11px;margin:10px 0;">
+    Esta herramienta funciona una sola vez. Después del reinicio exitoso, el botón se ocultará automáticamente.
+  </div>
+  <button id="elite-reset-operations-btn"
+          class="elite-v51-action"
+          style="background:#dc2626;width:100%;padding:14px"
+          onclick="eliteResetOperationsOnce()">
+    Descargar respaldo y reiniciar
+  </button>
+</div>
+
 <button class="elite-v51-action" style="background:#2563eb;width:100%;padding:14px" onclick="eliteV51SaveSettings()">Guardar configuración</button>
 `);
-setTimeout(eliteV51ActivarValidacionConfig,50);
+setTimeout(()=>{eliteV51ActivarValidacionConfig();eliteLoadResetStatus();},50);
 }
 function eliteV51ActivarValidacionConfig(){
   const ids=['cfg-rodrigo','cfg-dayana','cfg-companypct'];
@@ -4063,6 +4120,198 @@ function eliteV51ActualizarTotalPorcentajes(){
   box.style.borderColor=total===100?'#22c55e':'#f59e0b';
   box.style.color=total===100?'#86efac':'#fcd34d';
 }
+
+async function eliteDeleteCollectionInBatches(collectionName) {
+  let deleted = 0;
+
+  while (true) {
+    const snap = await db.collection(collectionName)
+      .limit(400)
+      .get();
+
+    if (snap.empty) break;
+
+    const batch = db.batch();
+    snap.docs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+    deleted += snap.size;
+
+    if (snap.size < 400) break;
+  }
+
+  return deleted;
+}
+
+function eliteDownloadJsonBackup(data) {
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json;charset=utf-8"
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `elite_backup_antes_reinicio_${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+async function eliteLoadResetStatus() {
+  try {
+    const snap = await db.collection("configuracion").doc("reinicio_operaciones").get();
+    const completed = snap.exists && snap.data()?.completado === true;
+    const section = document.getElementById("elite-reset-operations-section");
+
+    if (completed && section) {
+      section.innerHTML = `
+        <h3 style="color:#22c55e;">Reinicio completado</h3>
+        <p style="color:#cbd5e1;font-size:12px;">
+          La herramienta de reinicio único ya fue utilizada y quedó desactivada.
+          Los clientes se conservaron.
+        </p>`;
+    }
+  } catch (error) {
+    console.error("No se pudo verificar el reinicio:", error);
+  }
+}
+
+window.eliteResetOperationsOnce = async function() {
+  const button = document.getElementById("elite-reset-operations-btn");
+  if (!button || button.disabled) return;
+
+  const statusRef = db.collection("configuracion").doc("reinicio_operaciones");
+  const previous = await statusRef.get();
+
+  if (previous.exists && previous.data()?.completado === true) {
+    alert("El reinicio único ya fue utilizado.");
+    await eliteLoadResetStatus();
+    return;
+  }
+
+  const first = confirm(
+`⚠️ REINICIO ÚNICO DE OPERACIONES
+
+Se descargará primero un respaldo JSON.
+
+Después se eliminarán:
+• Todos los servicios y trabajos agendados
+• Agenda y trabajos pendientes
+• Depósitos, balances y pagos incluidos en los trabajos
+• Gastos contables
+• Cierres contables
+
+NO se eliminarán:
+• Clientes
+• Direcciones y teléfonos
+• Correos
+• Pies cuadrados y dimensiones
+• Habitaciones, baños y datos permanentes
+• Empleados e inventario
+
+¿Deseas continuar?`
+  );
+
+  if (!first) return;
+
+  const phrase = prompt(
+    'Para confirmar escribe exactamente:\n\nREINICIAR ELITE'
+  );
+
+  if (phrase !== "REINICIAR ELITE") {
+    alert("Confirmación incorrecta. No se eliminó nada.");
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Creando respaldo...";
+
+  try {
+    const [servicesSnap, expensesSnap, closuresSnap] = await Promise.all([
+      db.collection("servicios").get(),
+      db.collection("gastos_contabilidad").get(),
+      db.collection("cierres_contables").get()
+    ]);
+
+    const serialize = snap => snap.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    const backup = {
+      empresa: "Elite Cleaners Company",
+      creado_en: new Date().toISOString(),
+      descripcion: "Respaldo automático previo al reinicio único de operaciones.",
+      servicios: serialize(servicesSnap),
+      gastos_contabilidad: serialize(expensesSnap),
+      cierres_contables: serialize(closuresSnap)
+    };
+
+    eliteDownloadJsonBackup(backup);
+
+    const finalConfirmation = confirm(
+`El respaldo comenzó a descargarse.
+
+Verifica que aparezca en la carpeta Descargas y luego presiona Aceptar para borrar las operaciones.
+
+Los clientes NO serán eliminados.`
+    );
+
+    if (!finalConfirmation) {
+      button.disabled = false;
+      button.textContent = "Descargar respaldo y reiniciar";
+      alert("Se descargó el respaldo, pero no se eliminó ningún dato.");
+      return;
+    }
+
+    button.textContent = "Reiniciando operaciones...";
+
+    const deletedServices = await eliteDeleteCollectionInBatches("servicios");
+    const deletedExpenses = await eliteDeleteCollectionInBatches("gastos_contabilidad");
+    const deletedClosures = await eliteDeleteCollectionInBatches("cierres_contables");
+
+    await statusRef.set({
+      completado: true,
+      fecha: firebase.firestore.FieldValue.serverTimestamp(),
+      respaldo_descargado: true,
+      servicios_eliminados: deletedServices,
+      gastos_eliminados: deletedExpenses,
+      cierres_eliminados: deletedClosures,
+      clientes_conservados: true,
+      ejecutado_por: window.usuarioActual?.email || "Admin"
+    });
+
+    if (Array.isArray(window.todosLosServicios)) window.todosLosServicios.length = 0;
+    if (Array.isArray(window.gastosContabilidad)) window.gastosContabilidad.length = 0;
+    if (Array.isArray(window.cierresContables)) window.cierresContables.length = 0;
+
+    await eliteLoadResetStatus();
+
+    if (typeof renderCalendarioElite === "function") renderCalendarioElite();
+    if (typeof renderServicios === "function") renderServicios();
+    if (typeof renderContabilidadElite === "function") renderContabilidadElite();
+
+    alert(
+`Reinicio completado ✅
+
+Servicios eliminados: ${deletedServices}
+Gastos eliminados: ${deletedExpenses}
+Cierres eliminados: ${deletedClosures}
+
+Los clientes y toda su información permanente se conservaron.
+El botón de reinicio quedó desactivado.`
+    );
+  } catch (error) {
+    console.error("Error durante el reinicio:", error);
+    button.disabled = false;
+    button.textContent = "Descargar respaldo y reiniciar";
+    alert(
+      "No se pudo completar el reinicio. Revisa la consola y las reglas de Firebase. " +
+      "No vuelvas a intentarlo hasta verificar qué colecciones se alcanzaron a procesar."
+    );
+  }
+};
+
 async function eliteV51SaveSettings(){
   const totalPct=Number(document.getElementById('cfg-rodrigo').value||0)+Number(document.getElementById('cfg-dayana').value||0)+Number(document.getElementById('cfg-companypct').value||0);
   if(totalPct!==100)return alert('Los porcentajes de Rodrigo, Dayana y Empresa deben sumar exactamente 100%.');
