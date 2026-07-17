@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.0.12 | Agenda operativa editable y reinicio visible -->
+<!-- Elite Admin v6.0.13 | Corrección de alta de trabajos desde agenda -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.0.12 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.0.13 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -4865,12 +4865,34 @@ function opsStateLabel(s){return s.estado==='completado'?'Completado':s.estado==
 
 
 window.agregarTrabajoDesdeCentroOperaciones = function(fechaElegida) {
-  const fecha = fechaElegida || (typeof opsDateKey === "function" ? opsDateKey(opsCalendarDate) : new Date().toISOString().slice(0,10));
+  const fecha = fechaElegida ||
+    (typeof opsDateKey === "function"
+      ? opsDateKey(opsCalendarDate)
+      : new Date().toISOString().slice(0,10));
 
-  cerrarCentroOperacionesV601();
+  // Salir realmente del Centro de Operaciones integrado.
+  // No usamos cerrarCentroOperacionesV601 porque una mejora posterior
+  // redefine esa función para volver a abrir el calendario.
+  if (typeof eliteV605LeaveOperations === "function") {
+    eliteV605LeaveOperations();
+  } else {
+    const ops = document.getElementById("ops-center-modal-v601");
+    if (ops) ops.style.display = "none";
+    document.body.style.overflow = "";
+  }
 
-  if (typeof eliteV51SetLayout === "function") eliteV51SetLayout("servicios");
-  if (typeof eliteV5SetActive === "function") eliteV5SetActive("servicios");
+  const servicesButton =
+    document.querySelector('.elite-v5-nav-btn[data-module="servicios"]');
+
+  // Usar la navegación final de la app para mostrar correctamente Servicios.
+  if (typeof window.eliteV5Navigate === "function") {
+    window.eliteV5Navigate("servicios", servicesButton);
+  } else if (typeof eliteV51SetLayout === "function") {
+    eliteV51SetLayout("servicios");
+    if (typeof eliteV5SetActive === "function") {
+      eliteV5SetActive("servicios", servicesButton);
+    }
+  }
 
   setTimeout(() => {
     const fechaInput = document.getElementById("fecha");
@@ -4881,14 +4903,16 @@ window.agregarTrabajoDesdeCentroOperaciones = function(fechaElegida) {
     }
 
     const clienteInput = document.getElementById("cliente");
-    if (clienteInput) {
-      clienteInput.focus();
-      clienteInput.scrollIntoView({ behavior: "smooth", block: "center" });
-    } else {
-      const form = document.querySelector(".form-container");
-      form?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const form = document.getElementById("main-form");
+
+    if (form) {
+      form.classList.remove("elite-v51-hidden");
+      form.style.display = "";
+      form.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }, 250);
+
+    setTimeout(() => clienteInput?.focus(), 350);
+  }, 180);
 };
 
 function abrirCentroOperacionesV601(){const m=document.getElementById('ops-center-modal-v601');if(!m){alert('No se encontró el Centro de Operaciones v6.0.1');return;}m.style.display='block';document.body.style.overflow='hidden';opsCalendarDate=new Date();opsCalendarView='day';renderCentroOperacionesV601();}
