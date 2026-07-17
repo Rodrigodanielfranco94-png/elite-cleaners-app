@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.0.7 | Centro de Operaciones principal integrado -->
+<!-- Elite Admin v6.0.8 | Centro de Operaciones principal integrado -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.0.7 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.0.8 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -4810,7 +4810,7 @@ body.elite-v606-operations-home #ops-center-modal-v601.elite-v606-home{display:b
 
 <style id="elite-v607-permanent-sidebar-css">
 /* =========================================================
-   ELITE ADMIN v6.0.7 — navegación lateral permanente
+   ELITE ADMIN v6.0.8 — navegación lateral permanente
    ========================================================= */
 @media (min-width:801px){
   /* Los módulos generales dejan de ser ventanas flotantes. */
@@ -5053,6 +5053,216 @@ body.elite-v606-operations-home #ops-center-modal-v601.elite-v606-home{display:b
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(init,350));
   else setTimeout(init,350);
+})();
+</script>
+
+
+<style id="elite-v608-final-fixes-css">
+/* =========================================================
+   ELITE ADMIN v6.0.8 — selección manual, contabilidad ordenada
+   y menú visible también al registrar gastos
+   ========================================================= */
+
+/* Barra de selección siempre clara y visible. */
+.elite-v608-selection-toolbar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:#0b1220;border:1px solid #334155;border-radius:14px;
+  padding:12px;margin:0 0 14px;color:#e2e8f0;
+}
+.elite-v608-selection-toolbar label{
+  display:flex;align-items:center;gap:8px;font-size:12px;font-weight:900;cursor:pointer;
+}
+.elite-v608-selection-toolbar input[type="checkbox"],
+.elite-v608-card-check{width:21px!important;height:21px!important;margin:0!important;accent-color:#3b82f6;flex:0 0 auto}
+.elite-v608-clear,.elite-v608-delete{
+  border:0;border-radius:10px;padding:10px 13px;color:#fff;font-weight:900;cursor:pointer;
+}
+.elite-v608-clear{background:#475569}
+.elite-v608-delete{background:#ef4444;margin-left:auto}
+.elite-v608-select-content{display:flex;align-items:flex-start;gap:12px;min-width:0;flex:1}
+.elite-v608-select-content>div{min-width:0}
+
+/* CONTABILIDAD: tres gráficos en la misma fila y tabla completa debajo. */
+@media(min-width:901px){
+  #elite-accounting-modal .acc-lower{
+    display:grid!important;
+    grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr)!important;
+    gap:14px!important;
+    align-items:stretch;
+  }
+  #elite-accounting-modal .acc-left-stack,
+  #elite-accounting-modal .acc-mini-grid{display:contents!important}
+  #elite-accounting-modal .acc-left-stack>.acc-card:first-child{grid-column:1!important;grid-row:1!important}
+  #elite-accounting-modal .acc-mini-grid>.acc-card:nth-child(1){grid-column:2!important;grid-row:1!important}
+  #elite-accounting-modal .acc-mini-grid>.acc-card:nth-child(2){grid-column:3!important;grid-row:1!important}
+  #elite-accounting-modal .acc-table-card{grid-column:1 / -1!important;grid-row:2!important;width:100%!important}
+  #elite-accounting-modal .acc-chart-wrap,
+  #elite-accounting-modal .acc-mini-chart{height:260px!important}
+}
+
+/* GASTOS: conserva el menú lateral visible en escritorio. */
+@media(min-width:801px){
+  #modal-gasto-contabilidad{
+    left:215px!important;right:0!important;top:0!important;bottom:0!important;
+    width:auto!important;z-index:85000!important;padding:35px 20px!important;
+  }
+  #modal-gasto-contabilidad>div{margin:20px auto!important;max-width:520px!important}
+}
+@media(max-width:800px){
+  #modal-gasto-contabilidad{z-index:85000!important;padding-top:70px!important}
+  #elite-v5-mobile-toggle{display:block!important;z-index:90002!important}
+  #elite-v5-sidebar{z-index:90001!important}
+  #elite-v5-sidebar-overlay{z-index:89999!important}
+  .elite-v608-delete{width:100%;margin-left:0}
+  .elite-v608-selection-toolbar>*{max-width:100%}
+}
+</style>
+
+<script id="elite-v608-final-fixes-script">
+(function(){
+  'use strict';
+  const byId=id=>document.getElementById(id);
+  const services=()=>{
+    try{return typeof todosLosServicios!=='undefined' && Array.isArray(todosLosServicios) ? todosLosServicios : []}
+    catch(_){return []}
+  };
+
+  function esc(v){
+    if(typeof eliteV53Html==='function') return eliteV53Html(v||'');
+    return String(v||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+  }
+  function js(v){
+    if(typeof eliteV53Js==='function') return eliteV53Js(v||'');
+    return String(v||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,' ');
+  }
+
+  function toolbar(kind,total){
+    return `<div class="elite-v608-selection-toolbar">
+      <label><input type="checkbox" id="elite-v608-${kind}-all" onchange="eliteV608ToggleAll('${kind}',this.checked)"> Seleccionar todos</label>
+      <button type="button" class="elite-v608-clear" onclick="eliteV608ToggleAll('${kind}',false)">Deseleccionar todos</button>
+      <span id="elite-v608-${kind}-count">0 de ${total} seleccionados</span>
+      <button type="button" class="elite-v608-delete" onclick="eliteV608DeleteSelected('${kind}')">Eliminar seleccionados</button>
+    </div>`;
+  }
+
+  window.eliteV608UpdateCount=function(kind){
+    const checks=[...document.querySelectorAll(`.elite-v608-${kind}-check`)];
+    const selected=checks.filter(c=>c.checked).length;
+    const count=byId(`elite-v608-${kind}-count`);
+    if(count) count.textContent=`${selected} de ${checks.length} seleccionados`;
+    const master=byId(`elite-v608-${kind}-all`);
+    if(master){
+      master.checked=checks.length>0 && selected===checks.length;
+      master.indeterminate=selected>0 && selected<checks.length;
+    }
+  };
+
+  window.eliteV608ToggleAll=function(kind,value){
+    document.querySelectorAll(`.elite-v608-${kind}-check`).forEach(c=>c.checked=!!value);
+    eliteV608UpdateCount(kind);
+  };
+
+  window.eliteV608DeleteSelected=async function(kind){
+    const ids=[...document.querySelectorAll(`.elite-v608-${kind}-check:checked`)].map(c=>c.value);
+    if(!ids.length) return alert('Primero selecciona por lo menos una tarjeta.');
+    const label=kind==='message'?'Mensajes':'Reseñas';
+    if(!confirm(`¿Ocultar ${ids.length} tarjeta(s) seleccionada(s) de ${label}?\n\nNo se borrarán clientes, trabajos, contratos, pagos ni contabilidad.`)) return;
+    try{
+      const batch=db.batch();
+      ids.forEach(id=>batch.update(db.collection('servicios').doc(id),kind==='message'?{oculto_mensajes:true}:{oculto_resenas:true}));
+      await batch.commit();
+      if(kind==='message') eliteV51OpenMessages(); else eliteV51OpenReviews();
+    }catch(error){
+      console.error(error);
+      alert('No fue posible ocultar las tarjetas seleccionadas.');
+    }
+  };
+
+  /* Sustituye las dos listas. La corrección importante es leer la variable real
+     todosLosServicios, no window.todosLosServicios. */
+  window.eliteV51OpenMessages=function(){
+    const jobs=services().filter(s=>s.oculto_mensajes!==true)
+      .sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));
+    abrirEliteV5ModuleModal(
+      'Mensajes',
+      'Selecciona manualmente las tarjetas que quieras quitar. Nada se elimina automáticamente.',
+      '<div id="elite-v51-message-list"></div>'
+    );
+    const target=byId('elite-v51-message-list');
+    if(!target) return;
+    if(!jobs.length){target.innerHTML='<div class="elite-v51-empty">No hay mensajes para mostrar.</div>';return;}
+    target.innerHTML=toolbar('message',jobs.length)+`<div class="elite-v51-module-list">${jobs.map(s=>`<div class="elite-v51-row">
+      <div class="elite-v608-select-content">
+        <input class="elite-v608-card-check elite-v608-message-check" type="checkbox" value="${s.id}" onchange="eliteV608UpdateCount('message')">
+        <div><h4>${esc(s.cliente||'Cliente')}</h4><p>${esc(s.fecha||'')} · ${esc(s.tipo||'Servicio')} · ${esc(s.estado||'')}</p><p>${s.whatsapp?'📱 '+esc(s.whatsapp):'Sin teléfono'}</p></div>
+      </div>
+      <div class="elite-v51-actions">
+        <button class="elite-v51-action" style="background:#2563eb" onclick="enviarRecordatorio('${s.id}')">Recordatorio</button>
+        <button class="elite-v51-action" style="background:#7c3aed" onclick="enviarContrato('${s.id}','${js(s.whatsapp||'')}','${js(s.cliente||'')}')">Contrato</button>
+        ${s.estado==='completado'?`<button class="elite-v51-action" style="background:#16a34a" onclick="cambiarEstadoTrabajo('${s.id}','completado')">Balance</button>`:''}
+      </div>
+    </div>`).join('')}</div>`;
+  };
+
+  window.eliteV51OpenReviews=function(){
+    const jobs=services().filter(s=>s.estado==='completado' && s.whatsapp && s.oculto_resenas!==true)
+      .sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));
+    abrirEliteV5ModuleModal(
+      'Reseñas',
+      'Selecciona manualmente las tarjetas que quieras quitar. Nada se elimina automáticamente.',
+      '<div id="elite-v51-review-list"></div>'
+    );
+    const target=byId('elite-v51-review-list');
+    if(!target) return;
+    if(!jobs.length){target.innerHTML='<div class="elite-v51-empty">No hay solicitudes de reseña pendientes.</div>';return;}
+    target.innerHTML=toolbar('review',jobs.length)+`<div class="elite-v51-module-list">${jobs.map(s=>`<div class="elite-v51-row">
+      <div class="elite-v608-select-content">
+        <input class="elite-v608-card-check elite-v608-review-check" type="checkbox" value="${s.id}" onchange="eliteV608UpdateCount('review')">
+        <div><h4>${esc(s.cliente||'Cliente')}</h4><p>${esc(s.fecha||'')} · ${esc(s.tipo||'Servicio')}</p></div>
+      </div>
+      <div class="elite-v51-actions"><button class="elite-v51-action" style="background:#f59e0b" onclick="solicitarResenaGoogle('${js(s.cliente||'')}','${js(s.whatsapp||'')}')">Solicitar reseña ⭐</button></div>
+    </div>`).join('')}</div>`;
+  };
+
+  /* Restauración única adicional porque la migración v6.0.6 pudo marcarse antes
+     de que las tarjetas fueran realmente restauradas. */
+  async function restorePreviouslyHidden(){
+    try{
+      if(typeof db==='undefined'||typeof firebase==='undefined') return;
+      const marker=db.collection('migraciones_app').doc('v608_restauracion_real_mensajes_resenas');
+      const old=await marker.get();
+      if(old.exists && old.data()?.completada===true) return;
+      const snap=await db.collection('servicios').get();
+      let batch=db.batch(),count=0,ops=0;
+      for(const doc of snap.docs){
+        const data=doc.data()||{};
+        if(data.oculto_mensajes===true || data.oculto_resenas===true){
+          batch.update(doc.ref,{
+            oculto_mensajes:firebase.firestore.FieldValue.delete(),
+            oculto_resenas:firebase.firestore.FieldValue.delete()
+          });
+          count++;ops++;
+          if(ops===400){await batch.commit();batch=db.batch();ops=0;}
+        }
+      }
+      if(ops) await batch.commit();
+      await marker.set({completada:true,restauradas:count,fecha:firebase.firestore.FieldValue.serverTimestamp()});
+      console.log('v6.0.8 tarjetas restauradas:',count);
+    }catch(error){console.error('Restauración v6.0.8 falló:',error);}
+  }
+
+  /* Mientras Gastos esté abierto, el menú debe seguir siendo navegable. */
+  const oldOpenExpense=window.abrirAgregarGasto;
+  if(typeof oldOpenExpense==='function'){
+    window.abrirAgregarGasto=function(){
+      const result=oldOpenExpense.apply(this,arguments);
+      const sidebar=byId('elite-v5-sidebar');
+      if(sidebar) sidebar.style.display='flex';
+      return result;
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(restorePreviouslyHidden,1400));
 })();
 </script>
 
