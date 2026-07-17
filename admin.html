@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.0.11 | Agenda editable y reinicio único con respaldo -->
+<!-- Elite Admin v6.0.12 | Agenda operativa editable y reinicio visible -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.0.11 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.0.12 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -500,6 +500,10 @@ body.elite-v5-body{
     <button class="elite-v5-nav-btn" data-module="inventario" onclick="eliteV5Navigate('inventario',this)"><span class="elite-v5-nav-icon">▤</span>Inventario</button>
     <button class="elite-v5-nav-btn" data-module="informes" onclick="eliteV5Navigate('informes',this)"><span class="elite-v5-nav-icon">▥</span>Informes</button>
     <button class="elite-v5-nav-btn" data-module="configuracion" onclick="eliteV5Navigate('configuracion',this)"><span class="elite-v5-nav-icon">⚙</span>Configuración</button>
+    <button id="elite-reset-sidebar-btn" class="elite-v5-nav-btn" onclick="eliteOpenResetPanel()"
+            style="color:#fca5a5;border:1px solid rgba(239,68,68,.35);">
+      <span class="elite-v5-nav-icon">⚠</span>Reiniciar operaciones
+    </button>
     <button class="elite-v5-nav-btn" data-module="logout" onclick="eliteV5Navigate('logout',this)"><span class="elite-v5-nav-icon">↪</span>Cerrar sesión</button>
   </nav>
 
@@ -2793,6 +2797,11 @@ Please let us know if you have any questions.`;
         <button onclick="moveOpsDate(1)">›</button>
         <strong id="ops-date-title">—</strong>
       </div>
+      <button type="button"
+              onclick="agregarTrabajoDesdeCentroOperaciones()"
+              style="border:0;border-radius:10px;background:#2563eb;color:#fff;padding:11px 14px;font-weight:900;cursor:pointer;white-space:nowrap;">
+        + Nuevo trabajo
+      </button>
       <button class="ops-close" onclick="cerrarCentroOperacionesV601()">✕</button>
     </header>
 
@@ -4044,6 +4053,15 @@ function eliteV51SubscribeConfig(){
   if(eliteV51ConfigUnsub)return;
   eliteV51ConfigUnsub=db.collection('configuracion').doc('app').onSnapshot(d=>{eliteV51Config=d.exists?d.data():{};});
 }
+
+window.eliteOpenResetPanel = function() {
+  eliteV51OpenSettings();
+  setTimeout(() => {
+    const section = document.getElementById("elite-reset-operations-section");
+    section?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 180);
+};
+
 function eliteV51OpenSettings(){
   eliteV51SubscribeConfig();
   const c=eliteV51Config||{};
@@ -4163,13 +4181,20 @@ async function eliteLoadResetStatus() {
     const completed = snap.exists && snap.data()?.completado === true;
     const section = document.getElementById("elite-reset-operations-section");
 
-    if (completed && section) {
-      section.innerHTML = `
-        <h3 style="color:#22c55e;">Reinicio completado</h3>
-        <p style="color:#cbd5e1;font-size:12px;">
-          La herramienta de reinicio único ya fue utilizada y quedó desactivada.
-          Los clientes se conservaron.
-        </p>`;
+    const sidebarButton = document.getElementById("elite-reset-sidebar-btn");
+
+    if (completed) {
+      if (sidebarButton) sidebarButton.style.display = "none";
+      if (section) {
+        section.innerHTML = `
+          <h3 style="color:#22c55e;">Reinicio completado</h3>
+          <p style="color:#cbd5e1;font-size:12px;">
+            La herramienta de reinicio único ya fue utilizada y quedó desactivada.
+            Los clientes se conservaron.
+          </p>`;
+      }
+    } else {
+      if (sidebarButton) sidebarButton.style.display = "";
     }
   } catch (error) {
     console.error("No se pudo verificar el reinicio:", error);
@@ -4338,7 +4363,7 @@ window.eliteV5Navigate=function(module,button){
   if(module==='configuracion')return eliteV51OpenSettings();
   if(module==='logout')return eliteV5Logout();
 }
-document.addEventListener('DOMContentLoaded',()=>{eliteV51SubscribeConfig();setTimeout(()=>eliteV51SetLayout('dashboard'),700)});
+document.addEventListener('DOMContentLoaded',()=>{eliteV51SubscribeConfig();setTimeout(()=>{eliteV51SetLayout('dashboard');eliteLoadResetStatus();},700)});
 </script>
 
 
@@ -4838,6 +4863,34 @@ function opsJobsForDate(key){return todosLosServicios.filter(s=>s.fecha===key).s
 function opsStateClass(s){return s.estado==='completado'?'completed':s.estado==='en_progreso'?'progress':'pending'}
 function opsStateLabel(s){return s.estado==='completado'?'Completado':s.estado==='en_progreso'?'En progreso':'No iniciado'}
 
+
+window.agregarTrabajoDesdeCentroOperaciones = function(fechaElegida) {
+  const fecha = fechaElegida || (typeof opsDateKey === "function" ? opsDateKey(opsCalendarDate) : new Date().toISOString().slice(0,10));
+
+  cerrarCentroOperacionesV601();
+
+  if (typeof eliteV51SetLayout === "function") eliteV51SetLayout("servicios");
+  if (typeof eliteV5SetActive === "function") eliteV5SetActive("servicios");
+
+  setTimeout(() => {
+    const fechaInput = document.getElementById("fecha");
+    if (fechaInput) {
+      fechaInput.value = fecha;
+      fechaInput.dispatchEvent(new Event("input", { bubbles: true }));
+      fechaInput.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    const clienteInput = document.getElementById("cliente");
+    if (clienteInput) {
+      clienteInput.focus();
+      clienteInput.scrollIntoView({ behavior: "smooth", block: "center" });
+    } else {
+      const form = document.querySelector(".form-container");
+      form?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, 250);
+};
+
 function abrirCentroOperacionesV601(){const m=document.getElementById('ops-center-modal-v601');if(!m){alert('No se encontró el Centro de Operaciones v6.0.1');return;}m.style.display='block';document.body.style.overflow='hidden';opsCalendarDate=new Date();opsCalendarView='day';renderCentroOperacionesV601();}
 function cerrarCentroOperacionesV601(){const m=document.getElementById('ops-center-modal-v601');if(m)m.style.display='none';document.body.style.overflow='';}
 function setOpsView(v){opsCalendarView=v;document.querySelectorAll('.ops-view-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.view===v));renderCentroOperacionesV601()}
@@ -4866,7 +4919,15 @@ function renderOpsDay(){
  const key=opsDateKey(opsCalendarDate),jobs=opsJobsForDate(key);updateOpsMetrics(jobs);
  document.getElementById('ops-list-title').textContent=opsCalendarDate.toLocaleDateString('es-US',{weekday:'long',day:'numeric',month:'long'});document.getElementById('ops-list-badge').textContent=jobs.length;
  const timeline=document.getElementById('ops-timeline');
- timeline.innerHTML=jobs.length?jobs.map(s=>`<div class="ops-event" onclick="selectOpsJob('${s.id}')"><div class="ops-event-time">${formatAMPM(s.hora||'00:00')}</div><div class="ops-event-box ${opsStateClass(s)}"><h4>${s.cliente||'Cliente'}</h4><span class="ops-tag">${s.tipo||'Servicio'}</span><p>${formatAMPM(s.hora||'00:00')} – ${formatAMPM(opsEndTime(s))}</p><p>👥 ${[s.empleado_nombre,s.empleado_nombre_2].filter(Boolean).join(' • ')||'Sin asignar'}</p><p>📍 ${s.direccion||'Sin dirección'}</p></div></div>`).join(''):'<div class="ops-empty">No hay trabajos programados para este día.</div>';
+ timeline.innerHTML=jobs.length?jobs.map(s=>`<div class="ops-event" onclick="selectOpsJob('${s.id}')"><div class="ops-event-time">${formatAMPM(s.hora||'00:00')}</div><div class="ops-event-box ${opsStateClass(s)}"><h4>${s.cliente||'Cliente'}</h4><span class="ops-tag">${s.tipo||'Servicio'}</span><p>${formatAMPM(s.hora||'00:00')} – ${formatAMPM(opsEndTime(s))}</p><p>👥 ${[s.empleado_nombre,s.empleado_nombre_2].filter(Boolean).join(' • ')||'Sin asignar'}</p><p>📍 ${s.direccion||'Sin dirección'}</p></div></div>`).join(''):`<div class="ops-empty" style="padding:45px 20px">
+   <div style="font-size:32px;margin-bottom:10px">📅</div>
+   <div>No hay trabajos programados para este día.</div>
+   <button type="button"
+           onclick="agregarTrabajoDesdeCentroOperaciones('${key}')"
+           style="margin-top:16px;border:0;border-radius:10px;background:#2563eb;color:white;padding:12px 16px;font-weight:900;cursor:pointer;">
+     + Agregar trabajo en este día
+   </button>
+ </div>`;
  renderOpsRoute(jobs);renderOpsTeam(jobs);renderOpsAlerts(jobs);renderOpsInventory();
  if(!opsSelectedJobId||!jobs.some(s=>s.id===opsSelectedJobId))opsSelectedJobId=jobs[0]?.id||null;
  renderOpsJobDetail();
@@ -4892,7 +4953,7 @@ function renderOpsInventory(){const box=document.getElementById('ops-inventory-t
 
 function renderOpsMonth(){
  const y=opsCalendarDate.getFullYear(),m=opsCalendarDate.getMonth();const first=new Date(y,m,1),start=new Date(y,m,1-first.getDay());let html='<div class="ops-month-grid">';const all=[];
- for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const key=opsDateKey(d),jobs=opsJobsForDate(key);all.push(...jobs);html+=`<div class="ops-month-day ${d.getMonth()!==m?'muted':''} ${key===opsDateKey(new Date())?'today':''}" onclick="opsCalendarDate=new Date('${key}T12:00:00');setOpsView('day')"><div class="ops-month-num">${d.getDate()}</div>${jobs.slice(0,3).map(s=>`<div class="ops-month-job">${s.hora||''} ${s.cliente||''}</div>`).join('')}${jobs.length>3?`<small>+${jobs.length-3} más</small>`:''}</div>`}html+='</div>';
+ for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const key=opsDateKey(d),jobs=opsJobsForDate(key);all.push(...jobs);html+=`<div class="ops-month-day ${d.getMonth()!==m?'muted':''} ${key===opsDateKey(new Date())?'today':''}" onclick="opsCalendarDate=new Date('${key}T12:00:00');setOpsView('day')"><div class="ops-month-num">${d.getDate()}</div>${jobs.slice(0,3).map(s=>`<div class="ops-month-job" onclick="event.stopPropagation();abrirEditorEvento('${s.id}')" style="cursor:pointer">${s.hora||''} ${s.cliente||''}</div>`).join('')}${jobs.length>3?`<small>+${jobs.length-3} más</small>`:''}</div>`}html+='</div>';
  document.getElementById('ops-timeline').innerHTML=html;document.getElementById('ops-list-title').textContent='Vista mensual';document.getElementById('ops-list-badge').textContent=all.length;document.querySelector('.ops-timeline-card').style.gridColumn='1 / 3';document.querySelector('.ops-detail-card').style.display='none';updateOpsMetrics(all);renderOpsRoute([]);renderOpsTeam([]);renderOpsAlerts(all);renderOpsInventory();
 }
 function renderOpsWeek(){const d=new Date(opsCalendarDate);d.setDate(d.getDate()-d.getDay());let html='';let all=[];for(let i=0;i<7;i++){const x=new Date(d);x.setDate(d.getDate()+i);const jobs=opsJobsForDate(opsDateKey(x));all.push(...jobs);html+=`<div class="ops-agenda-date">${x.toLocaleDateString('es-US',{weekday:'long',day:'numeric',month:'short'})}</div>${jobs.length?jobs.map(s=>`<div class="ops-event" onclick="opsCalendarDate=new Date('${s.fecha}T12:00:00');opsSelectedJobId='${s.id}';setOpsView('day')"><div class="ops-event-time">${formatAMPM(s.hora||'')}</div><div class="ops-event-box ${opsStateClass(s)}"><h4>${s.cliente}</h4><p>${s.tipo||''} · ${[s.empleado_nombre,s.empleado_nombre_2].filter(Boolean).join(' • ')}</p></div></div>`).join(''):'<p style="color:#94a3b8;font-size:11px">Sin trabajos</p>'} `}document.getElementById('ops-timeline').innerHTML=html;document.getElementById('ops-list-title').textContent='Semana operativa';document.getElementById('ops-list-badge').textContent=all.length;document.querySelector('.ops-timeline-card').style.gridColumn='1 / 3';document.querySelector('.ops-detail-card').style.display='none';updateOpsMetrics(all);renderOpsRoute(all.filter(s=>s.fecha===opsDateKey(new Date())));renderOpsTeam(all);renderOpsAlerts(all);renderOpsInventory()}
