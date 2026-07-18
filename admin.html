@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.1.2 | Inventario: escáner y guardado corregidos -->
+<!-- Elite Admin v6.1.5 | Staff visible e inventario reforzado -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.1.2 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.1.5 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -117,9 +117,28 @@
   padding:0 14px 14px 14px;
 }
 
+.accordion-section.open { overflow:visible; position:relative; z-index:20; }
+
 .accordion-section.open .accordion-content {
   display:block;
+  overflow:visible;
 }
+
+#sec-staff.open { z-index:2000; }
+#sec-staff .search-container { z-index:2100; }
+#sec-staff .suggestions-list {
+  top:calc(100% - 8px);
+  left:0;
+  right:0;
+  width:auto;
+  min-height:44px;
+  background:#1677e8;
+  border:1px solid #60a5fa;
+  box-shadow:0 12px 28px rgba(0,0,0,.55);
+  color:#fff;
+}
+#sec-staff .suggestion-item { color:#fff; background:#1677e8; }
+#sec-staff .suggestion-item:hover { background:#0f5fc2; }
 
 #modal-editar-evento {
   display:none;
@@ -668,6 +687,38 @@ body.elite-v5-body{
 }
 </style>
 
+
+<style id="elite-client-search-fix">
+#suggestions-clientes{
+  position:relative;
+  z-index:9999;
+  width:100%;
+  max-height:320px;
+  overflow-y:auto;
+  margin-top:6px;
+  border:1px solid #38bdf8;
+  border-radius:12px;
+  background:#075985;
+  box-shadow:0 16px 38px rgba(0,0,0,.45);
+}
+#suggestions-clientes .suggestion-item{
+  display:block;
+  padding:12px 14px;
+  border:0;
+  border-bottom:1px solid rgba(255,255,255,.16);
+  background:transparent;
+  color:#fff;
+  font:inherit;
+  cursor:pointer;
+}
+#suggestions-clientes .suggestion-item:last-child{border-bottom:0}
+#suggestions-clientes .suggestion-item:hover,
+#suggestions-clientes .suggestion-item:focus{
+  background:#0284c7;
+  outline:none;
+}
+</style>
+
 </head>
 <body>
 <div id="loginBox" class="elite-login-overlay">
@@ -986,6 +1037,7 @@ body.elite-v5-body{
 <select id="nevera" style="width:100%; padding:14px; border-radius:12px; border:1px solid #2c2c2e; background:#2c2c2e; color:white;">
 <option value="">Nevera</option>
 <option value="No">No</option>
+<option value="Outside">Outside</option>
 <option value="1 Puerta">1 puerta</option>
 <option value="2 Puertas">2 puertas</option>
 </select>
@@ -1478,52 +1530,128 @@ function obtenerMillasServicio(s) {
         .trim();
 }
 
+function obtenerNombreCliente(c) {
+    return String(c?.nombre || c?.cliente || c?.nombre_cliente || "").trim();
+}
+
+function palabrasNormalizadas(txt) {
+    return normalizarTexto(txt).split(/\s+/).filter(Boolean);
+}
+
 function filtrarClientes() {
-    const q = normalizarTexto(document.getElementById("cliente").value);
-    const l = document.getElementById("suggestions-clientes");
+    const input = document.getElementById("cliente");
+    const lista = document.getElementById("suggestions-clientes");
+    if (!input || !lista) return;
 
-    l.innerHTML = "";
+    const q = normalizarTexto(input.value);
+    lista.innerHTML = "";
 
-    if (q.length < 1) {
-        l.style.display = "none";
+    if (!q) {
+        lista.style.display = "none";
         return;
     }
 
-    const f = todosLosClientes.filter(c => {
-        const texto = `
-            ${c.nombre || ""}
-            ${c.cliente || ""}
-            ${c.id || ""}
-            ${c.direccion || ""}
-            ${c.whatsapp || ""}
-            ${c.telefono || ""}
-            ${c.email || ""}
-            ${c.email_cliente || ""}
+    const consultaEsTelefono = /^[\d\s()+.-]+$/.test(input.value) && q.replace(/\D/g, "").length >= 2;
+    const consultaEsEmail = q.includes("@");
+
+    const resultados = todosLosClientes
+        .map(c => {
+            const nombreOriginal = obtenerNombreCliente(c);
+            const nombre = normalizarTexto(nombreOriginal);
+            const palabras = palabrasNormalizadas(nombreOriginal);
+            const telefono = normalizarTexto(c.whatsapp || c.telefono || "");
+            const email = normalizarTexto(c.email || c.email_cliente || "");
+            const direccion = normalizarTexto(c.direccion || "");
+
+            let prioridad = 999;
+
+            // Para nombres, buscar desde el comienzo del nombre o de cualquier palabra.
+            if (nombre.startsWith(q)) prioridad = 0;
+            else if (palabras.some(p => p.startsWith(q))) prioridad = 1;
+            else if (consultaEsTelefono && telefono.includes(q.replace(/\D/g, ""))) prioridad = 2;
+            else if (consultaEsEmail && email.includes(q)) prioridad = 2;
+            else if (q.length >= 4 && direccion.split(/\s+/).some(p => p.startsWith(q))) prioridad = 3;
+
+            return { cliente: c, prioridad, nombreOriginal };
+        })
+        .filter(x => x.prioridad < 999)
+        .sort((a, b) =>
+            a.prioridad - b.prioridad ||
+            a.nombreOriginal.localeCompare(b.nombreOriginal, "es", { sensitivity: "base" })
+        )
+        .slice(0, 12);
+
+    if (!resultados.length) {
+        const vacio = document.createElement("div");
+        vacio.className = "suggestion-item";
+        vacio.style.cursor = "default";
+        vacio.style.opacity = ".8";
+        vacio.textContent = "No se encontró ningún cliente";
+        lista.appendChild(vacio);
+        lista.style.display = "block";
+        return;
+    }
+
+    resultados.forEach(({ cliente: c }) => {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = "suggestion-item";
+        item.style.width = "100%";
+        item.style.textAlign = "left";
+
+        const nombre = obtenerNombreCliente(c) || "Cliente sin nombre";
+        const detalle = [c.telefono || c.whatsapp || "", c.direccion || ""]
+            .filter(Boolean)
+            .join(" · ");
+
+        item.innerHTML = `
+            <strong style="display:block">${nombre}</strong>
+            ${detalle ? `<small style="display:block;opacity:.82;margin-top:3px">${detalle}</small>` : ""}
         `;
-        return normalizarTexto(texto).includes(q);
+
+        item.addEventListener("mousedown", event => {
+            // mousedown evita que el blur del campo cierre la lista antes de seleccionar.
+            event.preventDefault();
+
+            input.value = nombre;
+            const asignar = (id, valor) => {
+                const campo = document.getElementById(id);
+                if (campo) campo.value = valor ?? "";
+            };
+
+            asignar("direccion", c.direccion || "");
+            asignar("whatsapp", c.whatsapp || c.telefono || "");
+            asignar("email_cliente", c.email || c.email_cliente || "");
+            asignar("millas_servicio", c.millas_servicio || c.millas_total || "");
+            asignar("pies_cuadrados", c.pies_cuadrados || c.pies2 || c.square_feet || "");
+            asignar("habitaciones", c.habitaciones || "");
+            asignar("banos", c.banos || "");
+            asignar("medios_banos", c.medios_banos || "");
+
+            lista.innerHTML = "";
+            lista.style.display = "none";
+
+            if (typeof calcularPrecioAutomatico === "function") {
+                calcularPrecioAutomatico();
+            }
+        });
+
+        lista.appendChild(item);
     });
 
-    f.forEach(c => {
-        const d = document.createElement("div");
-        d.className = "suggestion-item";
-        d.innerText = c.nombre || c.cliente || c.id;
-
-        d.onclick = () => {
-            document.getElementById("cliente").value = c.nombre || c.cliente || c.id || "";
-            document.getElementById("direccion").value = c.direccion || "";
-            document.getElementById("whatsapp").value = c.whatsapp || c.telefono || "";
-            document.getElementById("email_cliente").value = c.email || c.email_cliente || "";
-            document.getElementById("millas_servicio").value = c.millas_servicio || c.millas_total || "";
-
-            l.style.display = "none";
-            calcularPrecioAutomatico();
-        };
-
-        l.appendChild(d);
-    });
-
-    l.style.display = f.length > 0 ? "block" : "none";
+    lista.style.display = "block";
 }
+
+// Cierra la lista solo cuando el usuario toca fuera del buscador.
+document.addEventListener("mousedown", event => {
+    const input = document.getElementById("cliente");
+    const lista = document.getElementById("suggestions-clientes");
+    if (!input || !lista) return;
+    if (event.target !== input && !lista.contains(event.target)) {
+        lista.style.display = "none";
+    }
+});
+
         function registrarStaff() {
             const id = document.getElementById('edit-staff-id').value;
             const n = document.getElementById('reg-nombre').value;
@@ -1645,6 +1773,7 @@ const ELITE_PRICING = {
 
     extras: {
         estandar: {
+            nevera_outside: 20,
             nevera_1_puerta: 65,
             nevera_2_puertas: 95,
             horno: 85,
@@ -1730,6 +1859,7 @@ function calcularPrecioAutomatico() {
     total += valorNumero("horno") * precioExtraPorTipo("horno", tipoParaCalculo);
 
     const nevera = valorSelect("nevera");
+    if (nevera === "Outside") total += precioExtraPorTipo("nevera_outside", tipoParaCalculo);
     if (nevera === "1 Puerta") total += precioExtraPorTipo("nevera_1_puerta", tipoParaCalculo);
     if (nevera === "2 Puertas") total += precioExtraPorTipo("nevera_2_puertas", tipoParaCalculo);
 
@@ -4893,7 +5023,7 @@ function eliteV55OpenProductForm(id=''){
     <div class="elite-v55-help">Escanea el código y completa los datos una sola vez. Después la aplicación reconocerá el producto automáticamente.</div>
     <div id="elite-v55-scan-box" class="elite-v55-scan-box"><div style="color:#bfdbfe;font-size:12px;margin-bottom:9px;text-align:center">Mantén el código completo, recto y con buena luz dentro del recuadro. La lectura puede tardar unos segundos.</div><div id="elite-v55-reader" class="elite-v55-scan-reader"></div><button class="elite-v51-action" style="background:#dc2626;width:100%;margin-top:8px" onclick="eliteV55StopScanner()">Cerrar cámara</button></div>
     <div class="elite-v54-field"><label>Código de barras UPC / EAN</label>
-      <input id="v55-code" inputmode="numeric" value="${eliteV54Esc(p.codigo_barras||'')}" placeholder="Escanea o escribe el código">
+      <input id="v55-code" inputmode="numeric" value="${eliteV54Esc(p.codigo_barras||'')}" placeholder="Escanea o escribe el código" oninput="eliteV55LookupTypedCode(this.value)">
       <div class="elite-v55-scan-actions">
         <button type="button" onclick="eliteV55StartScanner('v55-code')">📷 Escanear con cámara</button>
         <button type="button" onclick="document.getElementById('v55-barcode-image').click()">🖼️ Leer desde galería</button>
@@ -4943,6 +5073,13 @@ async function eliteV55CompressPhotoToDataUrl(file,maxWidth=900,quality=.72){
     };
     reader.readAsDataURL(file);
   });
+}
+
+function eliteV55LookupTypedCode(value){
+  const code=String(value||'').replace(/\D/g,'');
+  if(code.length<8)return;
+  const found=eliteV55Catalog.find(p=>String(p.codigo_barras||'').replace(/\D/g,'')===code);
+  if(found) eliteV55ApplyDetectedCode(code);
 }
 
 function eliteV55SetSaveStatus(message,type='info'){
@@ -5000,9 +5137,9 @@ async function eliteV55SaveProduct(){
         photoUrl=await eliteV54Upload(file,`catalogo_productos/${code||Date.now()}/${Date.now()}_producto`);
         if(!photoUrl) throw new Error('Storage no devolvió la dirección de la foto.');
       }catch(uploadError){
-        console.warn('Firebase Storage falló; se guardará una foto comprimida en el registro.',uploadError);
-        eliteV55SetSaveStatus('Storage no respondió. Comprimiendo la foto para guardarla directamente...','warning');
-        photoUrl=await eliteV55CompressPhotoToDataUrl(file);
+        console.warn('Firebase Storage no permitió subir la foto.',uploadError);
+        photoUrl=eliteV55PhotoExisting||'';
+        eliteV55SetSaveStatus('La foto no pudo subirse, pero el producto se guardará sin perder los demás datos.','warning');
       }
     }
 
@@ -5029,11 +5166,15 @@ async function eliteV55SaveProduct(){
       const old=eliteV55Catalog.find(x=>x.id===eliteV55EditingId);
       await ref.set(data,{merge:true});
       if(Number(old?.precio_actual||0)!==price||String(old?.tienda||'')!==data.tienda){
-        await ref.collection('historial_precios').add({
-          precio:price,tienda:data.tienda,
-          fecha:firebase.firestore.FieldValue.serverTimestamp(),
-          usuario:data.actualizado_por
-        });
+        try{
+          await ref.collection('historial_precios').add({
+            precio:price,tienda:data.tienda,
+            fecha:firebase.firestore.FieldValue.serverTimestamp(),
+            usuario:data.actualizado_por
+          });
+        }catch(historyError){
+          console.warn('Producto actualizado, pero no se pudo guardar el historial de precio.',historyError);
+        }
       }
     }else{
       data.creado=firebase.firestore.FieldValue.serverTimestamp();
@@ -5153,7 +5294,7 @@ function eliteV55ApplyDetectedCode(decoded,targetId,quick=false){
     if(preview && found.foto_url){preview.src=found.foto_url;preview.style.display='block';}
     eliteV55SetSaveStatus('Producto reconocido y completado desde tu catálogo: '+found.nombre,'success');
   }else{
-    eliteV55SetSaveStatus('Código leído correctamente: '+code+'. Es un producto nuevo; completa sus datos una sola vez y después la app lo reconocerá automáticamente.','success');
+    eliteV55SetSaveStatus('Código leído correctamente: '+code+'. No existe todavía en tu catálogo. Completa los datos y guárdalo; la próxima vez se completará automáticamente.','success');
     document.getElementById('v55-name')?.focus();
   }
 }
