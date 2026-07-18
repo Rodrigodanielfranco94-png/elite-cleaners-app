@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.1.9 | Lista de Staff limpia y superpuesta -->
+<!-- Elite Admin v6.2.0 | Nevera con opciones Inside y Outside completas -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.1.9 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.2.0 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -1127,11 +1127,12 @@ body.elite-v5-body{
 <div>
 <span class="label-text">Nevera</span>
 <select id="nevera" style="width:100%; padding:14px; border-radius:12px; border:1px solid #2c2c2e; background:#2c2c2e; color:white;">
-<option value="">Nevera</option>
 <option value="No">No</option>
 <option value="Outside">Outside</option>
-<option value="1 Puerta">1 puerta</option>
-<option value="2 Puertas">2 puertas</option>
+<option value="1 Puerta Inside">1 puerta (Inside)</option>
+<option value="2 Puertas Inside">2 puertas (Inside)</option>
+<option value="1 Puerta Inside + Outside">1 puerta (Inside + Outside)</option>
+<option value="2 Puertas Inside + Outside">2 puertas (Inside + Outside)</option>
 </select>
 </div>
 
@@ -1912,8 +1913,10 @@ const ELITE_PRICING = {
     extras: {
         estandar: {
             nevera_outside: 20,
-            nevera_1_puerta: 65,
-            nevera_2_puertas: 95,
+            nevera_1_puerta_inside: 60,
+            nevera_2_puertas_inside: 75,
+            nevera_1_puerta_inside_outside: 80,
+            nevera_2_puertas_inside_outside: 95,
             horno_outside: 20,
             horno_inside: 65,
             horno_inside_outside: 85,
@@ -2003,8 +2006,10 @@ function calcularPrecioAutomatico() {
 
     const nevera = valorSelect("nevera");
     if (nevera === "Outside") total += precioExtraPorTipo("nevera_outside", tipoParaCalculo);
-    if (nevera === "1 Puerta") total += precioExtraPorTipo("nevera_1_puerta", tipoParaCalculo);
-    if (nevera === "2 Puertas") total += precioExtraPorTipo("nevera_2_puertas", tipoParaCalculo);
+    if (nevera === "1 Puerta Inside") total += precioExtraPorTipo("nevera_1_puerta_inside", tipoParaCalculo);
+    if (nevera === "2 Puertas Inside") total += precioExtraPorTipo("nevera_2_puertas_inside", tipoParaCalculo);
+    if (nevera === "1 Puerta Inside + Outside") total += precioExtraPorTipo("nevera_1_puerta_inside_outside", tipoParaCalculo);
+    if (nevera === "2 Puertas Inside + Outside") total += precioExtraPorTipo("nevera_2_puertas_inside_outside", tipoParaCalculo);
 
     const gabinetes = valorSelect("gabinetes");
     if (gabinetes === "Outside") total += precioExtraPorTipo("gabinetes_outside", tipoParaCalculo);
