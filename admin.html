@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.1.6 | Staff visible e inventario reforzado -->
+<!-- Elite Admin v6.1.7 | Guardado de edición corregido -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.1.6 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.1.7 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -1196,7 +1196,7 @@ style="width:100%;"></textarea>
 
 </div> <!-- cierre sec-venta -->
 
-<button class="save-btn" id="main-button" onclick="asignarTrabajo()">ASIGNAR TRABAJO</button>
+<button type="button" class="save-btn" id="main-button" onclick="asignarTrabajo()">ASIGNAR TRABAJO</button>
 
 <button id="cancel-edit" style="display:none; background:none; border:none; color:#ef4444; width:100%; margin-top:10px; font-weight:bold; cursor:pointer;" onclick="location.reload()">
     CANCELAR EDICIÓN
@@ -1959,161 +1959,233 @@ function activarCalculadoraAutomatica() {
 document.addEventListener("DOMContentLoaded", activarCalculadoraAutomatica);
 setTimeout(activarCalculadoraAutomatica, 500);
         
-        function asignarTrabajo() {
-    const id = document.getElementById('edit-id').value;
-    const cli_nombre = document.getElementById('cliente').value.trim();
+        async function asignarTrabajo() {
+    const boton = document.getElementById("main-button");
+    const editId = String(document.getElementById("edit-id")?.value || "").trim();
 
-    if (!cli_nombre) return alert("Falta el nombre del cliente");
-
-    const precio = Number(document.getElementById('precio_total').value || 0);
-
-    const data = {
-        cliente: cli_nombre,
-        direccion: document.getElementById('direccion').value,
-        whatsapp: document.getElementById('whatsapp').value.replace(/\D/g, ''),
-        email_cliente: document.getElementById('email_cliente').value || "",
-        precio_total: precio,
-        precio_inicial: document.getElementById("precio_inicial").value,
-        precio_recurrente: document.getElementById("precio_recurrente").value,
-
-        deposito_requerido: true,
-        deposito_monto: precio * 0.5,
-        balance_restante: precio * 0.5,
-
-        millas_servicio: Number(document.getElementById('millas_servicio').value) > 0
-            ? document.getElementById('millas_servicio').value
-            : obtenerMillasServicio({ cliente: cli_nombre }),
-
-        millas_reales: id && document.getElementById('millas_reales')
-            ? document.getElementById('millas_reales').value || ""
-            : "",
-
-        empleado_nombre: document.getElementById('search-empleado').value,
-        empleado_email: document.getElementById('email-empleado').value,
-        empleado_nombre_2: document.getElementById('search-empleado-2').value || "",
-        empleado_email_2: document.getElementById('email-empleado-2').value || "",
-
-        fecha: document.getElementById('fecha').value,
-hora: document.getElementById('hora').value,
-hora_final_estimada: document.getElementById('hora_final_estimada').value || "",
-
-repetir: document.getElementById('repetir').value || "ninguno",
-
-estado_calendario: document.getElementById('estado_calendario').value || "pendiente",
-estado: document.getElementById('estado_trabajo').value || "no_iniciado",
-
-pies_cuadrados: document.getElementById('pies_cuadrados').value || "",
-
-habitaciones: document.getElementById('habitaciones').value || "",
-
-banos: document.getElementById('banos').value || "",
-
-medios_banos: document.getElementById('medios_banos').value || "",
-
-salas: document.getElementById('salas').value || "",
-
-cocinas: document.getElementById('cocinas').value || "",
-
-oficinas: document.getElementById('oficinas').value || "",
-
-horno: document.getElementById('horno').value || "",
-
-nevera: document.getElementById('nevera').value || "",
-
-gabinetes: document.getElementById('gabinetes').value || "",
-
-ventanas: document.getElementById('ventanas').value || "",
-
-baseboards: document.getElementById('baseboards').value || "",
-perros: document.getElementById('perros').value || "No",
-lavanderia: document.getElementById('lavanderia').value || "",
-garaje: document.getElementById('garaje').value || "",
-comedor: document.getElementById('comedor').value || "",
-sala_juegos: document.getElementById('sala_juegos').value || "",
-
-alfombra_habitaciones: document.getElementById('alfombra_habitaciones').value || "",
-alfombra_pies_cuadrados: document.getElementById('alfombra_pies_cuadrados').value || "",
-alfombra_notas: document.getElementById('alfombra_notas').value || "",
-
-notas_internas: document.getElementById('notas_internas').value || "",
-        tipo: tipoSeleccionado,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    const valor = (id, fallback = "") => {
+        const elemento = document.getElementById(id);
+        return elemento ? elemento.value : fallback;
     };
 
-    if (id) {
-        data.hora_inicio = document.getElementById('hora_inicio_real').value || "--:--";
-        data.hora_fin = document.getElementById('hora_fin_real').value || "--:--";
-    } else {
-        data.estado = "no_iniciado";
-        data.hora_inicio = "--:--";
-        data.hora_fin = "--:--";
-        data.firma_cliente = false;
-        data.deposito_pagado = false;
-        data.metodo_pago_deposito = "";
-        data.comprobante_deposito = "";
-        data.fecha_pago_deposito = "";
+    const numero = (id, fallback = 0) => {
+        const n = Number(valor(id, fallback));
+        return Number.isFinite(n) ? n : Number(fallback || 0);
+    };
+
+    const cliNombre = String(valor("cliente")).trim();
+
+    if (!cliNombre) {
+        alert("Falta el nombre del cliente.");
+        document.getElementById("cliente")?.focus();
+        return;
     }
 
-    db.collection("clientes").doc(cli_nombre).set({
-    nombre: cli_nombre,
-    direccion: data.direccion,
-    whatsapp: data.whatsapp,
-    telefono: data.whatsapp,
-    email: data.email_cliente,
-    millas_servicio: data.millas_servicio || 0,
+    if (!valor("fecha")) {
+        alert("Selecciona la fecha del trabajo.");
+        document.getElementById("fecha")?.focus();
+        return;
+    }
 
-    repetir: data.repetir || "ninguno",
+    const textoOriginal = boton?.innerText || (editId ? "GUARDAR CAMBIOS" : "ASIGNAR TRABAJO");
 
-    pies_cuadrados: data.pies_cuadrados || "",
-    habitaciones: data.habitaciones || "",
-    banos: data.banos || "",
-    medios_banos: data.medios_banos || "",
-    salas: data.salas || "",
-    cocinas: data.cocinas || "",
-    oficinas: data.oficinas || "",
-    horno: (() => {
-        const valor = String(data.horno ?? "").trim();
-        if (!valor || valor === "0" || valor === "No") return "No";
-        if (valor === "1" || valor === "85") return "Inside + Outside";
-        return valor;
-    })(),
-    nevera: data.nevera || "",
-    gabinetes: data.gabinetes || "",
-    ventanas: data.ventanas || "",
-    baseboards: data.baseboards || "",
-    perros: data.perros || "No",
-    lavanderia: data.lavanderia || "",
-garaje: data.garaje || "",
-comedor: data.comedor || "",
-sala_juegos: data.sala_juegos || "",
+    if (boton) {
+        boton.disabled = true;
+        boton.innerText = editId ? "GUARDANDO CAMBIOS..." : "ASIGNANDO TRABAJO...";
+        boton.style.opacity = "0.7";
+        boton.style.cursor = "wait";
+    }
 
-alfombra_habitaciones: data.alfombra_habitaciones || "",
-alfombra_pies_cuadrados: data.alfombra_pies_cuadrados || "",
-alfombra_notas: data.alfombra_notas || "",
+    try {
+        const precio = numero("precio_total", 0);
 
-notas_internas: data.notas_internas || ""
-}, { merge: true });
+        /*
+         * Cuando se edita un trabajo, recuperamos el registro actual para
+         * conservar pagos, firma, contrato y demás campos que no pertenecen
+         * al formulario de edición.
+         */
+        let servicioActual = {};
+        if (editId) {
+            const actualSnap = await db.collection("servicios").doc(editId).get();
+            if (!actualSnap.exists) {
+                throw new Error("El trabajo que intentas editar ya no existe.");
+            }
+            servicioActual = actualSnap.data() || {};
+        }
 
-    if (id) {
-        db.collection("servicios").doc(id).update(data)
-           .then(async () => {
-    alert("Cambios guardados correctamente ✅");
-    location.reload();
-})
-            .catch(error => {
-                console.error("Error guardando cambios:", error);
-                alert("Error guardando cambios. Revisa la consola.");
+        const data = {
+            cliente: cliNombre,
+            direccion: valor("direccion"),
+            whatsapp: String(valor("whatsapp")).replace(/\D/g, ""),
+            email_cliente: valor("email_cliente"),
+
+            precio_total: precio,
+            precio_inicial: numero("precio_inicial", precio),
+            precio_recurrente: numero("precio_recurrente", 0),
+
+            millas_servicio: numero("millas_servicio", 0) > 0
+                ? numero("millas_servicio", 0)
+                : Number(obtenerMillasServicio({ cliente: cliNombre }) || 0),
+
+            millas_reales: editId ? valor("millas_reales") : "",
+
+            empleado_nombre: valor("search-empleado"),
+            empleado_email: valor("email-empleado"),
+            empleado_nombre_2: valor("search-empleado-2"),
+            empleado_email_2: valor("email-empleado-2"),
+
+            fecha: valor("fecha"),
+            hora: valor("hora"),
+            hora_final_estimada: valor("hora_final_estimada"),
+
+            repetir: valor("repetir", "ninguno") || "ninguno",
+            estado_calendario: valor("estado_calendario", "pendiente") || "pendiente",
+            estado: editId
+                ? (valor("estado_trabajo", servicioActual.estado || "no_iniciado") || "no_iniciado")
+                : "no_iniciado",
+
+            pies_cuadrados: valor("pies_cuadrados"),
+            habitaciones: valor("habitaciones"),
+            banos: valor("banos"),
+            medios_banos: valor("medios_banos"),
+            salas: valor("salas"),
+            cocinas: valor("cocinas"),
+            oficinas: valor("oficinas"),
+
+            horno: valor("horno", "No") || "No",
+            nevera: valor("nevera", "No") || "No",
+            gabinetes: valor("gabinetes", "No") || "No",
+            ventanas: valor("ventanas", "No") || "No",
+            baseboards: valor("baseboards", "No") || "No",
+            perros: valor("perros", "No") || "No",
+
+            lavanderia: valor("lavanderia"),
+            garaje: valor("garaje"),
+            comedor: valor("comedor"),
+            sala_juegos: valor("sala_juegos"),
+
+            alfombra_habitaciones: valor("alfombra_habitaciones"),
+            alfombra_pies_cuadrados: valor("alfombra_pies_cuadrados"),
+            alfombra_notas: valor("alfombra_notas"),
+            notas_internas: valor("notas_internas"),
+
+            tipo: tipoSeleccionado || servicioActual.tipo || "ESTÁNDAR",
+            actualizado_en: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        if (editId) {
+            data.hora_inicio = valor("hora_inicio_real", servicioActual.hora_inicio || "--:--") || "--:--";
+            data.hora_fin = valor("hora_fin_real", servicioActual.hora_fin || "--:--") || "--:--";
+
+            /*
+             * Recalcula únicamente los montos pendientes sin borrar estados
+             * de pago ya confirmados.
+             */
+            data.deposito_requerido = servicioActual.deposito_requerido !== false;
+            data.deposito_monto = Number(servicioActual.deposito_monto ?? (precio * 0.5));
+
+            if (servicioActual.balance_pagado === true) {
+                data.balance_restante = 0;
+            } else if (servicioActual.deposito_pagado === true) {
+                data.balance_restante = Math.max(
+                    0,
+                    precio - Number(servicioActual.deposito_monto || 0)
+                );
+            } else {
+                data.balance_restante = Number(
+                    servicioActual.balance_restante ?? (precio * 0.5)
+                );
+            }
+        } else {
+            Object.assign(data, {
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                hora_inicio: "--:--",
+                hora_fin: "--:--",
+                firma_cliente: false,
+                deposito_requerido: true,
+                deposito_pagado: false,
+                deposito_monto: precio * 0.5,
+                balance_pagado: false,
+                balance_restante: precio * 0.5,
+                metodo_pago_deposito: "",
+                comprobante_deposito: "",
+                fecha_pago_deposito: ""
             });
-    } else {
-        db.collection("servicios").add(data)
-.then(async () => {
-    await crearRepeticiones(data, data.repetir);
-    location.reload();
-})
-.catch(error => {
-    console.error("Error asignando trabajo:", error);
-    alert("Error asignando trabajo. Revisa la consola.");
-});
+        }
+
+        /*
+         * Primero se guarda el trabajo. El guardado del cliente es secundario:
+         * si sus reglas fallan, no impedirá actualizar el servicio.
+         */
+        if (editId) {
+            await db.collection("servicios").doc(editId).set(data, { merge: true });
+        } else {
+            const nuevoRef = await db.collection("servicios").add(data);
+            data.id = nuevoRef.id;
+        }
+
+        try {
+            await db.collection("clientes").doc(cliNombre).set({
+                nombre: cliNombre,
+                direccion: data.direccion,
+                whatsapp: data.whatsapp,
+                telefono: data.whatsapp,
+                email: data.email_cliente,
+                millas_servicio: data.millas_servicio || 0,
+                repetir: data.repetir || "ninguno",
+                pies_cuadrados: data.pies_cuadrados || "",
+                habitaciones: data.habitaciones || "",
+                banos: data.banos || "",
+                medios_banos: data.medios_banos || "",
+                salas: data.salas || "",
+                cocinas: data.cocinas || "",
+                oficinas: data.oficinas || "",
+                horno: data.horno || "No",
+                nevera: data.nevera || "No",
+                gabinetes: data.gabinetes || "No",
+                ventanas: data.ventanas || "No",
+                baseboards: data.baseboards || "No",
+                perros: data.perros || "No",
+                lavanderia: data.lavanderia || "",
+                garaje: data.garaje || "",
+                comedor: data.comedor || "",
+                sala_juegos: data.sala_juegos || "",
+                alfombra_habitaciones: data.alfombra_habitaciones || "",
+                alfombra_pies_cuadrados: data.alfombra_pies_cuadrados || "",
+                alfombra_notas: data.alfombra_notas || "",
+                notas_internas: data.notas_internas || ""
+            }, { merge: true });
+        } catch (clienteError) {
+            console.warn("El trabajo se guardó, pero no se pudo actualizar la ficha del cliente:", clienteError);
+        }
+
+        if (!editId) {
+            await crearRepeticiones(data, data.repetir);
+        }
+
+        alert(editId
+            ? "Cambios guardados correctamente ✅"
+            : "Trabajo asignado correctamente ✅"
+        );
+
+        location.reload();
+
+    } catch (error) {
+        console.error("Error al guardar el trabajo:", error);
+
+        const detalle = String(error?.message || error || "Error desconocido");
+        alert(
+            "No se pudieron guardar los cambios.\n\n" +
+            detalle +
+            "\n\nNo se borró el trabajo."
+        );
+    } finally {
+        if (boton) {
+            boton.disabled = false;
+            boton.innerText = textoOriginal;
+            boton.style.opacity = "1";
+            boton.style.cursor = "pointer";
+        }
     }
 }
         async function crearRepeticiones(data, repeticion) {
