@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.1.7 | Guardado de edición corregido -->
+<!-- Elite Admin v6.1.8 | Lista de Staff por encima del formulario -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.1.7 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.1.8 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -716,6 +716,55 @@ body.elite-v5-body{
 #suggestions-clientes .suggestion-item:focus{
   background:#0284c7;
   outline:none;
+}
+</style>
+
+
+<style id="elite-staff-dropdown-layer-fix">
+/* Mantiene la barra azul de sugerencias por encima del campo y de las secciones inferiores */
+#sec-staff{
+  position:relative;
+  z-index:5000;
+  overflow:visible !important;
+}
+
+#sec-staff.open,
+#sec-staff .accordion-content,
+#sec-staff .search-container{
+  overflow:visible !important;
+}
+
+#sec-staff .search-container{
+  position:relative;
+  z-index:5100;
+}
+
+#sec-staff .suggestions-list{
+  position:absolute !important;
+  top:100% !important;
+  left:0 !important;
+  right:0 !important;
+  width:100% !important;
+  margin-top:4px !important;
+  z-index:5200 !important;
+  overflow-y:auto !important;
+  max-height:220px !important;
+  box-sizing:border-box;
+}
+
+#sec-staff .suggestion-item{
+  position:relative;
+  z-index:5201;
+}
+
+/* Las secciones siguientes quedan por debajo de las sugerencias */
+#sec-programacion,
+#sec-estado,
+#sec-propiedad,
+#sec-alfombra,
+#sec-venta{
+  position:relative;
+  z-index:1;
 }
 </style>
 
