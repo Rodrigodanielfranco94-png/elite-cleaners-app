@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.1.5 | Staff visible e inventario reforzado -->
+<!-- Elite Admin v6.1.6 | Staff visible e inventario reforzado -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.1.5 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.1.6 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -1029,7 +1029,12 @@ body.elite-v5-body{
     
 <div>
 <span class="label-text">Hornos</span>
-<input type="number" id="horno" placeholder="Cantidad de hornos">
+<select id="horno" style="width:100%; padding:14px; border-radius:12px; border:1px solid #2c2c2e; background:#2c2c2e; color:white;">
+<option value="No">No</option>
+<option value="Outside">Outside</option>
+<option value="Inside">Inside</option>
+<option value="Inside + Outside">Inside + Outside</option>
+</select>
 </div>
 
 <div>
@@ -1776,7 +1781,9 @@ const ELITE_PRICING = {
             nevera_outside: 20,
             nevera_1_puerta: 65,
             nevera_2_puertas: 95,
-            horno: 85,
+            horno_outside: 20,
+            horno_inside: 65,
+            horno_inside_outside: 85,
             gabinetes_inside: 65,
             gabinetes_outside: 25,
             gabinetes_inside_outside: 90,
@@ -1856,7 +1863,10 @@ function calcularPrecioAutomatico() {
     const tarifaFt2 = obtenerTarifaPieCuadrado(tipoParaCalculo, ft2);
     total += ft2 * tarifaFt2;
 
-    total += valorNumero("horno") * precioExtraPorTipo("horno", tipoParaCalculo);
+    const horno = valorSelect("horno");
+    if (horno === "Outside") total += 20;
+    if (horno === "Inside") total += 65;
+    if (horno === "Inside + Outside") total += 85;
 
     const nevera = valorSelect("nevera");
     if (nevera === "Outside") total += precioExtraPorTipo("nevera_outside", tipoParaCalculo);
@@ -2061,7 +2071,12 @@ notas_internas: document.getElementById('notas_internas').value || "",
     salas: data.salas || "",
     cocinas: data.cocinas || "",
     oficinas: data.oficinas || "",
-    horno: data.horno || "",
+    horno: (() => {
+        const valor = String(data.horno ?? "").trim();
+        if (!valor || valor === "0" || valor === "No") return "No";
+        if (valor === "1" || valor === "85") return "Inside + Outside";
+        return valor;
+    })(),
     nevera: data.nevera || "",
     gabinetes: data.gabinetes || "",
     ventanas: data.ventanas || "",
