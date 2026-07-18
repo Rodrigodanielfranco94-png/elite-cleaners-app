@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.1.8 | Lista de Staff por encima del formulario -->
+<!-- Elite Admin v6.1.9 | Lista de Staff limpia y superpuesta -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.1.8 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.1.9 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -721,7 +721,7 @@ body.elite-v5-body{
 
 
 <style id="elite-staff-dropdown-layer-fix">
-/* Mantiene la barra azul de sugerencias por encima del campo y de las secciones inferiores */
+/* Lista de Staff limpia: el campo activo y sus resultados quedan por encima */
 #sec-staff{
   position:relative;
   z-index:5000;
@@ -729,35 +729,73 @@ body.elite-v5-body{
 }
 
 #sec-staff.open,
-#sec-staff .accordion-content,
-#sec-staff .search-container{
+#sec-staff .accordion-content{
   overflow:visible !important;
 }
 
 #sec-staff .search-container{
   position:relative;
-  z-index:5100;
+  z-index:1;
+  overflow:visible !important;
+}
+
+/* Solo el buscador que se está usando pasa al frente */
+#sec-staff .search-container:focus-within{
+  z-index:5500;
 }
 
 #sec-staff .suggestions-list{
   position:absolute !important;
-  top:100% !important;
+  top:calc(100% - 7px) !important;
   left:0 !important;
   right:0 !important;
   width:100% !important;
-  margin-top:4px !important;
-  z-index:5200 !important;
+  max-height:190px !important;
+  margin:0 !important;
+  padding:6px !important;
   overflow-y:auto !important;
-  max-height:220px !important;
   box-sizing:border-box;
+  z-index:5600 !important;
+
+  background:#0b2a46 !important;
+  border:1px solid #3b82f6 !important;
+  border-radius:0 0 12px 12px !important;
+  box-shadow:0 14px 30px rgba(0,0,0,.58) !important;
 }
 
 #sec-staff .suggestion-item{
+  display:block;
   position:relative;
-  z-index:5201;
+  z-index:5601;
+  padding:11px 12px !important;
+  margin:0 !important;
+  border:0 !important;
+  border-radius:8px;
+  background:transparent !important;
+  color:#fff !important;
+  font-size:14px;
+  font-weight:700;
+  line-height:1.25;
 }
 
-/* Las secciones siguientes quedan por debajo de las sugerencias */
+#sec-staff .suggestion-item + .suggestion-item{
+  margin-top:3px !important;
+}
+
+#sec-staff .suggestion-item:hover,
+#sec-staff .suggestion-item:focus{
+  background:#1677e8 !important;
+  outline:none;
+}
+
+/* El campo activo se une visualmente con la lista */
+#sec-staff .search-container:focus-within > input{
+  position:relative;
+  z-index:5602;
+  border-color:#3b82f6 !important;
+}
+
+/* Secciones inferiores siempre detrás */
 #sec-programacion,
 #sec-estado,
 #sec-propiedad,
@@ -1754,24 +1792,70 @@ generarNomina();
         function filtrarEmpleados(num) {
             const inputId = num === 1 ? 'search-empleado' : 'search-empleado-2';
             const suggestionsId = num === 1 ? 'suggestions-1' : 'suggestions-2';
+            const otherSuggestionsId = num === 1 ? 'suggestions-2' : 'suggestions-1';
             const emailId = num === 1 ? 'email-empleado' : 'email-empleado-2';
-            const q = document.getElementById(inputId).value.toLowerCase();
-            const l = document.getElementById(suggestionsId);
-            l.innerHTML = "";
-            if (q.length < 1) { l.style.display = "none"; return; }
-            const f = todosLosEmpleados.filter(e => (e.nombre || '').toLowerCase().includes(q));
-            f.forEach(e => {
-                const d = document.createElement('div');
-                d.className = 'suggestion-item'; d.innerText = e.nombre;
-                d.onclick = () => {
-                    document.getElementById(inputId).value = e.nombre;
-                    document.getElementById(emailId).value = e.email;
-                    l.style.display = "none";
-                };
-                l.appendChild(d);
+
+            const input = document.getElementById(inputId);
+            const lista = document.getElementById(suggestionsId);
+            const otraLista = document.getElementById(otherSuggestionsId);
+            if (!input || !lista) return;
+
+            if (otraLista) {
+                otraLista.style.display = "none";
+                otraLista.innerHTML = "";
+            }
+
+            const q = String(input.value || "").trim().toLowerCase();
+            lista.innerHTML = "";
+
+            if (!q) {
+                lista.style.display = "none";
+                return;
+            }
+
+            const resultados = todosLosEmpleados
+                .filter(e => String(e.nombre || "").toLowerCase().includes(q))
+                .sort((a, b) => {
+                    const an = String(a.nombre || "").toLowerCase();
+                    const bn = String(b.nombre || "").toLowerCase();
+                    const aStart = an.startsWith(q) ? 0 : 1;
+                    const bStart = bn.startsWith(q) ? 0 : 1;
+                    return aStart - bStart || an.localeCompare(bn);
+                });
+
+            resultados.forEach(e => {
+                const item = document.createElement("button");
+                item.type = "button";
+                item.className = "suggestion-item";
+                item.textContent = e.nombre || "Empleado";
+
+                item.addEventListener("mousedown", event => {
+                    event.preventDefault();
+                    input.value = e.nombre || "";
+                    const emailInput = document.getElementById(emailId);
+                    if (emailInput) emailInput.value = e.email || "";
+                    lista.innerHTML = "";
+                    lista.style.display = "none";
+                    input.blur();
+                });
+
+                lista.appendChild(item);
             });
-            l.style.display = f.length > 0 ? "block" : "none";
+
+            lista.style.display = resultados.length ? "block" : "none";
         }
+
+        document.addEventListener("mousedown", event => {
+            ["suggestions-1", "suggestions-2"].forEach(id => {
+                const lista = document.getElementById(id);
+                if (!lista) return;
+                const contenedor = lista.closest(".search-container");
+                if (contenedor && !contenedor.contains(event.target)) {
+                    lista.style.display = "none";
+                }
+            });
+        });
+
 
 function togglePayroll() {
     const box = document.getElementById("payroll-content");
