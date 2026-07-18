@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.0.13 | Corrección de alta de trabajos desde agenda -->
+<!-- Elite Admin v6.1.2 | Inventario: escáner y guardado corregidos -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.0.13 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.1.2 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -389,6 +389,17 @@ body.elite-v5-body{
   body.elite-v5-body{padding-left:0!important;padding-top:0!important}
 }
 
+
+.elite-login-input:-webkit-autofill,
+.elite-login-input:-webkit-autofill:hover,
+.elite-login-input:-webkit-autofill:focus{
+  -webkit-text-fill-color:#111 !important;
+  -webkit-box-shadow:0 0 0 1000px #fff inset !important;
+  box-shadow:0 0 0 1000px #fff inset !important;
+  caret-color:#111;
+  border-color:#d4d4d4;
+}
+
 </style>
 
 <style id="elite-v51-upgrade-style">
@@ -457,25 +468,265 @@ body.elite-v5-body{
 #elite-v55-reader{min-height:180px;background:#020617;border-radius:12px;overflow:hidden}
 @media(max-width:600px){.elite-v55-scan-actions,.elite-v55-photo-actions{grid-template-columns:1fr}.elite-v55-scan-actions button,.elite-v55-photo-actions button{min-height:48px}}
 </style>
+
+<style id="elite-login-pro-css">
+:root{
+  --elite-login-bg:#050505;
+  --elite-login-card:#111;
+  --elite-login-border:#2b2b2b;
+  --elite-login-muted:#9ca3af;
+  --elite-login-white:#fff;
+}
+.elite-login-overlay{
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255,255,255,.06), transparent 34%),
+    var(--elite-login-bg);
+}
+.elite-login-card{
+  width:100%;
+  max-width:400px;
+  padding:28px;
+  color:var(--elite-login-white);
+  background:rgba(17,17,17,.96);
+  border:1px solid var(--elite-login-border);
+  border-radius:20px;
+  box-shadow:0 24px 70px rgba(0,0,0,.55);
+}
+.elite-login-brand{
+  display:flex;
+  align-items:center;
+  gap:13px;
+}
+.elite-login-logo{
+  width:46px;
+  height:46px;
+  display:grid;
+  place-items:center;
+  flex:0 0 auto;
+  border:1px solid #444;
+  border-radius:14px;
+  background:#fff;
+  color:#050505;
+  font-weight:900;
+  letter-spacing:-.7px;
+}
+.elite-login-kicker{
+  margin-bottom:3px;
+  color:#a3a3a3;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:1.45px;
+}
+.elite-login-card h2{
+  margin:0;
+  color:#fff;
+  font-size:24px;
+  line-height:1.1;
+}
+.elite-login-subtitle{
+  margin:18px 0 22px;
+  color:var(--elite-login-muted);
+  font-size:14px;
+}
+.elite-login-label{
+  display:block;
+  margin:0 0 7px;
+  color:#d4d4d4;
+  font-size:12px;
+  font-weight:700;
+}
+.elite-login-input{
+  width:100%;
+  min-height:48px;
+  margin:0 0 15px;
+  padding:0 14px;
+  box-sizing:border-box;
+  border:1px solid #333;
+  border-radius:11px;
+  outline:none;
+  background:#080808;
+  color:#fff;
+  font-size:15px;
+  transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.elite-login-input::placeholder{color:#666}
+.elite-login-input:focus{
+  border-color:#737373;
+  background:#0b0b0b;
+  box-shadow:0 0 0 3px rgba(255,255,255,.07);
+}
+.elite-password-wrap{
+  position:relative;
+}
+.elite-password-input{
+  padding-right:49px;
+}
+
+.elite-password-toggle{
+  --elite-eye-color:#fff;
+  color:var(--elite-eye-color);
+}
+.elite-password-toggle.eye-dark{
+  --elite-eye-color:#111;
+}
+.elite-password-toggle.eye-light{
+  --elite-eye-color:#fff;
+}
+
+.elite-password-toggle{
+  position:absolute;
+  top:24px;
+  right:8px;
+  width:36px;
+  height:36px;
+  display:grid;
+  place-items:center;
+  padding:0;
+  border:0;
+  border-radius:8px;
+  outline:none;
+  background:transparent;
+  color:#fff;
+  cursor:pointer;
+}
+.elite-password-toggle:hover{background:rgba(255,255,255,.07)}
+.elite-password-toggle:focus-visible{box-shadow:0 0 0 2px #fff}
+.elite-password-toggle svg{
+  width:20px;
+  height:20px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.elite-eye-closed{display:none}
+.elite-password-toggle.is-visible .elite-eye-open{display:none}
+.elite-password-toggle.is-visible .elite-eye-closed{display:block}
+.elite-login-primary{
+  width:100%;
+  min-height:49px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  margin-top:2px;
+  padding:0 16px;
+  border:1px solid #fff;
+  border-radius:11px;
+  background:#fff;
+  color:#050505;
+  font-size:15px;
+  font-weight:900;
+  cursor:pointer;
+  transition:transform .12s ease, opacity .18s ease, background .18s ease;
+}
+.elite-login-primary:hover{background:#e5e5e5}
+.elite-login-primary:active{transform:translateY(1px)}
+.elite-login-primary:disabled{cursor:wait;opacity:.72}
+.elite-login-spinner{
+  display:none;
+  width:16px;
+  height:16px;
+  border:2px solid rgba(0,0,0,.25);
+  border-top-color:#000;
+  border-radius:50%;
+  animation:eliteLoginSpin .7s linear infinite;
+}
+.elite-login-primary.is-loading .elite-login-spinner{display:block}
+@keyframes eliteLoginSpin{to{transform:rotate(360deg)}}
+.elite-login-recovery{
+  display:block;
+  width:max-content;
+  margin:15px auto 0;
+  padding:4px 6px;
+  border:0;
+  background:transparent;
+  color:#bdbdbd;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+}
+.elite-login-recovery:hover{color:#fff;text-decoration:underline}
+.elite-login-message{
+  min-height:19px;
+  margin-top:13px;
+  text-align:center;
+  color:#ef4444;
+  font-size:13px;
+  line-height:1.45;
+}
+@media(max-width:480px){
+  .elite-login-card{padding:23px 19px;border-radius:17px}
+}
+</style>
+
 </head>
 <body>
-<div id="loginBox" style="position:fixed; inset:0; background:#000; z-index:99999; display:flex; align-items:center; justify-content:center; padding:20px;">
-  <div style="background:#111; border:1px solid #2c2c2c; border-radius:18px; padding:25px; width:100%; max-width:380px; color:white;">
-    <h2 style="margin-top:0; color:#3b82f6;">Elite Admin Login</h2>
+<div id="loginBox" class="elite-login-overlay">
+  <div class="elite-login-card" role="dialog" aria-labelledby="eliteLoginTitle">
+    <div class="elite-login-brand">
+      <div class="elite-login-logo">EC</div>
+      <div>
+        <div class="elite-login-kicker">ELITE CLEANERS COMPANY</div>
+        <h2 id="eliteLoginTitle">Elite Admin</h2>
+      </div>
+    </div>
 
-    <input id="loginEmail" type="email" placeholder="Email" style="width:100%; padding:14px; margin-bottom:12px; border-radius:10px; border:1px solid #333; background:#000; color:white;">
+    <p class="elite-login-subtitle">Accede al centro de administración.</p>
 
-    <input id="loginPassword" type="password" placeholder="Password" style="width:100%; padding:14px; margin-bottom:12px; border-radius:10px; border:1px solid #333; background:#000; color:white;">
+    <label class="elite-login-label" for="loginEmail">Correo electrónico</label>
+    <input id="loginEmail"
+           class="elite-login-input"
+           type="email"
+           placeholder="nombre@correo.com"
+           autocomplete="username"
+           inputmode="email">
 
-    <button onclick="loginAdmin()" style="width:100%; padding:14px; border:none; border-radius:10px; background:#3b82f6; color:white; font-weight:bold;">
-      Entrar
+    <label class="elite-login-label" for="loginPassword">Contraseña</label>
+    <div class="elite-password-wrap">
+      <input id="loginPassword"
+             class="elite-login-input elite-password-input"
+             type="password"
+             placeholder="Escribe tu contraseña"
+             autocomplete="current-password">
+
+      <button id="toggleLoginPassword"
+              class="elite-password-toggle"
+              type="button"
+              onclick="togglePasswordVisibility()"
+              aria-label="Mostrar contraseña"
+              title="Mostrar contraseña">
+        <svg class="elite-eye-open" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
+          <circle cx="12" cy="12" r="2.7"></circle>
+        </svg>
+        <svg class="elite-eye-closed" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 3l18 18"></path>
+          <path d="M10.6 10.7a2.7 2.7 0 0 0 3.7 3.7"></path>
+          <path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6 0 9.5 7 9.5 7a15.2 15.2 0 0 1-2.1 2.8"></path>
+          <path d="M6.2 6.2C3.8 8 2.5 12 2.5 12s3.5 7 9.5 7c1.5 0 2.8-.4 4-.9"></path>
+        </svg>
+      </button>
+    </div>
+
+    <button id="eliteLoginButton" class="elite-login-primary" type="button" onclick="loginAdmin()">
+      <span class="elite-login-button-text">Entrar</span>
+      <span class="elite-login-spinner" aria-hidden="true"></span>
     </button>
 
-    <button type="button" onclick="recuperarPasswordAdmin()" style="width:100%; margin-top:10px; padding:12px; border:1px solid #3b82f6; border-radius:10px; background:transparent; color:#60a5fa; font-weight:bold;">
+    <button type="button" class="elite-login-recovery" onclick="recuperarPasswordAdmin()">
       ¿Olvidaste tu contraseña?
     </button>
 
-    <p id="loginError" style="color:#ef4444; font-size:13px; margin-top:12px;"></p>
+    <div id="loginError" class="elite-login-message" role="status" aria-live="polite"></div>
   </div>
 </div>
 
@@ -4557,7 +4808,7 @@ window.eliteV51OpenInventory=function(){
   <div id="elite-v54-tab-content"></div>`);
   setTimeout(()=>eliteV54SwitchTab('solicitudes'),80)
 }
-function eliteV54SwitchTab(tab){eliteV54ActiveTab=tab;['solicitudes','general','agregar'].forEach(x=>document.getElementById('v54-tab-'+x)?.classList.toggle('active',x===tab));const c=document.getElementById('elite-v54-tab-content');if(!c)return;if(tab==='solicitudes'){c.innerHTML='<div id="elite-v54-request-list"></div>';eliteV54RenderRequests()}else if(tab==='general'){c.innerHTML='<div id="elite-v51-inventory-list"></div>';eliteV51RenderInventory()}else{c.innerHTML=`<div class="elite-v51-settings-section"><h3>Agregar artículo</h3><div class="elite-v51-form-grid"><input id="inv-name" placeholder="Nombre del artículo"><select id="inv-type" style="background:#0f172a;color:#fff;border:1px solid #3b82f6"><option>Producto químico</option><option>Herramienta</option><option>Máquina</option></select><input id="inv-qty" type="number" placeholder="Cantidad"><input id="inv-min" type="number" placeholder="Mínimo"><input id="inv-cost" type="number" step="0.01" placeholder="Costo unitario"><input id="inv-location" placeholder="Ubicación"></div><button class="elite-v51-action" style="background:#16a34a;width:100%;margin-top:12px" onclick="eliteV51SaveInventory()">Guardar artículo</button></div>`}}
+function eliteV54SwitchTab(tab){eliteV54ActiveTab=tab;['solicitudes','general','agregar'].forEach(x=>document.getElementById('v54-tab-'+x)?.classList.toggle('active',x===tab));const c=document.getElementById('elite-v54-tab-content');if(!c)return;if(tab==='solicitudes'){c.innerHTML='<div id="elite-v54-request-list"></div>';eliteV54RenderRequests()}else if(tab==='general'){c.innerHTML='<div id="elite-v51-inventory-list"></div>';eliteV51RenderInventory()}else{c.innerHTML=`<div class="elite-v51-settings-section"><h3>Agregar artículo</h3><div class="elite-v51-form-grid"><input id="inv-name" placeholder="Nombre del artículo"><select id="inv-type" style="background:#0f172a;color:#fff;border:1px solid #3b82f6"><option>Producto químico</option><option>Materiales</option><option>Herramienta</option><option>Máquina</option></select><input id="inv-qty" type="number" placeholder="Cantidad"><input id="inv-min" type="number" placeholder="Mínimo"><input id="inv-cost" type="number" step="0.01" placeholder="Costo unitario"><input id="inv-location" placeholder="Ubicación"></div><button class="elite-v51-action" style="background:#16a34a;width:100%;margin-top:12px" onclick="eliteV51SaveInventory()">Guardar artículo</button></div>`}}
 function eliteV54RenderRequests(){const box=document.getElementById('elite-v54-request-list');if(!box)return;if(!eliteV54Requests.length){box.innerHTML='<div class="elite-v51-empty">No hay solicitudes de inventario.</div>';return}box.innerHTML=eliteV54Requests.map(r=>{const diff=Number(r.cantidad_comprada||0)-Number(r.cantidad_entregada||0);const photos=[r.foto_producto_url,r.foto_recibo_url,r.foto_compra_url,r.foto_entrega_url].filter(Boolean);return `<div class="elite-v54-card"><h4>${eliteV54Esc(r.producto_nombre||'Producto')}</h4><span class="elite-v54-badge ${eliteV54StatusClass(r.estado)}">${eliteV54Esc(r.estado||'pendiente')}</span><div class="elite-v54-meta"><b>Empleado:</b> ${eliteV54Esc(r.empleado_nombre||'Sin nombre')}<br><b>Tipo:</b> ${eliteV54Esc(r.tipo||'Sin tipo')}<br><b>Solicitado:</b> ${Number(r.cantidad_solicitada||r.cantidad||0)}<br><b>Ubicación:</b> ${eliteV54Esc(r.ubicacion||'Sin ubicación')}<br><b>Solicitud:</b> ${eliteV54Date(r.creado||r.fecha)}${r.nota?`<br><b>Nota:</b> ${eliteV54Esc(r.nota)}`:''}${r.precio_unitario?`<br><b>Precio unitario:</b> $${Number(r.precio_unitario).toFixed(2)}`:''}${r.total_pagado?`<br><b>Total pagado:</b> $${Number(r.total_pagado).toFixed(2)}`:''}</div>${photos.length?`<div class="elite-v54-photo-grid">${photos.map(u=>`<a class="elite-v54-photo" href="${u}" target="_blank"><img src="${u}"></a>`).join('')}</div>`:''}${r.estado==='comprada'||r.estado==='lista_entrega'||r.estado==='entregada'||r.estado==='confirmada'?`${diff!==0?`<div class="elite-v54-warning">⚠ Diferencia entre comprado y entregado: ${diff}</div>`:`<div class="elite-v54-ok">✅ Cantidades conciliadas</div>`}`:''}<div class="elite-v54-actions">${r.estado==='pendiente'?`<button style="background:#2563eb" onclick="eliteV54Approve('${r.id}')">Aprobar</button><button style="background:#dc2626" onclick="eliteV54Reject('${r.id}')">Rechazar</button>`:''}${r.estado==='aprobada'?`<button style="background:#7c3aed" onclick="eliteV54Purchase('${r.id}')">Registrar compra</button>`:''}${r.estado==='comprada'||r.estado==='lista_entrega'?`<button style="background:#16a34a" onclick="eliteV54Deliver('${r.id}')">Registrar entrega</button>`:''}<button style="background:#475569" onclick="eliteV54History('${r.id}')">Historial</button></div></div>`}).join('')}
 async function eliteV54Audit(id,accion,detalle={}){await db.collection('solicitudes_inventario').doc(id).collection('auditoria').add({accion,detalle,usuario:window.usuarioActual?.nombre||currentUser?.email||'Admin',fecha:firebase.firestore.FieldValue.serverTimestamp()})}
 async function eliteV54Approve(id){const r=eliteV54Requests.find(x=>x.id===id);const q=prompt('Cantidad aprobada:',r?.cantidad_solicitada||r?.cantidad||1);if(q===null)return;await db.collection('solicitudes_inventario').doc(id).update({estado:'aprobada',cantidad_aprobada:Number(q),aprobado_por:window.usuarioActual?.nombre||'Admin',fecha_aprobacion:firebase.firestore.FieldValue.serverTimestamp()});await eliteV54Audit(id,'aprobada',{cantidad:Number(q)})}
@@ -4619,7 +4870,7 @@ function eliteV55SwitchTab(tab){
   }else if(tab==='general'){
     c.innerHTML='<div id="elite-v51-inventory-list"></div>';eliteV51RenderInventory();
   }else{
-    c.innerHTML=`<div class="elite-v51-settings-section"><h3>Ajustar inventario físico</h3><div class="elite-v55-help">Este formulario cambia la cantidad disponible. No crea un gasto ni agrega un producto al catálogo.</div><div class="elite-v51-form-grid"><input id="inv-name" placeholder="Nombre del artículo"><select id="inv-type" style="background:#0f172a;color:#fff;border:1px solid #3b82f6"><option>Producto químico</option><option>Herramienta</option><option>Máquina</option></select><input id="inv-qty" type="number" placeholder="Cantidad"><input id="inv-min" type="number" placeholder="Mínimo"><input id="inv-cost" type="number" step="0.01" placeholder="Costo unitario"><input id="inv-location" placeholder="Ubicación"></div><button class="elite-v51-action" style="background:#16a34a;width:100%;margin-top:12px" onclick="eliteV51SaveInventory()">Guardar ajuste</button></div>`;
+    c.innerHTML=`<div class="elite-v51-settings-section"><h3>Ajustar inventario físico</h3><div class="elite-v55-help">Este formulario cambia la cantidad disponible. No crea un gasto ni agrega un producto al catálogo.</div><div class="elite-v51-form-grid"><input id="inv-name" placeholder="Nombre del artículo"><select id="inv-type" style="background:#0f172a;color:#fff;border:1px solid #3b82f6"><option>Producto químico</option><option>Materiales</option><option>Herramienta</option><option>Máquina</option></select><input id="inv-qty" type="number" placeholder="Cantidad"><input id="inv-min" type="number" placeholder="Mínimo"><input id="inv-cost" type="number" step="0.01" placeholder="Costo unitario"><input id="inv-location" placeholder="Ubicación"></div><button class="elite-v51-action" style="background:#16a34a;width:100%;margin-top:12px" onclick="eliteV51SaveInventory()">Guardar ajuste</button></div>`;
   }
 }
 
@@ -4640,7 +4891,7 @@ function eliteV55OpenProductForm(id=''){
   eliteV55EditingId=id;eliteV55PhotoExisting=p.foto_url||'';eliteV55SelectedPhotoFile=null;
   abrirEliteV5ModuleModal(id?'Editar producto':'Agregar producto al catálogo','Este registro memoriza el producto. No crea un gasto.',`
     <div class="elite-v55-help">Escanea el código y completa los datos una sola vez. Después la aplicación reconocerá el producto automáticamente.</div>
-    <div id="elite-v55-scan-box" class="elite-v55-scan-box"><div id="elite-v55-reader" class="elite-v55-scan-reader"></div><button class="elite-v51-action" style="background:#dc2626;width:100%;margin-top:8px" onclick="eliteV55StopScanner()">Cerrar cámara</button></div>
+    <div id="elite-v55-scan-box" class="elite-v55-scan-box"><div style="color:#bfdbfe;font-size:12px;margin-bottom:9px;text-align:center">Mantén el código completo, recto y con buena luz dentro del recuadro. La lectura puede tardar unos segundos.</div><div id="elite-v55-reader" class="elite-v55-scan-reader"></div><button class="elite-v51-action" style="background:#dc2626;width:100%;margin-top:8px" onclick="eliteV55StopScanner()">Cerrar cámara</button></div>
     <div class="elite-v54-field"><label>Código de barras UPC / EAN</label>
       <input id="v55-code" inputmode="numeric" value="${eliteV54Esc(p.codigo_barras||'')}" placeholder="Escanea o escribe el código">
       <div class="elite-v55-scan-actions">
@@ -4651,7 +4902,7 @@ function eliteV55OpenProductForm(id=''){
     </div>
     <div class="elite-v54-field"><label>Nombre del producto</label><input id="v55-name" value="${eliteV54Esc(p.nombre||'')}" placeholder="Ej: Fabuloso Lavender 1 galón"></div>
     <div class="elite-v54-field"><label>Marca</label><input id="v55-brand" value="${eliteV54Esc(p.marca||'')}" placeholder="Ej: Fabuloso"></div>
-    <div class="elite-v54-field"><label>Tipo</label><select id="v55-type"><option ${p.tipo==='Producto químico'?'selected':''}>Producto químico</option><option ${p.tipo==='Herramienta'?'selected':''}>Herramienta</option><option ${p.tipo==='Máquina'?'selected':''}>Máquina</option></select></div>
+    <div class="elite-v54-field"><label>Tipo</label><select id="v55-type"><option ${p.tipo==='Producto químico'?'selected':''}>Producto químico</option><option ${p.tipo==='Materiales'?'selected':''}>Materiales</option><option ${p.tipo==='Herramienta'?'selected':''}>Herramienta</option><option ${p.tipo==='Máquina'?'selected':''}>Máquina</option></select></div>
     <div class="elite-v54-field"><label>Tamaño / presentación</label><input id="v55-size" value="${eliteV54Esc(p.tamano||'')}" placeholder="Ej: 1 galón, 32 oz, paquete de 12"></div>
     <div class="elite-v54-field"><label>Precio actual</label><input id="v55-price" type="number" min="0" step="0.01" value="${Number(p.precio_actual||0)}" placeholder="0.00"></div>
     <div class="elite-v54-field"><label>Tienda / proveedor</label><input id="v55-store" value="${eliteV54Esc(p.tienda||'')}" placeholder="Ej: Home Depot, Costco, Walmart"></div>
@@ -4668,23 +4919,155 @@ function eliteV55OpenProductForm(id=''){
       <div id="v55-photo-name" class="elite-v55-file-name">Ninguna foto seleccionada</div>
       <img id="v55-photo-preview" src="${eliteV54Esc(p.foto_url||'')}" style="${p.foto_url?'':'display:none;'}width:110px;height:110px;object-fit:cover;border-radius:12px;margin-top:8px;border:1px solid #334155">
     </div>
-    <button class="elite-v51-action" style="background:#16a34a;width:100%;padding:14px" onclick="eliteV55SaveProduct()">Guardar producto</button>`);
+    <div id="v55-save-status" style="display:none;margin:10px 0;padding:10px;border-radius:10px;font-size:12px;line-height:1.4"></div>
+    <button id="v55-save-button" class="elite-v51-action" style="background:#16a34a;width:100%;padding:14px" onclick="eliteV55SaveProduct()">Guardar producto</button>`);
+}
+
+async function eliteV55CompressPhotoToDataUrl(file,maxWidth=900,quality=.72){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onerror=()=>reject(new Error('No se pudo leer la foto.'));
+    reader.onload=()=>{
+      const img=new Image();
+      img.onerror=()=>reject(new Error('La foto seleccionada no es válida.'));
+      img.onload=()=>{
+        const scale=Math.min(1,maxWidth/img.width);
+        const canvas=document.createElement('canvas');
+        canvas.width=Math.max(1,Math.round(img.width*scale));
+        canvas.height=Math.max(1,Math.round(img.height*scale));
+        const ctx=canvas.getContext('2d');
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL('image/jpeg',quality));
+      };
+      img.src=reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function eliteV55SetSaveStatus(message,type='info'){
+  const box=document.getElementById('v55-save-status');
+  if(!box)return;
+  const styles={
+    info:['#172554','#bfdbfe','#2563eb'],
+    success:['#052e16','#bbf7d0','#16a34a'],
+    warning:['#451a03','#fde68a','#d97706'],
+    error:['#450a0a','#fecaca','#dc2626']
+  };
+  const s=styles[type]||styles.info;
+  box.style.display=message?'block':'none';
+  box.style.background=s[0];
+  box.style.color=s[1];
+  box.style.border='1px solid '+s[2];
+  box.textContent=message||'';
 }
 
 async function eliteV55SaveProduct(){
-  const code=document.getElementById('v55-code').value.trim();
-  const name=document.getElementById('v55-name').value.trim();
-  const price=Number(document.getElementById('v55-price').value||0);
-  if(!name)return alert('Escribe el nombre del producto.');
-  if(code){const duplicate=eliteV55Catalog.find(p=>p.codigo_barras===code&&p.id!==eliteV55EditingId);if(duplicate)return alert('Ese código ya pertenece a: '+duplicate.nombre);}
-  let photoUrl=eliteV55PhotoExisting;
-  const file=eliteV55SelectedPhotoFile || document.getElementById('v55-photo-camera')?.files?.[0] || document.getElementById('v55-photo-gallery')?.files?.[0] || null;
-  if(file)photoUrl=await eliteV54Upload(file,`catalogo_productos/${code||Date.now()}/${Date.now()}_producto`);
-  const data={codigo_barras:code,nombre:name,marca:document.getElementById('v55-brand').value.trim(),tipo:document.getElementById('v55-type').value,tamano:document.getElementById('v55-size').value.trim(),precio_actual:price,tienda:document.getElementById('v55-store').value.trim(),ubicacion:document.getElementById('v55-location').value.trim(),minimo:Number(document.getElementById('v55-min').value||0),foto_url:photoUrl,actualizado:firebase.firestore.FieldValue.serverTimestamp(),actualizado_por:window.usuarioActual?.nombre||currentUser?.email||'Admin'};
-  let ref;
-  if(eliteV55EditingId){ref=db.collection('catalogo_productos').doc(eliteV55EditingId);const old=eliteV55Catalog.find(x=>x.id===eliteV55EditingId);await ref.update(data);if(Number(old?.precio_actual||0)!==price||String(old?.tienda||'')!==data.tienda)await ref.collection('historial_precios').add({precio:price,tienda:data.tienda,fecha:firebase.firestore.FieldValue.serverTimestamp(),usuario:data.actualizado_por});}
-  else{data.creado=firebase.firestore.FieldValue.serverTimestamp();ref=await db.collection('catalogo_productos').add(data);await ref.collection('historial_precios').add({precio:price,tienda:data.tienda,fecha:firebase.firestore.FieldValue.serverTimestamp(),usuario:data.actualizado_por});}
-  eliteV55StopScanner();document.querySelector('#elite-v5-module-modal .elite-v5-close')?.click();eliteV51OpenInventory();setTimeout(()=>eliteV55SwitchTab('catalogo'),100);
+  const button=document.getElementById('v55-save-button');
+  const code=(document.getElementById('v55-code')?.value||'').trim();
+  const name=(document.getElementById('v55-name')?.value||'').trim();
+  const price=Number(document.getElementById('v55-price')?.value||0);
+
+  if(!name){
+    eliteV55SetSaveStatus('Escribe el nombre del producto.','warning');
+    document.getElementById('v55-name')?.focus();
+    return;
+  }
+  if(code){
+    const duplicate=eliteV55Catalog.find(p=>String(p.codigo_barras||'').trim()===code&&p.id!==eliteV55EditingId);
+    if(duplicate){
+      eliteV55SetSaveStatus('Ese código ya pertenece a: '+duplicate.nombre,'warning');
+      return;
+    }
+  }
+
+  if(button){
+    button.disabled=true;
+    button.textContent='Guardando...';
+    button.style.opacity='.7';
+  }
+  eliteV55SetSaveStatus('Preparando el producto...','info');
+
+  try{
+    let photoUrl=eliteV55PhotoExisting;
+    const file=eliteV55SelectedPhotoFile ||
+      document.getElementById('v55-photo-camera')?.files?.[0] ||
+      document.getElementById('v55-photo-gallery')?.files?.[0] || null;
+
+    if(file){
+      eliteV55SetSaveStatus('Subiendo la foto...','info');
+      try{
+        photoUrl=await eliteV54Upload(file,`catalogo_productos/${code||Date.now()}/${Date.now()}_producto`);
+        if(!photoUrl) throw new Error('Storage no devolvió la dirección de la foto.');
+      }catch(uploadError){
+        console.warn('Firebase Storage falló; se guardará una foto comprimida en el registro.',uploadError);
+        eliteV55SetSaveStatus('Storage no respondió. Comprimiendo la foto para guardarla directamente...','warning');
+        photoUrl=await eliteV55CompressPhotoToDataUrl(file);
+      }
+    }
+
+    const data={
+      codigo_barras:code,
+      nombre:name,
+      marca:(document.getElementById('v55-brand')?.value||'').trim(),
+      tipo:document.getElementById('v55-type')?.value||'Materiales',
+      tamano:(document.getElementById('v55-size')?.value||'').trim(),
+      precio_actual:price,
+      tienda:(document.getElementById('v55-store')?.value||'').trim(),
+      ubicacion:(document.getElementById('v55-location')?.value||'').trim(),
+      minimo:Number(document.getElementById('v55-min')?.value||0),
+      foto_url:photoUrl||'',
+      actualizado:firebase.firestore.FieldValue.serverTimestamp(),
+      actualizado_por:window.usuarioActual?.nombre||currentUser?.email||'Admin'
+    };
+
+    eliteV55SetSaveStatus('Guardando en el catálogo...','info');
+
+    let ref;
+    if(eliteV55EditingId){
+      ref=db.collection('catalogo_productos').doc(eliteV55EditingId);
+      const old=eliteV55Catalog.find(x=>x.id===eliteV55EditingId);
+      await ref.set(data,{merge:true});
+      if(Number(old?.precio_actual||0)!==price||String(old?.tienda||'')!==data.tienda){
+        await ref.collection('historial_precios').add({
+          precio:price,tienda:data.tienda,
+          fecha:firebase.firestore.FieldValue.serverTimestamp(),
+          usuario:data.actualizado_por
+        });
+      }
+    }else{
+      data.creado=firebase.firestore.FieldValue.serverTimestamp();
+      ref=await db.collection('catalogo_productos').add(data);
+      try{
+        await ref.collection('historial_precios').add({
+          precio:price,tienda:data.tienda,
+          fecha:firebase.firestore.FieldValue.serverTimestamp(),
+          usuario:data.actualizado_por
+        });
+      }catch(historyError){
+        console.warn('Producto guardado, pero no se pudo crear el historial inicial.',historyError);
+      }
+    }
+
+    eliteV55SetSaveStatus('Producto guardado correctamente.','success');
+    await eliteV55StopScanner();
+    setTimeout(()=>{
+      document.querySelector('#elite-v5-module-modal .elite-v5-close')?.click();
+      eliteV51OpenInventory();
+      setTimeout(()=>eliteV55SwitchTab('catalogo'),120);
+    },500);
+  }catch(error){
+    console.error('Error al guardar producto:',error);
+    const detail=String(error?.message||error||'Error desconocido');
+    eliteV55SetSaveStatus('No se pudo guardar: '+detail,'error');
+    alert('No se pudo guardar el producto.\n\n'+detail);
+  }finally{
+    if(button){
+      button.disabled=false;
+      button.textContent='Guardar producto';
+      button.style.opacity='1';
+    }
+  }
 }
 
 function eliteV55EditProduct(id){eliteV55OpenProductForm(id)}
@@ -4718,8 +5101,8 @@ async function eliteV55StartScanner(targetId,quick=false){
     await eliteV55Scanner.start(
       back.id,
       {
-        fps:12,
-        qrbox:{width:Math.min(300,Math.max(220,window.innerWidth-120)),height:140},
+        fps:20,
+        qrbox:{width:Math.min(420,Math.max(260,window.innerWidth-70)),height:180},
         aspectRatio:1.7778,
         formatsToSupport:[
           Html5QrcodeSupportedFormats.EAN_13,
@@ -4727,7 +5110,8 @@ async function eliteV55StartScanner(targetId,quick=false){
           Html5QrcodeSupportedFormats.UPC_A,
           Html5QrcodeSupportedFormats.UPC_E,
           Html5QrcodeSupportedFormats.CODE_128,
-          Html5QrcodeSupportedFormats.CODE_39
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.ITF
         ]
       },
       decoded=>{
@@ -4767,7 +5151,10 @@ function eliteV55ApplyDetectedCode(decoded,targetId,quick=false){
     eliteV55PhotoExisting=found.foto_url||'';
     const preview=document.getElementById('v55-photo-preview');
     if(preview && found.foto_url){preview.src=found.foto_url;preview.style.display='block';}
-    alert('Producto reconocido: '+found.nombre);
+    eliteV55SetSaveStatus('Producto reconocido y completado desde tu catálogo: '+found.nombre,'success');
+  }else{
+    eliteV55SetSaveStatus('Código leído correctamente: '+code+'. Es un producto nuevo; completa sus datos una sola vez y después la app lo reconocerá automáticamente.','success');
+    document.getElementById('v55-name')?.focus();
   }
 }
 
