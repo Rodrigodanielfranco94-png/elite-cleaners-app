@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.2.0 | Nevera con opciones Inside y Outside completas -->
+<!-- Elite Admin v6.2.1 | Eliminación sincronizada entre Calendario y Servicios -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.2.0 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.2.1 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -3251,17 +3251,27 @@ await db.collection("servicios").doc(id).update(datosActualizar);
 }
 
 async function eliminarEventoCalendario() {
-    const id = document.getElementById("edit-cal-id").value;
-    const cliente = document.getElementById("edit-cal-cliente").value || "este cliente";
+    const id = String(document.getElementById("edit-cal-id")?.value || "").trim();
+    const cliente = document.getElementById("edit-cal-cliente")?.value || "este cliente";
+    const fechaEliminada = document.getElementById("edit-cal-fecha")?.value || "";
 
-    if (!id) return alert("No se encontró el trabajo.");
+    if (!id) {
+        alert("No se encontró el trabajo.");
+        return;
+    }
 
     const confirmar = confirm(
-`⚠️ ELIMINAR SOLO ESTE TRABAJO
+`⚠️ ELIMINAR ESTE TRABAJO
 
 Cliente: ${cliente}
 
-Se eliminará únicamente este trabajo del calendario.
+Este trabajo se eliminará de:
+• Calendario
+• Lista de Servicios
+• Historial operativo
+• Cálculos relacionados
+
+La ficha del cliente se conservará.
 Las futuras repeticiones NO se tocarán.
 
 ¿Deseas continuar?`
@@ -3269,12 +3279,47 @@ Las futuras repeticiones NO se tocarán.
 
     if (!confirmar) return;
 
-    await db.collection("servicios").doc(id).delete();
+    try {
+        /*
+         * Calendario y Servicios usan el mismo documento de Firestore.
+         * Al borrar este documento, el trabajo queda eliminado de ambos módulos.
+         */
+        await db.collection("servicios").doc(id).delete();
 
-    cerrarEditorEvento();
-    renderCalendarioElite();
+        // Actualización inmediata de la memoria local para no exigir recargar.
+        if (Array.isArray(todosLosServicios)) {
+            todosLosServicios = todosLosServicios.filter(servicio => servicio.id !== id);
+        }
+        if (Array.isArray(window.todosLosServicios)) {
+            window.todosLosServicios = window.todosLosServicios.filter(servicio => servicio.id !== id);
+        }
 
-    alert("Trabajo eliminado del calendario ✅");
+        cerrarEditorEvento();
+
+        // Refresca todas las vistas relacionadas.
+        if (typeof renderCalendarioElite === "function") renderCalendarioElite();
+        if (typeof renderHistorial === "function") renderHistorial();
+        if (typeof generarNomina === "function") generarNomina();
+        if (typeof renderContabilidadElite === "function" &&
+            document.getElementById("elite-accounting-modal")?.style.display === "block") {
+            renderContabilidadElite();
+        }
+        if (fechaEliminada && typeof mostrarEventosDia === "function") {
+            mostrarEventosDia(fechaEliminada);
+        }
+
+        alert(
+            "Trabajo eliminado correctamente ✅\n\n" +
+            "Ya fue eliminado del Calendario y de Servicios.\n" +
+            "La información del cliente se mantuvo guardada."
+        );
+    } catch (error) {
+        console.error("Error eliminando trabajo desde el calendario:", error);
+        alert(
+            "No se pudo eliminar el trabajo.\n\n" +
+            String(error?.message || error || "Error desconocido")
+        );
+    }
 }
         
 function mostrarEventosDia(fecha) {
