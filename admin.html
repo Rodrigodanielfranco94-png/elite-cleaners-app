@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.5.0 | Metas mensuales y celebración en Contabilidad -->
+<!-- Elite Admin v6.5.1 | Metas mensuales y celebración en Contabilidad -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.5.0 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.5.1 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -2317,8 +2317,7 @@ setTimeout(activarCalculadoraAutomatica, 500);
         if (editId) {
             await db.collection("servicios").doc(editId).set(data, { merge: true });
         } else {
-            const nuevoRef = await db.collection("servicios").add(data);
-            data.id = nuevoRef.id;
+            await db.collection("servicios").add(data);
         }
 
         try {
@@ -2402,8 +2401,13 @@ setTimeout(activarCalculadoraAutomatica, 500);
 
         const fechaTexto = nuevaFecha.toISOString().slice(0, 10);
 
+        // No copiar un campo `id` dentro del documento repetido.
+        // Firestore ya asigna un ID único a cada repetición.
+        const dataRepeticion = { ...data };
+        delete dataRepeticion.id;
+
         await db.collection("servicios").add({
-            ...data,
+            ...dataRepeticion,
             fecha: fechaTexto,
             estado: "no_iniciado",
             estado_calendario: "pendiente",
@@ -2423,7 +2427,7 @@ setTimeout(activarCalculadoraAutomatica, 500);
     todosLosServicios = [];
     snap.forEach(doc => {
         const s = doc.data();
-        todosLosServicios.push({ id: doc.id, ...s });
+        todosLosServicios.push({ ...s, id: doc.id });
     });
 
     document.getElementById('count-pendientes').innerText = todosLosServicios.filter(s => s.estado !== 'completado').length;
