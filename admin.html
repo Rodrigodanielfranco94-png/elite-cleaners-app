@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.2.4 | Sincronización automática completa con Staff -->
+<!-- Elite Admin v6.3.0 | Contabilidad con 20% por empleado antes de distribución -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.2.4 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.3.0 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -1439,15 +1439,15 @@ style="width:100%;"></textarea>
         <div class="acc-card acc-metric"><h3>Dinero Cobrado</h3><p>Depósitos + balances</p><div class="acc-icon acc-green">👛</div><strong id="acc-cobrado" class="acc-green">$0.00</strong></div>
         <div class="acc-card acc-metric"><h3>Pendiente por Cobrar</h3><p>Cuentas por cobrar</p><div class="acc-icon acc-orange">◷</div><strong id="acc-pendiente" class="acc-orange">$0.00</strong></div>
         <div class="acc-card acc-metric"><h3>Gastos Operativos</h3><p>Combustible, productos, etc.</p><div class="acc-icon acc-red">🛒</div><strong id="acc-gastos" class="acc-red">$0.00</strong></div>
-        <div class="acc-card acc-metric"><h3>Pago de Empleados</h3><p>Nómina del mes</p><div class="acc-icon acc-purple">♙</div><strong id="acc-empleados" class="acc-purple">$0.00</strong></div>
+        <div class="acc-card acc-metric"><h3>Pago de Empleados</h3><p>20% del cobrado para cada empleado</p><div class="acc-icon acc-purple">♙</div><strong id="acc-empleados" class="acc-purple">$0.00</strong></div>
       </section>
       <section class="acc-row3">
-        <div class="acc-card acc-panel"><h3>Resumen Financiero del Mes</h3><div class="acc-summary-line"><span>Dinero Cobrado</span><b class="acc-green" id="acc-res-cobrado">$0.00</b></div><div class="acc-summary-line"><span>(−) Pago de Empleados</span><b class="acc-red" id="acc-res-nomina">-$0.00</b></div><div class="acc-summary-line"><span>(−) Gastos Operativos</span><b class="acc-red" id="acc-res-gastos">-$0.00</b></div><div class="acc-summary-line total"><span>= Ganancia Real</span><b class="acc-green" id="acc-neta">$0.00</b></div></div>
-        <div class="acc-card acc-panel"><h3>Distribución de Ganancia (35% / 35% / 30%)</h3><div class="acc-distribution"><div class="acc-split"><b class="acc-blue">Rodrigo 35%</b><strong class="acc-blue" id="acc-rodrigo">$0.00</strong></div><div class="acc-split"><b class="acc-purple">Dayana 35%</b><strong class="acc-purple" id="acc-dayana">$0.00</strong></div><div class="acc-split"><b class="acc-green">Empresa 30%</b><strong class="acc-green" id="acc-empresa">$0.00</strong></div></div><div class="acc-company-money"><span>Dinero Disponible para Empresa</span><span id="acc-empresa-neto">$0.00</span></div></div>
+        <div class="acc-card acc-panel"><h3>Resumen Financiero del Mes</h3><div class="acc-summary-line"><span>Dinero Cobrado</span><b class="acc-green" id="acc-res-cobrado">$0.00</b></div><div class="acc-summary-line"><span>(−) Empleados primero: 20% cada uno</span><b class="acc-red" id="acc-res-nomina">-$0.00</b></div><div class="acc-summary-line"><span>(−) Gastos Operativos</span><b class="acc-red" id="acc-res-gastos">-$0.00</b></div><div class="acc-summary-line total"><span>= Fondo repartible después de empleados y gastos</span><b class="acc-green" id="acc-neta">$0.00</b></div></div>
+        <div class="acc-card acc-panel"><h3>Distribución del restante (35% / 35% / 30%)</h3><div class="acc-distribution"><div class="acc-split"><b class="acc-blue">Rodrigo 35%</b><strong class="acc-blue" id="acc-rodrigo">$0.00</strong></div><div class="acc-split"><b class="acc-purple">Dayana 35%</b><strong class="acc-purple" id="acc-dayana">$0.00</strong></div><div class="acc-split"><b class="acc-green">Empresa 30%</b><strong class="acc-green" id="acc-empresa">$0.00</strong></div></div><div class="acc-company-money"><span>Dinero Disponible para Empresa</span><span id="acc-empresa-neto">$0.00</span></div></div>
         <div class="acc-card acc-panel"><h3>Cuentas por Cobrar</h3><div class="acc-receivable-line"><span>Total Vendido</span><b class="acc-blue" id="acc-cxc-vendido">$0.00</b></div><div class="acc-receivable-line"><span>Total Cobrado</span><b class="acc-green" id="acc-cxc-cobrado">$0.00</b></div><div class="acc-receivable-line acc-subline"><span>• Depósitos Recibidos</span><b class="acc-blue" id="acc-depositos">$0.00</b></div><div class="acc-receivable-line acc-subline"><span>• Balances Recibidos</span><b class="acc-blue" id="acc-balances">$0.00</b></div><div class="acc-receivable-line"><b>Pendiente por Cobrar</b><b class="acc-orange" id="acc-cxc-pendiente">$0.00</b></div><div class="acc-progress"><div id="acc-progress-bar" style="width:0%"></div></div><div class="acc-progress-label" id="acc-progress-label">0% cobrado</div></div>
       </section>
       <section class="acc-lower"><div class="acc-left-stack"><div class="acc-card acc-panel"><h3>Ganancia Neta de los Últimos 12 Meses (Empresa)</h3><div class="acc-chart-wrap"><canvas id="acc-company-chart"></canvas></div></div><div class="acc-mini-grid"><div class="acc-card acc-panel"><h3>Estado de Trabajos del Mes</h3><div class="acc-mini-chart"><canvas id="acc-status-chart"></canvas></div></div><div class="acc-card acc-panel"><h3>Gastos Operativos del Mes</h3><div class="acc-mini-chart"><canvas id="acc-expense-chart"></canvas></div><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;margin-top:10px"><span>Total Gastos</span><span id="acc-total-gastos">$0.00</span></div></div></div></div>
-        <div class="acc-card acc-table-card"><div class="acc-table-title">Detalle de Servicios / Trabajos</div><div class="acc-table-scroll"><table class="acc-table"><thead><tr><th>Fecha</th><th>Cliente</th><th>Servicio</th><th>Vendido</th><th>Cobrado</th><th>Pendiente</th><th>Empleado(s)</th><th>Rodrigo 35%</th><th>Dayana 35%</th><th>Empresa 30%</th><th>Estado Pago</th></tr></thead><tbody id="accounting-table-body"></tbody><tfoot id="accounting-table-total"></tfoot></table></div></div>
+        <div class="acc-card acc-table-card"><div class="acc-table-title">Detalle de Servicios / Trabajos</div><div class="acc-table-scroll"><table class="acc-table"><thead><tr><th>Fecha</th><th>Cliente</th><th>Servicio</th><th>Vendido</th><th>Cobrado</th><th>Pendiente</th><th>Empleado(s)</th><th>Pago Staff</th><th>Restante</th><th>Rodrigo 35%</th><th>Dayana 35%</th><th>Empresa 30%</th><th>Estado Pago</th></tr></thead><tbody id="accounting-table-body"></tbody><tfoot id="accounting-table-total"></tfoot></table></div></div>
       </section><div class="acc-footer">Elite Admin v6.0.3 • Contabilidad Profesional para tu Empresa</div>
     </main>
   </div>
@@ -3749,21 +3749,105 @@ function datosPagoServicio(s){
   if(vendido>0&&cobrado>=vendido)estadoPago="Pagado";else if(depositos>0&&balances<=0)estadoPago="Depósito";else if(cobrado>0)estadoPago="Parcial";
   return{vendido,depositos,balances,cobrado,pendiente,estadoPago};
 }
-function calcularPagoEmpleadosServicio(s){
-  if(s.estado!=="completado")return 0;
-  const horas=calcularTiempoTrabajado(s.hora_inicio,s.hora_fin).minutos/60;if(horas<=0)return 0;
-  const e1=todosLosEmpleados.find(e=>(s.empleado_email&&e.email===s.empleado_email)||(s.empleado_nombre&&e.nombre===s.empleado_nombre));
-  const e2=todosLosEmpleados.find(e=>(s.empleado_email_2&&e.email===s.empleado_email_2)||(s.empleado_nombre_2&&e.nombre===s.empleado_nombre_2));
-  return horas*(Number(e1?.pago_hora||0)+Number(e2?.pago_hora||0));
+function obtenerEmpleadosAsignadosServicio(s){
+  const empleados = [
+    { nombre: s.empleado_nombre, email: s.empleado_email },
+    { nombre: s.empleado_nombre_2, email: s.empleado_email_2 }
+  ].filter(e => String(e.nombre || e.email || "").trim());
+
+  const unicos = [];
+  const vistos = new Set();
+
+  empleados.forEach(e => {
+    const clave = String(e.email || e.nombre || "").trim().toLowerCase();
+    if (!clave || vistos.has(clave)) return;
+    vistos.add(clave);
+    unicos.push({
+      nombre: String(e.nombre || e.email || "Empleado").trim(),
+      email: String(e.email || "").trim()
+    });
+  });
+
+  return unicos.slice(0, 2);
+}
+
+function calcularPagoEmpleadosServicio(s, montoCobrado){
+  if(s.estado !== "completado") {
+    return { total: 0, porcentajeTotal: 0, detalle: [], cantidad: 0 };
+  }
+
+  const empleados = obtenerEmpleadosAsignadosServicio(s);
+  const base = Math.max(0, Number(montoCobrado || 0));
+  const pagoPorEmpleado = base * 0.20;
+
+  const detalle = empleados.map(e => ({
+    ...e,
+    porcentaje: 20,
+    monto: pagoPorEmpleado
+  }));
+
+  return {
+    total: detalle.reduce((sum, e) => sum + e.monto, 0),
+    porcentajeTotal: empleados.length * 20,
+    detalle,
+    cantidad: empleados.length
+  };
 }
 function obtenerDatosContabilidad(mesForzado){
   const mes=mesForzado||document.getElementById("accounting-month")?.value||mesActualInput();
   const trabajos=todosLosServicios.filter(s=>(s.fecha||"").startsWith(mes)&&s.estado!=="cancelado"&&Number(s.precio_total||0)>0);
   const gastosMes=gastosContabilidad.filter(g=>(g.fecha||"").startsWith(mes));
-  const filas=trabajos.map(s=>{const p=datosPagoServicio(s),pagoEmpleados=calcularPagoEmpleadosServicio(s),baseDistribucion=Math.max(p.cobrado-pagoEmpleados,0);return{id:s.id,fecha:s.fecha||"",cliente:s.cliente||"",servicio:s.tipo||"Servicio",empleados:[s.empleado_nombre,s.empleado_nombre_2].filter(Boolean).join(" & "),pagoEmpleados,...p,rodrigo:baseDistribucion*.35,dayana:baseDistribucion*.35,empresa:baseDistribucion*.30};});
-  const vendido=filas.reduce((a,b)=>a+b.vendido,0),depositos=filas.reduce((a,b)=>a+b.depositos,0),balances=filas.reduce((a,b)=>a+b.balances,0),cobrado=filas.reduce((a,b)=>a+b.cobrado,0),pendiente=filas.reduce((a,b)=>a+b.pendiente,0),pagoEmpleados=filas.reduce((a,b)=>a+b.pagoEmpleados,0),gastos=gastosMes.reduce((a,b)=>a+Number(b.monto||0),0);
-  const gananciaReal=Math.max(cobrado-pagoEmpleados-gastos,0),rodrigo=gananciaReal*.35,dayana=gananciaReal*.35,empresa=gananciaReal*.30;
-  return{mes,trabajos,gastosMes,filas,vendido,depositos,balances,cobrado,pendiente,pagoEmpleados,gastos,gananciaReal,rodrigo,dayana,empresa};
+
+  const filas=trabajos.map(s=>{
+    const p=datosPagoServicio(s);
+    const nomina=calcularPagoEmpleadosServicio(s,p.cobrado);
+    const restanteEmpresaBruto=Math.max(p.cobrado-nomina.total,0);
+
+    return{
+      id:s.id,
+      fecha:s.fecha||"",
+      cliente:s.cliente||"",
+      servicio:s.tipo||"Servicio",
+      empleados:nomina.detalle.map(e=>e.nombre).join(" & "),
+      empleadosDetalle:nomina.detalle,
+      pagoEmpleados:nomina.total,
+      porcentajeEmpleados:nomina.porcentajeTotal,
+      restanteEmpresaBruto,
+      ...p
+    };
+  });
+
+  const vendido=filas.reduce((a,b)=>a+b.vendido,0);
+  const depositos=filas.reduce((a,b)=>a+b.depositos,0);
+  const balances=filas.reduce((a,b)=>a+b.balances,0);
+  const cobrado=filas.reduce((a,b)=>a+b.cobrado,0);
+  const pendiente=filas.reduce((a,b)=>a+b.pendiente,0);
+  const pagoEmpleados=filas.reduce((a,b)=>a+b.pagoEmpleados,0);
+  const fondoEmpresaAntesGastos=Math.max(cobrado-pagoEmpleados,0);
+  const gastos=gastosMes.reduce((a,b)=>a+Number(b.monto||0),0);
+  const gananciaReal=Math.max(fondoEmpresaAntesGastos-gastos,0);
+
+  const rodrigo=gananciaReal*.35;
+  const dayana=gananciaReal*.35;
+  const empresa=gananciaReal*.30;
+
+  filas.forEach(f=>{
+    const proporcion=fondoEmpresaAntesGastos>0
+      ? f.restanteEmpresaBruto/fondoEmpresaAntesGastos
+      : 0;
+    const gastoAsignado=Math.min(f.restanteEmpresaBruto,gastos*proporcion);
+    const baseDistribucion=Math.max(f.restanteEmpresaBruto-gastoAsignado,0);
+    f.gastoAsignado=gastoAsignado;
+    f.baseDistribucion=baseDistribucion;
+    f.rodrigo=baseDistribucion*.35;
+    f.dayana=baseDistribucion*.35;
+    f.empresa=baseDistribucion*.30;
+  });
+
+  return{
+    mes,trabajos,gastosMes,filas,vendido,depositos,balances,cobrado,pendiente,
+    pagoEmpleados,fondoEmpresaAntesGastos,gastos,gananciaReal,rodrigo,dayana,empresa
+  };
 }
 function renderContabilidadElite(){
   const d=obtenerDatosContabilidad(),[y,m]=d.mes.split("-");document.getElementById("accounting-subtitle").innerText=`Resumen financiero y contable de ${MESES_CONTABILIDAD[Number(m)-1]} ${y}`;
@@ -3774,8 +3858,45 @@ function renderContabilidadElite(){
 }
 function renderTablaContabilidad(d){
   const body=document.getElementById("accounting-table-body"),foot=document.getElementById("accounting-table-total");
-  body.innerHTML=d.filas.length?d.filas.sort((a,b)=>a.fecha.localeCompare(b.fecha)).map(f=>{const cls=f.estadoPago==="Pagado"?"paid":f.estadoPago==="Depósito"?"deposit":f.estadoPago==="Parcial"?"partial":"unpaid";return `<tr><td>${f.fecha}</td><td>${f.cliente}</td><td>${f.servicio}</td><td>${dinero(f.vendido)}</td><td>${dinero(f.cobrado)}</td><td>${dinero(f.pendiente)}</td><td>${f.empleados||"—"}</td><td>${dinero(f.rodrigo)}</td><td>${dinero(f.dayana)}</td><td>${dinero(f.empresa)}</td><td><span class="acc-status ${cls}">${f.estadoPago}</span></td></tr>`}).join(""):`<tr><td colspan="11" class="acc-empty">No hay servicios registrados en este mes.</td></tr>`;
-  foot.innerHTML=`<tr><td colspan="3">TOTALES</td><td>${dinero(d.vendido)}</td><td>${dinero(d.cobrado)}</td><td>${dinero(d.pendiente)}</td><td></td><td>${dinero(d.rodrigo)}</td><td>${dinero(d.dayana)}</td><td>${dinero(d.empresa)}</td><td></td></tr>`;
+
+  body.innerHTML=d.filas.length
+    ? d.filas.sort((a,b)=>a.fecha.localeCompare(b.fecha)).map(f=>{
+        const cls=f.estadoPago==="Pagado"?"paid":f.estadoPago==="Depósito"?"deposit":f.estadoPago==="Parcial"?"partial":"unpaid";
+        const empleadosTexto=f.empleadosDetalle?.length
+          ? f.empleadosDetalle.map(e=>`${e.nombre}: ${dinero(e.monto)} (20%)`).join("<br>")
+          : "—";
+
+        return `<tr>
+          <td>${f.fecha}</td>
+          <td>${f.cliente}</td>
+          <td>${f.servicio}</td>
+          <td>${dinero(f.vendido)}</td>
+          <td>${dinero(f.cobrado)}</td>
+          <td>${dinero(f.pendiente)}</td>
+          <td>${empleadosTexto}</td>
+          <td>${dinero(f.pagoEmpleados)} (${f.porcentajeEmpleados}%)</td>
+          <td>${dinero(f.restanteEmpresaBruto)}</td>
+          <td>${dinero(f.rodrigo)}</td>
+          <td>${dinero(f.dayana)}</td>
+          <td>${dinero(f.empresa)}</td>
+          <td><span class="acc-status ${cls}">${f.estadoPago}</span></td>
+        </tr>`;
+      }).join("")
+    : `<tr><td colspan="13" class="acc-empty">No hay servicios registrados en este mes.</td></tr>`;
+
+  foot.innerHTML=`<tr>
+    <td colspan="3">TOTALES</td>
+    <td>${dinero(d.vendido)}</td>
+    <td>${dinero(d.cobrado)}</td>
+    <td>${dinero(d.pendiente)}</td>
+    <td></td>
+    <td>${dinero(d.pagoEmpleados)}</td>
+    <td>${dinero(d.fondoEmpresaAntesGastos)}</td>
+    <td>${dinero(d.rodrigo)}</td>
+    <td>${dinero(d.dayana)}</td>
+    <td>${dinero(d.empresa)}</td>
+    <td></td>
+  </tr>`;
 }
 function destruirGrafico(n){if(graficosContabilidad[n])graficosContabilidad[n].destroy();}
 function renderGraficosContabilidad(d){
@@ -3788,8 +3909,50 @@ function renderGraficosContabilidad(d){
 }
 function abrirAgregarGasto(){document.getElementById("modal-gasto-contabilidad").style.display="block";document.getElementById("gasto-fecha").value=new Date().toISOString().slice(0,10)}function cerrarAgregarGasto(){document.getElementById("modal-gasto-contabilidad").style.display="none"}
 async function guardarGastoContabilidad(){const fecha=document.getElementById("gasto-fecha").value,categoria=document.getElementById("gasto-categoria").value,monto=Number(document.getElementById("gasto-monto").value||0),nota=document.getElementById("gasto-nota").value.trim();if(!fecha||monto<=0)return alert("Completa fecha y monto válido.");await db.collection("gastos_contabilidad").add({fecha,categoria,monto,nota,timestamp:firebase.firestore.FieldValue.serverTimestamp()});document.getElementById("gasto-monto").value="";document.getElementById("gasto-nota").value="";cerrarAgregarGasto();}
-async function cerrarMesContable(){const d=obtenerDatosContabilidad();if(cierresContables.some(c=>c.mes===d.mes&&c.cerrado===true))return alert("Este mes ya está cerrado.");if(!confirm(`¿Cerrar contablemente ${d.mes}? Los trabajos NO serán eliminados.`))return;await db.collection("cierres_contables").doc(d.mes).set({mes:d.mes,cerrado:true,fecha_cierre:new Date().toISOString(),resumen:{vendido:d.vendido,cobrado:d.cobrado,pendiente:d.pendiente,nomina:d.pagoEmpleados,gastos:d.gastos,ganancia_real:d.gananciaReal,rodrigo:d.rodrigo,dayana:d.dayana,empresa:d.empresa},timestamp:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});const batch=db.batch();d.trabajos.forEach(s=>batch.update(db.collection("servicios").doc(s.id),{mes_contable:d.mes,mes_cerrado:true}));await batch.commit();alert("Mes cerrado correctamente. No se eliminó ningún trabajo.");}
-function exportarContabilidadExcel(){const d=obtenerDatosContabilidad(),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([{Mes:d.mes,Vendido:d.vendido,Cobrado:d.cobrado,Pendiente:d.pendiente,Depósitos:d.depositos,Balances:d.balances,Nómina:d.pagoEmpleados,Gastos:d.gastos,"Ganancia Real":d.gananciaReal,"Rodrigo 35%":d.rodrigo,"Dayana 35%":d.dayana,"Empresa 30%":d.empresa}]),"Resumen");XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(d.filas.map(f=>({Fecha:f.fecha,Cliente:f.cliente,Servicio:f.servicio,Vendido:f.vendido,Cobrado:f.cobrado,Pendiente:f.pendiente,Empleados:f.empleados,Nómina:f.pagoEmpleados,"Rodrigo 35%":f.rodrigo,"Dayana 35%":f.dayana,"Empresa 30%":f.empresa,"Estado Pago":f.estadoPago}))),"Servicios");XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(d.gastosMes.map(g=>({Fecha:g.fecha,Categoría:g.categoria,Monto:Number(g.monto||0),Nota:g.nota||""}))),"Gastos");XLSX.writeFile(wb,`Elite_Contabilidad_${d.mes}.xlsx`);}
+async function cerrarMesContable(){const d=obtenerDatosContabilidad();if(cierresContables.some(c=>c.mes===d.mes&&c.cerrado===true))return alert("Este mes ya está cerrado.");if(!confirm(`¿Cerrar contablemente ${d.mes}? Los trabajos NO serán eliminados.`))return;await db.collection("cierres_contables").doc(d.mes).set({mes:d.mes,cerrado:true,fecha_cierre:new Date().toISOString(),resumen:{vendido:d.vendido,cobrado:d.cobrado,pendiente:d.pendiente,nomina_20_por_cada_empleado:d.pagoEmpleados,fondo_empresa_antes_gastos:d.fondoEmpresaAntesGastos,gastos:d.gastos,ganancia_real:d.gananciaReal,rodrigo:d.rodrigo,dayana:d.dayana,empresa:d.empresa},timestamp:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});const batch=db.batch();d.trabajos.forEach(s=>batch.update(db.collection("servicios").doc(s.id),{mes_contable:d.mes,mes_cerrado:true}));await batch.commit();alert("Mes cerrado correctamente. No se eliminó ningún trabajo.");}
+function exportarContabilidadExcel(){
+  const d=obtenerDatosContabilidad(),wb=XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([{
+    Mes:d.mes,
+    Vendido:d.vendido,
+    Cobrado:d.cobrado,
+    Pendiente:d.pendiente,
+    Depósitos:d.depositos,
+    Balances:d.balances,
+    "Empleados primero (20% cada uno)":d.pagoEmpleados,
+    "Fondo empresa antes de gastos":d.fondoEmpresaAntesGastos,
+    Gastos:d.gastos,
+    "Fondo repartible":d.gananciaReal,
+    "Rodrigo 35%":d.rodrigo,
+    "Dayana 35%":d.dayana,
+    "Empresa 30%":d.empresa
+  }]),"Resumen");
+
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(d.filas.map(f=>({
+    Fecha:f.fecha,
+    Cliente:f.cliente,
+    Servicio:f.servicio,
+    Vendido:f.vendido,
+    Cobrado:f.cobrado,
+    Pendiente:f.pendiente,
+    Empleados:f.empleados,
+    "Detalle pago empleados":f.empleadosDetalle.map(e=>`${e.nombre}: ${dinero(e.monto)} (20%)`).join(" | "),
+    "Pago total empleados":f.pagoEmpleados,
+    "Porcentaje total empleados":f.porcentajeEmpleados+"%",
+    "Restante después de empleados":f.restanteEmpresaBruto,
+    "Rodrigo 35%":f.rodrigo,
+    "Dayana 35%":f.dayana,
+    "Empresa 30%":f.empresa,
+    "Estado Pago":f.estadoPago
+  }))),"Servicios");
+
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(d.gastosMes.map(g=>({
+    Fecha:g.fecha,Categoría:g.categoria,Monto:Number(g.monto||0),Nota:g.nota||""
+  }))),"Gastos");
+
+  XLSX.writeFile(wb,`Elite_Contabilidad_${d.mes}.xlsx`);
+}
 function descargarContabilidadPDF(){window.print();}
 
 </script>
