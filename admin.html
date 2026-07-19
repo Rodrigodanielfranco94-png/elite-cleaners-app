@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.2.1 | Eliminación sincronizada entre Calendario y Servicios -->
+<!-- Elite Admin v6.2.4 | Sincronización automática completa con Staff -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.2.1 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.2.4 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -803,6 +803,43 @@ body.elite-v5-body{
 #sec-venta{
   position:relative;
   z-index:1;
+}
+</style>
+
+
+<style id="elite-ops-dynamic-date-badge">
+.ops-date-badge{
+  width:38px;
+  height:38px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  border:1px solid #cbd5e1;
+  border-radius:8px;
+  background:#fff;
+  color:#0f172a;
+  line-height:1;
+  box-shadow:0 2px 7px rgba(15,23,42,.10);
+}
+.ops-date-badge small{
+  display:block;
+  width:100%;
+  padding:3px 0 2px;
+  background:#ef4444;
+  color:#fff !important;
+  font-size:8px !important;
+  font-weight:900;
+  letter-spacing:.05em;
+  text-align:center;
+}
+.ops-date-badge strong{
+  display:block;
+  margin-top:2px;
+  font-size:17px;
+  font-weight:900;
+  color:#0f172a;
 }
 </style>
 
@@ -3253,7 +3290,6 @@ await db.collection("servicios").doc(id).update(datosActualizar);
 async function eliminarEventoCalendario() {
     const id = String(document.getElementById("edit-cal-id")?.value || "").trim();
     const cliente = document.getElementById("edit-cal-cliente")?.value || "este cliente";
-    const fechaEliminada = document.getElementById("edit-cal-fecha")?.value || "";
 
     if (!id) {
         alert("No se encontró el trabajo.");
@@ -3279,46 +3315,56 @@ Las futuras repeticiones NO se tocarán.
 
     if (!confirmar) return;
 
+    const botonEliminar = document.querySelector(
+        '#modal-editar-evento button[onclick="eliminarEventoCalendario()"]'
+    );
+
+    if (botonEliminar) {
+        botonEliminar.disabled = true;
+        botonEliminar.textContent = "ELIMINANDO...";
+        botonEliminar.style.opacity = ".7";
+    }
+
     try {
         /*
-         * Calendario y Servicios usan el mismo documento de Firestore.
-         * Al borrar este documento, el trabajo queda eliminado de ambos módulos.
+         * Calendario y Servicios muestran el mismo documento de la colección
+         * "servicios". Borrarlo aquí lo elimina de ambos módulos.
          */
         await db.collection("servicios").doc(id).delete();
 
-        // Actualización inmediata de la memoria local para no exigir recargar.
-        if (Array.isArray(todosLosServicios)) {
-            todosLosServicios = todosLosServicios.filter(servicio => servicio.id !== id);
-        }
-        if (Array.isArray(window.todosLosServicios)) {
-            window.todosLosServicios = window.todosLosServicios.filter(servicio => servicio.id !== id);
-        }
-
+        /*
+         * No ejecutamos renderizadores parciales después de borrar porque
+         * algunos esperan elementos que no existen mientras el modal está
+         * abierto. Eso provocaba el error:
+         * "Cannot set properties of null (setting innerHTML)".
+         */
         cerrarEditorEvento();
-
-        // Refresca todas las vistas relacionadas.
-        if (typeof renderCalendarioElite === "function") renderCalendarioElite();
-        if (typeof renderHistorial === "function") renderHistorial();
-        if (typeof generarNomina === "function") generarNomina();
-        if (typeof renderContabilidadElite === "function" &&
-            document.getElementById("elite-accounting-modal")?.style.display === "block") {
-            renderContabilidadElite();
-        }
-        if (fechaEliminada && typeof mostrarEventosDia === "function") {
-            mostrarEventosDia(fechaEliminada);
-        }
 
         alert(
             "Trabajo eliminado correctamente ✅\n\n" +
-            "Ya fue eliminado del Calendario y de Servicios.\n" +
+            "Se eliminó del Calendario y de Servicios.\n" +
             "La información del cliente se mantuvo guardada."
         );
+
+        /*
+         * La recarga reconstruye todas las vistas desde Firestore de forma
+         * segura y evita que queden tarjetas o cálculos antiguos en pantalla.
+         */
+        window.location.reload();
+
     } catch (error) {
         console.error("Error eliminando trabajo desde el calendario:", error);
+
         alert(
             "No se pudo eliminar el trabajo.\n\n" +
             String(error?.message || error || "Error desconocido")
         );
+
+        if (botonEliminar) {
+            botonEliminar.disabled = false;
+            botonEliminar.textContent = "🗑 ELIMINAR ESTE TRABAJO";
+            botonEliminar.style.opacity = "1";
+        }
     }
 }
         
@@ -3457,7 +3503,14 @@ Please let us know if you have any questions.`;
     </header>
 
     <section class="ops-metrics">
-      <button class="ops-metric" onclick="filterOpsMetric('all')"><span>📅</span><b id="ops-jobs-count">0</b><small>Trabajos hoy</small></button>
+      <button class="ops-metric" onclick="filterOpsMetric('all')">
+        <span id="ops-date-badge" class="ops-date-badge" aria-label="Fecha seleccionada">
+          <small id="ops-date-badge-month">JUL</small>
+          <strong id="ops-date-badge-day">18</strong>
+        </span>
+        <b id="ops-jobs-count">0</b>
+        <small id="ops-jobs-label">Trabajos del día</small>
+      </button>
       <button class="ops-metric" onclick="filterOpsMetric('sold')"><span>💵</span><b id="ops-sold">$0</b><small>Ventas del día</small></button>
       <button class="ops-metric" onclick="filterOpsMetric('collected')"><span>💳</span><b id="ops-collected">$0</b><small>Cobrado</small></button>
       <button class="ops-metric" onclick="filterOpsMetric('pending')"><span>🧾</span><b id="ops-pending">$0</b><small>Pendiente</small></button>
@@ -5734,7 +5787,36 @@ function updateOpsMetrics(jobs){
  const sold=jobs.reduce((a,s)=>a+Number(s.precio_total||0),0);let collected=0,pending=0;const staff=new Set();
  jobs.forEach(s=>{const p=opsPayment(s);collected+=p.collected;pending+=p.pending;[s.empleado_nombre,s.empleado_nombre_2].filter(Boolean).forEach(x=>staff.add(x))});
  const completed=jobs.filter(s=>s.estado==='completado').length;const pct=jobs.length?Math.round(completed/jobs.length*100):0;
- document.getElementById('ops-jobs-count').textContent=jobs.length;document.getElementById('ops-sold').textContent=opsMoney(sold);document.getElementById('ops-collected').textContent=opsMoney(collected);document.getElementById('ops-pending').textContent=opsMoney(pending);document.getElementById('ops-staff-count').textContent=staff.size;document.getElementById('ops-progress').textContent=pct+'%';document.getElementById('ops-progress-bar').style.width=pct+'%';
+
+ /*
+  * La fecha de esta tarjeta se genera desde opsCalendarDate.
+  * Ya no usamos el emoji 📅 porque su dibujo trae una fecha fija
+  * que en algunos teléfonos aparece como JUL 17.
+  */
+ const badgeMonth=document.getElementById('ops-date-badge-month');
+ const badgeDay=document.getElementById('ops-date-badge-day');
+ const jobsLabel=document.getElementById('ops-jobs-label');
+ if(badgeMonth){
+   badgeMonth.textContent=opsCalendarDate
+     .toLocaleDateString('es-US',{month:'short'})
+     .replace('.','')
+     .slice(0,3)
+     .toUpperCase();
+ }
+ if(badgeDay) badgeDay.textContent=String(opsCalendarDate.getDate());
+ if(jobsLabel){
+   const selectedKey=opsDateKey(opsCalendarDate);
+   const todayKey=opsDateKey(new Date());
+   jobsLabel.textContent=selectedKey===todayKey?'Trabajos hoy':'Trabajos del día';
+ }
+
+ document.getElementById('ops-jobs-count').textContent=jobs.length;
+ document.getElementById('ops-sold').textContent=opsMoney(sold);
+ document.getElementById('ops-collected').textContent=opsMoney(collected);
+ document.getElementById('ops-pending').textContent=opsMoney(pending);
+ document.getElementById('ops-staff-count').textContent=staff.size;
+ document.getElementById('ops-progress').textContent=pct+'%';
+ document.getElementById('ops-progress-bar').style.width=pct+'%';
 }
 
 function renderOpsDay(){
@@ -5756,14 +5838,48 @@ function renderOpsDay(){
 }
 
 function selectOpsJob(id){opsSelectedJobId=id;renderOpsJobDetail()}
+function opsStaffTime(value){
+  if(!value || value==="--:--") return "No registrado";
+  return formatAMPM(value);
+}
+
+function opsWorkedTime(service){
+  const direct=Number(service.tiempo_trabajado_minutos||0);
+  if(direct>0){
+    return Math.floor(direct/60)+"h "+(direct%60)+"m";
+  }
+
+  const calculated=calcularTiempoTrabajado(service.hora_inicio,service.hora_fin);
+  const pause=Number(service.pausa_total_minutos||0);
+  const net=Math.max(0,Number(calculated.minutos||0)-pause);
+
+  if(net>0) return Math.floor(net/60)+"h "+(net%60)+"m";
+  return calculated.texto;
+}
+
+function opsStaffTimeline(service){
+  const pauses=Number(service.pausa_total_minutos||0);
+  return `
+    <div class="ops-info-list" style="margin-top:12px">
+      <div class="ops-info-row"><b>🚗 En camino</b><span>${opsStaffTime(service.hora_en_camino)}</span></div>
+      <div class="ops-info-row"><b>📍 Llegada</b><span>${opsStaffTime(service.hora_llegada)}</span></div>
+      <div class="ops-info-row"><b>🧹 Inicio</b><span>${opsStaffTime(service.hora_inicio)}</span></div>
+      <div class="ops-info-row"><b>☕ Última pausa</b><span>${opsStaffTime(service.hora_pausa)}</span></div>
+      <div class="ops-info-row"><b>▶ Reanudación</b><span>${opsStaffTime(service.hora_reanudacion)}</span></div>
+      <div class="ops-info-row"><b>✅ Finalización</b><span>${opsStaffTime(service.hora_fin)}</span></div>
+      <div class="ops-info-row"><b>⏸ Pausa total</b><span>${pauses} min</span></div>
+      <div class="ops-info-row"><b>⏱ Tiempo trabajado</b><span>${opsWorkedTime(service)}</span></div>
+    </div>`;
+}
+
 function renderOpsJobDetail(){
  const box=document.getElementById('ops-job-detail'),s=todosLosServicios.find(x=>x.id===opsSelectedJobId);if(!s){box.innerHTML='<div class="ops-empty">Selecciona un trabajo para ver todos sus detalles.</div>';return}
  const p=opsPayment(s);const staff=[s.empleado_nombre,s.empleado_nombre_2].filter(Boolean).join(' • ')||'Sin asignar';
- box.innerHTML=`<div class="ops-detail-head"><div><small style="color:#8b5cf6">● Servicio</small><h3>${s.cliente||'Cliente'}</h3></div><select class="ops-status-select" onchange="cambiarEstadoTrabajo('${s.id}',this.value).then(()=>setTimeout(renderCentroOperacionesV601,300))"><option value="no_iniciado" ${s.estado==='no_iniciado'?'selected':''}>No iniciado</option><option value="en_progreso" ${s.estado==='en_progreso'?'selected':''}>En progreso</option><option value="completado" ${s.estado==='completado'?'selected':''}>Completado</option></select></div>
+ box.innerHTML=`<div class="ops-detail-head"><div><small style="color:#8b5cf6">● Servicio</small><h3>${s.cliente||'Cliente'}</h3></div><select class="ops-status-select" onchange="cambiarEstadoTrabajo('${s.id}',this.value).then(()=>setTimeout(renderCentroOperacionesV601,300))"><option value="no_iniciado" ${s.estado==='no_iniciado'?'selected':''}>No iniciado</option><option value="en_progreso" ${s.estado==='en_progreso'?'selected':''}>En progreso</option><option value="completado" ${s.estado==='completado'?'selected':''}>Terminado / Realizado</option></select></div>
  <div class="ops-detail-tabs"><button class="active">Resumen</button><button onclick="abrirEditorEvento('${s.id}')">Detalles</button><button>Checklist</button><button>Fotos</button><button>Inventario</button><button>Notas</button><button>Historial</button></div>
  <div class="ops-detail-body"><div class="ops-detail-grid"><div><div class="ops-info-list">
- <div class="ops-info-row"><b>📍 Dirección</b><span>${s.direccion||'Sin dirección'}</span></div><div class="ops-info-row"><b>📅 Fecha y hora</b><span>${s.fecha||''}<br>${formatAMPM(s.hora||'00:00')} – ${formatAMPM(opsEndTime(s))}</span></div><div class="ops-info-row"><b>🧽 Tipo</b><span>${s.tipo||'Servicio'}</span></div><div class="ops-info-row"><b>⏱ Tiempo</b><span>Estimado: ${s.hora_final_estimada?calcularTiempoTrabajado(s.hora,s.hora_final_estimada).texto:'2h aprox.'} · Real: ${calcularTiempoTrabajado(s.hora_inicio,s.hora_fin).texto}</span></div><div class="ops-info-row"><b>👥 Empleados</b><span>${staff}</span></div><div class="ops-info-row"><b>📝 Notas</b><span>${s.notas_internas||'Sin notas especiales'}</span></div></div>
- <div class="ops-payment-grid" style="margin-top:12px"><div class="ops-payment"><small>Precio</small><strong>${opsMoney(p.total)}</strong></div><div class="ops-payment"><small>Cobrado</small><strong style="color:#16a34a">${opsMoney(p.collected)}</strong></div><div class="ops-payment"><small>Balance</small><strong style="color:#f97316">${opsMoney(p.pending)}</strong></div></div></div>
+ <div class="ops-info-row"><b>📍 Dirección</b><span>${s.direccion||'Sin dirección'}</span></div><div class="ops-info-row"><b>📅 Fecha y hora</b><span>${s.fecha||''}<br>${formatAMPM(s.hora||'00:00')} – ${formatAMPM(opsEndTime(s))}</span></div><div class="ops-info-row"><b>🧽 Tipo</b><span>${s.tipo||'Servicio'}</span></div><div class="ops-info-row"><b>⏱ Tiempo</b><span>Estimado: ${s.hora_final_estimada?calcularTiempoTrabajado(s.hora,s.hora_final_estimada).texto:'2h aprox.'} · Real trabajado: ${opsWorkedTime(s)}</span></div><div class="ops-info-row"><b>👥 Empleados</b><span>${staff}</span></div><div class="ops-info-row"><b>📝 Notas</b><span>${s.notas_internas||'Sin notas especiales'}</span></div></div>
+ <div class="ops-payment-grid" style="margin-top:12px"><div class="ops-payment"><small>Precio</small><strong>${opsMoney(p.total)}</strong></div><div class="ops-payment"><small>Cobrado</small><strong style="color:#16a34a">${opsMoney(p.collected)}</strong></div><div class="ops-payment"><small>Balance</small><strong style="color:#f97316">${opsMoney(p.pending)}</strong></div></div>${opsStaffTimeline(s)}</div>
  <div><div class="ops-mini-map"><div><div style="font-size:35px">🗺️</div><a target="_blank" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.direccion||'')}">Abrir ubicación en Google Maps</a><p style="font-size:11px;color:#64748b">${s.direccion||'Sin dirección'}</p></div></div><div class="ops-info-list" style="margin-top:12px"><div class="ops-info-row"><b>📞 Teléfono</b><span>${s.whatsapp||'Sin teléfono'}</span></div><div class="ops-info-row"><b>✉️ Correo</b><span>${s.email_cliente||'Sin email'}</span></div><div class="ops-info-row"><b>📄 Contrato</b><span>${s.contrato_firmado?'Firmado':'Pendiente'}</span></div></div></div></div>
  <div class="ops-actions"><button class="start" onclick="cambiarEstadoTrabajo('${s.id}','en_progreso').then(()=>setTimeout(renderCentroOperacionesV601,300))">▶ Iniciar</button><button class="edit" onclick="abrirEditorEvento('${s.id}')">✎ Editar</button><button class="reschedule" onclick="abrirEditorEvento('${s.id}')">↻ Reprogramar</button><button class="cancel" onclick="cancelarCliente('${String(s.cliente||'').replace(/'/g,"\\'")}')">✕ Cancelar</button></div></div>`;
 }
