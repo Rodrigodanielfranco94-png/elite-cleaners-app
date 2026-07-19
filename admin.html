@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.4.1 | Filtros y edición de nombres en evidencia fotográfica -->
+<!-- Elite Admin v6.5.0 | Metas mensuales y celebración en Contabilidad -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.4.0 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.5.0 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -843,6 +843,17 @@ body.elite-v5-body{
 }
 </style>
 
+
+<style id="elite-monthly-goals-css">
+.acc-goal-card{position:relative;overflow:hidden;margin-bottom:16px;padding:22px;border:1px solid #fde68a;border-radius:18px;background:linear-gradient(135deg,#fff7cc,#fffdf4);box-shadow:0 12px 30px rgba(245,158,11,.12)}
+.acc-goal-card.reached{border-color:#86efac;background:linear-gradient(135deg,#dcfce7,#f0fdf4)}
+.acc-goal-head{display:flex;justify-content:space-between;gap:15px;align-items:flex-start}.acc-goal-eyebrow{font-size:12px;font-weight:900;color:#b45309;text-transform:uppercase}.acc-goal-card.reached .acc-goal-eyebrow{color:#15803d}.acc-goal-title{margin:8px 0 5px;font-size:28px;line-height:1.08;color:#0f172a}.acc-goal-art{font-size:64px;filter:drop-shadow(0 8px 12px rgba(15,23,42,.15));animation:goalFloat 3s ease-in-out infinite}.acc-goal-card.reached .acc-goal-art{animation:goalPulse 1.8s ease-in-out infinite}
+.acc-goal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}.acc-goal-stat{background:rgba(255,255,255,.84);border:1px solid rgba(148,163,184,.25);border-radius:13px;padding:14px}.acc-goal-stat span{display:block;font-size:11px;color:#64748b}.acc-goal-stat strong{display:block;margin-top:6px;font-size:24px;color:#0f172a}.acc-goal-stat strong.green{color:#16a34a}.acc-goal-track{height:16px;margin-top:16px;background:#e2e8f0;border-radius:999px;overflow:hidden}.acc-goal-fill{height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#2563eb);border-radius:999px;transition:width .8s ease}.acc-goal-card.reached .acc-goal-fill{background:linear-gradient(90deg,#22c55e,#16a34a)}.acc-goal-row{display:flex;justify-content:space-between;gap:12px;margin-top:8px;font-size:12px;font-weight:800;color:#334155}.acc-goal-message{margin-top:13px;font-size:14px;font-weight:800;color:#0f172a}.acc-goal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.acc-goal-btn{border:0;border-radius:9px;padding:10px 13px;font-weight:900;cursor:pointer;background:#2563eb;color:#fff}.acc-goal-btn.secondary{background:#fff;color:#2563eb;border:1px solid #bfdbfe}.acc-goal-btn.celebrate{background:#16a34a}.acc-goal-bottom{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-bottom:16px}.acc-goal-history,.acc-goal-next{padding:18px}.acc-goal-history table{width:100%;border-collapse:collapse;font-size:11px}.acc-goal-history th,.acc-goal-history td{padding:9px;border-bottom:1px solid #e2e8f0;text-align:left}.acc-goal-next-value{font-size:30px;font-weight:900;color:#16a34a;margin:16px 0}.acc-goal-mini{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.acc-goal-mini div{padding:12px;border-radius:11px;background:#f8fafc;border:1px solid #e2e8f0}.acc-goal-mini span{font-size:10px;color:#64748b}.acc-goal-mini strong{display:block;margin-top:5px;font-size:16px}.acc-week-chart-wrap{height:210px;margin-top:15px}
+#elite-goal-celebration{display:none;position:fixed;inset:0;z-index:2000000;pointer-events:none;overflow:hidden;background:rgba(15,23,42,.10)}#elite-goal-celebration.show{display:block}.goal-celebration-box{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,88vw);padding:30px;border-radius:25px;text-align:center;background:linear-gradient(135deg,#dcfce7,#fff);border:2px solid #4ade80;box-shadow:0 30px 90px rgba(0,0,0,.3);animation:goalPop .45s ease}.goal-celebration-box .trophy{font-size:82px}.goal-celebration-box h2{font-size:36px;color:#15803d;margin:5px 0}.goal-celebration-box p{font-size:17px;color:#0f172a;font-weight:800}.goal-confetti{position:absolute;top:-30px;font-size:28px;animation:goalFall 4s linear forwards}.goal-balloon{position:absolute;bottom:-100px;font-size:62px;animation:goalRise 5s ease-in forwards}
+@keyframes goalFloat{50%{transform:translateY(-8px)}}@keyframes goalPulse{50%{transform:scale(1.08)}}@keyframes goalPop{from{transform:translate(-50%,-50%) scale(.6);opacity:0}}@keyframes goalFall{to{transform:translateY(115vh) rotate(720deg)}}@keyframes goalRise{to{transform:translateY(-125vh)}}
+@media(max-width:760px){.acc-goal-title{font-size:22px}.acc-goal-art{font-size:48px}.acc-goal-stats,.acc-goal-bottom{grid-template-columns:1fr}.acc-goal-head{align-items:center}}
+</style>
+
 </head>
 <body>
 <div id="loginBox" class="elite-login-overlay">
@@ -1434,6 +1445,17 @@ style="width:100%;"></textarea>
       <button class="acc-btn gray acc-close-mobile" onclick="cerrarContabilidadElite()">← Volver</button>
       <header class="acc-topbar"><div class="acc-heading"><h2>Contabilidad <span style="font-size:12px;color:#64748b;font-weight:700">v6.0.2</span></h2><p id="accounting-subtitle">Resumen financiero y contable de tu empresa</p></div><div class="acc-controls"><select class="acc-control" id="accounting-month-name" onchange="sincronizarMesContable()"></select><select class="acc-control" id="accounting-year" onchange="sincronizarMesContable()"></select><button class="acc-btn green" onclick="cerrarMesContable()">🔒 Cerrar Mes Contable</button><button class="acc-btn blue" onclick="exportarContabilidadExcel()">⇩ Exportar Excel</button><button class="acc-btn gray" onclick="descargarContabilidadPDF()">PDF</button><button class="acc-btn red" onclick="abrirAgregarGasto()">＋ Gasto</button></div></header>
       <input type="month" id="accounting-month" onchange="sincronizarSelectoresDesdeMes()" style="display:none">
+
+      <section id="acc-monthly-goal" class="acc-goal-card">
+        <div class="acc-goal-head"><div><div class="acc-goal-eyebrow">🎯 Meta mensual</div><h2 class="acc-goal-title" id="acc-goal-title">¡Superemos la meta este mes!</h2></div><div class="acc-goal-art" id="acc-goal-art">🎈</div></div>
+        <div class="acc-goal-stats"><div class="acc-goal-stat"><span>Meta mensual</span><strong id="acc-goal-target">$0.00</strong></div><div class="acc-goal-stat"><span>Ventas confirmadas</span><strong class="green" id="acc-goal-sales">$0.00</strong></div><div class="acc-goal-stat"><span id="acc-goal-difference-label">Faltan para la meta</span><strong id="acc-goal-difference">$0.00</strong></div></div>
+        <div class="acc-goal-track"><div class="acc-goal-fill" id="acc-goal-fill"></div></div><div class="acc-goal-row"><span>Progreso</span><span id="acc-goal-percent">0%</span></div><div class="acc-goal-message" id="acc-goal-message">Cada trabajo cuenta.</div>
+        <div class="acc-goal-actions"><button class="acc-goal-btn" onclick="editarMetaMensualElite()">✎ Editar meta</button><button class="acc-goal-btn celebrate" id="acc-goal-celebrate-btn" style="display:none" onclick="celebrarMetaElite(true)">🎉 Celebrar otra vez</button></div>
+      </section>
+      <section class="acc-goal-bottom">
+        <div class="acc-card acc-goal-history"><h3 style="margin-top:0">Resumen de ventas por semana</h3><div class="acc-week-chart-wrap"><canvas id="acc-goal-week-chart"></canvas></div><div class="acc-goal-mini"><div><span>Trabajos del mes</span><strong id="acc-goal-jobs">0</strong></div><div><span>Ticket promedio</span><strong id="acc-goal-ticket">$0.00</strong></div></div></div>
+        <div class="acc-card acc-goal-next"><h3 style="margin-top:0">Próxima meta sugerida</h3><p style="font-size:12px;color:#64748b">Basada en 5% más que las ventas de este mes.</p><div class="acc-goal-next-value" id="acc-goal-next-value">$0.00</div><button class="acc-goal-btn" style="width:100%" onclick="aplicarMetaSugeridaElite()">Aplicar para el próximo mes</button><h3 style="margin:20px 0 8px">Metas anteriores</h3><div style="overflow:auto"><table><thead><tr><th>Mes</th><th>Meta</th><th>Ventas</th><th>Resultado</th></tr></thead><tbody id="acc-goal-history-body"></tbody></table></div><div class="acc-goal-mini"><div><span>🔥 Racha</span><strong id="acc-goal-streak">0 meses</strong></div><div><span>🏆 Mejor mes</span><strong id="acc-goal-record">—</strong></div></div></div>
+      </section>
       <section class="acc-metrics">
         <div class="acc-card acc-metric"><h3>Servicios Vendidos</h3><p>Total del mes</p><div class="acc-icon acc-green">🛒</div><strong id="acc-vendido" class="acc-green">$0.00</strong></div>
         <div class="acc-card acc-metric"><h3>Dinero Cobrado</h3><p>Depósitos + balances</p><div class="acc-icon acc-green">👛</div><strong id="acc-cobrado" class="acc-green">$0.00</strong></div>
@@ -6875,5 +6897,36 @@ body.elite-v606-operations-home #ops-center-modal-v601.elite-v606-home{display:b
     }catch(error){console.error(error);alert('No se pudo eliminar la fotografía. Las reglas de Firebase deben permitir esta acción al administrador.');}
   };
   window.addEventListener('keydown',e=>{if(e.key==='Escape'){cerrarFotoEvidencia();cerrarEvidenciaServicio()}});
+})();
+</script>
+
+<script id="elite-monthly-goals-js">
+(function(){
+  window.metasMensualesElite=window.metasMensualesElite||{};
+  let goalWeekChart=null;
+  function mesNombre(k){const [y,m]=k.split('-');return (window.MESES_CONTABILIDAD?.[Number(m)-1]||m)+' '+y}
+  function metaDefault(mes){
+    if(window.metasMensualesElite[mes]?.meta>0)return Number(window.metasMensualesElite[mes].meta);
+    const prev=new Date(mes+'-01T12:00:00');prev.setMonth(prev.getMonth()-1);const pk=`${prev.getFullYear()}-${String(prev.getMonth()+1).padStart(2,'0')}`;
+    try{const pv=obtenerDatosContabilidad(pk).vendido||0;if(pv>0)return Math.ceil((pv*1.05)/100)*100}catch(e){}
+    return 11000;
+  }
+  async function cargarMetas(){
+    try{db.collection('metas_mensuales').onSnapshot(s=>{const o={};s.forEach(d=>o[d.id]={id:d.id,...d.data()});window.metasMensualesElite=o;if(typeof renderContabilidadElite==='function'&&document.getElementById('elite-accounting-modal')?.style.display==='block')renderContabilidadElite();});}catch(e){console.warn('Metas mensuales:',e)}
+  }
+  window.editarMetaMensualElite=async function(){const d=obtenerDatosContabilidad(),actual=metaDefault(d.mes);const valor=prompt(`Meta de ventas para ${mesNombre(d.mes)}:`,actual);if(valor===null)return;const meta=Number(String(valor).replace(/[$,]/g,''));if(!Number.isFinite(meta)||meta<=0)return alert('Escribe una meta válida mayor que cero.');await db.collection('metas_mensuales').doc(d.mes).set({mes:d.mes,meta,actualizado:new Date().toISOString()},{merge:true});}
+  window.aplicarMetaSugeridaElite=async function(){const d=obtenerDatosContabilidad();const next=new Date(d.mes+'-01T12:00:00');next.setMonth(next.getMonth()+1);const nk=`${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}`;const sugerida=Math.ceil((Math.max(d.vendido,metaDefault(d.mes))*1.05)/100)*100;if(!confirm(`¿Aplicar ${dinero(sugerida)} como meta de ${mesNombre(nk)}?`))return;await db.collection('metas_mensuales').doc(nk).set({mes:nk,meta:sugerida,origen:d.mes,actualizado:new Date().toISOString()},{merge:true});alert('Próxima meta guardada.');}
+  window.celebrarMetaElite=function(force){const d=obtenerDatosContabilidad(),meta=metaDefault(d.mes);if(d.vendido<meta&&!force)return;const layer=document.getElementById('elite-goal-celebration');layer.innerHTML='<div class="goal-celebration-box"><div class="trophy">🏆</div><h2>¡META SUPERADA!</h2><p>¡Felicidades, Elite Cleaners! Alcanzamos '+dinero(d.vendido)+' este mes.</p></div>';for(let i=0;i<30;i++){const x=document.createElement('span');x.className='goal-confetti';x.textContent=['🎊','✨','⭐','🎉'][i%4];x.style.left=(Math.random()*100)+'%';x.style.animationDelay=(Math.random()*1.5)+'s';layer.appendChild(x)}for(let i=0;i<8;i++){const x=document.createElement('span');x.className='goal-balloon';x.textContent=['🎈','🟣','🔵','🟢'][i%4];x.style.left=(4+i*13)+'%';x.style.animationDelay=(Math.random()*1.2)+'s';layer.appendChild(x)}layer.classList.add('show');setTimeout(()=>layer.classList.remove('show'),6000);localStorage.setItem('elite_goal_celebrated_'+d.mes,'1');}
+  function weekly(d){const a=[0,0,0,0,0];d.filas.forEach(f=>{const day=Number(String(f.fecha).slice(8,10))||1;const idx=Math.min(4,Math.floor((day-1)/7));a[idx]+=Number(f.vendido||0)});return a}
+  window.renderMetaMensualElite=function(d){
+    const box=document.getElementById('acc-monthly-goal');if(!box)return;const meta=metaDefault(d.mes),pct=meta>0?(d.vendido/meta*100):0,reached=d.vendido>=meta,diff=Math.abs(meta-d.vendido);
+    box.classList.toggle('reached',reached);document.getElementById('acc-goal-title').textContent=reached?'¡META SUPERADA!':`¡Superemos la meta de ${dinero(meta)} este mes!`;document.getElementById('acc-goal-art').textContent=reached?'🏆':'🎈';document.getElementById('acc-goal-target').textContent=dinero(meta);document.getElementById('acc-goal-sales').textContent=dinero(d.vendido);document.getElementById('acc-goal-difference-label').textContent=reached?'Superamos la meta por':'Faltan para la meta';document.getElementById('acc-goal-difference').textContent=dinero(diff);document.getElementById('acc-goal-fill').style.width=Math.min(pct,100)+'%';document.getElementById('acc-goal-percent').textContent=pct.toFixed(1)+'%';document.getElementById('acc-goal-jobs').textContent=d.filas.length;document.getElementById('acc-goal-ticket').textContent=dinero(d.filas.length?d.vendido/d.filas.length:0);document.getElementById('acc-goal-next-value').textContent=dinero(Math.ceil((Math.max(d.vendido,meta)*1.05)/100)*100);document.getElementById('acc-goal-celebrate-btn').style.display=reached?'inline-block':'none';
+    let msg='🚀 ¡Vamos muy bien! Faltan '+dinero(Math.max(meta-d.vendido,0))+' para alcanzar la meta.';if(pct<25)msg='🌱 Estamos comenzando. Cada trabajo cuenta.';else if(pct<50)msg='💪 Seguimos avanzando hacia la meta.';else if(pct<80)msg='🔥 ¡Ya pasamos la mitad!';else if(!reached)msg='🚀 ¡Estamos muy cerca! Faltan '+dinero(meta-d.vendido)+'.';else msg='🎉 ¡Nuevo récord de esfuerzo! Sigamos creciendo juntos.';document.getElementById('acc-goal-message').textContent=msg;
+    const months=[];const base=new Date(d.mes+'-01T12:00:00');for(let i=5;i>=0;i--){const x=new Date(base.getFullYear(),base.getMonth()-i,1);const k=`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}`;const data=obtenerDatosContabilidad(k),mt=metaDefault(k);months.push({k,data,mt,ok:data.vendido>=mt})}document.getElementById('acc-goal-history-body').innerHTML=months.slice().reverse().map(x=>`<tr><td>${mesNombre(x.k)}</td><td>${dinero(x.mt)}</td><td>${dinero(x.data.vendido)}</td><td>${x.ok?'✅ Superada':'⏳ En progreso'}</td></tr>`).join('');let streak=0;for(const x of months.slice().reverse()){if(x.ok)streak++;else break}document.getElementById('acc-goal-streak').textContent=streak+' meses';const rec=months.reduce((a,b)=>b.data.vendido>a.data.vendido?b:a,months[0]);document.getElementById('acc-goal-record').textContent=rec&&rec.data.vendido?mesNombre(rec.k)+' · '+dinero(rec.data.vendido):'—';
+    if(typeof Chart!=='undefined'){if(goalWeekChart)goalWeekChart.destroy();goalWeekChart=new Chart(document.getElementById('acc-goal-week-chart'),{type:'bar',data:{labels:['Sem 1','Sem 2','Sem 3','Sem 4','Sem 5'],datasets:[{data:weekly(d),backgroundColor:reached?'#22c55e':'#3b82f6',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'$'+v}}}}})}
+    if(reached&&!localStorage.getItem('elite_goal_celebrated_'+d.mes))setTimeout(()=>celebrarMetaElite(false),350);
+  }
+  const original=window.renderContabilidadElite;window.renderContabilidadElite=function(){const r=original.apply(this,arguments);try{renderMetaMensualElite(obtenerDatosContabilidad())}catch(e){console.error('Meta mensual:',e)}return r};
+  document.addEventListener('DOMContentLoaded',()=>{if(!document.getElementById('elite-goal-celebration')){const d=document.createElement('div');d.id='elite-goal-celebration';document.body.appendChild(d)}cargarMetas()});
 })();
 </script>
