@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.4.0 | Evidencia fotográfica del servicio -->
+<!-- Elite Admin v6.4.1 | Filtros y edición de nombres en evidencia fotográfica -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -6775,7 +6775,7 @@ body.elite-v606-operations-home #ops-center-modal-v601.elite-v606-home{display:b
 </style>
 
 <!-- =========================================================
-     ELITE ADMIN v6.4.0 — GALERÍA DE EVIDENCIA FOTOGRÁFICA
+     ELITE ADMIN v6.4.1 — GALERÍA DE EVIDENCIA FOTOGRÁFICA
      Lee: servicios/{servicioId}/fotos
      ========================================================= -->
 <style id="elite-evidence-v640-css">
@@ -6785,9 +6785,9 @@ body.elite-v606-operations-home #ops-center-modal-v601.elite-v606-home{display:b
 .elite-evidence-head{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;gap:14px;align-items:center;padding:17px 18px;background:rgba(7,18,36,.97);border-bottom:1px solid #334155;backdrop-filter:blur(10px)}
 .elite-evidence-head h2{margin:0;color:#93c5fd;font-size:21px}.elite-evidence-head p{margin:4px 0 0;color:#94a3b8;font-size:12px}
 .elite-evidence-head-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.elite-evidence-head-actions button{border:0;border-radius:10px;padding:10px 12px;color:#fff;font-weight:900;cursor:pointer}.elite-evidence-download{background:#16a34a}.elite-evidence-close{background:#ef4444}
-.elite-evidence-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px 18px 2px}.elite-evidence-stat{background:#111827;border:1px solid #334155;border-radius:14px;padding:13px;text-align:center}.elite-evidence-stat strong{display:block;color:#fff;font-size:23px}.elite-evidence-stat span{color:#94a3b8;font-size:10px;text-transform:uppercase;font-weight:900}
+.elite-evidence-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px 18px 2px}.elite-evidence-stat{background:#111827;border:1px solid #334155;border-radius:14px;padding:13px;text-align:center;cursor:pointer;transition:.18s;user-select:none}.elite-evidence-stat:hover{border-color:#60a5fa;transform:translateY(-1px)}.elite-evidence-stat.active{background:#172554;border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.18)}.elite-evidence-stat strong{display:block;color:#fff;font-size:23px}.elite-evidence-stat span{color:#94a3b8;font-size:10px;text-transform:uppercase;font-weight:900}.elite-evidence-stat.active span{color:#bfdbfe}
 .elite-evidence-body{padding:16px 18px 25px}.elite-evidence-group{margin-top:18px}.elite-evidence-group-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #334155}.elite-evidence-group-title h3{margin:0;font-size:16px;color:#bfdbfe}.elite-evidence-count{background:#1d4ed8;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:900}
-.elite-evidence-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px}.elite-evidence-card{position:relative;background:#05070b;border:1px solid #334155;border-radius:15px;overflow:hidden}.elite-evidence-photo{width:100%;height:175px;display:block;object-fit:cover;background:#020617;cursor:zoom-in}.elite-evidence-info{padding:10px}.elite-evidence-area{font-weight:900;color:#fff;font-size:12px}.elite-evidence-detail{color:#cbd5e1;font-size:11px;line-height:1.35;margin-top:3px;min-height:15px}.elite-evidence-meta{color:#64748b;font-size:9px;line-height:1.45;margin-top:7px}.elite-evidence-card-actions{display:grid;grid-template-columns:1fr auto;gap:6px;padding:0 10px 10px}.elite-evidence-card-actions a,.elite-evidence-card-actions button{border:0;border-radius:8px;padding:8px;color:#fff;text-decoration:none;text-align:center;font-size:10px;font-weight:900;cursor:pointer}.elite-evidence-open{background:#2563eb}.elite-evidence-delete{background:#7f1d1d}.elite-evidence-empty,.elite-evidence-loading,.elite-evidence-error{padding:35px 15px;text-align:center;border:1px dashed #475569;border-radius:14px;color:#94a3b8}.elite-evidence-error{color:#fca5a5;border-color:#7f1d1d}
+.elite-evidence-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px}.elite-evidence-card{position:relative;background:#05070b;border:1px solid #334155;border-radius:15px;overflow:hidden}.elite-evidence-photo{width:100%;height:175px;display:block;object-fit:cover;background:#020617;cursor:zoom-in}.elite-evidence-info{padding:10px}.elite-evidence-area{font-weight:900;color:#fff;font-size:12px}.elite-evidence-detail{color:#cbd5e1;font-size:11px;line-height:1.35;margin-top:3px;min-height:15px}.elite-evidence-meta{color:#64748b;font-size:9px;line-height:1.45;margin-top:7px}.elite-evidence-card-actions{display:grid;grid-template-columns:1fr auto auto;gap:6px;padding:0 10px 10px}.elite-evidence-card-actions a,.elite-evidence-card-actions button{border:0;border-radius:8px;padding:8px;color:#fff;text-decoration:none;text-align:center;font-size:10px;font-weight:900;cursor:pointer}.elite-evidence-open{background:#2563eb}.elite-evidence-edit{background:#d97706}.elite-evidence-delete{background:#7f1d1d}.elite-evidence-empty,.elite-evidence-loading,.elite-evidence-error{padding:35px 15px;text-align:center;border:1px dashed #475569;border-radius:14px;color:#94a3b8}.elite-evidence-error{color:#fca5a5;border-color:#7f1d1d}
 #elite-evidence-lightbox{display:none;position:fixed;inset:0;z-index:1300000;background:rgba(0,0,0,.98);align-items:center;justify-content:center;padding:18px;box-sizing:border-box}#elite-evidence-lightbox img{max-width:96vw;max-height:88vh;object-fit:contain}#elite-evidence-lightbox button{position:absolute;top:15px;right:15px;width:44px;height:44px;border:0;border-radius:50%;background:#ef4444;color:#fff;font-size:22px;cursor:pointer}
 @media(max-width:700px){.elite-evidence-summary{grid-template-columns:1fr 1fr}.elite-evidence-head{align-items:flex-start}.elite-evidence-head-actions{flex-direction:column}.elite-evidence-grid{grid-template-columns:1fr 1fr}.elite-evidence-photo{height:145px}}
 @media(max-width:430px){.elite-evidence-grid{grid-template-columns:1fr}.elite-evidence-photo{height:230px}}
@@ -6796,6 +6796,7 @@ body.elite-v606-operations-home #ops-center-modal-v601.elite-v606-home{display:b
 (function(){
   let fotosEvidenciaActuales=[];
   let servicioEvidenciaActual=null;
+  let filtroEvidenciaActual='all';
   const tipoInfo={before:{titulo:'Antes',icono:'🕐'},evidence:{titulo:'Durante',icono:'🧽'},after:{titulo:'Después',icono:'✅'}};
   function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
   function fechaFoto(v){
@@ -6809,7 +6810,7 @@ body.elite-v606-operations-home #ops-center-modal-v601.elite-v606-home{display:b
     const light=document.createElement('div');light.id='elite-evidence-lightbox';light.innerHTML='<button type="button" onclick="cerrarFotoEvidencia()">×</button><img id="elite-evidence-lightbox-img" alt="Evidencia fotográfica">';light.addEventListener('click',e=>{if(e.target===light)cerrarFotoEvidencia()});document.body.appendChild(light);
   }
   window.abrirEvidenciaServicio=async function(id){
-    asegurarModal();servicioEvidenciaActual=(window.todosLosServicios||[]).find(s=>s.id===id)||{id};fotosEvidenciaActuales=[];
+    asegurarModal();servicioEvidenciaActual=(window.todosLosServicios||[]).find(s=>s.id===id)||{id};fotosEvidenciaActuales=[];filtroEvidenciaActual='all';
     document.getElementById('elite-evidence-modal').style.display='block';document.body.style.overflow='hidden';
     document.getElementById('elite-evidence-title').textContent='📸 Evidencia — '+(servicioEvidenciaActual.cliente||'Servicio');
     document.getElementById('elite-evidence-subtitle').textContent=[servicioEvidenciaActual.fecha,servicioEvidenciaActual.direccion].filter(Boolean).join(' • ');
@@ -6824,13 +6825,37 @@ body.elite-v606-operations-home #ops-center-modal-v601.elite-v606-home{display:b
   };
   function renderEvidenciaServicio(){
     const counts={before:0,evidence:0,after:0};fotosEvidenciaActuales.forEach(f=>{if(counts[f.tipo]!==undefined)counts[f.tipo]++});
-    document.getElementById('elite-evidence-summary').innerHTML=[['Total',fotosEvidenciaActuales.length],['Antes',counts.before],['Durante',counts.evidence],['Después',counts.after]].map(([l,n])=>`<div class="elite-evidence-stat"><strong>${n}</strong><span>${l}</span></div>`).join('');
+    const stats=[['all','Total',fotosEvidenciaActuales.length],['before','Antes',counts.before],['evidence','Durante',counts.evidence],['after','Después',counts.after]];
+    document.getElementById('elite-evidence-summary').innerHTML=stats.map(([tipo,l,n])=>`<div class="elite-evidence-stat ${filtroEvidenciaActual===tipo?'active':''}" role="button" tabindex="0" onclick="filtrarEvidenciaServicio('${tipo}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();filtrarEvidenciaServicio('${tipo}')}"><strong>${n}</strong><span>${l}</span></div>`).join('');
     if(!fotosEvidenciaActuales.length){document.getElementById('elite-evidence-body').innerHTML='<div class="elite-evidence-empty">Este trabajo todavía no tiene fotografías guardadas.<br><small>Si se tomaron fotos, verifica que Staff mostrara “subidas correctamente”.</small></div>';return}
-    document.getElementById('elite-evidence-body').innerHTML=['before','evidence','after'].map(tipo=>{
-      const arr=fotosEvidenciaActuales.filter(f=>f.tipo===tipo);if(!arr.length)return '';
-      return `<section class="elite-evidence-group"><div class="elite-evidence-group-title"><h3>${tipoInfo[tipo].icono} ${tipoInfo[tipo].titulo}</h3><span class="elite-evidence-count">${arr.length}</span></div><div class="elite-evidence-grid">${arr.map(f=>`<article class="elite-evidence-card"><img class="elite-evidence-photo" src="${esc(f.url)}" loading="lazy" onclick="abrirFotoEvidencia('${esc(f.url)}')" onerror="this.style.opacity='.25';this.alt='Foto no disponible'"><div class="elite-evidence-info"><div class="elite-evidence-area">${esc(f.area||'Área no indicada')}</div><div class="elite-evidence-detail">${esc(f.detalle||'')}</div><div class="elite-evidence-meta">${esc(f.staff_nombre||f.staff_email||'Empleado no registrado')}<br>${esc(fechaFoto(f.timestamp))}</div></div><div class="elite-evidence-card-actions"><a class="elite-evidence-open" href="${esc(f.url)}" target="_blank" rel="noopener">Abrir original</a><button class="elite-evidence-delete" onclick="eliminarFotoEvidencia('${f.id}')">🗑</button></div></article>`).join('')}</div></section>`
+    const tiposVisibles=filtroEvidenciaActual==='all'?['before','evidence','after']:[filtroEvidenciaActual];
+    document.getElementById('elite-evidence-body').innerHTML=tiposVisibles.map(tipo=>{
+      const arr=fotosEvidenciaActuales.filter(f=>f.tipo===tipo);if(!arr.length)return `<div class="elite-evidence-empty">No hay fotografías en ${tipoInfo[tipo].titulo}.</div>`;
+      return `<section class="elite-evidence-group"><div class="elite-evidence-group-title"><h3>${tipoInfo[tipo].icono} ${tipoInfo[tipo].titulo}</h3><span class="elite-evidence-count">${arr.length}</span></div><div class="elite-evidence-grid">${arr.map(f=>`<article class="elite-evidence-card"><img class="elite-evidence-photo" src="${esc(f.url)}" loading="lazy" onclick="abrirFotoEvidencia('${esc(f.url)}')" onerror="this.style.opacity='.25';this.alt='Foto no disponible'"><div class="elite-evidence-info"><div class="elite-evidence-area">${esc(f.nombre||f.area||'Foto sin nombre')}</div><div class="elite-evidence-detail">${esc(f.detalle||'')}</div><div class="elite-evidence-meta">${esc(f.staff_nombre||f.staff_email||'Empleado no registrado')}<br>${esc(fechaFoto(f.timestamp))}</div></div><div class="elite-evidence-card-actions"><a class="elite-evidence-open" href="${esc(f.url)}" target="_blank" rel="noopener">Abrir original</a><button class="elite-evidence-edit" onclick="editarNombreFotoEvidencia('${f.id}')" title="Editar nombre">✏️</button><button class="elite-evidence-delete" onclick="eliminarFotoEvidencia('${f.id}')" title="Eliminar">🗑</button></div></article>`).join('')}</div></section>`
     }).join('');
   }
+
+  window.filtrarEvidenciaServicio=function(tipo){
+    if(!['all','before','evidence','after'].includes(tipo))tipo='all';
+    filtroEvidenciaActual=tipo;
+    renderEvidenciaServicio();
+    const body=document.getElementById('elite-evidence-body');
+    if(body)body.scrollIntoView({behavior:'smooth',block:'start'});
+  };
+  window.editarNombreFotoEvidencia=async function(photoId){
+    const foto=fotosEvidenciaActuales.find(f=>f.id===photoId);if(!foto||!servicioEvidenciaActual)return;
+    const actual=foto.nombre||foto.area||'';
+    const nuevo=prompt('Escribe el nuevo nombre de esta fotografía:',actual);
+    if(nuevo===null)return;
+    const nombre=String(nuevo).trim();
+    if(!nombre)return alert('El nombre no puede quedar vacío.');
+    if(nombre.length>80)return alert('El nombre debe tener 80 caracteres o menos.');
+    try{
+      await db.collection('servicios').doc(servicioEvidenciaActual.id).collection('fotos').doc(photoId).update({nombre:nombre,nombre_editado_en:firebase.firestore.FieldValue.serverTimestamp()});
+      foto.nombre=nombre;
+      renderEvidenciaServicio();
+    }catch(error){console.error(error);alert('No se pudo editar el nombre. Revisa que las reglas de Firestore permitan actualizar fotografías desde Admin.');}
+  };
   window.cerrarEvidenciaServicio=function(){const m=document.getElementById('elite-evidence-modal');if(m)m.style.display='none';document.body.style.overflow=''};
   window.abrirFotoEvidencia=function(url){asegurarModal();document.getElementById('elite-evidence-lightbox-img').src=url;document.getElementById('elite-evidence-lightbox').style.display='flex'};
   window.cerrarFotoEvidencia=function(){const l=document.getElementById('elite-evidence-lightbox');if(l)l.style.display='none'};
