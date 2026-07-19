@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Elite Staff v6.1 | GPS y orden operativo actualizado -->
+<!-- Elite Staff v7.1 | GPS y orden operativo actualizado -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#000000">
-  <title>Elite Staff v4.0 - Dashboard</title>
+  <title>Elite Staff v7.1 - Operación automática</title>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -1374,7 +1374,10 @@
       notes.appendChild(document.createElement("br"));
       const operationalNotes = [
         safeText(job.notas_internas),
-        job.alfombra_notas ? "Alfombra: " + safeText(job.alfombra_notas) : ""
+        job.alfombra_notas ? "Alfombra: " + safeText(job.alfombra_notas) : "",
+        Number(job.oficinas || 0) > 0
+          ? "Depósito: aspirar y cepillar el piso laminado."
+          : ""
       ].filter(Boolean).join("\n\n");
 
       notes.appendChild(document.createTextNode(
@@ -2156,6 +2159,10 @@
       addCountedArea(job.salas, "sala", "salas", "🛋️");
       addCountedArea(job.comedor, "comedor", "comedores", "🍽️");
       addCountedArea(job.oficinas, "oficina", "oficinas", "💻");
+
+      if (Number(job.oficinas || 0) > 0) {
+        items.push("🏭 Depósito: aspirar y cepillar el piso laminado");
+      }
       addCountedArea(job.lavanderia, "lavandería", "lavanderías", "🧺");
       addCountedArea(job.garaje, "garaje", "garajes", "🚙");
       addCountedArea(job.sala_juegos, "sala de juegos", "salas de juegos", "🎮");
@@ -2573,9 +2580,17 @@
 
     async function updateWorkflow(id,nextStage,inspectionConfirmed=false){
       if(!currentUser) return;
+
+      const serviceRef = db.collection("servicios").doc(id);
+      const freshSnapshot = await serviceRef.get();
+
+      if(!freshSnapshot.exists){
+        throw new Error("El trabajo ya no existe.");
+      }
+
+      const currentJob = freshSnapshot.data() || {};
+
       if(nextStage==="completado"){
-        const docBeforeFinish = await db.collection("servicios").doc(id).get();
-        const currentJob = docBeforeFinish.exists ? docBeforeFinish.data() : {};
         const checklistItems = getChecklistTemplate(currentJob);
         const checklistState = getChecklistState(currentJob, checklistItems);
         const pending = checklistItems.filter((_, index) =>
@@ -2595,34 +2610,93 @@
           throw new Error("Actualización cancelada");
         }
       }
+
       let position=null;
-      try{ position=await getPosition(); }
-      catch(_){ if(!confirm("No se pudo obtener el GPS. ¿Deseas continuar sin ubicación?")) throw new Error("Actualización cancelada"); }
+      try{
+        position=await getPosition();
+      }catch(_){
+        if(!confirm("No se pudo obtener el GPS. ¿Deseas continuar sin ubicación?")){
+          throw new Error("Actualización cancelada");
+        }
+      }
 
       const now=new Date();
-      const timeText=now.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",hour12:true}).toLowerCase();
-      const coords=position?{lat:position.coords.latitude,lon:position.coords.longitude,accuracy:position.coords.accuracy}:null;
-      const update={ etapa_staff:nextStage, ultima_actualizacion:firebase.firestore.FieldValue.serverTimestamp(), actualizado_por_staff_email:currentUser.email, actualizado_por_staff_nombre:currentUser.nombre };
+      const nowMs=now.getTime();
+      const timeText=now.toLocaleTimeString("en-US",{
+        hour:"2-digit",
+        minute:"2-digit",
+        hour12:true
+      }).toLowerCase();
 
-      if(nextStage==="en_camino") Object.assign(update,{estado:"no_iniciado",hora_en_camino:timeText,en_camino_timestamp:firebase.firestore.FieldValue.serverTimestamp(),gps_en_camino:coords});
-      if(nextStage==="llego") Object.assign(update,{estado:"no_iniciado",hora_llegada:timeText,llegada_timestamp:firebase.firestore.FieldValue.serverTimestamp(),gps_llegada:coords});
+      const coords=position ? {
+        lat:position.coords.latitude,
+        lon:position.coords.longitude,
+        accuracy:position.coords.accuracy
+      } : null;
+
+      const update={
+        etapa_staff:nextStage,
+        ultima_actualizacion:firebase.firestore.FieldValue.serverTimestamp(),
+        actualizado_por_staff_email:currentUser.email,
+        actualizado_por_staff_nombre:currentUser.nombre
+      };
+
+      let eventType=nextStage;
+      let eventLabel=nextStage;
+
+      if(nextStage==="en_camino"){
+        Object.assign(update,{
+          estado:"no_iniciado",
+          estado_calendario:"pendiente",
+          hora_en_camino:timeText,
+          en_camino_timestamp:firebase.firestore.FieldValue.serverTimestamp(),
+          gps_en_camino:coords
+        });
+        eventLabel="En camino";
+      }
+
+      if(nextStage==="llego"){
+        Object.assign(update,{
+          estado:"no_iniciado",
+          estado_calendario:"pendiente",
+          hora_llegada:timeText,
+          llegada_timestamp:firebase.firestore.FieldValue.serverTimestamp(),
+          gps_llegada:coords
+        });
+        eventLabel="Llegada";
+      }
+
       if(nextStage==="limpiando"){
         update.estado="en_progreso";
+        update.estado_calendario="pendiente";
 
-        const doc = await db.collection("servicios").doc(id).get();
-        const currentData = doc.exists ? doc.data() : {};
+        /*
+         * Si Staff inicia la limpieza sin haber marcado “Llegué”,
+         * la app completa automáticamente la llegada para evitar huecos.
+         */
+        if(!hasRealTime(currentJob.hora_llegada)){
+          Object.assign(update,{
+            hora_llegada:timeText,
+            llegada_timestamp:firebase.firestore.FieldValue.serverTimestamp(),
+            gps_llegada:coords,
+            llegada_registrada_automaticamente:true
+          });
+        }
 
-        if(!hasRealTime(currentData.hora_inicio)) {
+        if(!hasRealTime(currentJob.hora_inicio)){
           Object.assign(update,{
             hora_inicio:timeText,
             inicio_timestamp:firebase.firestore.FieldValue.serverTimestamp(),
-            gps_inicio:coords
+            inicio_ms:nowMs,
+            gps_inicio:coords,
+            servicio_finalizado:false
           });
-        } else {
+          eventLabel="Inicio de limpieza";
+        }else{
           const durationMinutes = await closeStaffBreak(
             id,
-            currentData.pausa_activa_id,
-            currentData.pausa_activa_inicio_ms,
+            currentJob.pausa_activa_id,
+            currentJob.pausa_activa_inicio_ms,
             timeText,
             coords
           );
@@ -2631,31 +2705,109 @@
             hora_reanudacion:timeText,
             reanudacion_timestamp:firebase.firestore.FieldValue.serverTimestamp(),
             gps_reanudacion:coords,
-            pausa_activa_id: firebase.firestore.FieldValue.delete(),
-            pausa_activa_inicio_ms: firebase.firestore.FieldValue.delete(),
+            pausa_activa_id:firebase.firestore.FieldValue.delete(),
+            pausa_activa_inicio_ms:firebase.firestore.FieldValue.delete(),
             pausa_total_minutos:
               firebase.firestore.FieldValue.increment(durationMinutes)
           });
+          eventType="reanudacion";
+          eventLabel="Regreso de pausa";
         }
       }
 
-      if(nextStage==="pausado") {
-        const pause = await startStaffBreak(id, timeText, coords);
+      if(nextStage==="pausado"){
+        const pause = await startStaffBreak(id,timeText,coords);
 
         Object.assign(update,{
           estado:"en_progreso",
+          estado_calendario:"pendiente",
           hora_pausa:timeText,
           pausa_timestamp:firebase.firestore.FieldValue.serverTimestamp(),
           gps_pausa:coords,
-          pausa_activa_id: pause.pauseId,
-          pausa_activa_inicio_ms: pause.startMs,
-          pausas_count: firebase.firestore.FieldValue.increment(1)
+          pausa_activa_id:pause.pauseId,
+          pausa_activa_inicio_ms:pause.startMs,
+          pausas_count:firebase.firestore.FieldValue.increment(1)
         });
+        eventType="pausa";
+        eventLabel="Inicio de pausa";
       }
-      if(nextStage==="completado") Object.assign(update,{estado:"completado",hora_fin:timeText,fin_timestamp:firebase.firestore.FieldValue.serverTimestamp(),gps_fin:coords});
-      await db.collection("servicios").doc(id).update(update);
-    }
 
+      if(nextStage==="completado"){
+        let pauseMinutesToAdd=0;
+
+        /*
+         * Si el empleado finaliza mientras la pausa sigue abierta,
+         * se cierra automáticamente antes de completar el servicio.
+         */
+        if(currentJob.pausa_activa_id || currentJob.pausa_activa_inicio_ms){
+          pauseMinutesToAdd = await closeStaffBreak(
+            id,
+            currentJob.pausa_activa_id,
+            currentJob.pausa_activa_inicio_ms,
+            timeText,
+            coords
+          );
+        }
+
+        const startMs = Number(
+          currentJob.inicio_ms ||
+          currentJob.inicio_timestamp?.toMillis?.() ||
+          0
+        );
+
+        const previousPauseMinutes = Number(currentJob.pausa_total_minutos || 0);
+        const totalPauseMinutes = previousPauseMinutes + pauseMinutesToAdd;
+        const grossMinutes = startMs > 0
+          ? Math.max(0,Math.round((nowMs-startMs)/60000))
+          : 0;
+        const workedMinutes = Math.max(0,grossMinutes-totalPauseMinutes);
+
+        Object.assign(update,{
+          estado:"completado",
+          estado_calendario:"completado",
+          etapa_staff:"completado",
+          hora_fin:timeText,
+          fin_timestamp:firebase.firestore.FieldValue.serverTimestamp(),
+          fin_ms:nowMs,
+          gps_fin:coords,
+
+          servicio_finalizado:true,
+          trabajo_realizado:true,
+          finalizado_por_staff:true,
+          finalizado_por_staff_email:currentUser.email,
+          finalizado_por_staff_nombre:currentUser.nombre,
+          finalizado_en:firebase.firestore.FieldValue.serverTimestamp(),
+
+          pausa_activa_id:firebase.firestore.FieldValue.delete(),
+          pausa_activa_inicio_ms:firebase.firestore.FieldValue.delete(),
+          pausa_total_minutos:totalPauseMinutes,
+          tiempo_bruto_minutos:grossMinutes,
+          tiempo_trabajado_minutos:workedMinutes,
+          tiempo_trabajado_texto:
+            Math.floor(workedMinutes/60)+"h "+(workedMinutes%60)+"m"
+        });
+
+        eventType="completado";
+        eventLabel="Trabajo completado";
+      }
+
+      const batch=db.batch();
+      batch.update(serviceRef,update);
+
+      const eventRef=serviceRef.collection("eventos_staff").doc();
+      batch.set(eventRef,{
+        tipo:eventType,
+        etiqueta:eventLabel,
+        hora:timeText,
+        fecha:firebase.firestore.FieldValue.serverTimestamp(),
+        fecha_ms:nowMs,
+        gps:coords,
+        empleado_nombre:currentUser.nombre,
+        empleado_email:currentUser.email
+      });
+
+      await batch.commit();
+    }
     function getPosition() {
       return new Promise((resolve, reject) => {
         if (!navigator.geolocation) {
