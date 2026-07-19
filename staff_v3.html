@@ -3694,5 +3694,136 @@ if (currentUser) {
 }
 </script>
 
+
+
+<style>
+/* ===== ELITE STAFF v7.1 — FOTOS INTELIGENTES + SUMINISTROS ===== */
+.photo-detail-input,.supply-select,.supply-input,.photo-edit-select,.photo-edit-input{width:100%;padding:12px;border-radius:12px;border:1px solid #374151;background:#1f2937;color:#fff;font-size:13px;outline:none}
+.photo-detail-input{margin:0 0 10px}.photo-custom-area{display:none;margin-top:9px}.photo-groups{display:grid;gap:14px;margin-top:13px}.photo-group{padding:11px;border-radius:14px;background:#0b1220;border:1px solid #334155}.photo-group-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}.photo-group-title{font-size:11px;font-weight:950;text-transform:uppercase;color:#e5e7eb}.photo-group-count{font-size:10px;color:#93c5fd;font-weight:900}.photo-group-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;max-height:390px;overflow-y:auto;overscroll-behavior:contain;padding-right:2px}.photo-group-empty{grid-column:1/-1;padding:15px 8px;text-align:center;color:#64748b;font-size:11px;border:1px dashed #334155;border-radius:10px}.photo-thumb-button{appearance:none;padding:0;cursor:pointer;text-align:left}.photo-thumb-detail{position:absolute;left:4px;right:4px;top:4px;padding:3px 4px;border-radius:6px;background:rgba(15,23,42,.82);color:#fde68a;font-size:7px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.photo-manage-hint{margin-top:9px;color:#94a3b8;font-size:10px;text-align:center}.photo-manager-overlay{position:fixed;inset:0;z-index:1000001;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.92)}.photo-manager-modal{width:100%;max-width:500px;max-height:94vh;overflow-y:auto;padding:16px;border-radius:20px;background:#111827;border:1px solid #3b82f6}.photo-manager-image{display:block;width:100%;max-height:48vh;object-fit:contain;border-radius:14px;background:#020617;margin-bottom:13px}.photo-manager-grid{display:grid;gap:9px}.photo-manager-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}.photo-manager-actions button{padding:13px;border:0;border-radius:12px;font-weight:900;text-transform:uppercase;cursor:pointer}.photo-save-btn{background:#2563eb;color:#fff}.photo-delete-btn{background:#b91c1c;color:#fff}.photo-close-btn{grid-column:1/-1;background:#27272a;color:#e5e7eb}.supply-box{margin-top:14px;padding:14px;border-radius:16px;background:#111827;border:1px solid #f59e0b}.supply-title{color:#fde68a;font-size:12px;font-weight:900;text-transform:uppercase;margin-bottom:6px}.supply-help{color:#94a3b8;font-size:11px;line-height:1.45;margin-bottom:10px}.supply-grid{display:grid;grid-template-columns:1.3fr .7fr;gap:8px}.supply-urgency{grid-column:1/-1}.supply-note{grid-column:1/-1;min-height:70px;resize:vertical}.supply-button{width:100%;margin-top:9px;padding:13px;border:0;border-radius:12px;background:#d97706;color:#fff;font-weight:900;text-transform:uppercase;cursor:pointer}.supply-status{min-height:16px;margin-top:8px;text-align:center;font-size:11px;color:#fde68a}.service-update-banner{margin:12px 0;padding:13px;border-radius:14px;background:#172554;border:1px solid #60a5fa;color:#dbeafe}.service-update-banner strong{display:block;margin-bottom:4px;color:#fff;font-size:12px}.service-update-banner button{margin-top:9px;width:100%;padding:10px;border:0;border-radius:10px;background:#2563eb;color:white;font-weight:900;text-transform:uppercase}
+@media(max-width:440px){.photo-group-gallery{grid-template-columns:repeat(3,minmax(0,1fr));max-height:330px}.supply-grid{grid-template-columns:1fr 90px}}
+</style>
+
+<div id="photo-manager-overlay" class="photo-manager-overlay" aria-hidden="true">
+  <div class="photo-manager-modal">
+    <img id="photo-manager-image" class="photo-manager-image" alt="Fotografía del servicio">
+    <div class="photo-manager-grid">
+      <select id="photo-manager-type" class="photo-edit-select">
+        <option value="before">Antes</option><option value="evidence">Durante / evidencia</option><option value="after">Después / final</option>
+      </select>
+      <select id="photo-manager-area" class="photo-edit-select"></select>
+      <input id="photo-manager-custom-area" class="photo-edit-input" placeholder="Escribe el área o elemento" style="display:none">
+      <input id="photo-manager-detail" class="photo-edit-input" placeholder="Detalle: Ej. Mancha en alfombra">
+    </div>
+    <div class="photo-manager-actions">
+      <button id="photo-manager-save" class="photo-save-btn" type="button">Guardar cambios</button>
+      <button id="photo-manager-delete" class="photo-delete-btn" type="button">Eliminar foto</button>
+      <button id="photo-manager-close" class="photo-close-btn" type="button">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function eliteStaffV71(){
+  const PHOTO_AREAS_BASE=["Vista general","Entrada","Cocina","Sala","Comedor","Oficina","Habitación","Habitación máster","Baño","Baño máster","Medio baño","Closet","Pasillo","Escalera","Lavandería","Garaje","Patio delantero","Patio trasero","Balcón"];
+  const PHOTO_EXTRAS=["Horno","Nevera","Microondas","Lavavajillas","Gabinetes interior","Gabinetes exterior","Ventanas interiores","Ventanas exteriores","Baseboards","Persianas","Alfombra","Sofá","Tapicería","Colchón","Chimenea"];
+  const PHOTO_SPECIAL=["Lámpara de techo","Ventilador de techo","Candelabro","Espejo","Puerta","Marco de ventana","Moldura","Interruptor","Toma eléctrica","Rejilla de aire","Baranda","Objeto encontrado","Daño previo","Daño encontrado","Otro"];
+  const SUPPLY_PRODUCTS=["Soft Scrub","Fabuloso","Pine-Sol","Cloro","Desengrasante","Limpiavidrios","Limpiador de baño","Limpiador de horno","Limpiador de alfombra","Bolsas de basura","Guantes","Esponjas","Magic Eraser","Toallas de microfibra","Papel toalla","Otro producto"];
+  let activePhotoManager=null;
+  const photoUnsubs=new Map();
+  const updateSignatures=new Map();
+
+  function unique(values){return [...new Set(values.map(v=>String(v||'').trim()).filter(Boolean))];}
+  function contractedPhotoAreas(job){
+    const list=[...PHOTO_AREAS_BASE];
+    if(Number(job.horno||0)>0) list.push('Horno');
+    if(safeText(job.nevera)&&normalize(job.nevera)!=='no') list.push('Nevera');
+    if(safeText(job.gabinetes)&&normalize(job.gabinetes)!=='no') list.push('Gabinetes interior','Gabinetes exterior');
+    if(safeText(job.ventanas)&&normalize(job.ventanas)!=='no') list.push('Ventanas interiores','Ventanas exteriores');
+    if(['si','sí'].includes(normalize(job.baseboards))) list.push('Baseboards');
+    if(Number(job.alfombra_habitaciones||0)>0||Number(job.alfombra_pies_cuadrados||0)>0) list.push('Alfombra');
+    const dynamic=Array.isArray(job.areas_adicionales_staff)?job.areas_adicionales_staff:[];
+    const extras=Array.isArray(job.extras_agregados)?job.extras_agregados:[];
+    return unique([...list,...dynamic,...extras,...PHOTO_EXTRAS,...PHOTO_SPECIAL]);
+  }
+  function fillAreaSelect(select,job,current=''){
+    select.innerHTML='';
+    contractedPhotoAreas(job).forEach(area=>{const o=document.createElement('option');o.value=area;o.textContent=area;select.appendChild(o)});
+    const custom=document.createElement('option');custom.value='__custom__';custom.textContent='➕ Agregar otra área o elemento';select.appendChild(custom);
+    if(current && ![...select.options].some(o=>o.value===current)){const o=document.createElement('option');o.value=current;o.textContent=current;select.insertBefore(o,custom)}
+    select.value=current||'Vista general';
+  }
+  function counterField(type){return {before:'fotos_iniciales_count',evidence:'fotos_evidencia_count',after:'fotos_finales_count'}[type]}
+  function typeLabel(type){return {before:'Antes',evidence:'Durante',after:'Después'}[type]||'Foto'}
+
+  window.appendPhotoModule=function(card,job,isToday){
+    const stage=getWorkflowStage(job),requiredFinal=getRequiredFinalPhotos(job),counts=getPhotoCounts(job);
+    const box=document.createElement('div');box.className='photos-box';
+    const header=document.createElement('div');header.className='photos-header';
+    const title=document.createElement('div');title.className='photos-title';title.textContent='Evidencia fotográfica';
+    const required=document.createElement('div');required.className='photos-required';required.textContent='Finales: '+counts.after+'/'+requiredFinal;header.append(title,required);box.appendChild(header);
+    const plan=getPhotoPlan(job),planBox=document.createElement('div');planBox.className='photo-plan';planBox.innerHTML='<div class="photo-plan-title">Plan de fotos para este servicio</div><div class="photo-plan-grid"><div class="photo-plan-item"><strong>'+plan.before+' recomendadas</strong><span>Antes</span></div><div class="photo-plan-item"><strong>Opcional</strong><span>Durante</span></div><div class="photo-plan-item"><strong>'+plan.after+' obligatorias</strong><span>Después</span></div></div><div class="photo-suggestions"></div>';planBox.querySelector('.photo-suggestions').textContent=plan.suggested;box.appendChild(planBox);
+    const controls=document.createElement('div');controls.className='photo-controls';
+    const typeSelect=document.createElement('select');typeSelect.id='photo-type-'+job.id;[['before','Antes (opcional)'],['evidence','Durante / evidencia'],['after','Después / final']].forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;typeSelect.appendChild(o)});
+    const areaSelect=document.createElement('select');areaSelect.id='photo-area-'+job.id;fillAreaSelect(areaSelect,job);controls.append(typeSelect,areaSelect);box.appendChild(controls);
+    const customArea=document.createElement('input');customArea.className='photo-detail-input photo-custom-area';customArea.placeholder='Escribe el área o elemento (ej. lámpara de techo)';
+    areaSelect.addEventListener('change',()=>customArea.style.display=areaSelect.value==='__custom__'?'block':'none');
+    const detail=document.createElement('input');detail.className='photo-detail-input';detail.placeholder='Detalle opcional (ej. Mancha en alfombra)';box.append(customArea,detail);
+    const fileInput=document.createElement('input');fileInput.type='file';fileInput.accept='image/*';fileInput.capture='environment';fileInput.multiple=true;fileInput.className='photo-file-input';fileInput.id='photo-input-'+job.id;
+    const upload=document.createElement('button');upload.type='button';upload.className='photo-upload-btn';upload.textContent='📷 TOMAR O ELEGIR FOTOS';
+    const canUpload=isToday&&['llego','limpiando','pausado'].includes(stage);upload.disabled=!canUpload;
+    const status=document.createElement('div');status.className='photo-status';status.id='photo-status-'+job.id;
+    status.textContent=!isToday?'Las fotografías estarán disponibles el día del servicio.':!canUpload?'Marca “Llegué” para habilitar la cámara.':Math.max(0,requiredFinal-counts.after)>0?'Faltan '+Math.max(0,requiredFinal-counts.after)+' foto(s) finales para poder terminar.':'Fotografías finales completas.';
+    upload.onclick=()=>fileInput.click();
+    fileInput.onchange=async()=>{const files=[...(fileInput.files||[])];if(!files.length)return;const area=areaSelect.value==='__custom__'?customArea.value.trim():areaSelect.value;if(!area){alert('Escribe el área o elemento de la foto.');return}upload.disabled=true;try{await uploadJobPhotosV71(job,files,typeSelect.value,area,detail.value.trim(),status);fileInput.value='';detail.value='';customArea.value=''}catch(e){console.error(e);alert('No se pudieron subir las fotografías: '+e.message);status.textContent='Error al subir fotografías.'}finally{upload.disabled=!canUpload}};
+    box.append(fileInput,upload,status);
+    const summary=document.createElement('div');summary.className='photo-summary';[['Antes',counts.before],['Durante',counts.evidence],['Después',counts.after]].forEach(([l,v])=>{const i=document.createElement('div');i.className='photo-summary-card';i.innerHTML='<strong>'+v+'</strong><span>'+l+'</span>';summary.appendChild(i)});box.appendChild(summary);
+    const progress=document.createElement('div');progress.className='photo-progress';progress.innerHTML='<div class="photo-progress-fill" style="width:'+Math.min(100,(counts.after/requiredFinal)*100)+'%"></div>';box.appendChild(progress);
+    const missing=Math.max(0,requiredFinal-counts.after),rem=document.createElement('div');rem.className='photo-remaining'+(missing===0?' complete':'');rem.textContent=missing===0?'✓ Fotos finales completas':'Faltan '+missing+' foto(s) finales';box.appendChild(rem);
+    const groups=document.createElement('div');groups.className='photo-groups';groups.id='photo-groups-'+job.id;box.appendChild(groups);
+    const hint=document.createElement('div');hint.className='photo-manage-hint';hint.textContent='Toca una foto para editar su tipo, área, detalle o eliminarla.';box.appendChild(hint);
+    subscribeJobPhotos(job,groups);card.appendChild(box);
+  };
+
+  async function uploadJobPhotosV71(job,files,photoType,area,detail,status){
+    const user=await ensureStorageAuthentication();if(!user)throw new Error('No se pudo autenticar Firebase.');
+    for(let i=0;i<files.length;i++){
+      status.textContent='Comprimiendo foto '+(i+1)+' de '+files.length+'...';const blob=await compressPhoto(files[i]);const path='servicios/'+job.id+'/'+photoType+'/'+Date.now()+'_'+sanitizePathPart(area)+'_'+Math.random().toString(36).slice(2,9)+'.jpg';const ref=storage.ref().child(path);
+      const snap=await ref.put(blob,{contentType:'image/jpeg',customMetadata:{servicioId:job.id,tipo:photoType,area,detalle:detail||'',staffEmail:currentUser.email,staffNombre:currentUser.nombre}});const url=await snap.ref.getDownloadURL();
+      await db.collection('servicios').doc(job.id).collection('fotos').add({url,path,tipo:photoType,area,detalle:detail||'',staff_email:currentUser.email,staff_nombre:currentUser.nombre,auth_uid:user.uid,timestamp:firebase.firestore.FieldValue.serverTimestamp()});
+    }
+    const f=counterField(photoType);await db.collection('servicios').doc(job.id).update({[f]:firebase.firestore.FieldValue.increment(files.length),fotos_ultima_actualizacion:firebase.firestore.FieldValue.serverTimestamp(),fotos_ultimo_staff_email:currentUser.email});status.textContent=files.length+' foto(s) subida(s) correctamente.';
+  }
+
+  function subscribeJobPhotos(job,container){
+    if(photoUnsubs.has(job.id)){try{photoUnsubs.get(job.id)()}catch(_){}}
+    const unsub=db.collection('servicios').doc(job.id).collection('fotos').orderBy('timestamp','desc').onSnapshot(s=>{const photos=[];s.forEach(d=>photos.push({id:d.id,...d.data()}));renderPhotoGroups(job,container,photos)},e=>{console.warn(e);container.innerHTML='<div class="photo-group-empty">No se pudieron cargar las fotos.</div>'});photoUnsubs.set(job.id,unsub);
+  }
+  function renderPhotoGroups(job,container,photos){container.innerHTML='';[['before','Antes'],['evidence','Durante / evidencia'],['after','Después / finales']].forEach(([type,label])=>{const section=document.createElement('section');section.className='photo-group';const selected=photos.filter(p=>p.tipo===type);const head=document.createElement('div');head.className='photo-group-head';head.innerHTML='<div class="photo-group-title">'+label+'</div><div class="photo-group-count">'+selected.length+' foto(s)</div>';const gallery=document.createElement('div');gallery.className='photo-group-gallery';if(!selected.length){gallery.innerHTML='<div class="photo-group-empty">Todavía no hay fotografías en esta sección.</div>'}selected.forEach(p=>{const b=document.createElement('button');b.type='button';b.className='photo-thumb photo-thumb-button';const img=document.createElement('img');img.src=p.url;img.alt=p.area||'Foto';img.loading='lazy';const cap=document.createElement('span');cap.textContent=(p.area||'Sin área');b.append(img,cap);if(p.detalle){const d=document.createElement('div');d.className='photo-thumb-detail';d.textContent=p.detalle;b.appendChild(d)}b.onclick=()=>openPhotoManager(job,p);gallery.appendChild(b)});section.append(head,gallery);container.appendChild(section)});}
+
+  function openPhotoManager(job,photo){activePhotoManager={job,photo};document.getElementById('photo-manager-image').src=photo.url;document.getElementById('photo-manager-type').value=photo.tipo||'evidence';const area=document.getElementById('photo-manager-area');fillAreaSelect(area,job,photo.area||'Vista general');document.getElementById('photo-manager-custom-area').style.display='none';document.getElementById('photo-manager-detail').value=photo.detalle||'';const ov=document.getElementById('photo-manager-overlay');ov.style.display='flex';ov.setAttribute('aria-hidden','false');}
+  function closePhotoManager(){activePhotoManager=null;const ov=document.getElementById('photo-manager-overlay');ov.style.display='none';ov.setAttribute('aria-hidden','true')}
+  document.getElementById('photo-manager-close').onclick=closePhotoManager;
+  document.getElementById('photo-manager-overlay').onclick=e=>{if(e.target.id==='photo-manager-overlay')closePhotoManager()};
+  document.getElementById('photo-manager-area').onchange=e=>document.getElementById('photo-manager-custom-area').style.display=e.target.value==='__custom__'?'block':'none';
+  document.getElementById('photo-manager-save').onclick=async()=>{if(!activePhotoManager)return;const {job,photo}=activePhotoManager,btn=document.getElementById('photo-manager-save');const oldType=photo.tipo||'evidence',newType=document.getElementById('photo-manager-type').value;let area=document.getElementById('photo-manager-area').value;if(area==='__custom__')area=document.getElementById('photo-manager-custom-area').value.trim();if(!area)return alert('Selecciona o escribe el área.');btn.disabled=true;btn.textContent='GUARDANDO...';try{await db.runTransaction(async tx=>{const serviceRef=db.collection('servicios').doc(job.id),photoRef=serviceRef.collection('fotos').doc(photo.id);tx.update(photoRef,{tipo:newType,area,detalle:document.getElementById('photo-manager-detail').value.trim(),editada_fecha:firebase.firestore.FieldValue.serverTimestamp(),editada_por:currentUser.email});if(oldType!==newType)tx.update(serviceRef,{[counterField(oldType)]:firebase.firestore.FieldValue.increment(-1),[counterField(newType)]:firebase.firestore.FieldValue.increment(1),fotos_ultima_actualizacion:firebase.firestore.FieldValue.serverTimestamp()})});closePhotoManager()}catch(e){alert('No se pudo editar la foto: '+e.message)}finally{btn.disabled=false;btn.textContent='Guardar cambios'}};
+  document.getElementById('photo-manager-delete').onclick=async()=>{if(!activePhotoManager)return;const {job,photo}=activePhotoManager;if(!confirm('¿Seguro que deseas eliminar esta fotografía? Esta acción no se puede deshacer.'))return;const btn=document.getElementById('photo-manager-delete');btn.disabled=true;btn.textContent='ELIMINANDO...';try{if(photo.path){try{await storage.ref().child(photo.path).delete()}catch(e){console.warn('Storage:',e)}}await db.runTransaction(async tx=>{const serviceRef=db.collection('servicios').doc(job.id);tx.delete(serviceRef.collection('fotos').doc(photo.id));tx.update(serviceRef,{[counterField(photo.tipo||'evidence')]:firebase.firestore.FieldValue.increment(-1),fotos_ultima_actualizacion:firebase.firestore.FieldValue.serverTimestamp()})});closePhotoManager()}catch(e){alert('No se pudo eliminar la foto: '+e.message)}finally{btn.disabled=false;btn.textContent='Eliminar foto'}};
+
+  function appendSupplyRequest(card,job,isToday){const stage=getWorkflowStage(job),canSend=isToday&&['llego','limpiando','pausado'].includes(stage);const box=document.createElement('div');box.className='supply-box';box.innerHTML='<div class="supply-title">📦 Productos y suministros</div><div class="supply-help">Reporta aquí un producto agotado o solicita reposición. Esto es independiente del informe del servicio.</div>';const grid=document.createElement('div');grid.className='supply-grid';const product=document.createElement('select');product.className='supply-select';SUPPLY_PRODUCTS.forEach(x=>{const o=document.createElement('option');o.value=x;o.textContent=x;product.appendChild(o)});const qty=document.createElement('input');qty.className='supply-input';qty.type='number';qty.min='1';qty.value='1';qty.placeholder='Cantidad';const urgency=document.createElement('select');urgency.className='supply-select supply-urgency';[['puede_esperar','Puede esperar'],['proximo_trabajo','Se necesita para el próximo trabajo'],['urgente','Urgente: afecta el trabajo actual']].forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;urgency.appendChild(o)});const note=document.createElement('textarea');note.className='supply-input supply-note';note.placeholder='Nota opcional';grid.append(product,qty,urgency,note);const button=document.createElement('button');button.className='supply-button';button.type='button';button.textContent='⚠️ REPORTAR / SOLICITAR PRODUCTO';button.disabled=!canSend;const status=document.createElement('div');status.className='supply-status';if(!canSend)status.textContent='Disponible al llegar al servicio.';button.onclick=async()=>{button.disabled=true;button.textContent='ENVIANDO...';try{const result=await saveSupplyRequest(job,product.value,Number(qty.value||1),urgency.value,note.value.trim());status.textContent=result;note.value=''}catch(e){alert('No se pudo enviar la solicitud: '+e.message)}finally{button.disabled=!canSend;button.textContent='⚠️ REPORTAR / SOLICITAR PRODUCTO'}};box.append(grid,button,status);card.appendChild(box)}
+  async function findInventoryProduct(name){const snap=await db.collection('inventario').get();let found=null;snap.forEach(d=>{const x=d.data();if(!found&&normalize(x.nombre||x.producto||x.name)===normalize(name))found={id:d.id,...x}});return found}
+  async function saveSupplyRequest(job,product,qty,urgency,note){if(product==='Otro producto'){const custom=prompt('Escribe el nombre del producto:');if(!custom)throw new Error('Debes escribir el producto.');product=custom.trim()}const inventory=await findInventoryProduct(product);const available=Number(inventory?.cantidad??inventory?.stock??inventory?.existencia??0);const status=inventory&&available>=qty?'disponible_en_inventario':available>0?'existencia_insuficiente':'requiere_compra';const ref=db.collection('solicitudes_inventario').doc();const batch=db.batch();batch.set(ref,{producto:product,cantidad_solicitada:qty,urgencia:urgency,nota:note,estado:status,inventario_id:inventory?.id||null,existencia_detectada:available,servicio_id:job.id,cliente:safeText(job.cliente,'Servicio'),empleado_nombre:currentUser.nombre,empleado_email:currentUser.email,fecha:firebase.firestore.FieldValue.serverTimestamp(),resuelta:false});const n=db.collection('notificaciones_admin').doc();batch.set(n,{tipo:'solicitud_inventario',titulo:status==='requiere_compra'?'Producto agotado / comprar':'Solicitud de producto',mensaje:product+' · solicita '+qty+' · inventario detectado: '+available,servicio_id:job.id,cliente:safeText(job.cliente,'Servicio'),empleado_nombre:currentUser.nombre,empleado_email:currentUser.email,solicitud_id:ref.id,leida:false,fecha:firebase.firestore.FieldValue.serverTimestamp()});await batch.commit();return status==='disponible_en_inventario'?'Solicitud enviada. Admin detectó '+available+' unidad(es) disponibles.':status==='existencia_insuficiente'?'Solicitud enviada. Solo quedan '+available+' unidad(es); Admin fue avisado.':'Solicitud enviada. No hay existencias; quedó marcada para compra.'}
+
+  const previousCreateJobCard=createJobCard;
+  createJobCard=function(job,isToday=false){const card=previousCreateJobCard(job,isToday);const stage=getWorkflowStage(job);if(['llego','limpiando','pausado','completado'].includes(stage)){const workflow=card.querySelector('.workflow-box');const marker=document.createElement('div');appendSupplyRequest(marker,job,isToday);const supply=marker.firstElementChild;if(workflow)card.insertBefore(supply,workflow);else card.appendChild(supply)}return card};
+
+  const previousRender=renderMergedJobs;
+  renderMergedJobs=function(){previousRender();detectServiceUpdates()};
+  function serviceSignature(job){return JSON.stringify({habitaciones:job.habitaciones,banos:job.banos,medios_banos:job.medios_banos,cocinas:job.cocinas,salas:job.salas,comedor:job.comedor,oficinas:job.oficinas,lavanderia:job.lavanderia,garaje:job.garaje,horno:job.horno,nevera:job.nevera,gabinetes:job.gabinetes,ventanas:job.ventanas,baseboards:job.baseboards,alfombra_habitaciones:job.alfombra_habitaciones,alfombra_pies_cuadrados:job.alfombra_pies_cuadrados,extras_agregados:job.extras_agregados,areas_adicionales_staff:job.areas_adicionales_staff,notas_internas:job.notas_internas})}
+  function detectServiceUpdates(){getMergedJobs().forEach(job=>{const sig=serviceSignature(job),old=updateSignatures.get(job.id);if(old&&old!==sig&&['llego','limpiando','pausado'].includes(getWorkflowStage(job)))showUpdateBanner(job);updateSignatures.set(job.id,sig)})}
+  function showUpdateBanner(job){const cards=[...document.querySelectorAll('.card')];const card=cards.find(c=>c.querySelector('h3')?.textContent===safeText(job.cliente,'Servicio asignado'));if(!card||card.querySelector('.service-update-banner'))return;const b=document.createElement('div');b.className='service-update-banner';b.innerHTML='<strong>🆕 Servicio actualizado desde Admin</strong><div>Se añadieron o modificaron áreas, extras o instrucciones. La información y el checklist ya fueron actualizados.</div>';const btn=document.createElement('button');btn.textContent='CONFIRMAR QUE VI EL CAMBIO';btn.onclick=async()=>{await db.collection('servicios').doc(job.id).update({actualizacion_staff_confirmada:true,actualizacion_staff_confirmada_por:currentUser.email,actualizacion_staff_confirmada_fecha:firebase.firestore.FieldValue.serverTimestamp()});b.remove()};b.appendChild(btn);card.insertBefore(b,card.firstChild.nextSibling)}
+
+  renderMergedJobs();
+})();
+</script>
+
 </body>
 </html>
