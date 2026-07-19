@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.5.1 | Metas mensuales y celebración en Contabilidad -->
+<!-- Elite Admin v6.5.2 | Corrección definitiva de IDs al editar trabajos -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.5.1 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.5.2 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -2156,6 +2156,43 @@ function activarCalculadoraAutomatica() {
 document.addEventListener("DOMContentLoaded", activarCalculadoraAutomatica);
 setTimeout(activarCalculadoraAutomatica, 500);
         
+        async function resolverDocumentoServicioParaEdicion(editId) {
+    const idSolicitado = String(editId || "").trim();
+    if (!idSolicitado) return null;
+
+    // 1) Intento normal con el ID real recibido desde la tarjeta.
+    let ref = db.collection("servicios").doc(idSolicitado);
+    let snap = await ref.get();
+    if (snap.exists) return { ref, snap, id: snap.id };
+
+    // 2) Compatibilidad con trabajos recurrentes antiguos cuyo campo interno
+    // `id` apuntaba al trabajo original. Buscamos el registro visible usando
+    // cliente + fecha + hora, sin borrar ni duplicar nada.
+    const cliente = String(document.getElementById("cliente")?.value || "").trim();
+    const fecha = String(document.getElementById("fecha")?.value || "").trim();
+    const hora = String(document.getElementById("hora")?.value || "").trim();
+
+    if (cliente && fecha) {
+        let consulta = db.collection("servicios")
+            .where("cliente", "==", cliente)
+            .where("fecha", "==", fecha);
+        const candidatos = await consulta.get();
+        let elegido = null;
+
+        candidatos.forEach(doc => {
+            const d = doc.data() || {};
+            if (!elegido && (!hora || String(d.hora || "") === hora)) {
+                elegido = doc;
+            }
+        });
+
+        if (!elegido && candidatos.size === 1) elegido = candidatos.docs[0];
+        if (elegido) return { ref: elegido.ref, snap: elegido, id: elegido.id };
+    }
+
+    return null;
+}
+
         async function asignarTrabajo() {
     const boton = document.getElementById("main-button");
     const editId = String(document.getElementById("edit-id")?.value || "").trim();
@@ -2202,12 +2239,20 @@ setTimeout(activarCalculadoraAutomatica, 500);
          * al formulario de edición.
          */
         let servicioActual = {};
+        let editRef = null;
+        let editIdReal = editId;
         if (editId) {
-            const actualSnap = await db.collection("servicios").doc(editId).get();
-            if (!actualSnap.exists) {
-                throw new Error("El trabajo que intentas editar ya no existe.");
+            const resuelto = await resolverDocumentoServicioParaEdicion(editId);
+            if (!resuelto) {
+                throw new Error("No pude localizar el documento real de este trabajo. Recarga la página e inténtalo nuevamente.");
             }
-            servicioActual = actualSnap.data() || {};
+            editRef = resuelto.ref;
+            editIdReal = resuelto.id;
+            servicioActual = resuelto.snap.data() || {};
+
+            // Corrige el formulario en memoria para las siguientes acciones.
+            const campoEditId = document.getElementById("edit-id");
+            if (campoEditId) campoEditId.value = editIdReal;
         }
 
         const data = {
@@ -2315,9 +2360,12 @@ setTimeout(activarCalculadoraAutomatica, 500);
          * si sus reglas fallan, no impedirá actualizar el servicio.
          */
         if (editId) {
-            await db.collection("servicios").doc(editId).set(data, { merge: true });
+            await editRef.set(data, { merge: true });
         } else {
-            await db.collection("servicios").add(data);
+            const nuevoRef = await db.collection("servicios").add(data);
+            // El ID se usa solo en memoria; crearRepeticiones lo elimina antes de guardar.
+            data.id = nuevoRef.id;
+            data.firestore_id = nuevoRef.id;
         }
 
         try {
@@ -2401,13 +2449,13 @@ setTimeout(activarCalculadoraAutomatica, 500);
 
         const fechaTexto = nuevaFecha.toISOString().slice(0, 10);
 
-        // No copiar un campo `id` dentro del documento repetido.
-        // Firestore ya asigna un ID único a cada repetición.
-        const dataRepeticion = { ...data };
-        delete dataRepeticion.id;
+        // Nunca copiar el ID del trabajo original dentro de la repetición.
+        const datosRepeticion = { ...data };
+        delete datosRepeticion.id;
+        delete datosRepeticion.firestore_id;
 
         await db.collection("servicios").add({
-            ...dataRepeticion,
+            ...datosRepeticion,
             fecha: fechaTexto,
             estado: "no_iniciado",
             estado_calendario: "pendiente",
@@ -2426,8 +2474,10 @@ setTimeout(activarCalculadoraAutomatica, 500);
         db.collection("servicios").onSnapshot(snap => {
     todosLosServicios = [];
     snap.forEach(doc => {
-        const s = doc.data();
-        todosLosServicios.push({ ...s, id: doc.id });
+        const s = doc.data() || {};
+        // El ID verdadero del documento siempre debe prevalecer sobre cualquier
+        // campo `id` antiguo copiado dentro de trabajos recurrentes.
+        todosLosServicios.push({ ...s, id: doc.id, firestore_id: doc.id });
     });
 
     document.getElementById('count-pendientes').innerText = todosLosServicios.filter(s => s.estado !== 'completado').length;
