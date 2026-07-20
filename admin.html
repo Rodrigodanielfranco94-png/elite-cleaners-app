@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.6.0 | Llegadas instantáneas con foto y GPS -->
+<!-- Elite Admin v6.6.1 | Galería deslizable y descargas de evidencia -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.6.0 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.6.1 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -12,6 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     
     <style>
         body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; padding-bottom: 100px; }
@@ -7051,13 +7052,64 @@ body.elite-v606-operations-home #ops-center-modal-v601.elite-v606-home{display:b
     }catch(error){console.error(error);alert('No se pudo editar el nombre. Revisa que las reglas de Firestore permitan actualizar fotografías desde Admin.');}
   };
   window.editarFotoEvidenciaActual=function(){const foto=fotoVisorActual();if(foto)editarNombreFotoEvidencia(foto.id)};
-  window.descargarFotoEvidenciaActual=function(){
+  async function obtenerBlobFoto(url){
+    const respuesta=await fetch(url,{mode:'cors',cache:'no-store'});
+    if(!respuesta.ok)throw new Error('No se pudo descargar la fotografía.');
+    return await respuesta.blob();
+  }
+  async function guardarBlobFoto(blob,nombre){
+    const tipo=blob.type||'image/jpeg';
+    const archivo=new File([blob],nombre,{type:tipo});
+    const esMovil=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if(esMovil&&navigator.share&&navigator.canShare?.({files:[archivo]})){
+      await navigator.share({files:[archivo],title:nombre});
+      return;
+    }
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=nombre;a.rel='noopener';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+  }
+  window.descargarFotoEvidenciaActual=async function(){
     const foto=fotoVisorActual();if(!foto?.url)return;
-    const a=document.createElement('a');a.href=foto.url;a.target='_blank';a.rel='noopener';a.download=nombreArchivo(foto,indiceVisor);document.body.appendChild(a);a.click();a.remove();
+    const nombre=nombreArchivo(foto,indiceVisor);
+    try{
+      const blob=await obtenerBlobFoto(foto.url);
+      await guardarBlobFoto(blob,nombre);
+    }catch(error){
+      console.warn('Descarga directa no disponible:',error);
+      window.open(foto.url,'_blank','noopener');
+      alert('La foto se abrió en una pestaña nueva. En iPhone mantén presionada la imagen y elige “Guardar en Fotos”.');
+    }
   };
-  window.descargarEvidenciaServicio=function(){
+  window.descargarEvidenciaServicio=async function(){
     if(!fotosEvidenciaActuales.length)return alert('Este trabajo no tiene fotos para descargar.');
-    fotosEvidenciaActuales.forEach((f,i)=>setTimeout(()=>{const a=document.createElement('a');a.href=f.url;a.target='_blank';a.rel='noopener';a.download=nombreArchivo(f,i);document.body.appendChild(a);a.click();a.remove()},i*220));
+    if(typeof JSZip==='undefined')return alert('No se pudo cargar el módulo de descarga ZIP. Actualiza la página e inténtalo nuevamente.');
+    const boton=document.querySelector('.elite-evidence-download');
+    const textoOriginal=boton?.textContent||'⬇ Descargar todas';
+    if(boton){boton.disabled=true;boton.textContent='Preparando ZIP…';}
+    try{
+      const zip=new JSZip();
+      const carpeta=zip.folder('Evidencia_Elite_Cleaners');
+      for(let i=0;i<fotosEvidenciaActuales.length;i++){
+        const foto=fotosEvidenciaActuales[i];
+        if(boton)boton.textContent=`Descargando ${i+1}/${fotosEvidenciaActuales.length}…`;
+        const blob=await obtenerBlobFoto(foto.url);
+        const ext=(blob.type||'').includes('png')?'.png':(blob.type||'').includes('webp')?'.webp':'.jpg';
+        const base=nombreArchivo(foto,i).replace(/\.[^.]+$/, '');
+        carpeta.file(base+ext,blob);
+      }
+      if(boton)boton.textContent='Creando ZIP…';
+      const zipBlob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+      const cliente=(servicioEvidenciaActual?.cliente||'servicio').replace(/[^a-z0-9áéíóúñ]+/gi,'_');
+      await guardarBlobFoto(zipBlob,`Evidencia_${cliente}.zip`);
+    }catch(error){
+      console.error('Error descargando evidencia:',error);
+      alert('No se pudieron descargar todas las fotos. Puedes descargarlas individualmente desde el visor.');
+    }finally{
+      if(boton){boton.disabled=false;boton.textContent=textoOriginal;}
+    }
   };
   window.eliminarFotoEvidenciaActual=function(){const foto=fotoVisorActual();if(foto)eliminarFotoEvidencia(foto.id)};
   window.eliminarFotoEvidencia=async function(photoId){
