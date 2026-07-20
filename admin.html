@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.5.3 | Visor profesional de fotos Antes/Durante/Después -->
+<!-- Elite Admin v6.6.0 | Llegadas instantáneas con foto y GPS -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.5.3 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.6.0 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -7114,5 +7114,135 @@ body.elite-v606-operations-home #ops-center-modal-v601.elite-v606-home{display:b
   }
   const original=window.renderContabilidadElite;window.renderContabilidadElite=function(){const r=original.apply(this,arguments);try{renderMetaMensualElite(obtenerDatosContabilidad())}catch(e){console.error('Meta mensual:',e)}return r};
   document.addEventListener('DOMContentLoaded',()=>{if(!document.getElementById('elite-goal-celebration')){const d=document.createElement('div');d.id='elite-goal-celebration';document.body.appendChild(d)}cargarMetas()});
+})();
+</script>
+<style id="elite-arrival-alerts-css">
+#elite-arrival-bar{display:none;position:sticky;top:8px;z-index:85000;margin:0 0 16px;padding:14px;border:1px solid #38bdf8;border-radius:16px;background:linear-gradient(135deg,#082f49,#0c4a6e);box-shadow:0 12px 35px rgba(2,132,199,.28)}
+#elite-arrival-bar.show{display:block}
+.elite-arrival-bar-head{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.elite-arrival-bar-head strong{font-size:15px;color:#e0f2fe}.elite-arrival-bar-head span{min-width:25px;height:25px;display:grid;place-items:center;border-radius:999px;background:#ef4444;color:#fff;font-weight:900;font-size:12px}
+#elite-arrival-list{display:grid;gap:9px;margin-top:10px}
+.elite-arrival-mini{display:grid;grid-template-columns:58px 1fr auto;gap:10px;align-items:center;padding:10px;border:1px solid rgba(255,255,255,.15);border-radius:12px;background:rgba(0,0,0,.28)}
+.elite-arrival-mini img{width:58px;height:58px;object-fit:cover;border-radius:10px;background:#111}
+.elite-arrival-mini b{display:block;color:#fff;font-size:13px}.elite-arrival-mini p{margin:3px 0;color:#bae6fd;font-size:11px}
+.elite-arrival-mini button,.elite-arrival-enable{border:0;border-radius:9px;padding:9px 11px;background:#22c55e;color:#fff;font-size:10px;font-weight:900;cursor:pointer}
+.elite-arrival-enable{background:#2563eb;margin-left:7px}
+#elite-arrival-toast-wrap{position:fixed;top:18px;right:18px;z-index:2200000;display:grid;gap:10px;width:min(390px,calc(100vw - 30px));pointer-events:none}
+.elite-arrival-toast{pointer-events:auto;padding:14px;border:1px solid #38bdf8;border-radius:17px;background:#071a2c;color:#fff;box-shadow:0 22px 70px rgba(0,0,0,.55);animation:eliteArrivalIn .25s ease}
+.elite-arrival-toast h3{margin:0 0 6px;color:#7dd3fc;font-size:16px}.elite-arrival-toast p{margin:3px 0;color:#dbeafe;font-size:12px}.elite-arrival-toast-actions{display:flex;gap:8px;margin-top:10px}.elite-arrival-toast button{border:0;border-radius:9px;padding:9px 11px;color:#fff;font-weight:900;cursor:pointer}.elite-arrival-toast .view{background:#16a34a}.elite-arrival-toast .close{background:#475569}
+#elite-arrival-modal{display:none;position:fixed;inset:0;z-index:2300000;padding:18px;background:rgba(0,0,0,.9);overflow:auto}
+.elite-arrival-modal-box{max-width:620px;margin:30px auto;padding:18px;border:1px solid #38bdf8;border-radius:22px;background:#0f172a;color:#fff}
+.elite-arrival-modal-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.elite-arrival-modal-head h2{margin:0;color:#7dd3fc}.elite-arrival-modal-close{border:0;border-radius:9px;padding:9px 11px;background:#ef4444;color:#fff;font-weight:900;cursor:pointer}
+#elite-arrival-photo{display:none;width:100%;max-height:440px;object-fit:contain;margin-top:14px;border-radius:15px;background:#000}
+.elite-arrival-details{margin-top:14px;padding:13px;border:1px solid #334155;border-radius:13px;background:#020617}.elite-arrival-details p{margin:7px 0;color:#dbeafe;font-size:13px}
+.elite-arrival-modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}.elite-arrival-modal-actions button,.elite-arrival-modal-actions a{display:flex;align-items:center;justify-content:center;min-height:44px;border:0;border-radius:10px;color:#fff;text-decoration:none;font-weight:900;cursor:pointer}.elite-arrival-map{background:#2563eb}.elite-arrival-read{background:#16a34a}
+@keyframes eliteArrivalIn{from{transform:translateY(-10px);opacity:0}}
+@media(max-width:650px){#elite-arrival-toast-wrap{top:65px;right:15px}.elite-arrival-mini{grid-template-columns:48px 1fr}.elite-arrival-mini img{width:48px;height:48px}.elite-arrival-mini button{grid-column:1/-1}.elite-arrival-modal-actions{grid-template-columns:1fr}}
+</style>
+
+<script id="elite-arrival-alerts-js">
+(function(){
+  'use strict';
+  const ARRIVAL_TYPES=new Set(['llegada_staff','empleado_llego','llegada_empleado','arrival_staff','staff_arrival']);
+  let arrivals=[],unsubscribe=null,initial=true,current=null;
+
+  function isArrival(n){
+    const type=String(n?.tipo||n?.type||'').toLowerCase().trim();
+    return ARRIVAL_TYPES.has(type) || n?.es_llegada===true;
+  }
+  function photo(n){return n.foto_url||n.foto_llegada_url||n.photo_url||n.imagen_url||n.evidencia_url||''}
+  function employee(n){return n.empleado_nombre||n.empleado||n.staff_nombre||'Empleado'}
+  function client(n){return n.cliente||n.cliente_nombre||'Servicio'}
+  function address(n){return n.direccion||n.direccion_servicio||n.address||''}
+  function lat(n){return Number(n.latitud??n.latitude??n.ubicacion?.latitud??n.ubicacion?.lat??NaN)}
+  function lng(n){return Number(n.longitud??n.longitude??n.ubicacion?.longitud??n.ubicacion?.lng??NaN)}
+  function when(n){
+    const v=n.fecha||n.hora_llegada||n.timestamp||n.creado;
+    try{const d=v?.toDate?v.toDate():new Date(v);return Number.isNaN(d.getTime())?'Ahora':d.toLocaleString('es-US',{dateStyle:'medium',timeStyle:'short'})}catch(_){return 'Ahora'}
+  }
+  function ensureUI(){
+    if(document.getElementById('elite-arrival-bar'))return;
+    const bar=document.createElement('section');bar.id='elite-arrival-bar';bar.innerHTML=`
+      <div class="elite-arrival-bar-head">
+        <div><strong>📍 Llegadas de empleados</strong><button class="elite-arrival-enable" type="button">Activar alertas del navegador</button></div>
+        <span id="elite-arrival-count">0</span>
+      </div><div id="elite-arrival-list"></div>`;
+    const anchor=document.querySelector('h1')||document.body.firstElementChild;
+    if(anchor?.parentNode)anchor.parentNode.insertBefore(bar,anchor.nextSibling);else document.body.prepend(bar);
+    bar.querySelector('.elite-arrival-enable').onclick=enableBrowserNotifications;
+
+    const wrap=document.createElement('div');wrap.id='elite-arrival-toast-wrap';document.body.appendChild(wrap);
+    const modal=document.createElement('div');modal.id='elite-arrival-modal';modal.innerHTML=`
+      <div class="elite-arrival-modal-box">
+        <div class="elite-arrival-modal-head"><div><h2>📍 Confirmación de llegada</h2><div id="elite-arrival-modal-sub"></div></div><button class="elite-arrival-modal-close" type="button">Cerrar</button></div>
+        <img id="elite-arrival-photo" alt="Foto tomada al llegar">
+        <div class="elite-arrival-details" id="elite-arrival-details"></div>
+        <div class="elite-arrival-modal-actions"><a id="elite-arrival-map" class="elite-arrival-map" target="_blank" rel="noopener">🗺️ Ver ubicación</a><button id="elite-arrival-read" class="elite-arrival-read" type="button">✓ Marcar como revisada</button></div>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.querySelector('.elite-arrival-modal-close').onclick=()=>modal.style.display='none';
+    modal.onclick=e=>{if(e.target===modal)modal.style.display='none'};
+    document.getElementById('elite-arrival-read').onclick=markCurrentRead;
+  }
+  function render(){
+    ensureUI();
+    const unread=arrivals.filter(x=>x.leida!==true);
+    const bar=document.getElementById('elite-arrival-bar'),list=document.getElementById('elite-arrival-list');
+    document.getElementById('elite-arrival-count').textContent=String(unread.length);
+    bar.classList.toggle('show',unread.length>0);
+    list.innerHTML='';
+    unread.slice(0,5).forEach(n=>{
+      const row=document.createElement('div');row.className='elite-arrival-mini';
+      const img=document.createElement('img');img.alt='Evidencia de llegada';img.src=photo(n)||'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="100%" height="100%" fill="#111827"/><text x="50%" y="54%" text-anchor="middle" font-size="42">📍</text></svg>');
+      const info=document.createElement('div');info.innerHTML=`<b>${esc(employee(n))} llegó a ${esc(client(n))}</b><p>${esc(address(n)||'Dirección no informada')}</p><p>${esc(when(n))}</p>`;
+      const btn=document.createElement('button');btn.type='button';btn.textContent='Ver evidencia';btn.onclick=()=>openArrival(n.id);
+      row.append(img,info,btn);list.appendChild(row);
+    });
+  }
+  function esc(v){const d=document.createElement('div');d.textContent=String(v??'');return d.innerHTML}
+  function openArrival(id){
+    const n=arrivals.find(x=>x.id===id);if(!n)return;current=n;
+    const modal=document.getElementById('elite-arrival-modal'),img=document.getElementById('elite-arrival-photo'),url=photo(n);
+    document.getElementById('elite-arrival-modal-sub').textContent=`${employee(n)} · ${when(n)}`;
+    if(url){img.src=url;img.style.display='block'}else{img.removeAttribute('src');img.style.display='none'}
+    const la=lat(n),lo=lng(n),has=Number.isFinite(la)&&Number.isFinite(lo);
+    document.getElementById('elite-arrival-details').innerHTML=`
+      <p><b>Empleado:</b> ${esc(employee(n))}</p><p><b>Cliente:</b> ${esc(client(n))}</p>
+      <p><b>Dirección programada:</b> ${esc(address(n)||'No informada')}</p><p><b>Hora registrada:</b> ${esc(when(n))}</p>
+      <p><b>GPS:</b> ${has?`${la.toFixed(6)}, ${lo.toFixed(6)}`:'No disponible'}</p>
+      ${n.distancia_millas!=null?`<p><b>Distancia de la propiedad:</b> ${Number(n.distancia_millas).toFixed(2)} millas</p>`:''}`;
+    const map=document.getElementById('elite-arrival-map');map.style.display=has?'flex':'none';if(has)map.href=`https://www.google.com/maps?q=${encodeURIComponent(la+','+lo)}`;
+    document.getElementById('elite-arrival-read').textContent=n.leida===true?'Revisada ✓':'✓ Marcar como revisada';
+    modal.style.display='block';
+  }
+  async function markCurrentRead(){
+    if(!current?.id)return;
+    try{await db.collection('notificaciones_admin').doc(current.id).update({leida:true,fecha_lectura:firebase.firestore.FieldValue.serverTimestamp(),revisada_por_admin:true});document.getElementById('elite-arrival-modal').style.display='none'}catch(e){alert('No se pudo marcar la llegada: '+e.message)}
+  }
+  function sound(){
+    try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const c=new C(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.setValueAtTime(740,c.currentTime);o.frequency.setValueAtTime(980,c.currentTime+.14);g.gain.setValueAtTime(.12,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.45);o.start();o.stop(c.currentTime+.45)}catch(_){}
+  }
+  function toast(n){
+    sound();const wrap=document.getElementById('elite-arrival-toast-wrap'),t=document.createElement('div');t.className='elite-arrival-toast';
+    t.innerHTML=`<h3>📍 ${esc(employee(n))} llegó</h3><p><b>${esc(client(n))}</b></p><p>${esc(address(n)||'Dirección no informada')}</p><p>${esc(when(n))}</p><div class="elite-arrival-toast-actions"><button class="view">Ver foto y GPS</button><button class="close">Cerrar</button></div>`;
+    t.querySelector('.view').onclick=()=>{openArrival(n.id);t.remove()};t.querySelector('.close').onclick=()=>t.remove();wrap.prepend(t);setTimeout(()=>t.remove(),18000);
+    if('Notification'in window&&Notification.permission==='granted'){new Notification(`${employee(n)} llegó al servicio`,{body:`${client(n)} · ${address(n)||'Ver evidencia en Admin'}`,icon:photo(n)||undefined,tag:'arrival-'+n.id})}
+  }
+  async function enableBrowserNotifications(){
+    if(!('Notification'in window))return alert('Este navegador no admite notificaciones.');
+    const p=await Notification.requestPermission();alert(p==='granted'?'Alertas del navegador activadas ✅':'No se concedió permiso para notificaciones.');
+  }
+  function subscribe(){
+    if(typeof db==='undefined'){setTimeout(subscribe,500);return}
+    ensureUI();
+    unsubscribe=db.collection('notificaciones_admin').onSnapshot(s=>{
+      const next=[];s.forEach(d=>{const x={id:d.id,...d.data()};if(isArrival(x))next.push(x)});
+      next.sort((a,b)=>{const ta=(a.fecha?.toMillis?.()||new Date(a.fecha||0).getTime()||0),tb=(b.fecha?.toMillis?.()||new Date(b.fecha||0).getTime()||0);return tb-ta});
+      if(!initial){s.docChanges().filter(c=>c.type==='added').forEach(c=>{const n={id:c.doc.id,...c.doc.data()};if(isArrival(n)&&n.leida!==true)toast(n)})}
+      arrivals=next;window.eliteArrivalNotifications=arrivals;render();initial=false;
+    },e=>console.warn('Alertas de llegada:',e));
+  }
+  document.addEventListener('DOMContentLoaded',subscribe);
+  window.openEliteArrival=openArrival;
 })();
 </script>
