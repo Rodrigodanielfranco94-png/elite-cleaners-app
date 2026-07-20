@@ -3821,27 +3821,108 @@ async function revisarSesion() {
 }
 
 window.loginAdmin = async function () {
-  const email = document.getElementById("loginEmail").value.trim();
-  const password = document.getElementById("loginPassword").value.trim();
+  const emailInput = document.getElementById("loginEmail");
+  const passwordInput = document.getElementById("loginPassword");
   const errorBox = document.getElementById("loginError");
+  const loginButton = document.getElementById("eliteLoginButton");
 
-  errorBox.textContent = "Entrando...";
+  const email = (emailInput?.value || "").trim().toLowerCase();
 
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
-    email,
-    password
-  });
+  // La contraseña no debe usar trim().
+  const password = passwordInput?.value || "";
 
-  if (error) {
-    errorBox.textContent = "Email o contraseña incorrectos.";
+  if (!email) {
+    errorBox.style.color = "#f59e0b";
+    errorBox.textContent = "Escribe tu correo electrónico.";
+    emailInput?.focus();
     return;
   }
 
-  currentUser = data.user;
-  detectarUsuario(currentUser);
-  document.getElementById("loginBox").style.display = "none";
+  if (!password) {
+    errorBox.style.color = "#f59e0b";
+    errorBox.textContent = "Escribe tu contraseña.";
+    passwordInput?.focus();
+    return;
+  }
 
-  alert("Bienvenido " + window.usuarioActual.nombre);
+  loginButton?.classList.add("is-loading");
+
+  if (loginButton) {
+    loginButton.disabled = true;
+  }
+
+  errorBox.style.color = "#93c5fd";
+  errorBox.textContent = "Verificando acceso...";
+
+  try {
+    const { data, error } =
+      await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+    if (error) {
+      console.error("Error real de Supabase:", error);
+
+      const mensaje = String(error.message || "").toLowerCase();
+
+      errorBox.style.color = "#ef4444";
+
+      if (mensaje.includes("invalid login credentials")) {
+        errorBox.textContent =
+          "El correo o la contraseña no coinciden.";
+      } else if (mensaje.includes("email not confirmed")) {
+        errorBox.textContent =
+          "Tu correo todavía no está confirmado.";
+      } else if (
+        mensaje.includes("too many requests") ||
+        mensaje.includes("rate limit")
+      ) {
+        errorBox.textContent =
+          "Hubo demasiados intentos. Espera un momento.";
+      } else if (
+        mensaje.includes("failed to fetch") ||
+        mensaje.includes("network")
+      ) {
+        errorBox.textContent =
+          "No se pudo conectar con Supabase. Revisa tu internet.";
+      } else {
+        errorBox.textContent =
+          "No se pudo iniciar sesión: " + error.message;
+      }
+
+      passwordInput?.focus();
+      return;
+    }
+
+    if (!data?.user) {
+      errorBox.style.color = "#ef4444";
+      errorBox.textContent =
+        "No se recibió una sesión válida.";
+      return;
+    }
+
+    currentUser = data.user;
+    detectarUsuario(currentUser);
+
+    document.getElementById("loginBox").style.display = "none";
+
+    errorBox.textContent = "";
+
+    alert("Bienvenido " + window.usuarioActual.nombre);
+  } catch (error) {
+    console.error("Error inesperado en login:", error);
+
+    errorBox.style.color = "#ef4444";
+    errorBox.textContent =
+      "No se pudo conectar con el sistema de acceso.";
+  } finally {
+    loginButton?.classList.remove("is-loading");
+
+    if (loginButton) {
+      loginButton.disabled = false;
+    }
+  }
 };
 
 revisarSesion();
