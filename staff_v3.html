@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Elite Staff v7.1 | GPS y orden operativo actualizado -->
+<!-- Elite Staff v7.2 | Llegada con foto, GPS y alerta instantánea -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#000000">
-  <title>Elite Staff v7.1 - Operación automática</title>
+  <title>Elite Staff v7.2 - Llegada verificada</title>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -3974,6 +3974,192 @@ if (currentUser) {
   function showUpdateBanner(job){const cards=[...document.querySelectorAll('.card')];const card=cards.find(c=>c.querySelector('h3')?.textContent===safeText(job.cliente,'Servicio asignado'));if(!card||card.querySelector('.service-update-banner'))return;const b=document.createElement('div');b.className='service-update-banner';b.innerHTML='<strong>🆕 Servicio actualizado desde Admin</strong><div>Se añadieron o modificaron áreas, extras o instrucciones. La información y el checklist ya fueron actualizados.</div>';const btn=document.createElement('button');btn.textContent='CONFIRMAR QUE VI EL CAMBIO';btn.onclick=async()=>{await db.collection('servicios').doc(job.id).update({actualizacion_staff_confirmada:true,actualizacion_staff_confirmada_por:currentUser.email,actualizacion_staff_confirmada_fecha:firebase.firestore.FieldValue.serverTimestamp()});b.remove()};b.appendChild(btn);card.insertBefore(b,card.firstChild.nextSibling)}
 
   renderMergedJobs();
+})();
+</script>
+
+
+
+<!-- ===== ELITE STAFF v7.2 — LLEGADA CON FOTO + GPS + ALERTA INSTANTÁNEA ===== -->
+<style id="elite-arrival-proof-css">
+.elite-arrival-camera-input{position:fixed!important;left:-9999px!important;top:-9999px!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}
+.elite-arrival-help{margin-top:9px;padding:10px 12px;border-radius:11px;background:#431407;border:1px solid #ea580c;color:#fed7aa;font-size:11px;font-weight:800;line-height:1.45;text-align:center}
+</style>
+<script>
+(function eliteStaffArrivalProofUpgrade(){
+  const originalUpdateWorkflow = updateWorkflow;
+  let arrivalCaptureBusy = false;
+
+  function arrivalTimeText(){
+    return new Date().toLocaleTimeString('en-US',{
+      hour:'2-digit',minute:'2-digit',hour12:true
+    }).toLowerCase();
+  }
+
+  function requestArrivalCamera(){
+    return new Promise((resolve,reject)=>{
+      const input=document.createElement('input');
+      input.type='file';
+      input.accept='image/*';
+      input.capture='environment';
+      input.className='elite-arrival-camera-input';
+      input.setAttribute('aria-hidden','true');
+      document.body.appendChild(input);
+
+      let settled=false;
+      const cleanup=()=>setTimeout(()=>input.remove(),100);
+      input.addEventListener('change',()=>{
+        settled=true;
+        const file=input.files&&input.files[0];
+        cleanup();
+        if(!file){reject(new Error('Debes tomar una foto para confirmar la llegada.'));return;}
+        resolve(file);
+      },{once:true});
+
+      window.addEventListener('focus',()=>{
+        setTimeout(()=>{
+          if(!settled && (!input.files || !input.files.length)){
+            cleanup();
+            reject(new Error('La llegada no fue registrada porque no se tomó la foto.'));
+          }
+        },700);
+      },{once:true});
+
+      input.click();
+    });
+  }
+
+  async function registerArrivalWithProof(serviceId){
+    if(arrivalCaptureBusy) throw new Error('Ya se está registrando una llegada.');
+    if(!currentUser) throw new Error('No existe una sesión activa de Staff.');
+    arrivalCaptureBusy=true;
+
+    try{
+      const serviceRef=db.collection('servicios').doc(serviceId);
+      const snap=await serviceRef.get();
+      if(!snap.exists) throw new Error('El trabajo ya no existe.');
+      const job={id:serviceId,...snap.data()};
+
+      if(getWorkflowStage(job)==='llego' || hasRealTime(job.hora_llegada)){
+        throw new Error('La llegada de este servicio ya fue registrada.');
+      }
+
+      let position;
+      try{
+        position=await getPosition();
+      }catch(error){
+        throw new Error('Activa el GPS y permite la ubicación para confirmar que llegaste al lugar correcto.');
+      }
+
+      const file=await requestArrivalCamera();
+      const user=await ensureStorageAuthentication();
+      const blob=await compressPhoto(file);
+      const now=new Date();
+      const nowMs=now.getTime();
+      const timeText=arrivalTimeText();
+      const coords={
+        lat:position.coords.latitude,
+        lon:position.coords.longitude,
+        accuracy:position.coords.accuracy
+      };
+      const path='servicios/'+serviceId+'/arrival/'+nowMs+'_'+Math.random().toString(36).slice(2,9)+'.jpg';
+      const storageRef=storage.ref().child(path);
+      const upload=await storageRef.put(blob,{
+        contentType:'image/jpeg',
+        customMetadata:{
+          servicioId:serviceId,
+          tipo:'arrival',
+          area:'Fachada / número de casa',
+          staffEmail:currentUser.email,
+          staffNombre:currentUser.nombre
+        }
+      });
+      const photoUrl=await upload.ref.getDownloadURL();
+
+      const batch=db.batch();
+      const photoRef=serviceRef.collection('fotos').doc();
+      const eventRef=serviceRef.collection('eventos_staff').doc();
+      const notificationRef=db.collection('notificaciones_admin').doc();
+
+      batch.set(photoRef,{
+        url:photoUrl,
+        path:path,
+        tipo:'arrival',
+        area:'Fachada / número de casa',
+        detalle:'Evidencia obligatoria de llegada',
+        staff_email:currentUser.email,
+        staff_nombre:currentUser.nombre,
+        auth_uid:user.uid,
+        gps:coords,
+        timestamp:firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      batch.update(serviceRef,{
+        etapa_staff:'llego',
+        estado:'no_iniciado',
+        estado_calendario:'pendiente',
+        hora_llegada:timeText,
+        llegada_timestamp:firebase.firestore.FieldValue.serverTimestamp(),
+        llegada_ms:nowMs,
+        gps_llegada:coords,
+        foto_llegada_url:photoUrl,
+        foto_llegada_path:path,
+        foto_llegada_id:photoRef.id,
+        llegada_verificada_con_foto:true,
+        llegada_notificacion_id:notificationRef.id,
+        ultima_actualizacion:firebase.firestore.FieldValue.serverTimestamp(),
+        actualizado_por_staff_email:currentUser.email,
+        actualizado_por_staff_nombre:currentUser.nombre
+      });
+
+      batch.set(eventRef,{
+        tipo:'llegada_con_foto',
+        etiqueta:'Llegada verificada con foto',
+        hora:timeText,
+        fecha:firebase.firestore.FieldValue.serverTimestamp(),
+        fecha_ms:nowMs,
+        gps:coords,
+        foto_url:photoUrl,
+        empleado_nombre:currentUser.nombre,
+        empleado_email:currentUser.email
+      });
+
+      batch.set(notificationRef,{
+        tipo:'llegada_staff',
+        titulo:'📍 Empleado llegó al servicio',
+        mensaje:currentUser.nombre+' llegó al servicio de '+safeText(job.cliente,'cliente')+'.',
+        servicio_id:serviceId,
+        cliente:safeText(job.cliente,'Servicio'),
+        direccion:safeText(job.direccion,'Dirección no disponible'),
+        empleado_nombre:currentUser.nombre,
+        empleado_email:currentUser.email,
+        hora_llegada:timeText,
+        foto_url:photoUrl,
+        foto_llegada_url:photoUrl,
+        latitud:coords.lat,
+        longitud:coords.lon,
+        precision_gps:coords.accuracy,
+        ubicacion:{lat:coords.lat,lng:coords.lon,latitud:coords.lat,longitud:coords.lon},
+        gps:coords,
+        leida:false,
+        revisada_por_admin:false,
+        fecha:firebase.firestore.FieldValue.serverTimestamp(),
+        fecha_ms:nowMs
+      });
+
+      await batch.commit();
+      setMessage('Llegada confirmada. La foto, el GPS y la alerta fueron enviados a Admin.', 'success');
+      return true;
+    }finally{
+      arrivalCaptureBusy=false;
+    }
+  }
+
+  updateWorkflow=async function(id,nextStage,inspectionConfirmed=false){
+    if(nextStage==='llego') return registerArrivalWithProof(id);
+    return originalUpdateWorkflow(id,nextStage,inspectionConfirmed);
+  };
+
+  window.eliteRegisterArrivalWithProof=registerArrivalWithProof;
 })();
 </script>
 
