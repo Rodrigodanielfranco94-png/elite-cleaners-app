@@ -3744,7 +3744,38 @@ function detectarUsuario(user) {
   console.log("Usuario detectado:", window.usuarioActual);
 }
 
+window.togglePasswordVisibility = function () {
+  const input = document.getElementById("loginPassword");
+  const button = document.getElementById("toggleLoginPassword");
 
+  if (!input || !button) return;
+
+  const mostrarPassword = input.type === "password";
+
+  input.type = mostrarPassword ? "text" : "password";
+
+  button.classList.toggle("is-visible", mostrarPassword);
+
+  button.setAttribute(
+    "aria-label",
+    mostrarPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+  );
+
+  button.setAttribute(
+    "title",
+    mostrarPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+  );
+
+  input.focus();
+
+  try {
+    const posicion = input.value.length;
+    input.setSelectionRange(posicion, posicion);
+  } catch (error) {
+    console.log("No se pudo posicionar el cursor.");
+  }
+};
+    
 window.recuperarPasswordAdmin = async function () {
   const emailInput = document.getElementById("loginEmail");
   const errorBox = document.getElementById("loginError");
