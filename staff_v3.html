@@ -4163,5 +4163,143 @@ if (currentUser) {
 })();
 </script>
 
+
+
+<!-- ===== ELITE STAFF v7.3 — ACCESO DIRECTO AL PRÓXIMO TRABAJO ===== -->
+<style id="elite-next-job-access-css">
+  .dashboard-link-card{cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+  .dashboard-link-card:active{transform:scale(.985)}
+  .card[data-service-id]{scroll-margin-top:18px}
+  .elite-job-focus{animation:eliteJobFocus 1.2s ease 2}
+  @keyframes eliteJobFocus{
+    0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,0)}
+    50%{box-shadow:0 0 0 5px rgba(59,130,246,.38),0 18px 45px rgba(37,99,235,.28)}
+  }
+  .elite-access-job-btn{
+    width:100%;min-height:58px;margin:12px 0 2px;padding:15px 18px;border:0;border-radius:15px;
+    background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;font-weight:950;
+    text-transform:uppercase;cursor:pointer;box-shadow:0 10px 26px rgba(37,99,235,.28)
+  }
+  .elite-access-job-btn:disabled{opacity:.55;cursor:not-allowed}
+</style>
+<script>
+(function eliteNextJobAccessFix(){
+  let dashboardTodayJobIds=[];
+  let dashboardNextJobId='';
+
+  function findJobCard(jobId){
+    if(!jobId)return null;
+    return document.querySelector('.card[data-service-id="'+CSS.escape(String(jobId))+'"]');
+  }
+
+  function openJob(jobId){
+    const card=findJobCard(jobId);
+    if(!card){
+      setMessage('El trabajo todavía se está cargando. Intenta nuevamente en un momento.','info');
+      return;
+    }
+
+    if(card.classList.contains('future-card') && !card.classList.contains('expanded')){
+      const toggle=card.querySelector('.future-summary-toggle');
+      if(toggle)toggle.click();
+    }
+
+    card.scrollIntoView({behavior:'smooth',block:'start'});
+    card.classList.remove('elite-job-focus');
+    void card.offsetWidth;
+    card.classList.add('elite-job-focus');
+    setTimeout(()=>card.classList.remove('elite-job-focus'),2600);
+  }
+
+  const originalUpdateDashboard=updateDashboard;
+  updateDashboard=function(todayJobs){
+    originalUpdateDashboard(todayJobs);
+    dashboardTodayJobIds=(todayJobs||[]).map(job=>job.id);
+    const active=(todayJobs||[]).find(job=>normalize(job.estado)==='en_progreso');
+    const next=active || (todayJobs||[]).find(job=>normalize(job.estado)==='no_iniciado') || null;
+    dashboardNextJobId=next?.id || '';
+  };
+
+  const originalCreateJobCard=createJobCard;
+  createJobCard=function(job,isToday=false){
+    const card=originalCreateJobCard(job,isToday);
+    card.dataset.serviceId=String(job.id);
+    card.dataset.jobDate=safeText(job.fecha);
+    card.dataset.jobTime=safeText(job.hora);
+
+    const header=card.querySelector('.header-card');
+    if(header){
+      header.style.cursor='pointer';
+      header.setAttribute('role','button');
+      header.setAttribute('tabindex','0');
+      header.setAttribute('aria-label','Abrir trabajo de '+safeText(job.cliente,'cliente'));
+      const activate=event=>{
+        if(event.type==='keydown' && event.key!=='Enter' && event.key!==' ')return;
+        if(event.type==='keydown')event.preventDefault();
+        openJob(job.id);
+      };
+      header.addEventListener('click',activate);
+      header.addEventListener('keydown',activate);
+    }
+
+    if(isToday && !['completado'].includes(getWorkflowStage(job))){
+      const button=document.createElement('button');
+      button.type='button';
+      button.className='elite-access-job-btn';
+      button.textContent='ABRIR ESTE TRABAJO';
+      button.addEventListener('click',()=>openJob(job.id));
+      const firstContent=card.children[1] || null;
+      if(firstContent)card.insertBefore(button,firstContent);
+      else card.appendChild(button);
+    }
+    return card;
+  };
+
+  function bindDashboardCards(){
+    const cards=document.querySelectorAll('.dashboard-link-card');
+    const todayCard=cards[0];
+    const nextCard=cards[1];
+
+    if(todayCard && !todayCard.dataset.accessBound){
+      todayCard.dataset.accessBound='true';
+      todayCard.setAttribute('role','button');
+      todayCard.setAttribute('tabindex','0');
+      const action=event=>{
+        if(event.type==='keydown' && event.key!=='Enter' && event.key!==' ')return;
+        if(event.type==='keydown')event.preventDefault();
+        const firstId=dashboardTodayJobIds[0];
+        if(firstId)openJob(firstId);
+        else document.getElementById('job-list')?.scrollIntoView({behavior:'smooth',block:'start'});
+      };
+      todayCard.addEventListener('click',action);
+      todayCard.addEventListener('keydown',action);
+    }
+
+    if(nextCard && !nextCard.dataset.accessBound){
+      nextCard.dataset.accessBound='true';
+      nextCard.setAttribute('role','button');
+      nextCard.setAttribute('tabindex','0');
+      const action=event=>{
+        if(event.type==='keydown' && event.key!=='Enter' && event.key!==' ')return;
+        if(event.type==='keydown')event.preventDefault();
+        if(dashboardNextJobId)openJob(dashboardNextJobId);
+        else setMessage('No hay otro servicio pendiente para hoy.','info');
+      };
+      nextCard.addEventListener('click',action);
+      nextCard.addEventListener('keydown',action);
+    }
+  }
+
+  const originalRenderMergedJobs=renderMergedJobs;
+  renderMergedJobs=function(){
+    originalRenderMergedJobs();
+    bindDashboardCards();
+  };
+
+  bindDashboardCards();
+  if(currentUser)renderMergedJobs();
+  window.eliteOpenStaffJob=openJob;
+})();
+</script>
 </body>
 </html>
