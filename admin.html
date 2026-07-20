@@ -602,19 +602,22 @@ body.elite-v5-body{
 
 .elite-password-toggle{
   position:absolute;
-  top:24px;
+  top:50%;
   right:8px;
-  width:36px;
-  height:36px;
+  transform:translateY(-50%);
+  width:40px;
+  height:40px;
   display:grid;
   place-items:center;
   padding:0;
+  margin:0;
   border:0;
-  border-radius:8px;
+  border-radius:9px;
   outline:none;
   background:transparent;
   color:#fff;
   cursor:pointer;
+  z-index:3;
 }
 .elite-password-toggle:hover{background:rgba(255,255,255,.07)}
 .elite-password-toggle:focus-visible{box-shadow:0 0 0 2px #fff}
