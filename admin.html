@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.9.1 | Series, corrección de horas y gasto automático de inventario -->
+<!-- Elite Admin v6.9.2 | Imágenes en solicitudes y catálogo sin historial -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.9.1 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.9.2 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -1039,6 +1039,51 @@ body.elite-v5-body{
 }
 @media(max-width:520px){
   .elite-v691-time-grid{grid-template-columns:1fr}
+}
+</style>
+
+
+<style id="elite-v692-request-images-css">
+.elite-v692-request-head{
+  display:grid;
+  grid-template-columns:96px minmax(0,1fr);
+  gap:14px;
+  align-items:center;
+  margin-bottom:14px;
+}
+.elite-v692-request-image{
+  width:96px;
+  height:96px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  border:1px solid #f59e0b;
+  border-radius:14px;
+  background:#fff;
+  font-size:34px;
+}
+.elite-v692-request-image img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+}
+.elite-v692-request-title h4{
+  margin:0 0 10px!important;
+}
+@media(max-width:560px){
+  .elite-v692-request-head{
+    grid-template-columns:82px minmax(0,1fr);
+    gap:12px;
+  }
+  .elite-v692-request-image{
+    width:82px;
+    height:82px;
+  }
+  .elite-v55-card-actions{
+    grid-template-columns:1fr;
+  }
 }
 </style>
 
@@ -8171,7 +8216,7 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
 </script>
 
 <style id="elite-v689-purchase-reminders-css">
-.elite-v55-card-actions{grid-template-columns:repeat(4,1fr)}
+.elite-v55-card-actions{grid-template-columns:repeat(3,1fr)}
 .elite-v689-request-btn{background:#f59e0b!important;color:#111!important}
 .elite-v689-buy-card{border-color:#f59e0b;background:linear-gradient(145deg,#111827,#05080d)}
 .elite-v689-buy-card h4{color:#fbbf24}
@@ -8359,8 +8404,17 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
         <div class="elite-v55-help">Estos son productos que marcaste desde el catálogo. Al pulsar <b>Marcar comprado</b>, se sumarán al stock y esta tarjeta desaparecerá para evitar compras repetidas.</div>
         ${purchaseRequests.map(r=>`
           <div class="elite-v54-card elite-v689-buy-card">
-            <h4>${eliteV54Esc(r.producto_nombre||'Producto')}</h4>
-            <span class="elite-v54-badge elite-v54-pending">Pendiente de compra</span>
+            <div class="elite-v692-request-head">
+              <div class="elite-v692-request-image">
+                ${r.foto_producto_url
+                  ? `<img src="${eliteV54Esc(r.foto_producto_url)}" alt="${eliteV54Esc(r.producto_nombre||'Producto')}" onerror="this.parentElement.innerHTML='<span>📦</span>'">`
+                  : '<span>📦</span>'}
+              </div>
+              <div class="elite-v692-request-title">
+                <h4>${eliteV54Esc(r.producto_nombre||'Producto')}</h4>
+                <span class="elite-v54-badge elite-v54-pending">Pendiente de compra</span>
+              </div>
+            </div>
             <div class="elite-v54-meta">
               ${r.marca?`<b>Marca:</b> ${eliteV54Esc(r.marca)}<br>`:''}
               <b>Cantidad:</b> ${Number(r.cantidad_solicitada||r.cantidad||1)}<br>
