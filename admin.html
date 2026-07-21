@@ -1038,7 +1038,11 @@ body.elite-v5-body{
         <input type="hidden" id="edit-staff-id">
         <input type="text" id="reg-nombre" placeholder="Nombre Completo">
         <input type="email" id="reg-email" placeholder="Correo Electrónico">
-        <input type="number" id="reg-pago" placeholder="Pago por Hora ($)">
+        <select id="reg-tipo-pago" onchange="actualizarCampoPagoStaff()" style="width:100%;padding:14px;margin-bottom:10px;border-radius:12px;border:1px solid #2c2c2e;background:#2c2c2e;color:white;box-sizing:border-box;font-size:15px;">
+            <option value="porcentaje_hora">25% por hora trabajada</option>
+            <option value="fijo_hora">Pago fijo por hora ($)</option>
+        </select>
+        <input type="number" id="reg-pago" placeholder="Monto fijo por hora ($)" min="0" step="0.01" style="display:none;">
         <button class="reg-btn" id="btn-staff-main" onclick="registrarStaff()">GUARDAR PERSONAL</button>
         <div class="staff-list" id="lista-visual-staff"></div>
     </div>
@@ -1839,24 +1843,45 @@ document.addEventListener("mousedown", event => {
     }
 });
 
+        function actualizarCampoPagoStaff() {
+            const tipo = document.getElementById('reg-tipo-pago')?.value || 'porcentaje_hora';
+            const campo = document.getElementById('reg-pago');
+            if (!campo) return;
+            campo.style.display = tipo === 'fijo_hora' ? 'block' : 'none';
+            if (tipo === 'porcentaje_hora') campo.value = '';
+        }
+
         function registrarStaff() {
             const id = document.getElementById('edit-staff-id').value;
-            const n = document.getElementById('reg-nombre').value;
+            const n = document.getElementById('reg-nombre').value.trim();
             const e = document.getElementById('reg-email').value.toLowerCase().trim();
-            const p = document.getElementById('reg-pago').value || 0;
+            const tipoPago = document.getElementById('reg-tipo-pago').value || 'porcentaje_hora';
+            const pagoHora = tipoPago === 'fijo_hora' ? Number(document.getElementById('reg-pago').value || 0) : 0;
             if(!n || !e) return alert("Faltan datos por completar");
-            if(id) db.collection("usuarios").doc(id).update({ nombre: n, email: e, pago_hora: p }).then(resetStaffForm);
-            else db.collection("usuarios").add({ nombre: n, email: e, rol: "empleado", pago_hora: p }).then(resetStaffForm);
+            if(tipoPago === 'fijo_hora' && pagoHora <= 0) return alert("Escribe el pago fijo por hora.");
+            const datos = {
+                nombre: n,
+                email: e,
+                tipo_pago: tipoPago,
+                pago_hora: pagoHora,
+                porcentaje_hora: tipoPago === 'porcentaje_hora' ? 25 : 0
+            };
+            if(id) db.collection("usuarios").doc(id).update(datos).then(resetStaffForm);
+            else db.collection("usuarios").add({ ...datos, rol: "empleado" }).then(resetStaffForm);
         }
 
         function resetStaffForm() {
             document.getElementById('edit-staff-id').value = "";
             document.getElementById('reg-nombre').value = "";
             document.getElementById('reg-email').value = "";
+            document.getElementById('reg-tipo-pago').value = "porcentaje_hora";
             document.getElementById('reg-pago').value = "";
+            actualizarCampoPagoStaff();
             document.getElementById('btn-staff-main').innerText = "GUARDAR PERSONAL";
         }
 
+
+window.addEventListener('DOMContentLoaded', actualizarCampoPagoStaff);
         db.collection("usuarios").where("rol", "==", "empleado").onSnapshot(snap => {
             todosLosEmpleados = [];
             const lv = document.getElementById('lista-visual-staff');
@@ -1867,11 +1892,11 @@ document.addEventListener("mousedown", event => {
                 lv.innerHTML += `<div class="staff-item">
     <div class="staff-info">
         <b>${e.nombre}</b>
-        <span>$${e.pago_hora || 0}/hr</span>
+        <span>${e.tipo_pago === 'porcentaje_hora' ? '25% por hora trabajada' : '$' + (e.pago_hora || 0) + '/hr'}</span>
     </div>
 
     <div class="staff-actions">
-        <button class="btn-mini" style="background:#6366f1" onclick="editarStaff('${id}','${e.nombre}','${e.email}','${e.pago_hora||0}')">
+        <button class="btn-mini" style="background:#6366f1" onclick="editarStaff('${id}','${e.nombre}','${e.email}','${e.pago_hora||0}','${e.tipo_pago||'fijo_hora'}','${e.porcentaje_hora||0}')">
             Editar
         </button>
 
@@ -2806,28 +2831,41 @@ La información del cliente NO se borrará.
     }
 }
 
-        function generarNomina() {
+        function calcularPagoEmpleadoEnServicio(emp, servicio) {
+    const horas = calcularTiempoTrabajado(servicio.hora_inicio, servicio.hora_fin).minutos / 60;
+    if (emp.tipo_pago === 'porcentaje_hora') {
+        const porcentaje = Number(emp.porcentaje_hora || 25) / 100;
+        const precioServicio = Number(servicio.precio_total || servicio.precio || 0);
+        return precioServicio * porcentaje;
+    }
+    return horas * Number(emp.pago_hora || 0);
+}
+
+function generarNomina() {
     const tabla = document.getElementById('lista-nomina');
     tabla.innerHTML = "";
 
     todosLosEmpleados.forEach(emp => {
         let min = 0;
         let millas = 0;
+        let pago = 0;
 
         todosLosServicios
             .filter(s => s.estado === "completado" && (s.empleado_email === emp.email || s.empleado_email_2 === emp.email))
             .forEach(s => {
                 min += calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).minutos;
                 millas += Number(obtenerMillasServicio(s));
+                pago += calcularPagoEmpleadoEnServicio(emp, s);
             });
 
         if(min > 0 || millas > 0) {
+            const modalidad = emp.tipo_pago === 'porcentaje_hora' ? '25%' : '$' + Number(emp.pago_hora || 0).toFixed(2) + '/h';
             tabla.innerHTML += `
                 <tr>
-                    <td><b>${emp.nombre}</b></td>
+                    <td><b>${emp.nombre}</b><br><small>${modalidad}</small></td>
                     <td>${Math.floor(min/60)}h ${min%60}m</td>
                     <td>${millas.toFixed(1)} mi</td>
-                    <td class="pay-amount">$${((min/60)*emp.pago_hora).toFixed(2)}</td>
+                    <td class="pay-amount">$${pago.toFixed(2)}</td>
                 </tr>`;
         }
     });
@@ -2838,7 +2876,7 @@ La información del cliente NO se borrará.
     if (completados.length === 0) return alert("No hay trabajos completados para exportar.");
     if (!confirm("¿Descargar el reporte de nómina? Los trabajos NO serán eliminados.")) return;
     const data = completados.map(s => ({Customer:s.cliente,Date:s.fecha,Price:s.precio_total||0,Staff_1:s.empleado_nombre||"",Staff_2:s.empleado_nombre_2||"",Time:calcularTiempoTrabajado(s.hora_inicio,s.hora_fin).texto,Service_Miles:s.millas_servicio||0,Real_Miles:s.millas_reales||0,Total_Miles:obtenerMillasServicio(s)}));
-    const payrollData = todosLosEmpleados.map(emp => {let min=0,millas=0;completados.filter(s=>s.empleado_email===emp.email||s.empleado_email_2===emp.email).forEach(s=>{min+=calcularTiempoTrabajado(s.hora_inicio,s.hora_fin).minutos;millas+=Number(obtenerMillasServicio(s));});return {Staff:emp.nombre,Hours:`${Math.floor(min/60)}h ${min%60}m`,Miles:millas.toFixed(1),Pay:((min/60)*emp.pago_hora).toFixed(2)};}).filter(r=>r.Hours!=="0h 0m"||Number(r.Miles)>0);
+    const payrollData = todosLosEmpleados.map(emp => {let min=0,millas=0,pago=0;completados.filter(s=>s.empleado_email===emp.email||s.empleado_email_2===emp.email).forEach(s=>{min+=calcularTiempoTrabajado(s.hora_inicio,s.hora_fin).minutos;millas+=Number(obtenerMillasServicio(s));pago+=calcularPagoEmpleadoEnServicio(emp,s);});return {Staff:emp.nombre,Payment_Type:emp.tipo_pago==='porcentaje_hora'?'25% por hora trabajada':`$${Number(emp.pago_hora||0).toFixed(2)}/hr`,Hours:`${Math.floor(min/60)}h ${min%60}m`,Miles:millas.toFixed(1),Pay:pago.toFixed(2)};}).filter(r=>r.Hours!=="0h 0m"||Number(r.Miles)>0);
     const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(data),"Jobs");XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(payrollData),"Payroll");XLSX.writeFile(wb,"Elite_Report.xlsx");
     alert("Reporte descargado. El historial fue conservado.");
 }
@@ -3106,11 +3144,13 @@ alert(`✅ ${nombreCliente} fue eliminado completamente.`);
     }
 }
 
-        function editarStaff(id, n, e, p) {
+        function editarStaff(id, n, e, p, tipoPago = 'fijo_hora', porcentaje = 0) {
             document.getElementById('edit-staff-id').value = id;
             document.getElementById('reg-nombre').value = n;
             document.getElementById('reg-email').value = e;
-            document.getElementById('reg-pago').value = p;
+            document.getElementById('reg-tipo-pago').value = tipoPago === 'porcentaje_hora' ? 'porcentaje_hora' : 'fijo_hora';
+            document.getElementById('reg-pago').value = tipoPago === 'porcentaje_hora' ? '' : p;
+            actualizarCampoPagoStaff();
             document.getElementById('btn-staff-main').innerText = "ACTUALIZAR PERSONAL";
         }
 
