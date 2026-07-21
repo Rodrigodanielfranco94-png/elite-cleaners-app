@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.9.0 | Ajustar stock con etiquetas permanentes e imagen -->
+<!-- Elite Admin v6.9.1 | Series, corrección de horas y gasto automático de inventario -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.9.0 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.9.1 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -999,6 +999,46 @@ body.elite-v5-body{
 @media(max-width:620px){
   .elite-v690-stock-product-card{grid-template-columns:76px minmax(0,1fr)}
   .elite-v690-stock-image{width:76px;height:76px}
+}
+</style>
+
+
+<style id="elite-v691-series-time-css">
+.elite-v691-time-title{
+  margin:16px 0 10px;
+  padding-top:14px;
+  border-top:1px solid #d1d5db;
+  color:#1d4ed8;
+  font-size:14px;
+  font-weight:900;
+}
+.elite-v691-time-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+}
+.elite-v691-time-grid label{
+  margin:0;
+  color:#555;
+  font-size:11px;
+  font-weight:800;
+}
+.elite-v691-time-grid input{
+  margin-top:6px!important;
+  margin-bottom:0!important;
+}
+.elite-v691-series-note{
+  margin:8px 0 4px;
+  padding:9px 10px;
+  border:1px solid #bfdbfe;
+  border-radius:9px;
+  background:#eff6ff;
+  color:#1e40af;
+  font-size:10px;
+  line-height:1.4;
+}
+@media(max-width:520px){
+  .elite-v691-time-grid{grid-template-columns:1fr}
 }
 </style>
 
@@ -3882,6 +3922,35 @@ Please let us know if you have any questions.`;
       <option value="cita">🟢 Cita extra</option>
     </select>
 
+    <div class="elite-v691-time-title">Corrección de horas del empleado</div>
+    <div class="elite-v691-time-grid">
+      <label>Hora de llegada
+        <input type="time" id="edit-cal-hora-llegada">
+      </label>
+      <label>Hora de inicio
+        <input type="time" id="edit-cal-hora-inicio-real">
+      </label>
+      <label>Inicio de pausa
+        <input type="time" id="edit-cal-hora-pausa">
+      </label>
+      <label>Fin de pausa
+        <input type="time" id="edit-cal-hora-regreso">
+      </label>
+      <label>Hora de salida
+        <input type="time" id="edit-cal-hora-fin-real">
+      </label>
+      <label>Minutos totales de pausa
+        <input type="number" min="0" id="edit-cal-pausa-minutos" placeholder="0">
+      </label>
+    </div>
+
+    <label>Aplicar cambios a</label>
+    <select id="edit-cal-scope">
+      <option value="this">Solamente este trabajo</option>
+      <option value="series">Todos los trabajos repetidos</option>
+    </select>
+    <div id="edit-cal-series-note" class="elite-v691-series-note"></div>
+
    <div class="editor-evento-actions">
     <button class="save-btn" style="background:#6b7280;" onclick="cerrarEditorEvento()">
         Cancelar
@@ -3897,7 +3966,7 @@ Please let us know if you have any questions.`;
     style="background:#ef4444; margin-top:12px;"
     onclick="eliminarEventoCalendario()"
 >
-    🗑️ ELIMINAR ESTE TRABAJO
+    🗑️ ELIMINAR SEGÚN LA OPCIÓN ELEGIDA
 </button>
 
 </div>
@@ -8326,6 +8395,249 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
     }
 
     box.innerHTML=html||'<div class="elite-v51-empty">No hay productos pendientes de compra.</div>';
+  };
+})();
+</script>
+
+
+<script id="elite-v691-series-time-expense-js">
+(function(){
+  const cleanTime=v=>{
+    const s=String(v||'').trim();
+    if(!s||s==='--:--')return '';
+    const m=s.match(/^(\d{1,2}):(\d{2})/);
+    return m ? `${String(Number(m[1])).padStart(2,'0')}:${m[2]}` : '';
+  };
+  const norm=v=>String(v||'').trim().toLowerCase().replace(/\s+/g,' ');
+
+  function currentEvent(){
+    const id=document.getElementById('edit-cal-id')?.value;
+    return (todosLosServicios||[]).find(s=>s.id===id);
+  }
+
+  function isRecurring(ev){
+    return ev && !['','ninguno','none','única','unica'].includes(norm(ev.repetir||ev.frecuencia||'ninguno'));
+  }
+
+  function sameSeries(a,b){
+    if(!a||!b||!isRecurring(a))return false;
+    return norm(a.cliente)===norm(b.cliente) &&
+           norm(a.direccion)===norm(b.direccion) &&
+           norm(a.repetir||a.frecuencia)===norm(b.repetir||b.frecuencia);
+  }
+
+  function seriesRows(ev){
+    return (todosLosServicios||[]).filter(x=>sameSeries(ev,x));
+  }
+
+  function refreshSeriesNote(){
+    const ev=currentEvent();
+    const note=document.getElementById('edit-cal-series-note');
+    const scope=document.getElementById('edit-cal-scope');
+    if(!note||!scope)return;
+    if(!isRecurring(ev)){
+      scope.value='this';
+      scope.querySelector('option[value="series"]').disabled=true;
+      note.textContent='Este trabajo no pertenece a una serie repetida.';
+    }else{
+      scope.querySelector('option[value="series"]').disabled=false;
+      note.textContent=`Serie repetida: ${seriesRows(ev).length} trabajos encontrados para ${ev.cliente}.`;
+    }
+  }
+
+  const originalOpen=window.abrirEditorEvento;
+  window.abrirEditorEvento=function(id){
+    if(typeof originalOpen==='function')originalOpen(id);
+    const ev=(todosLosServicios||[]).find(s=>s.id===id);
+    if(!ev)return;
+    document.getElementById('edit-cal-hora-llegada').value=cleanTime(ev.hora_llegada);
+    document.getElementById('edit-cal-hora-inicio-real').value=cleanTime(ev.hora_inicio);
+    document.getElementById('edit-cal-hora-pausa').value=cleanTime(ev.hora_pausa||ev.hora_inicio_pausa);
+    document.getElementById('edit-cal-hora-regreso').value=cleanTime(ev.hora_regreso||ev.hora_fin_pausa);
+    document.getElementById('edit-cal-hora-fin-real').value=cleanTime(ev.hora_fin);
+    document.getElementById('edit-cal-pausa-minutos').value=Number(ev.pausa_total_minutos||0);
+    document.getElementById('edit-cal-scope').value='this';
+    refreshSeriesNote();
+  };
+
+  window.guardarEditorEvento=async function(){
+    const ev=currentEvent();
+    if(!ev)return alert('Trabajo no encontrado.');
+
+    const scope=document.getElementById('edit-cal-scope').value;
+    const estadoCal=document.getElementById('edit-cal-estado').value;
+    const data={
+      fecha:document.getElementById('edit-cal-fecha').value,
+      hora:document.getElementById('edit-cal-hora').value,
+      hora_final_estimada:document.getElementById('edit-cal-hora-final').value,
+      estado_calendario:estadoCal,
+      estado:estadoCal==='completado'?'completado':(ev.estado==='en_progreso'?'en_progreso':'no_iniciado'),
+      hora_llegada:document.getElementById('edit-cal-hora-llegada').value||'--:--',
+      hora_inicio:document.getElementById('edit-cal-hora-inicio-real').value||'--:--',
+      hora_pausa:document.getElementById('edit-cal-hora-pausa').value||'--:--',
+      hora_inicio_pausa:document.getElementById('edit-cal-hora-pausa').value||'--:--',
+      hora_regreso:document.getElementById('edit-cal-hora-regreso').value||'--:--',
+      hora_fin_pausa:document.getElementById('edit-cal-hora-regreso').value||'--:--',
+      hora_fin:document.getElementById('edit-cal-hora-fin-real').value||'--:--',
+      pausa_total_minutos:Number(document.getElementById('edit-cal-pausa-minutos').value||0),
+      editado_desde_calendario:true,
+      edicion_solo_este_trabajo:scope==='this',
+      ultima_edicion_admin:firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    let rows=[ev];
+    if(scope==='series'){
+      if(!isRecurring(ev))return alert('Este trabajo no pertenece a una serie repetida.');
+      rows=seriesRows(ev);
+      if(!confirm(`Se editarán ${rows.length} trabajos repetidos de ${ev.cliente}.\n\n¿Continuar?`))return;
+      // Preserve each occurrence date when editing the whole series.
+      delete data.fecha;
+      // Actual employee timestamps belong to one performed service, not future occurrences.
+      delete data.hora_llegada;
+      delete data.hora_inicio;
+      delete data.hora_pausa;
+      delete data.hora_inicio_pausa;
+      delete data.hora_regreso;
+      delete data.hora_fin_pausa;
+      delete data.hora_fin;
+      delete data.pausa_total_minutos;
+      delete data.estado;
+      delete data.estado_calendario;
+    }
+
+    const batch=db.batch();
+    rows.forEach(row=>batch.update(db.collection('servicios').doc(row.id),data));
+    await batch.commit();
+    cerrarEditorEvento();
+    alert(scope==='series'
+      ?`${rows.length} trabajos repetidos fueron actualizados ✅`
+      :'Trabajo y horas del empleado actualizados ✅');
+    location.reload();
+  };
+
+  window.eliminarEventoCalendario=async function(){
+    const ev=currentEvent();
+    if(!ev)return alert('Trabajo no encontrado.');
+    const scope=document.getElementById('edit-cal-scope').value;
+    let rows=[ev];
+
+    if(scope==='series'){
+      if(!isRecurring(ev))return alert('Este trabajo no pertenece a una serie repetida.');
+      rows=seriesRows(ev);
+    }
+
+    const message=scope==='series'
+      ?`⚠️ Se eliminarán TODOS los ${rows.length} trabajos repetidos de ${ev.cliente}.\n\nLa ficha del cliente se conservará.\n\n¿Continuar?`
+      :`⚠️ Se eliminará solamente este trabajo de ${ev.cliente}.\n\nLos demás trabajos repetidos se conservarán.\n\n¿Continuar?`;
+
+    if(!confirm(message))return;
+
+    const batch=db.batch();
+    rows.forEach(row=>batch.delete(db.collection('servicios').doc(row.id)));
+    await batch.commit();
+    cerrarEditorEvento();
+    alert(scope==='series'
+      ?`${rows.length} trabajos repetidos eliminados ✅`
+      :'Este trabajo fue eliminado ✅');
+    location.reload();
+  };
+
+  // Replaces the purchase completion workflow so stock + accounting expense +
+  // purchase history + reminder deletion happen in one atomic Firestore batch.
+  window.eliteV689MarkPurchased=async function(requestId){
+    const r=(eliteV54Requests||[]).find(x=>x.id===requestId);
+    if(!r)return alert('No se encontró la solicitud.');
+
+    const qtyRaw=prompt(`Cantidad comprada de "${r.producto_nombre||'Producto'}":`,String(r.cantidad_solicitada||r.cantidad||1));
+    if(qtyRaw===null)return;
+    const qty=Number(qtyRaw||0);
+    if(qty<=0)return alert('La cantidad debe ser mayor que cero.');
+
+    const costRaw=prompt('Costo unitario pagado:',r.precio_estimado?String(r.precio_estimado):'');
+    if(costRaw===null)return;
+    const unitCost=Math.max(0,Number(costRaw||0));
+    const total=qty*unitCost;
+
+    const store=prompt('Tienda donde se compró:',r.tienda_sugerida||'') ?? '';
+    const location=prompt('Ubicación donde se guardará:',r.ubicacion||'Almacén') ?? 'Almacén';
+    const method=prompt('Método de pago (opcional):','') ?? '';
+
+    if(!confirm(
+      `¿Confirmar compra?\n\n${r.producto_nombre}\nCantidad: ${qty}\nTotal: $${total.toFixed(2)}\n\n`+
+      `Se agregará al stock, se registrará UNA sola vez en Gastos y desaparecerá de la lista de compras.`
+    ))return;
+
+    const inventory=(eliteV51Inventario||[]);
+    const key=normalizarTexto(r.producto_nombre||'');
+    let existing=inventory.find(i=>r.catalogo_id&&i.catalogo_id===r.catalogo_id);
+    if(!existing)existing=inventory.find(i=>normalizarTexto(i.nombre||'')===key);
+
+    const batch=db.batch();
+    if(existing){
+      batch.set(db.collection('inventario').doc(existing.id),{
+        nombre:r.producto_nombre||existing.nombre||'Producto',
+        tipo:r.tipo||existing.tipo||'Producto químico',
+        cantidad:Number(existing.cantidad||0)+qty,
+        costo:unitCost||Number(existing.costo||0),
+        ubicacion:location.trim()||existing.ubicacion||'Almacén',
+        catalogo_id:r.catalogo_id||existing.catalogo_id||'',
+        foto_url:r.foto_producto_url||existing.foto_url||'',
+        actualizado:firebase.firestore.FieldValue.serverTimestamp()
+      },{merge:true});
+    }else{
+      const invRef=db.collection('inventario').doc();
+      batch.set(invRef,{
+        nombre:r.producto_nombre||'Producto',
+        tipo:r.tipo||'Producto químico',
+        cantidad:qty,minimo:0,costo:unitCost,
+        ubicacion:location.trim()||'Almacén',
+        catalogo_id:r.catalogo_id||'',
+        codigo_barras:r.codigo_barras||'',
+        foto_url:r.foto_producto_url||'',
+        creado:firebase.firestore.FieldValue.serverTimestamp(),
+        actualizado:firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+    const purchaseRef=db.collection('compras_inventario').doc(requestId);
+    batch.set(purchaseRef,{
+      solicitud_id:requestId,
+      catalogo_id:r.catalogo_id||'',
+      producto_nombre:r.producto_nombre||'Producto',
+      cantidad:qty,costo_unitario:unitCost,total,
+      tienda:store.trim(),
+      metodo_pago:method.trim(),
+      comprado_por:window.usuarioActual?.nombre||currentUser?.email||'Admin',
+      fecha:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true});
+
+    // Deterministic document ID prevents a duplicated accounting transaction.
+    const expenseRef=db.collection('gastos_contabilidad').doc(`inventario_${requestId}`);
+    batch.set(expenseRef,{
+      fecha:new Date().toISOString().slice(0,10),
+      categoria:'Inventario',
+      monto:total,
+      nota:`Compra de inventario: ${r.producto_nombre||'Producto'} (${qty} × $${unitCost.toFixed(2)})`,
+      tienda:store.trim(),
+      metodo_pago:method.trim(),
+      solicitud_inventario_id:requestId,
+      compra_inventario_id:requestId,
+      origen:'inventario_compra',
+      creado_por:window.usuarioActual?.nombre||currentUser?.email||'Admin',
+      timestamp:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true});
+
+    batch.delete(db.collection('solicitudes_inventario').doc(requestId));
+    await batch.commit();
+
+    alert(
+      `Compra registrada ✅\n\n`+
+      `• Stock actualizado\n`+
+      `• Gasto de $${total.toFixed(2)} enviado a Contabilidad\n`+
+      `• Recordatorio eliminado\n`+
+      `• Sin doble transacción`
+    );
+    eliteV55SwitchTab('general');
   };
 })();
 </script>
