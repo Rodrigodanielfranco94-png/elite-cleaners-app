@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.8.9 | Solicitudes de compra desde catálogo y stock automático -->
+<!-- Elite Admin v6.9.0 | Ajustar stock con etiquetas permanentes e imagen -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.8.9 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.9.0 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -926,6 +926,82 @@ body.elite-v5-body{
   .elite-v687-prev{left:7px}.elite-v687-next{right:7px}
 }
 </style>
+
+<style id="elite-v690-stock-label-image-css">
+.elite-v690-stock-product-card{
+  display:grid;
+  grid-template-columns:92px minmax(0,1fr);
+  gap:14px;
+  align-items:center;
+  margin:14px 0;
+  padding:13px;
+  border:1px solid #334155;
+  border-radius:15px;
+  background:#07101f;
+}
+.elite-v690-stock-image{
+  width:92px;
+  height:92px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  border:1px solid #475569;
+  border-radius:14px;
+  background:#fff;
+  font-size:34px;
+}
+.elite-v690-stock-image img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:contain;
+}
+.elite-v690-stock-product-card small{
+  display:block;
+  margin-bottom:5px;
+  color:#60a5fa;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.06em;
+}
+.elite-v690-stock-product-card strong{
+  display:block;
+  color:#fff;
+  font-size:18px;
+}
+.elite-v690-stock-product-card span{
+  display:block;
+  margin-top:5px;
+  color:#94a3b8;
+  font-size:11px;
+  line-height:1.4;
+}
+.elite-v690-field{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  min-width:0;
+}
+.elite-v690-field>span{
+  padding-left:4px;
+  color:#93c5fd;
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.elite-v690-field input,
+.elite-v690-field select{
+  width:100%;
+  margin:0!important;
+}
+@media(max-width:620px){
+  .elite-v690-stock-product-card{grid-template-columns:76px minmax(0,1fr)}
+  .elite-v690-stock-image{width:76px;height:76px}
+}
+</style>
+
 </head>
 <body>
 <div id="loginBox" class="elite-login-overlay">
@@ -7757,14 +7833,49 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
       .map(x=>`<option value="${esc(x.nombre)}">`).join('');
     c.innerHTML=`<div class="elite-v51-settings-section"><h3>Ajustar inventario físico</h3>
       <div class="elite-v55-help"><b>¿Para qué sirve?</b><br>Úsalo después de contar físicamente los productos. Cambia la cantidad disponible del artículo existente. No crea un gasto y no agrega otra copia al catálogo.</div>
-      <div class="elite-v51-form-grid">
-        <div><input id="inv-name" list="elite-v685-stock-products" placeholder="Busca o escribe el producto" oninput="eliteV685LoadStockProduct()"><datalist id="elite-v685-stock-products">${options}</datalist></div>
-        <select id="inv-type"><option>Producto químico</option><option>Materiales</option><option>Herramienta</option><option>Máquina</option></select>
-        <input id="inv-qty" type="number" min="0" placeholder="Cantidad física contada">
-        <input id="inv-min" type="number" min="0" placeholder="Mínimo recomendado">
-        <input id="inv-cost" type="number" min="0" step="0.01" placeholder="Costo unitario">
-        <input id="inv-location" placeholder="Ubicación">
+
+      <div id="elite-v690-stock-product-card" class="elite-v690-stock-product-card">
+        <div id="elite-v690-stock-image" class="elite-v690-stock-image"><span>📦</span></div>
+        <div>
+          <small>PRODUCTO SELECCIONADO</small>
+          <strong id="elite-v690-stock-title">Ningún producto seleccionado</strong>
+          <span id="elite-v690-stock-subtitle">Busca un producto para ver su imagen y datos.</span>
+        </div>
       </div>
+
+      <div class="elite-v51-form-grid elite-v690-stock-grid">
+        <label class="elite-v690-field">
+          <span>Nombre del producto</span>
+          <input id="inv-name" list="elite-v685-stock-products" placeholder="Busca o escribe el producto" oninput="eliteV685LoadStockProduct()">
+          <datalist id="elite-v685-stock-products">${options}</datalist>
+        </label>
+
+        <label class="elite-v690-field">
+          <span>Tipo de producto</span>
+          <select id="inv-type"><option>Producto químico</option><option>Materiales</option><option>Herramienta</option><option>Máquina</option></select>
+        </label>
+
+        <label class="elite-v690-field">
+          <span>Cantidad física contada</span>
+          <input id="inv-qty" type="number" min="0" placeholder="Escribe la cantidad">
+        </label>
+
+        <label class="elite-v690-field">
+          <span>Mínimo recomendado</span>
+          <input id="inv-min" type="number" min="0" placeholder="Escribe el mínimo">
+        </label>
+
+        <label class="elite-v690-field">
+          <span>Costo unitario</span>
+          <input id="inv-cost" type="number" min="0" step="0.01" placeholder="Escribe el costo">
+        </label>
+
+        <label class="elite-v690-field">
+          <span>Ubicación</span>
+          <input id="inv-location" placeholder="Escribe la ubicación">
+        </label>
+      </div>
+
       <div id="elite-v685-stock-preview" class="elite-v685-stock-preview">Selecciona un producto para ver sus datos actuales.</div>
       <button class="elite-v51-action" style="background:#16a34a;width:100%;margin-top:12px" onclick="eliteV51SaveInventory()">Guardar cantidad física</button>
       <div id="elite-v685-stock-status" class="elite-v685-stock-status"></div>
@@ -7774,9 +7885,41 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
 
   window.eliteV685LoadStockProduct=function(){
     const name=document.getElementById('inv-name')?.value||'';const key=norm(name);
-    const inv=(eliteV51Inventario||[]).find(x=>norm(x.nombre)===key);const cat=(eliteV55Catalog||[]).find(x=>norm(x.nombre)===key);const x=inv||cat;
-    if(x){document.getElementById('inv-type').value=x.tipo||'Producto químico';document.getElementById('inv-qty').value=inv?Number(inv.cantidad||0):'';document.getElementById('inv-min').value=Number(x.minimo||0);document.getElementById('inv-cost').value=Number(x.costo||x.precio_actual||0);document.getElementById('inv-location').value=x.ubicacion||'';}
-    const preview=document.getElementById('elite-v685-stock-preview');if(preview)preview.innerHTML=x?`<b>${esc(x.nombre)}</b><br>Cantidad actual: ${inv?Number(inv.cantidad||0):'No registrada'} · Mínimo: ${Number(x.minimo||0)} · Ubicación: ${esc(x.ubicacion||'Sin ubicación')}`:'Producto nuevo: se creará únicamente en Inventario al guardar la cantidad.';
+    const inv=(eliteV51Inventario||[]).find(x=>norm(x.nombre)===key);
+    const cat=(eliteV55Catalog||[]).find(x=>norm(x.nombre)===key);
+    const x=inv||cat;
+
+    if(x){
+      document.getElementById('inv-type').value=x.tipo||'Producto químico';
+      document.getElementById('inv-qty').value=inv?Number(inv.cantidad||0):'';
+      document.getElementById('inv-min').value=Number(x.minimo||0);
+      document.getElementById('inv-cost').value=Number(x.costo||x.precio_actual||0);
+      document.getElementById('inv-location').value=x.ubicacion||'';
+    }
+
+    const preview=document.getElementById('elite-v685-stock-preview');
+    if(preview)preview.innerHTML=x
+      ?`<b>${esc(x.nombre)}</b><br>Cantidad actual: ${inv?Number(inv.cantidad||0):'No registrada'} · Mínimo: ${Number(x.minimo||0)} · Ubicación: ${esc(x.ubicacion||'Sin ubicación')}`
+      :'Producto nuevo: se creará únicamente en Inventario al guardar la cantidad.';
+
+    const title=document.getElementById('elite-v690-stock-title');
+    const subtitle=document.getElementById('elite-v690-stock-subtitle');
+    const imageBox=document.getElementById('elite-v690-stock-image');
+    const photo=String(
+      cat?.foto_url||cat?.imagen_url||cat?.image_url||cat?.photo_url||
+      inv?.foto_url||inv?.imagen_url||inv?.image_url||inv?.photo_url||''
+    ).trim();
+
+    if(title)title.textContent=x?.nombre||'Ningún producto seleccionado';
+    if(subtitle)subtitle.textContent=x
+      ?`${x.marca||'Sin marca'} · ${x.tipo||'Sin tipo'}${x.tamano?' · '+x.tamano:''}`
+      :'Busca un producto para ver su imagen y datos.';
+
+    if(imageBox){
+      imageBox.innerHTML=photo
+        ?`<img src="${esc(photo)}" alt="${esc(x?.nombre||'Producto')}" onerror="this.parentElement.innerHTML='<span>📦</span>'">`
+        :'<span>📦</span>';
+    }
   };
 
   window.eliteV51SaveInventory=async function(){
