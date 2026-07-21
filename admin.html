@@ -3997,19 +3997,25 @@ function cerrarContabilidadElite(){document.getElementById("elite-accounting-mod
 
 function elitePaymentState(s){
   const estado=String(s?.estado_pago||'').trim().toLowerCase();
-  const completo=estado==='pagado_completo'||estado==='pagado'||estado==='paid'||s?.pago_completo===true;
-  const deposito=completo||s?.deposito_pagado===true||Boolean(s?.fecha_pago_deposito);
-  const balance=completo||s?.balance_pagado===true||Boolean(s?.fecha_pago_balance);
-  return {deposito,balance,completo};
+  const depositoConfirmado=s?.deposito_pagado===true||Boolean(s?.fecha_pago_deposito);
+  const balanceConfirmado=s?.balance_pagado===true||Boolean(s?.fecha_pago_balance);
+  const completoPorEstado=estado==='pagado_completo'||estado==='pagado'||estado==='paid'||s?.pago_completo===true;
+  const completo=completoPorEstado||(depositoConfirmado&&balanceConfirmado);
+  return {
+    deposito: completo||depositoConfirmado,
+    balance: completo||balanceConfirmado,
+    completo
+  };
 }
 function datosPagoServicio(s){
   const vendido=Math.max(0,Number(s.precio_total||0));
   const depositoMonto=Math.max(0,Number(s.deposito_monto||vendido*.5));
   const balanceMonto=Math.max(0,Number(s.balance_restante!==undefined&&s.balance_restante!==""?s.balance_restante:vendido-depositoMonto));
   const pago=elitePaymentState(s);
+  const pagoCompletoReal=pago.completo||(pago.deposito&&balanceMonto<=0);
   let depositos=pago.deposito?Math.min(depositoMonto,vendido):0;
   let balances=pago.balance?Math.min(balanceMonto,Math.max(vendido-depositos,0)):0;
-  if(pago.completo&&depositos+balances<vendido)balances=Math.max(vendido-depositos,0);
+  if(pagoCompletoReal&&depositos+balances<vendido)balances=Math.max(vendido-depositos,0);
   const cobrado=Math.min(vendido,depositos+balances), pendiente=Math.max(vendido-cobrado,0);
   let estadoPago="No pagado";
   if(vendido>0&&cobrado>=vendido)estadoPago="Pagado";else if(depositos>0&&balances<=0)estadoPago="Depósito";else if(cobrado>0)estadoPago="Parcial";
