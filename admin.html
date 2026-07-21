@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.7.0 | Nico: Clientes por recuperar -->
+<!-- Elite Admin v6.8.0 | Trimestral, nómina 25%, seguimiento 30+ y pagos corregidos -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.7.0 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.8.0 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -828,7 +828,7 @@ body.elite-v5-body{
 <style id="elite-recovery-v670-css">.elite-recovery-menu-count{margin-left:auto;min-width:20px;height:20px;padding:0 6px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:#ef4444;color:#fff;font-size:9px;font-weight:900;box-sizing:border-box}
 #elite-recovery-page{display:none;color:#e5e7eb}
 .recovery-hero{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;padding:22px;border:1px solid #334155;border-radius:20px;background:linear-gradient(145deg,#111827,#071a2c);margin-bottom:15px}
-.recovery-hero h2{margin:0 0 7px;color:#fff;font-size:26px}.recovery-hero p{margin:0;color:#cbd5e1;font-size:13px;line-height:1.5}.recovery-nico-avatar{width:74px;height:74px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#071a2c;font-size:38px;border:5px solid #2563eb;box-shadow:0 8px 25px rgba(37,99,235,.25)}
+.recovery-hero h2{margin:0 0 7px;color:#fff;font-size:26px}.recovery-hero p{margin:0;color:#cbd5e1;font-size:13px;line-height:1.5}.recovery-nico-avatar{width:74px;height:74px;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:#fff;color:#071a2c;font-size:38px;border:5px solid #2563eb;box-shadow:0 8px 25px rgba(37,99,235,.25)}.recovery-nico-avatar img{width:100%;height:100%;object-fit:cover;display:block}
 .recovery-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:15px}.recovery-metric{background:#111827;border:1px solid #334155;border-radius:15px;padding:15px}.recovery-metric span{display:block;color:#94a3b8;font-size:10px;text-transform:uppercase;font-weight:800}.recovery-metric strong{display:block;margin-top:7px;color:#fff;font-size:23px}.recovery-metric.green strong{color:#22c55e}.recovery-metric.orange strong{color:#f59e0b}.recovery-metric.red strong{color:#ef4444}
 .recovery-toolbar{display:grid;grid-template-columns:minmax(180px,1fr) 180px 180px;gap:9px;margin-bottom:14px}.recovery-toolbar input,.recovery-toolbar select{margin:0;background:#111827;border:1px solid #334155;color:#fff;border-radius:12px;padding:12px}
 .recovery-list{display:grid;gap:11px}.recovery-card{background:#111827;border:1px solid #334155;border-radius:17px;padding:16px;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(240px,.85fr);gap:15px}.recovery-card-main h3{margin:0;color:#93c5fd;font-size:18px}.recovery-card-main p{margin:5px 0;color:#cbd5e1;font-size:12px}.recovery-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.recovery-detail{background:#05070b;border:1px solid #263449;border-radius:10px;padding:9px}.recovery-detail span{display:block;color:#94a3b8;font-size:9px;text-transform:uppercase}.recovery-detail b{display:block;margin-top:4px;color:#fff;font-size:12px}.recovery-side{border-left:1px solid #334155;padding-left:15px}.recovery-priority{display:inline-flex;padding:6px 9px;border-radius:999px;font-size:9px;font-weight:900;text-transform:uppercase}.recovery-priority.wait{background:#1e293b;color:#cbd5e1}.recovery-priority.contact{background:#422006;color:#fbbf24}.recovery-priority.offer{background:#431407;color:#fb923c}.recovery-priority.high{background:#450a0a;color:#f87171}.recovery-message{margin:10px 0;padding:11px;border:1px solid #334155;border-radius:11px;background:#05070b;color:#dbeafe;font-size:11px;line-height:1.5;white-space:pre-wrap}.recovery-actions{display:flex;gap:7px;flex-wrap:wrap}.recovery-btn{border:0;border-radius:9px;padding:9px 11px;color:#fff;font-size:10px;font-weight:900;cursor:pointer}.recovery-btn.primary{background:#2563eb}.recovery-btn.green{background:#16a34a}.recovery-btn.gray{background:#475569}.recovery-btn.red{background:#b91c1c}.recovery-empty{padding:35px;text-align:center;border:1px dashed #475569;border-radius:16px;color:#94a3b8}.recovery-status{font-size:10px;color:#93c5fd;font-weight:800;margin-top:8px}
@@ -933,7 +933,7 @@ body.elite-v5-body{
 <div id="elite-recovery-page">
   <div class="recovery-hero">
     <div><h2 id="elite-recovery-greeting">Buenos días, Rodrigo.</h2><p id="elite-recovery-nico-text">Nico está revisando los clientes posibles por recuperar.</p></div>
-    <div class="recovery-nico-avatar" aria-label="Nico">🤖</div>
+    <div class="recovery-nico-avatar" aria-label="Nico"><img src="saluda.png" alt="Nico" onerror="this.onerror=null;this.src='bien.png';"></div>
   </div>
   <div class="recovery-metrics">
     <div class="recovery-metric"><span>Clientes posibles</span><strong id="recovery-total">0</strong></div>
@@ -1069,6 +1069,7 @@ body.elite-v5-body{
 <option value="semanal">Semanal</option>
 <option value="quincenal">Quincenal</option>
 <option value="mensual">Mensual</option>
+<option value="trimestral">Trimestral (cada 3 meses)</option>
 </select>
     </div>
 </div>
@@ -1450,10 +1451,10 @@ style="width:100%;"></textarea>
         <div class="acc-card acc-metric"><h3>Dinero Cobrado</h3><p>Depósitos + balances</p><div class="acc-icon acc-green">👛</div><strong id="acc-cobrado" class="acc-green">$0.00</strong></div>
         <div class="acc-card acc-metric"><h3>Pendiente por Cobrar</h3><p>Cuentas por cobrar</p><div class="acc-icon acc-orange">◷</div><strong id="acc-pendiente" class="acc-orange">$0.00</strong></div>
         <div class="acc-card acc-metric"><h3>Gastos Operativos</h3><p>Combustible, productos, etc.</p><div class="acc-icon acc-red">🛒</div><strong id="acc-gastos" class="acc-red">$0.00</strong></div>
-        <div class="acc-card acc-metric"><h3>Pago de Empleados</h3><p>20% del cobrado para cada empleado</p><div class="acc-icon acc-purple">♙</div><strong id="acc-empleados" class="acc-purple">$0.00</strong></div>
+        <div class="acc-card acc-metric"><h3>Pago de Empleados</h3><p>25% del cobrado para cada empleado</p><div class="acc-icon acc-purple">♙</div><strong id="acc-empleados" class="acc-purple">$0.00</strong></div>
       </section>
       <section class="acc-row3">
-        <div class="acc-card acc-panel"><h3>Resumen Financiero del Mes</h3><div class="acc-summary-line"><span>Dinero Cobrado</span><b class="acc-green" id="acc-res-cobrado">$0.00</b></div><div class="acc-summary-line"><span>(−) Empleados primero: 20% cada uno</span><b class="acc-red" id="acc-res-nomina">-$0.00</b></div><div class="acc-summary-line"><span>(−) Gastos Operativos</span><b class="acc-red" id="acc-res-gastos">-$0.00</b></div><div class="acc-summary-line total"><span>= Fondo repartible después de empleados y gastos</span><b class="acc-green" id="acc-neta">$0.00</b></div></div>
+        <div class="acc-card acc-panel"><h3>Resumen Financiero del Mes</h3><div class="acc-summary-line"><span>Dinero Cobrado</span><b class="acc-green" id="acc-res-cobrado">$0.00</b></div><div class="acc-summary-line"><span>(−) Empleados primero: 25% cada uno</span><b class="acc-red" id="acc-res-nomina">-$0.00</b></div><div class="acc-summary-line"><span>(−) Gastos Operativos</span><b class="acc-red" id="acc-res-gastos">-$0.00</b></div><div class="acc-summary-line total"><span>= Fondo repartible después de empleados y gastos</span><b class="acc-green" id="acc-neta">$0.00</b></div></div>
         <div class="acc-card acc-panel"><h3>Distribución del restante (35% / 35% / 30%)</h3><div class="acc-distribution"><div class="acc-split"><b class="acc-blue">Rodrigo 35%</b><strong class="acc-blue" id="acc-rodrigo">$0.00</strong></div><div class="acc-split"><b class="acc-purple">Dayana 35%</b><strong class="acc-purple" id="acc-dayana">$0.00</strong></div><div class="acc-split"><b class="acc-green">Empresa 30%</b><strong class="acc-green" id="acc-empresa">$0.00</strong></div></div><div class="acc-company-money"><span>Dinero Disponible para Empresa</span><span id="acc-empresa-neto">$0.00</span></div></div>
         <div class="acc-card acc-panel"><h3>Cuentas por Cobrar</h3><div class="acc-receivable-line"><span>Total Vendido</span><b class="acc-blue" id="acc-cxc-vendido">$0.00</b></div><div class="acc-receivable-line"><span>Total Cobrado</span><b class="acc-green" id="acc-cxc-cobrado">$0.00</b></div><div class="acc-receivable-line acc-subline"><span>• Depósitos Recibidos</span><b class="acc-blue" id="acc-depositos">$0.00</b></div><div class="acc-receivable-line acc-subline"><span>• Balances Recibidos</span><b class="acc-blue" id="acc-balances">$0.00</b></div><div class="acc-receivable-line"><b>Pendiente por Cobrar</b><b class="acc-orange" id="acc-cxc-pendiente">$0.00</b></div><div class="acc-progress"><div id="acc-progress-bar" style="width:0%"></div></div><div class="acc-progress-label" id="acc-progress-label">0% cobrado</div></div>
       </section>
@@ -2090,6 +2091,11 @@ function calcularPrecioAutomatico() {
         precioRecurrente = precioInicial * 0.75;
     }
 
+    // Trimestral conserva el precio completo porque transcurren 3 meses entre servicios.
+    if (repetir === "trimestral") {
+        precioRecurrente = precioInicial;
+    }
+
     document.getElementById("precio_inicial").value = precioInicial.toFixed(2);
     document.getElementById("precio_recurrente").value = precioRecurrente.toFixed(2);
 
@@ -2423,6 +2429,7 @@ setTimeout(activarCalculadoraAutomatica, 500);
         if (repeticion === "semanal") nuevaFecha.setDate(fechaBase.getDate() + (7 * i));
         if (repeticion === "quincenal") nuevaFecha.setDate(fechaBase.getDate() + (14 * i));
         if (repeticion === "mensual") nuevaFecha.setMonth(fechaBase.getMonth() + i);
+        if (repeticion === "trimestral") nuevaFecha.setMonth(fechaBase.getMonth() + (3 * i));
 
         const fechaTexto = nuevaFecha.toISOString().slice(0, 10);
 
@@ -2577,13 +2584,14 @@ if (
     ? `<button class="btn-action" style="background:#22c55e;" onclick="verFirma('${s.id}')">✍️ Ver Firma</button>`
     : `<button class="btn-action btn-contract" onclick="enviarContrato('${s.id}', '${s.whatsapp}', '${s.cliente}')">📄 Acuerdo</button>`;
                     const depositoMonto = Number(s.deposito_monto || 0).toFixed(2);
-const estadoDeposito = s.deposito_pagado
+const pagoNormalizado = elitePaymentState(s);
+const estadoDeposito = pagoNormalizado.deposito
     ? `<p style="color:#22c55e; font-weight:bold;">✅ Depósito confirmado: $${depositoMonto}</p>`
     : `<p style="color:#f59e0b; font-weight:bold;">🔒 Depósito pendiente: $${depositoMonto}</p>`;
-const btnDeposito = s.deposito_pagado
+const btnDeposito = pagoNormalizado.deposito
     ? `<button class="btn-action" style="background:#92400e;" onclick="cancelarDeposito('${s.id}')">Cancelar Depósito</button>`
     : `<button class="btn-action" style="background:#22c55e;" onclick="confirmarDeposito('${s.id}')">Confirmar Depósito</button>`;
-     const btnBalance = s.balance_pagado
+     const btnBalance = pagoNormalizado.balance
     ? `<button class="btn-action" style="background:#92400e;" onclick="cancelarBalance('${s.id}')">Cancelar Balance</button>`
     : `<button class="btn-action" style="background:#16a34a;" onclick="confirmarBalance('${s.id}')">Confirmar Balance</button>`;
                     const card = document.createElement('div');
@@ -2618,7 +2626,7 @@ ${s.alfombra_notas ? `
 </div>
                         <span class="price-tag">$${s.precio_total || 0}</span>
 ${estadoDeposito}
-${s.balance_pagado
+${pagoNormalizado.balance
 ? `<p style="color:#22c55e;font-weight:bold;">✅ Balance pagado</p>`
 : `<p style="color:#f59e0b;font-weight:bold;">💰 Balance pendiente: $${Number(s.balance_restante || 0).toFixed(2)}</p>`
 }
@@ -3898,13 +3906,21 @@ function sincronizarSelectoresDesdeMes(render=true){
 function abrirContabilidadElite(){document.getElementById("elite-accounting-modal").style.display="block";inicializarSelectoresContabilidad();renderContabilidadElite();}
 function cerrarContabilidadElite(){document.getElementById("elite-accounting-modal").style.display="none";}
 
+function elitePaymentState(s){
+  const estado=String(s?.estado_pago||'').trim().toLowerCase();
+  const completo=estado==='pagado_completo'||estado==='pagado'||estado==='paid'||s?.pago_completo===true;
+  const deposito=completo||s?.deposito_pagado===true||Boolean(s?.fecha_pago_deposito);
+  const balance=completo||s?.balance_pagado===true||Boolean(s?.fecha_pago_balance);
+  return {deposito,balance,completo};
+}
 function datosPagoServicio(s){
   const vendido=Math.max(0,Number(s.precio_total||0));
   const depositoMonto=Math.max(0,Number(s.deposito_monto||vendido*.5));
   const balanceMonto=Math.max(0,Number(s.balance_restante!==undefined&&s.balance_restante!==""?s.balance_restante:vendido-depositoMonto));
-  let depositos=s.deposito_pagado===true?Math.min(depositoMonto,vendido):0;
-  let balances=s.balance_pagado===true?Math.min(balanceMonto,Math.max(vendido-depositos,0)):0;
-  if(s.estado_pago==="pagado_completo"&&depositos+balances<vendido)balances=Math.max(vendido-depositos,0);
+  const pago=elitePaymentState(s);
+  let depositos=pago.deposito?Math.min(depositoMonto,vendido):0;
+  let balances=pago.balance?Math.min(balanceMonto,Math.max(vendido-depositos,0)):0;
+  if(pago.completo&&depositos+balances<vendido)balances=Math.max(vendido-depositos,0);
   const cobrado=Math.min(vendido,depositos+balances), pendiente=Math.max(vendido-cobrado,0);
   let estadoPago="No pagado";
   if(vendido>0&&cobrado>=vendido)estadoPago="Pagado";else if(depositos>0&&balances<=0)estadoPago="Depósito";else if(cobrado>0)estadoPago="Parcial";
@@ -3939,17 +3955,17 @@ function calcularPagoEmpleadosServicio(s, montoCobrado){
 
   const empleados = obtenerEmpleadosAsignadosServicio(s);
   const base = Math.max(0, Number(montoCobrado || 0));
-  const pagoPorEmpleado = base * 0.20;
+  const pagoPorEmpleado = base * 0.25;
 
   const detalle = empleados.map(e => ({
     ...e,
-    porcentaje: 20,
+    porcentaje: 25,
     monto: pagoPorEmpleado
   }));
 
   return {
     total: detalle.reduce((sum, e) => sum + e.monto, 0),
-    porcentajeTotal: empleados.length * 20,
+    porcentajeTotal: empleados.length * 25,
     detalle,
     cantidad: empleados.length
   };
@@ -4024,7 +4040,7 @@ function renderTablaContabilidad(d){
     ? d.filas.sort((a,b)=>a.fecha.localeCompare(b.fecha)).map(f=>{
         const cls=f.estadoPago==="Pagado"?"paid":f.estadoPago==="Depósito"?"deposit":f.estadoPago==="Parcial"?"partial":"unpaid";
         const empleadosTexto=f.empleadosDetalle?.length
-          ? f.empleadosDetalle.map(e=>`${e.nombre}: ${dinero(e.monto)} (20%)`).join("<br>")
+          ? f.empleadosDetalle.map(e=>`${e.nombre}: ${dinero(e.monto)} (25%)`).join("<br>")
           : "—";
 
         return `<tr>
@@ -4070,7 +4086,7 @@ function renderGraficosContabilidad(d){
 }
 function abrirAgregarGasto(){document.getElementById("modal-gasto-contabilidad").style.display="block";document.getElementById("gasto-fecha").value=new Date().toISOString().slice(0,10)}function cerrarAgregarGasto(){document.getElementById("modal-gasto-contabilidad").style.display="none"}
 async function guardarGastoContabilidad(){const fecha=document.getElementById("gasto-fecha").value,categoria=document.getElementById("gasto-categoria").value,monto=Number(document.getElementById("gasto-monto").value||0),nota=document.getElementById("gasto-nota").value.trim();if(!fecha||monto<=0)return alert("Completa fecha y monto válido.");await db.collection("gastos_contabilidad").add({fecha,categoria,monto,nota,timestamp:firebase.firestore.FieldValue.serverTimestamp()});document.getElementById("gasto-monto").value="";document.getElementById("gasto-nota").value="";cerrarAgregarGasto();}
-async function cerrarMesContable(){const d=obtenerDatosContabilidad();if(cierresContables.some(c=>c.mes===d.mes&&c.cerrado===true))return alert("Este mes ya está cerrado.");if(!confirm(`¿Cerrar contablemente ${d.mes}? Los trabajos NO serán eliminados.`))return;await db.collection("cierres_contables").doc(d.mes).set({mes:d.mes,cerrado:true,fecha_cierre:new Date().toISOString(),resumen:{vendido:d.vendido,cobrado:d.cobrado,pendiente:d.pendiente,nomina_20_por_cada_empleado:d.pagoEmpleados,fondo_empresa_antes_gastos:d.fondoEmpresaAntesGastos,gastos:d.gastos,ganancia_real:d.gananciaReal,rodrigo:d.rodrigo,dayana:d.dayana,empresa:d.empresa},timestamp:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});const batch=db.batch();d.trabajos.forEach(s=>batch.update(db.collection("servicios").doc(s.id),{mes_contable:d.mes,mes_cerrado:true}));await batch.commit();alert("Mes cerrado correctamente. No se eliminó ningún trabajo.");}
+async function cerrarMesContable(){const d=obtenerDatosContabilidad();if(cierresContables.some(c=>c.mes===d.mes&&c.cerrado===true))return alert("Este mes ya está cerrado.");if(!confirm(`¿Cerrar contablemente ${d.mes}? Los trabajos NO serán eliminados.`))return;await db.collection("cierres_contables").doc(d.mes).set({mes:d.mes,cerrado:true,fecha_cierre:new Date().toISOString(),resumen:{vendido:d.vendido,cobrado:d.cobrado,pendiente:d.pendiente,nomina_25_por_cada_empleado:d.pagoEmpleados,fondo_empresa_antes_gastos:d.fondoEmpresaAntesGastos,gastos:d.gastos,ganancia_real:d.gananciaReal,rodrigo:d.rodrigo,dayana:d.dayana,empresa:d.empresa},timestamp:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});const batch=db.batch();d.trabajos.forEach(s=>batch.update(db.collection("servicios").doc(s.id),{mes_contable:d.mes,mes_cerrado:true}));await batch.commit();alert("Mes cerrado correctamente. No se eliminó ningún trabajo.");}
 function exportarContabilidadExcel(){
   const d=obtenerDatosContabilidad(),wb=XLSX.utils.book_new();
 
@@ -4081,7 +4097,7 @@ function exportarContabilidadExcel(){
     Pendiente:d.pendiente,
     Depósitos:d.depositos,
     Balances:d.balances,
-    "Empleados primero (20% cada uno)":d.pagoEmpleados,
+    "Empleados primero (25% cada uno)":d.pagoEmpleados,
     "Fondo empresa antes de gastos":d.fondoEmpresaAntesGastos,
     Gastos:d.gastos,
     "Fondo repartible":d.gananciaReal,
@@ -4098,7 +4114,7 @@ function exportarContabilidadExcel(){
     Cobrado:f.cobrado,
     Pendiente:f.pendiente,
     Empleados:f.empleados,
-    "Detalle pago empleados":f.empleadosDetalle.map(e=>`${e.nombre}: ${dinero(e.monto)} (20%)`).join(" | "),
+    "Detalle pago empleados":f.empleadosDetalle.map(e=>`${e.nombre}: ${dinero(e.monto)} (25%)`).join(" | "),
     "Pago total empleados":f.pagoEmpleados,
     "Porcentaje total empleados":f.porcentajeEmpleados+"%",
     "Restante después de empleados":f.restanteEmpresaBruto,
@@ -4989,7 +5005,7 @@ function eliteV51RenderDashboardExtra(){
   const hoy=new Date().toISOString().slice(0,10);
   const hoyJobs=(todosLosServicios||[]).filter(s=>s.fecha===hoy);
   const enProgreso=(todosLosServicios||[]).filter(s=>s.estado==='en_progreso').length;
-  const pendientesPago=(todosLosServicios||[]).filter(s=>(s.deposito_pagado!==true)||(s.estado==='completado'&&s.balance_pagado!==true)).length;
+  const pendientesPago=(todosLosServicios||[]).filter(s=>{const p=datosPagoServicio(s);return p.vendido>0&&p.pendiente>0;}).length;
   box.innerHTML=`<div class="elite-v51-dashboard-grid">
     <div class="elite-v51-dash-card"><b>Trabajos de hoy</b><strong>${hoyJobs.length}</strong></div>
     <div class="elite-v51-dash-card"><b>En progreso</b><strong>${enProgreso}</strong></div>
@@ -5973,7 +5989,7 @@ function opsDateKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padSt
 function opsMoney(n){return Number(n||0).toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0})}
 function opsMinutes(t){if(!t||t==='--:--')return 0;const p=String(t).split(':');return Number(p[0]||0)*60+Number(p[1]||0)}
 function opsEndTime(s){if(s.hora_final_estimada)return s.hora_final_estimada;const start=opsMinutes(s.hora);const mins=120;return `${String(Math.floor((start+mins)/60)%24).padStart(2,'0')}:${String((start+mins)%60).padStart(2,'0')}`}
-function opsPayment(s){const total=Number(s.precio_total||0);const dep=s.deposito_pagado?Number(s.deposito_monto||total*.5):0;const bal=s.balance_pagado?Math.max(total-dep,0):0;return {total,collected:Math.min(total,dep+bal),pending:Math.max(total-dep-bal,0),dep,bal}}
+function opsPayment(s){const total=Math.max(0,Number(s.precio_total||0)),state=elitePaymentState(s),depAmount=Math.max(0,Number(s.deposito_monto||total*.5));const dep=state.deposito?Math.min(depAmount,total):0;const balanceAmount=Math.max(0,Number(s.balance_restante!==undefined&&s.balance_restante!==''?s.balance_restante:total-depAmount));let bal=state.balance?Math.min(balanceAmount,Math.max(total-dep,0)):0;if(state.completo&&dep+bal<total)bal=Math.max(total-dep,0);return {total,collected:Math.min(total,dep+bal),pending:Math.max(total-dep-bal,0),dep,bal}}
 function opsJobsForDate(key){return todosLosServicios.filter(s=>s.fecha===key).sort((a,b)=>(a.hora||'').localeCompare(b.hora||''))}
 function opsStateClass(s){return s.estado==='completado'?'completed':s.estado==='en_progreso'?'progress':'pending'}
 function opsStateLabel(s){return s.estado==='completado'?'Completado':s.estado==='en_progreso'?'En progreso':'No iniciado'}
@@ -7249,7 +7265,7 @@ const norm=v=>String(v||'').trim().toLowerCase().normalize('NFD').replace(/[\u03
 const getJobs=()=>typeof todosLosServicios!=='undefined'&&Array.isArray(todosLosServicios)?todosLosServicios:[];
 const getClients=()=>typeof todosLosClientes!=='undefined'&&Array.isArray(todosLosClientes)?todosLosClientes:[];
 const greeting=()=>{const h=new Date().getHours();return h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches'};
-const oneTime=s=>!['semanal','quincenal','mensual','weekly','biweekly','monthly'].includes(norm(s.repetir||s.frecuencia||s.repeticion||'ninguno'));
+const oneTime=s=>!['semanal','quincenal','mensual','trimestral','weekly','biweekly','monthly','quarterly'].includes(norm(s.repetir||s.frecuencia||s.repeticion||'ninguno'));
 const completed=s=>['completado','terminado'].includes(norm(s.estado))||norm(s.estado_calendario)==='completado';
 const jobDate=s=>{const raw=s.fecha_fin||s.fecha_completado||s.fecha||'';const d=new Date(String(raw).slice(0,10)+'T12:00:00');return Number.isNaN(d.getTime())?null:d};
 const days=d=>Math.max(0,Math.floor((new Date().setHours(12,0,0,0)-d.getTime())/86400000));
@@ -7259,6 +7275,7 @@ const storageKey=id=>'eliteRecovery:'+id;
 const readState=id=>{try{return JSON.parse(localStorage.getItem(storageKey(id))||'{}')}catch(_){return {}}};
 const saveState=(id,data)=>localStorage.setItem(storageKey(id),JSON.stringify({...readState(id),...data,updatedAt:new Date().toISOString()}));
 const suggested=(name,p)=>{const first=String(name||'there').trim().split(/\s+/)[0];const promo=['offer','high'].includes(p)?' We would also be happy to offer you a special returning-customer discount.':'';return `Hi ${first}! 👋\nWe hope you are doing well. It has been a while since your last cleaning with Elite Cleaners, and we wanted to let you know that we are here whenever you need us.${promo}\n\nWould you like us to help you schedule your next cleaning?`};
+const suggestedEs=(name,p)=>{const first=String(name||'cliente').trim().split(/\s+/)[0];const promo=['offer','high'].includes(p)?' También nos gustaría ofrecerte un descuento especial por volver a elegirnos.':'';return `¡Hola ${first}! 👋\nEsperamos que estés muy bien. Ha pasado un tiempo desde tu última limpieza con Elite Cleaners y queríamos recordarte que estamos disponibles cuando nos necesites.${promo}\n\n¿Te gustaría que te ayudemos a programar tu próxima limpieza?`};
 
 window.buildEliteRecoveryRows=function(){
  const jobs=getJobs(),clients=getClients(),latest=new Map();
@@ -7269,7 +7286,8 @@ window.buildEliteRecoveryRows=function(){
    const future=jobs.some(s=>norm(s.cliente||s.nombre_cliente)===k&&jobDate(s)&&jobDate(s)>date&&norm(s.estado)!=='cancelado');
    const recurring=jobs.some(s=>norm(s.cliente||s.nombre_cliente)===k&&!oneTime(s)&&norm(s.estado)!=='cancelado');
    const c=clients.find(x=>norm(x.nombre||x.id)===k)||{},id=String(c.id||job.cliente||k),st=readState(id),d=days(date),p=priority(d);
-   rows.push({id,name:job.cliente||c.nombre||id,phone:job.whatsapp||c.whatsapp||c.telefono||'',email:job.email_cliente||c.email_cliente||c.email||'',address:job.direccion||c.direccion||'',service:job.tipo||job.tipo_limpieza||'Servicio de limpieza',date,days:d,priority:p,value:Number(job.precio_total||job.precio_inicial||0),status:(future||recurring)?'recuperado':(st.status||'pendiente'),message:st.message||suggested(job.cliente||c.nombre,p)});
+   if(d < 30)return;
+   rows.push({id,name:job.cliente||c.nombre||id,phone:job.whatsapp||c.whatsapp||c.telefono||'',email:job.email_cliente||c.email_cliente||c.email||'',address:job.direccion||c.direccion||'',service:job.tipo||job.tipo_limpieza||'Servicio de limpieza',date,days:d,priority:p,value:Number(job.precio_total||job.precio_inicial||0),status:(future||recurring)?'recuperado':(st.status||'pendiente'),message:st.message||suggested(job.cliente||c.nombre,p),messageEs:st.messageEs||suggestedEs(job.cliente||c.nombre,p),language:st.language||'en'});
  });
  return rows.sort((a,b)=>b.days-a.days);
 };
@@ -7283,19 +7301,20 @@ window.renderEliteRecoveryPage=function(){
  const box=document.getElementById('elite-recovery-list');if(!box)return;
  const q=norm(document.getElementById('recovery-search')?.value||''),pf=document.getElementById('recovery-priority-filter')?.value||'all',sf=document.getElementById('recovery-status-filter')?.value||'active';
  const filtered=rows.filter(r=>(!q||norm(`${r.name} ${r.phone} ${r.email} ${r.service}`).includes(q))&&(pf==='all'||r.priority===pf)&&(sf==='all'||(sf==='active'?!['recuperado','omitido'].includes(r.status):r.status===sf)));
- box.innerHTML=filtered.length?filtered.map(r=>`<article class="recovery-card"><div class="recovery-card-main"><h3>${esc(r.name)}</h3><p>📍 ${esc(r.address||'Sin dirección')} · 📱 ${esc(r.phone||'Sin teléfono')}</p><div class="recovery-detail-grid"><div class="recovery-detail"><span>Último servicio</span><b>${r.date.toLocaleDateString('es-US',{day:'numeric',month:'short',year:'numeric'})}</b></div><div class="recovery-detail"><span>Días sin reservar</span><b>${r.days} días</b></div><div class="recovery-detail"><span>Servicio</span><b>${esc(r.service)}</b></div><div class="recovery-detail"><span>Último valor</span><b>${money(r.value)}</b></div><div class="recovery-detail"><span>Estado</span><b>${esc(r.status)}</b></div><div class="recovery-detail"><span>Frecuencia</span><b>Una sola vez</b></div></div></div><div class="recovery-side"><span class="recovery-priority ${r.priority}">${priorityLabel(r.priority)}</span><div class="recovery-message">${esc(r.message)}</div><div class="recovery-actions"><button class="recovery-btn primary" onclick="eliteRecoveryEdit('${esc(r.id)}')">✎ Editar mensaje</button><button class="recovery-btn green" onclick="eliteRecoveryContact('${esc(r.id)}')">✓ Marcar contactado</button><button class="recovery-btn gray" onclick="eliteRecoveryCopy('${esc(r.id)}')">Copiar</button><button class="recovery-btn red" onclick="eliteRecoveryOmit('${esc(r.id)}')">Omitir</button></div><div class="recovery-status">Nico recomienda: ${priorityLabel(r.priority)}</div></div></article>`).join(''):'<div class="recovery-empty">No hay clientes que coincidan con estos filtros.</div>';
+ box.innerHTML=filtered.length?filtered.map(r=>`<article class="recovery-card"><div class="recovery-card-main"><h3>${esc(r.name)}</h3><p>📍 ${esc(r.address||'Sin dirección')} · 📱 ${esc(r.phone||'Sin teléfono')}</p><div class="recovery-detail-grid"><div class="recovery-detail"><span>Último servicio</span><b>${r.date.toLocaleDateString('es-US',{day:'numeric',month:'short',year:'numeric'})}</b></div><div class="recovery-detail"><span>Días sin reservar</span><b>${r.days} días</b></div><div class="recovery-detail"><span>Servicio</span><b>${esc(r.service)}</b></div><div class="recovery-detail"><span>Último valor</span><b>${money(r.value)}</b></div><div class="recovery-detail"><span>Estado</span><b>${esc(r.status)}</b></div><div class="recovery-detail"><span>Frecuencia</span><b>Una sola vez</b></div></div></div><div class="recovery-side"><span class="recovery-priority ${r.priority}">${priorityLabel(r.priority)}</span><div class="recovery-message"><b style="display:block;color:#93c5fd;margin-bottom:7px">${r.language==='es'?'Mensaje en español':'Mensaje en inglés'}</b>${esc(r.language==='es'?r.messageEs:r.message)}</div><div class="recovery-actions"><button class="recovery-btn primary" onclick="eliteRecoveryToggleLanguage('${esc(r.id)}')">🌐 ${r.language==='es'?'Ver inglés':'Traducir al español'}</button><button class="recovery-btn primary" onclick="eliteRecoveryEdit('${esc(r.id)}')">✎ Editar mensaje</button><button class="recovery-btn green" onclick="eliteRecoveryContact('${esc(r.id)}')">✓ Marcar contactado</button><button class="recovery-btn gray" onclick="eliteRecoveryCopy('${esc(r.id)}')">Copiar</button><button class="recovery-btn red" onclick="eliteRecoveryOmit('${esc(r.id)}')">Omitir</button></div><div class="recovery-status">Nico recomienda: ${priorityLabel(r.priority)}</div></div></article>`).join(''):'<div class="recovery-empty">No hay clientes que coincidan con estos filtros.</div>';
 };
-window.eliteRecoveryEdit=id=>{const r=buildEliteRecoveryRows().find(x=>x.id===id);if(!r)return;const m=prompt('Edita el mensaje sugerido por Nico:',r.message);if(m!==null){saveState(id,{message:m});renderEliteRecoveryPage()}};
+window.eliteRecoveryToggleLanguage=id=>{const r=buildEliteRecoveryRows().find(x=>x.id===id);if(!r)return;saveState(id,{language:r.language==='es'?'en':'es'});renderEliteRecoveryPage()};
+window.eliteRecoveryEdit=id=>{const r=buildEliteRecoveryRows().find(x=>x.id===id);if(!r)return;const isEs=r.language==='es';const m=prompt(isEs?'Edita el mensaje en español:':'Edita el mensaje en inglés:',isEs?r.messageEs:r.message);if(m!==null){saveState(id,isEs?{messageEs:m}:{message:m});renderEliteRecoveryPage()}};
 window.eliteRecoveryContact=id=>{saveState(id,{status:'contactado',contactedAt:new Date().toISOString()});renderEliteRecoveryPage()};
 window.eliteRecoveryOmit=id=>{if(confirm('¿Omitir este cliente de la lista activa?')){saveState(id,{status:'omitido'});renderEliteRecoveryPage()}};
-window.eliteRecoveryCopy=async id=>{const r=buildEliteRecoveryRows().find(x=>x.id===id);if(!r)return;try{await navigator.clipboard.writeText(r.message);alert('Mensaje copiado. Revísalo antes de enviarlo.')}catch(_){prompt('Copia el mensaje:',r.message)}};
+window.eliteRecoveryCopy=async id=>{const r=buildEliteRecoveryRows().find(x=>x.id===id);if(!r)return;try{await navigator.clipboard.writeText(r.language==='es'?r.messageEs:r.message);alert('Mensaje copiado. Revísalo antes de enviarlo.')}catch(_){prompt('Copia el mensaje:',r.language==='es'?r.messageEs:r.message)}};
 
 const originalLayout=window.eliteV51SetLayout;
 window.eliteV51SetLayout=function(module){const page=document.getElementById('elite-recovery-page');if(page)page.style.display='none';if(module!=='recuperacion')return originalLayout?.apply(this,arguments);originalLayout?.call(this,'__recovery__');const header=document.getElementById('elite-v51-page-header');if(header)header.style.display='none';if(page){const host=document.getElementById('admin-fixed-top');if(host&&page.parentNode!==host)host.appendChild(page);page.style.display='block'}renderEliteRecoveryPage()};
 const originalNav=window.eliteV5Navigate;
 window.eliteV5Navigate=function(module,button){if(module==='recuperacion'){eliteV5SetActive(module,button);cerrarEliteV5Menu();return eliteV51SetLayout('recuperacion')}return originalNav?.apply(this,arguments)};
 const originalDash=window.eliteV51RenderDashboardExtra;
-window.eliteV51RenderDashboardExtra=function(){originalDash?.apply(this,arguments);const box=document.getElementById('elite-v51-dashboard-extra');if(!box)return;const active=buildEliteRecoveryRows().filter(r=>!['recuperado','omitido'].includes(r.status));let banner=document.getElementById('elite-recovery-dashboard-banner');if(!banner){banner=document.createElement('div');banner.id='elite-recovery-dashboard-banner';banner.className='recovery-hero';box.prepend(banner)}banner.innerHTML=`<div><h2 style="font-size:21px">${greeting()}, Rodrigo.</h2><p>${active.length?`Mira, tengo <b>${active.length}</b> cliente${active.length===1?'':'s'} posible${active.length===1?'':'s'} por recuperar.`:'Por ahora no tengo clientes pendientes por recuperar.'}</p><button class="recovery-btn primary" style="margin-top:12px" onclick="eliteV5Navigate('recuperacion',document.querySelector('[data-module=recuperacion]'))">Ver clientes por recuperar</button></div><div class="recovery-nico-avatar">🤖</div>`;putBadge(active.length)};
+window.eliteV51RenderDashboardExtra=function(){originalDash?.apply(this,arguments);const box=document.getElementById('elite-v51-dashboard-extra');if(!box)return;const active=buildEliteRecoveryRows().filter(r=>!['recuperado','omitido'].includes(r.status));let banner=document.getElementById('elite-recovery-dashboard-banner');if(!banner){banner=document.createElement('div');banner.id='elite-recovery-dashboard-banner';banner.className='recovery-hero';box.prepend(banner)}banner.innerHTML=`<div><h2 style="font-size:21px">${greeting()}, Rodrigo.</h2><p>${active.length?`Mira, tengo <b>${active.length}</b> cliente${active.length===1?'':'s'} posible${active.length===1?'':'s'} por recuperar.`:'Por ahora no tengo clientes pendientes por recuperar.'}</p><button class="recovery-btn primary" style="margin-top:12px" onclick="eliteV5Navigate('recuperacion',document.querySelector('[data-module=recuperacion]'))">Ver clientes por recuperar</button></div><div class="recovery-nico-avatar"><img src="saluda.png" alt="Nico" onerror="this.onerror=null;this.src='bien.png';"></div>`;putBadge(active.length)};
 function putBadge(n){const e=document.getElementById('elite-recovery-menu-count');if(e)e.textContent=n}
 function refresh(){try{const a=buildEliteRecoveryRows().filter(r=>!['recuperado','omitido'].includes(r.status));putBadge(a.length);if(document.getElementById('elite-recovery-page')?.style.display==='block')renderEliteRecoveryPage()}catch(e){console.warn('Nico recuperación:',e)}}
 document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setInterval(refresh,15000);
