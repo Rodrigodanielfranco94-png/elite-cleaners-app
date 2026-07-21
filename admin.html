@@ -884,6 +884,23 @@ body.elite-v5-body{
 }
 </style>
 
+
+<style id="elite-v687-catalog-viewer-css">
+.elite-v55-product-photo-wrap{cursor:pointer;transition:transform .18s ease,box-shadow .18s ease}
+.elite-v55-product-photo-wrap:hover{transform:scale(1.03);box-shadow:0 0 0 2px #3b82f6}
+#elite-v687-viewer{display:none;position:fixed;inset:0;z-index:3000000;background:rgba(0,0,0,.94);padding:16px;box-sizing:border-box;align-items:center;justify-content:center;touch-action:pan-y}
+#elite-v687-viewer.open{display:flex}
+.elite-v687-box{position:relative;width:min(860px,96vw);max-height:94vh;background:#0f172a;border:1px solid #334155;border-radius:22px;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.6)}
+.elite-v687-image-stage{height:min(58vh,560px);background:#020617;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.elite-v687-image-stage img{width:100%;height:100%;object-fit:contain;display:block}
+.elite-v687-placeholder{font-size:90px}
+.elite-v687-info{padding:18px 20px 20px;color:#fff}
+.elite-v687-info h2{margin:0 0 8px;color:#60a5fa;font-size:25px}.elite-v687-info p{margin:5px 0;color:#cbd5e1;font-size:13px}.elite-v687-counter{color:#93c5fd;font-size:11px;font-weight:900;text-transform:uppercase;margin-bottom:8px}
+.elite-v687-close{position:absolute;right:12px;top:12px;z-index:4;width:42px;height:42px;border:0;border-radius:50%;background:rgba(15,23,42,.88);color:#fff;font-size:23px;cursor:pointer}
+.elite-v687-nav{position:absolute;top:42%;transform:translateY(-50%);z-index:4;width:48px;height:58px;border:0;border-radius:14px;background:rgba(15,23,42,.82);color:#fff;font-size:31px;cursor:pointer}.elite-v687-prev{left:12px}.elite-v687-next{right:12px}
+.elite-v687-hint{text-align:center;color:#94a3b8;font-size:10px;margin-top:12px}
+@media(max-width:620px){#elite-v687-viewer{padding:0}.elite-v687-box{width:100vw;max-height:100vh;height:100vh;border:0;border-radius:0;display:flex;flex-direction:column}.elite-v687-image-stage{height:62vh;flex:0 0 62vh}.elite-v687-info{overflow:auto}.elite-v687-nav{width:42px;height:52px}.elite-v687-prev{left:7px}.elite-v687-next{right:7px}}
+</style>
 </head>
 <body>
 <div id="loginBox" class="elite-login-overlay">
@@ -7641,8 +7658,8 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
     box.innerHTML=rows.map(p=>{
       const photo=productPhoto(p);
       const visual=photo
-        ?`<div class="elite-v55-product-photo-wrap"><img src="${esc(photo)}" alt="${esc(p.nombre||'Producto')}" loading="lazy" referrerpolicy="no-referrer" onerror="eliteV686ImageError(this)"></div>`
-        :'<div class="elite-v55-product-photo-wrap"><span class="elite-v55-product-placeholder">📦</span></div>';
+        ?`<div class="elite-v55-product-photo-wrap" role="button" tabindex="0" title="Ver producto" onclick="eliteV687OpenViewer('${p.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();eliteV687OpenViewer('${p.id}')}" ><img src="${esc(photo)}" alt="${esc(p.nombre||'Producto')}" loading="lazy" referrerpolicy="no-referrer" onerror="eliteV686ImageError(this)"></div>`
+        :`<div class="elite-v55-product-photo-wrap" role="button" tabindex="0" title="Ver producto" onclick="eliteV687OpenViewer('${p.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();eliteV687OpenViewer('${p.id}')}" ><span class="elite-v55-product-placeholder">📦</span></div>`;
       return `<div class="elite-v55-product-card">
         ${visual}
         <div><h4>${esc(p.nombre||'Producto')}</h4><p><b>Código:</b> ${esc(p.codigo_barras||'Sin código')}</p><p><b>${esc(p.marca||'Sin marca')}</b> · ${esc(p.tipo||'Sin tipo')} · ${esc(p.tamano||'Sin tamaño')}</p><p><b>Último precio:</b> $${Number(p.precio_actual||0).toFixed(2)} · ${esc(p.tienda||'Sin tienda')}</p></div>
@@ -7687,5 +7704,40 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
 })();
 </script>
 
+
+<div id="elite-v687-viewer" aria-hidden="true" onclick="eliteV687BackdropClose(event)">
+  <div class="elite-v687-box">
+    <button class="elite-v687-close" type="button" onclick="eliteV687CloseViewer()" aria-label="Cerrar">×</button>
+    <button class="elite-v687-nav elite-v687-prev" type="button" onclick="eliteV687Move(-1)" aria-label="Producto anterior">‹</button>
+    <button class="elite-v687-nav elite-v687-next" type="button" onclick="eliteV687Move(1)" aria-label="Producto siguiente">›</button>
+    <div id="elite-v687-image-stage" class="elite-v687-image-stage"></div>
+    <div id="elite-v687-info" class="elite-v687-info"></div>
+  </div>
+</div>
+
+<script id="elite-v687-catalog-viewer-js">
+(function(){
+  let viewerRows=[];let viewerIndex=0;let touchStartX=0;let touchStartY=0;
+  function escHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function rows(){
+    const coll=new Intl.Collator('es',{sensitivity:'base',numeric:true});
+    return (window.eliteV55Catalog||eliteV55Catalog||[]).slice().sort((a,b)=>coll.compare(String(a.nombre||''),String(b.nombre||''))||coll.compare(String(a.marca||''),String(b.marca||'')));
+  }
+  function render(){
+    const p=viewerRows[viewerIndex];if(!p)return;
+    const stage=document.getElementById('elite-v687-image-stage');const info=document.getElementById('elite-v687-info');
+    const photo=window.eliteV686ProductPhoto?window.eliteV686ProductPhoto(p):'';
+    stage.innerHTML=photo?`<img src="${escHtml(photo)}" alt="${escHtml(p.nombre||'Producto')}" onerror="this.parentElement.innerHTML='<span class=\'elite-v687-placeholder\'>📦</span>'">`:`<span class="elite-v687-placeholder">📦</span>`;
+    info.innerHTML=`<div class="elite-v687-counter">Producto ${viewerIndex+1} de ${viewerRows.length}</div><h2>${escHtml(p.nombre||'Producto')}</h2><p><b>Marca:</b> ${escHtml(p.marca||'Sin marca')}</p><p><b>Tipo:</b> ${escHtml(p.tipo||'Sin tipo')}</p><p><b>Tamaño:</b> ${escHtml(p.tamano||'Sin tamaño')}</p><p><b>Código:</b> ${escHtml(p.codigo_barras||'Sin código')}</p><p><b>Último precio:</b> $${Number(p.precio_actual||0).toFixed(2)} · ${escHtml(p.tienda||'Sin tienda')}</p><div class="elite-v687-hint">Desliza a la izquierda o derecha para ver más productos</div>`;
+  }
+  window.eliteV687OpenViewer=function(id){viewerRows=rows();viewerIndex=Math.max(0,viewerRows.findIndex(x=>x.id===id));const v=document.getElementById('elite-v687-viewer');v.classList.add('open');v.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';render();};
+  window.eliteV687CloseViewer=function(){const v=document.getElementById('elite-v687-viewer');v.classList.remove('open');v.setAttribute('aria-hidden','true');document.body.style.overflow='';};
+  window.eliteV687Move=function(step){if(!viewerRows.length)return;viewerIndex=(viewerIndex+step+viewerRows.length)%viewerRows.length;render();};
+  window.eliteV687BackdropClose=function(e){if(e.target?.id==='elite-v687-viewer')eliteV687CloseViewer();};
+  document.addEventListener('keydown',e=>{const v=document.getElementById('elite-v687-viewer');if(!v?.classList.contains('open'))return;if(e.key==='ArrowLeft')eliteV687Move(-1);if(e.key==='ArrowRight')eliteV687Move(1);if(e.key==='Escape')eliteV687CloseViewer();});
+  document.addEventListener('touchstart',e=>{const v=document.getElementById('elite-v687-viewer');if(!v?.classList.contains('open'))return;const t=e.changedTouches[0];touchStartX=t.clientX;touchStartY=t.clientY;},{passive:true});
+  document.addEventListener('touchend',e=>{const v=document.getElementById('elite-v687-viewer');if(!v?.classList.contains('open'))return;const t=e.changedTouches[0],dx=t.clientX-touchStartX,dy=t.clientY-touchStartY;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)){eliteV687Move(dx<0?1:-1);}},{passive:true});
+})();
+</script>
 </body>
 </html>
