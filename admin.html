@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.8.6 | Catálogo con imágenes persistentes y orden alfabético -->
+<!-- Elite Admin v6.8.7 | Gastos operativos editables -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.8.6 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.8.7 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -250,7 +250,21 @@
 .acc-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:14px}.acc-card{background:#fff;border:1px solid #e2e8f0;border-radius:11px;box-shadow:0 8px 24px rgba(15,23,42,.06)}.acc-metric{padding:16px;min-height:122px;position:relative}.acc-metric h3{font-size:13px;margin:0 0 6px}.acc-metric p{font-size:11px;color:#64748b;margin:0}.acc-metric strong{display:block;font-size:22px;margin-top:24px}.acc-icon{position:absolute;right:16px;top:16px;width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:21px}.acc-green{color:#16a34a}.acc-orange{color:#f97316}.acc-red{color:#dc2626}.acc-purple{color:#7c3aed}.acc-blue{color:#2563eb}.acc-icon.acc-green{background:#dcfce7}.acc-icon.acc-orange{background:#ffedd5}.acc-icon.acc-red{background:#fee2e2}.acc-icon.acc-purple{background:#ede9fe}
 .acc-row3{display:grid;grid-template-columns:1.05fr 1.45fr 1.15fr;gap:14px;margin-bottom:14px}.acc-panel{padding:18px}.acc-panel h3{font-size:14px;margin:0 0 18px}.acc-summary-line,.acc-receivable-line{display:flex;justify-content:space-between;gap:15px;padding:8px 0;font-size:13px}.acc-summary-line.total{border-top:1px solid #e2e8f0;margin-top:8px;padding-top:15px;font-weight:900}.acc-subline{padding-left:14px;font-size:12px}.acc-distribution{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.acc-split{padding:18px;text-align:center;border:1px solid #e2e8f0;border-radius:9px;background:#f8fafc}.acc-split b{font-size:13px}.acc-split strong{display:block;font-size:22px;margin-top:14px}.acc-company-money{margin-top:18px;background:#ecfdf5;border:1px solid #bbf7d0;color:#15803d;border-radius:9px;padding:17px 20px;display:flex;justify-content:space-between;font-weight:900}.acc-progress{height:13px;background:#e2e8f0;border-radius:20px;overflow:hidden;margin-top:14px}.acc-progress>div{height:100%;background:#10b981;border-radius:20px}.acc-progress-label{text-align:right;font-size:10px;color:#16a34a;margin-top:5px}
 .acc-lower{display:grid;grid-template-columns:1fr 2.3fr;gap:14px}.acc-left-stack{display:grid;gap:14px}.acc-chart-wrap{height:205px}.acc-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.acc-mini-chart{height:220px}.acc-table-card{overflow:hidden}.acc-table-title{padding:17px 18px;border-bottom:1px solid #e2e8f0;font-weight:900;font-size:14px}.acc-table-scroll{overflow:auto}.acc-table{width:100%;border-collapse:collapse;min-width:1020px;font-size:11px;background:#fff;color:#0f172a}.acc-table th,.acc-table td{padding:10px;border-bottom:1px solid #e2e8f0;text-align:left;white-space:nowrap}.acc-table th{background:#f8fafc;color:#334155;font-size:10px}.acc-table tfoot td{font-weight:900;background:#f8fafc}.acc-status{display:inline-block;padding:5px 9px;border-radius:7px;font-weight:800;font-size:10px}.acc-status.paid{background:#dcfce7;color:#15803d}.acc-status.deposit{background:#dbeafe;color:#1d4ed8}.acc-status.partial{background:#f1f5f9;color:#475569}.acc-status.unpaid{background:#fee2e2;color:#b91c1c}.acc-empty{padding:30px;text-align:center;color:#64748b}.acc-footer{text-align:center;color:#64748b;font-size:10px;margin-top:25px}
-#modal-gasto-contabilidad{color:#fff}.acc-gasto-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.acc-close-mobile{display:none}
+#modal-gasto-contabilidad{color:#fff}
+.acc-gasto-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.acc-gasto-actions.editing{grid-template-columns:1fr 1fr 1fr}
+.acc-gasto-list{margin-top:14px;border-top:1px solid #e2e8f0;padding-top:12px;max-height:245px;overflow:auto}
+.acc-gasto-list-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;font-size:12px;font-weight:900;color:#334155}
+.acc-gasto-item{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px;margin-bottom:8px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;cursor:pointer;transition:.18s}
+.acc-gasto-item:hover{border-color:#60a5fa;background:#eff6ff}
+.acc-gasto-item-main b{display:block;color:#0f172a;font-size:11px}
+.acc-gasto-item-main span{display:block;margin-top:3px;color:#64748b;font-size:10px;white-space:normal}
+.acc-gasto-item-amount{color:#dc2626;font-size:12px;font-weight:900}
+.acc-gasto-empty{padding:15px;text-align:center;color:#64748b;font-size:11px;border:1px dashed #cbd5e1;border-radius:10px}
+.acc-gasto-edit-hint{font-size:9px;color:#2563eb;font-weight:800;margin-top:3px}
+.acc-gasto-delete{display:none!important;background:#b91c1c!important}
+.acc-gasto-actions.editing .acc-gasto-delete{display:block!important}
+.acc-close-mobile{display:none}
 @media(max-width:1100px){.acc-shell{grid-template-columns:1fr}.acc-sidebar{display:none}.acc-metrics{grid-template-columns:repeat(2,1fr)}.acc-row3,.acc-lower{grid-template-columns:1fr}.acc-close-mobile{display:block}}
 @media(max-width:650px){.acc-main{padding:14px}.acc-topbar{display:block}.acc-controls{justify-content:flex-start;margin-top:16px}.acc-heading h2{font-size:28px}.acc-metrics{grid-template-columns:1fr}.acc-mini-grid{grid-template-columns:1fr}.acc-distribution{grid-template-columns:1fr}.acc-company-money{font-size:13px}}
 @media print{body>*:not(#elite-accounting-modal){display:none!important}#elite-accounting-modal{display:block!important;position:static!important;overflow:visible!important}.acc-sidebar,.acc-controls,.acc-close-mobile{display:none!important}.acc-shell{display:block}.acc-main{padding:0}.acc-card{box-shadow:none}}
@@ -1528,13 +1542,45 @@ style="width:100%;"></textarea>
         <div class="acc-card acc-panel"><h3>Distribución del restante (35% / 35% / 30%)</h3><div class="acc-distribution"><div class="acc-split"><b class="acc-blue">Rodrigo 35%</b><strong class="acc-blue" id="acc-rodrigo">$0.00</strong></div><div class="acc-split"><b class="acc-purple">Dayana 35%</b><strong class="acc-purple" id="acc-dayana">$0.00</strong></div><div class="acc-split"><b class="acc-green">Empresa 30%</b><strong class="acc-green" id="acc-empresa">$0.00</strong></div></div><div class="acc-company-money"><span>Dinero Disponible para Empresa</span><span id="acc-empresa-neto">$0.00</span></div></div>
         <div class="acc-card acc-panel"><h3>Cuentas por Cobrar</h3><div class="acc-receivable-line"><span>Total Vendido</span><b class="acc-blue" id="acc-cxc-vendido">$0.00</b></div><div class="acc-receivable-line"><span>Total Cobrado</span><b class="acc-green" id="acc-cxc-cobrado">$0.00</b></div><div class="acc-receivable-line acc-subline"><span>• Depósitos Recibidos</span><b class="acc-blue" id="acc-depositos">$0.00</b></div><div class="acc-receivable-line acc-subline"><span>• Balances Recibidos</span><b class="acc-blue" id="acc-balances">$0.00</b></div><div class="acc-receivable-line"><b>Pendiente por Cobrar</b><b class="acc-orange" id="acc-cxc-pendiente">$0.00</b></div><div class="acc-progress"><div id="acc-progress-bar" style="width:0%"></div></div><div class="acc-progress-label" id="acc-progress-label">0% cobrado</div></div>
       </section>
-      <section class="acc-lower"><div class="acc-left-stack"><div class="acc-card acc-panel"><h3>Ganancia Neta de los Últimos 12 Meses (Empresa)</h3><div class="acc-chart-wrap"><canvas id="acc-company-chart"></canvas></div></div><div class="acc-mini-grid"><div class="acc-card acc-panel"><h3>Estado de Trabajos del Mes</h3><div class="acc-mini-chart"><canvas id="acc-status-chart"></canvas></div></div><div class="acc-card acc-panel"><h3>Gastos Operativos del Mes</h3><div class="acc-mini-chart"><canvas id="acc-expense-chart"></canvas></div><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;margin-top:10px"><span>Total Gastos</span><span id="acc-total-gastos">$0.00</span></div></div></div></div>
+      <section class="acc-lower"><div class="acc-left-stack"><div class="acc-card acc-panel"><h3>Ganancia Neta de los Últimos 12 Meses (Empresa)</h3><div class="acc-chart-wrap"><canvas id="acc-company-chart"></canvas></div></div><div class="acc-mini-grid"><div class="acc-card acc-panel"><h3>Estado de Trabajos del Mes</h3><div class="acc-mini-chart"><canvas id="acc-status-chart"></canvas></div></div><div class="acc-card acc-panel"><h3>Gastos Operativos del Mes</h3><div class="acc-mini-chart"><canvas id="acc-expense-chart"></canvas></div><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;margin-top:10px"><span>Total Gastos</span><span id="acc-total-gastos">$0.00</span></div><div class="acc-gasto-list"><div class="acc-gasto-list-title"><span>Detalle de gastos</span><span>Toca un gasto para editarlo</span></div><div id="acc-gastos-list"></div></div></div></div></div>
         <div class="acc-card acc-table-card"><div class="acc-table-title">Detalle de Servicios / Trabajos</div><div class="acc-table-scroll"><table class="acc-table"><thead><tr><th>Fecha</th><th>Cliente</th><th>Servicio</th><th>Vendido</th><th>Cobrado</th><th>Pendiente</th><th>Empleado(s)</th><th>Pago Staff</th><th>Restante</th><th>Rodrigo 35%</th><th>Dayana 35%</th><th>Empresa 30%</th><th>Estado Pago</th></tr></thead><tbody id="accounting-table-body"></tbody><tfoot id="accounting-table-total"></tfoot></table></div></div>
       </section><div class="acc-footer">Elite Admin v6.0.3 • Contabilidad Profesional para tu Empresa</div>
     </main>
   </div>
 </div>
-<div id="modal-gasto-contabilidad" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:1000000;padding:20px;box-sizing:border-box"><div style="background:#111827;border:1px solid #3b82f6;border-radius:20px;padding:20px;max-width:420px;margin:40px auto"><h2 style="margin-top:0">➕ Agregar gasto</h2><span class="label-text">Fecha</span><input type="date" id="gasto-fecha"><span class="label-text">Categoría</span><select id="gasto-categoria" style="width:100%;padding:14px;margin-bottom:10px;border-radius:12px;background:#2c2c2e;color:#fff;border:1px solid #374151"><option>Combustible</option><option>Productos / Insumos</option><option>Lavandería</option><option>Máquinas / Equipos</option><option>Vehículo</option><option>Publicidad</option><option>Seguro</option><option>Otros</option></select><span class="label-text">Monto</span><input type="number" step="0.01" id="gasto-monto" placeholder="0.00"><span class="label-text">Nota</span><textarea id="gasto-nota" placeholder="Descripción del gasto"></textarea><div class="acc-gasto-actions"><button class="save-btn" onclick="guardarGastoContabilidad()">Guardar</button><button class="save-btn" style="background:#ef4444" onclick="cerrarAgregarGasto()">Cancelar</button></div></div></div>
+<div id="modal-gasto-contabilidad" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:1000000;padding:20px;box-sizing:border-box;overflow:auto">
+  <div style="background:#111827;border:1px solid #3b82f6;border-radius:20px;padding:20px;max-width:420px;margin:40px auto">
+    <h2 id="gasto-modal-titulo" style="margin-top:0">➕ Agregar gasto</h2>
+    <input type="hidden" id="gasto-editando-id">
+
+    <span class="label-text">Fecha</span>
+    <input type="date" id="gasto-fecha">
+
+    <span class="label-text">Categoría</span>
+    <select id="gasto-categoria" style="width:100%;padding:14px;margin-bottom:10px;border-radius:12px;background:#2c2c2e;color:#fff;border:1px solid #374151">
+      <option>Combustible</option>
+      <option>Productos / Insumos</option>
+      <option>Lavandería</option>
+      <option>Máquinas / Equipos</option>
+      <option>Vehículo</option>
+      <option>Publicidad</option>
+      <option>Seguro</option>
+      <option>Otros</option>
+    </select>
+
+    <span class="label-text">Monto</span>
+    <input type="number" min="0" step="0.01" id="gasto-monto" placeholder="0.00">
+
+    <span class="label-text">Nota</span>
+    <textarea id="gasto-nota" placeholder="Descripción del gasto"></textarea>
+
+    <div id="gasto-modal-acciones" class="acc-gasto-actions">
+      <button id="gasto-boton-guardar" class="save-btn" onclick="guardarGastoContabilidad()">Guardar</button>
+      <button class="save-btn acc-gasto-delete" onclick="eliminarGastoContabilidad()">Eliminar</button>
+      <button class="save-btn" style="background:#ef4444" onclick="cerrarAgregarGasto()">Cancelar</button>
+    </div>
+  </div>
+</div>
 
     <script>const firebaseConfig = {
             apiKey: "AIzaSyDB4F55StoX8WYYzCm8oSnucclrHyvjpLA",
@@ -4143,7 +4189,7 @@ function renderContabilidadElite(){
   const ids={"acc-vendido":d.vendido,"acc-cobrado":d.cobrado,"acc-pendiente":d.pendiente,"acc-gastos":d.gastos,"acc-empleados":d.pagoEmpleados,"acc-res-cobrado":d.cobrado,"acc-neta":d.gananciaReal,"acc-rodrigo":d.rodrigo,"acc-dayana":d.dayana,"acc-empresa":d.empresa,"acc-empresa-neto":d.empresa,"acc-cxc-vendido":d.vendido,"acc-cxc-cobrado":d.cobrado,"acc-depositos":d.depositos,"acc-balances":d.balances,"acc-cxc-pendiente":d.pendiente,"acc-total-gastos":d.gastos};Object.entries(ids).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.innerText=dinero(v)});
   document.getElementById("acc-res-nomina").innerText="-"+dinero(d.pagoEmpleados);document.getElementById("acc-res-gastos").innerText="-"+dinero(d.gastos);
   const pct=d.vendido>0?Math.min(d.cobrado/d.vendido*100,100):0;document.getElementById("acc-progress-bar").style.width=pct.toFixed(1)+"%";document.getElementById("acc-progress-label").innerText=pct.toFixed(1)+"% cobrado";
-  renderTablaContabilidad(d);renderGraficosContabilidad(d);
+  renderTablaContabilidad(d);renderGraficosContabilidad(d);renderListaGastosContabilidad(d);
 }
 function renderTablaContabilidad(d){
   const body=document.getElementById("accounting-table-body"),foot=document.getElementById("accounting-table-total");
@@ -4196,8 +4242,137 @@ function renderGraficosContabilidad(d){
   graficosContabilidad.estado=new Chart(document.getElementById("acc-status-chart"),{type:"doughnut",data:{labels:["Pagados completos","Con balance pendiente","Solo depósito","No pagados"],datasets:[{data:[c.pagado,c.parcial,c.deposito,c.nopagado],backgroundColor:["#16a34a","#2563eb","#f97316","#dc2626"]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{boxWidth:9,font:{size:9}}}}}});
   const cats={};d.gastosMes.forEach(g=>{const c=g.categoria||"Otros";cats[c]=(cats[c]||0)+Number(g.monto||0)});graficosContabilidad.gastos=new Chart(document.getElementById("acc-expense-chart"),{type:"pie",data:{labels:Object.keys(cats).length?Object.keys(cats):["Sin gastos"],datasets:[{data:Object.keys(cats).length?Object.values(cats):[1],backgroundColor:["#16a34a","#f97316","#2563eb","#7c3aed","#dc2626","#0ea5e9","#eab308","#64748b"]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{boxWidth:9,font:{size:8}}}}}});
 }
-function abrirAgregarGasto(){document.getElementById("modal-gasto-contabilidad").style.display="block";document.getElementById("gasto-fecha").value=new Date().toISOString().slice(0,10)}function cerrarAgregarGasto(){document.getElementById("modal-gasto-contabilidad").style.display="none"}
-async function guardarGastoContabilidad(){const fecha=document.getElementById("gasto-fecha").value,categoria=document.getElementById("gasto-categoria").value,monto=Number(document.getElementById("gasto-monto").value||0),nota=document.getElementById("gasto-nota").value.trim();if(!fecha||monto<=0)return alert("Completa fecha y monto válido.");await db.collection("gastos_contabilidad").add({fecha,categoria,monto,nota,timestamp:firebase.firestore.FieldValue.serverTimestamp()});document.getElementById("gasto-monto").value="";document.getElementById("gasto-nota").value="";cerrarAgregarGasto();}
+function eliteEscaparHtml(valor){
+  return String(valor ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function renderListaGastosContabilidad(d){
+  const box=document.getElementById("acc-gastos-list");
+  if(!box)return;
+
+  const gastos=[...(d.gastosMes||[])].sort((a,b)=>
+    String(b.fecha||"").localeCompare(String(a.fecha||""))
+  );
+
+  box.innerHTML=gastos.length
+    ? gastos.map(g=>`
+      <div class="acc-gasto-item" role="button" tabindex="0"
+           onclick="abrirEditarGasto('${g.id}')"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirEditarGasto('${g.id}')}">
+        <div class="acc-gasto-item-main">
+          <b>${eliteEscaparHtml(g.fecha||"Sin fecha")} · ${eliteEscaparHtml(g.categoria||"Otros")}</b>
+          <span>${eliteEscaparHtml(g.nota||"Sin descripción")}</span>
+          <div class="acc-gasto-edit-hint">✏️ Editar gasto</div>
+        </div>
+        <div class="acc-gasto-item-amount">${dinero(g.monto)}</div>
+      </div>`).join("")
+    : `<div class="acc-gasto-empty">No hay gastos registrados en este mes.</div>`;
+}
+
+function prepararModalGasto(modo,gasto=null){
+  const editando=modo==="editar"&&gasto;
+  document.getElementById("gasto-editando-id").value=editando?gasto.id:"";
+  document.getElementById("gasto-modal-titulo").textContent=editando?"✏️ Editar gasto":"➕ Agregar gasto";
+  document.getElementById("gasto-boton-guardar").textContent=editando?"Guardar cambios":"Guardar";
+  document.getElementById("gasto-modal-acciones").classList.toggle("editing",Boolean(editando));
+
+  document.getElementById("gasto-fecha").value=editando
+    ? String(gasto.fecha||"")
+    : new Date().toISOString().slice(0,10);
+  document.getElementById("gasto-categoria").value=editando
+    ? String(gasto.categoria||"Otros")
+    : "Combustible";
+  document.getElementById("gasto-monto").value=editando
+    ? Number(gasto.monto||0).toFixed(2)
+    : "";
+  document.getElementById("gasto-nota").value=editando
+    ? String(gasto.nota||"")
+    : "";
+}
+
+function abrirAgregarGasto(){
+  prepararModalGasto("agregar");
+  document.getElementById("modal-gasto-contabilidad").style.display="block";
+  setTimeout(()=>document.getElementById("gasto-monto")?.focus(),50);
+}
+
+function abrirEditarGasto(id){
+  const gasto=gastosContabilidad.find(g=>g.id===id);
+  if(!gasto)return alert("No se encontró este gasto. Actualiza la página e inténtalo nuevamente.");
+  prepararModalGasto("editar",gasto);
+  document.getElementById("modal-gasto-contabilidad").style.display="block";
+}
+
+function cerrarAgregarGasto(){
+  document.getElementById("modal-gasto-contabilidad").style.display="none";
+  prepararModalGasto("agregar");
+}
+
+async function guardarGastoContabilidad(){
+  const id=document.getElementById("gasto-editando-id").value.trim();
+  const fecha=document.getElementById("gasto-fecha").value;
+  const categoria=document.getElementById("gasto-categoria").value;
+  const monto=Number(document.getElementById("gasto-monto").value||0);
+  const nota=document.getElementById("gasto-nota").value.trim();
+  const boton=document.getElementById("gasto-boton-guardar");
+
+  if(!fecha||!categoria||!Number.isFinite(monto)||monto<=0){
+    return alert("Completa la fecha, la categoría y un monto válido.");
+  }
+
+  boton.disabled=true;
+  boton.textContent=id?"Guardando cambios...":"Guardando...";
+
+  try{
+    const datos={
+      fecha,
+      categoria,
+      monto:Math.round(monto*100)/100,
+      nota,
+      actualizado_en:firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    if(id){
+      await db.collection("gastos_contabilidad").doc(id).update(datos);
+    }else{
+      datos.timestamp=firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection("gastos_contabilidad").add(datos);
+    }
+
+    cerrarAgregarGasto();
+  }catch(error){
+    console.error("Error al guardar gasto:",error);
+    alert("No se pudo guardar el gasto. Revisa tu conexión e inténtalo nuevamente.");
+  }finally{
+    boton.disabled=false;
+    boton.textContent=id?"Guardar cambios":"Guardar";
+  }
+}
+
+async function eliminarGastoContabilidad(){
+  const id=document.getElementById("gasto-editando-id").value.trim();
+  if(!id)return;
+
+  const gasto=gastosContabilidad.find(g=>g.id===id);
+  const descripcion=gasto
+    ? `${gasto.categoria||"Gasto"} — ${dinero(gasto.monto)}`
+    : "este gasto";
+
+  if(!confirm(`¿Eliminar ${descripcion}?\n\nEsta acción quitará el gasto de Contabilidad y recalculará automáticamente todos los totales.`))return;
+
+  try{
+    await db.collection("gastos_contabilidad").doc(id).delete();
+    cerrarAgregarGasto();
+  }catch(error){
+    console.error("Error al eliminar gasto:",error);
+    alert("No se pudo eliminar el gasto. Revisa tu conexión e inténtalo nuevamente.");
+  }
+}
 async function cerrarMesContable(){const d=obtenerDatosContabilidad();if(cierresContables.some(c=>c.mes===d.mes&&c.cerrado===true))return alert("Este mes ya está cerrado.");if(!confirm(`¿Cerrar contablemente ${d.mes}? Los trabajos NO serán eliminados.`))return;await db.collection("cierres_contables").doc(d.mes).set({mes:d.mes,cerrado:true,fecha_cierre:new Date().toISOString(),resumen:{vendido:d.vendido,cobrado:d.cobrado,pendiente:d.pendiente,nomina_25_por_cada_empleado:d.pagoEmpleados,fondo_empresa_antes_gastos:d.fondoEmpresaAntesGastos,gastos:d.gastos,ganancia_real:d.gananciaReal,rodrigo:d.rodrigo,dayana:d.dayana,empresa:d.empresa},timestamp:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});const batch=db.batch();d.trabajos.forEach(s=>batch.update(db.collection("servicios").doc(s.id),{mes_contable:d.mes,mes_cerrado:true}));await batch.commit();alert("Mes cerrado correctamente. No se eliminó ningún trabajo.");}
 function exportarContabilidadExcel(){
   const d=obtenerDatosContabilidad(),wb=XLSX.utils.book_new();
