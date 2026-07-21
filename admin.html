@@ -7493,5 +7493,106 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
 })();
 </script>
 
+
+<style id="elite-v685-inventory-fix-css">
+.elite-v685-stock-status{display:none;margin-top:10px;padding:11px 13px;border-radius:11px;font-size:12px;line-height:1.45}
+.elite-v685-stock-status.show{display:block}
+.elite-v685-stock-preview{margin-top:10px;padding:12px;border:1px solid #334155;border-radius:12px;background:#05070b;color:#cbd5e1;font-size:12px}
+.elite-v55-product-photo{display:block;overflow:hidden}
+</style>
+<script id="elite-v685-inventory-fixes">
+(function(){
+  function esc(v){return typeof eliteV54Esc==='function'?eliteV54Esc(v):String(v||'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));}
+  function norm(v){return typeof normalizarTexto==='function'?normalizarTexto(v):String(v||'').trim().toLowerCase();}
+
+  // Si Storage falla, conserva la foto comprimida dentro del documento del catálogo.
+  window.eliteV55SaveProduct=async function(){
+    const button=document.getElementById('v55-save-button');
+    const code=(document.getElementById('v55-code')?.value||'').trim();
+    const name=(document.getElementById('v55-name')?.value||'').trim();
+    const price=Number(document.getElementById('v55-price')?.value||0);
+    if(!name){eliteV55SetSaveStatus('Escribe el nombre del producto.','warning');document.getElementById('v55-name')?.focus();return;}
+    if(code){const duplicate=eliteV55Catalog.find(p=>String(p.codigo_barras||'').trim()===code&&p.id!==eliteV55EditingId);if(duplicate){eliteV55SetSaveStatus('Ese código ya pertenece a: '+duplicate.nombre,'warning');return;}}
+    if(button){button.disabled=true;button.textContent='Guardando...';button.style.opacity='.7';}
+    eliteV55SetSaveStatus('Preparando el producto...','info');
+    try{
+      let photoUrl=eliteV55PhotoExisting||'';
+      const file=eliteV55SelectedPhotoFile||document.getElementById('v55-photo-camera')?.files?.[0]||document.getElementById('v55-photo-gallery')?.files?.[0]||null;
+      if(file){
+        eliteV55SetSaveStatus('Procesando la foto...','info');
+        try{
+          photoUrl=await eliteV54Upload(file,`catalogo_productos/${code||Date.now()}/${Date.now()}_producto`);
+          if(!photoUrl)throw new Error('Storage no devolvió URL');
+        }catch(storageError){
+          console.warn('Storage rechazó la foto; se usará respaldo comprimido.',storageError);
+          photoUrl=await eliteV55CompressPhotoToDataUrl(file,700,.68);
+          eliteV55SetSaveStatus('La foto se guardará de forma comprimida dentro del catálogo.','warning');
+        }
+      }
+      const data={codigo_barras:code,nombre:name,marca:(document.getElementById('v55-brand')?.value||'').trim(),tipo:document.getElementById('v55-type')?.value||'Materiales',tamano:(document.getElementById('v55-size')?.value||'').trim(),precio_actual:price,tienda:(document.getElementById('v55-store')?.value||'').trim(),ubicacion:(document.getElementById('v55-location')?.value||'').trim(),minimo:Number(document.getElementById('v55-min')?.value||0),foto_url:photoUrl||'',actualizado:firebase.firestore.FieldValue.serverTimestamp(),actualizado_por:window.usuarioActual?.nombre||currentUser?.email||'Admin'};
+      let ref;
+      if(eliteV55EditingId){
+        ref=db.collection('catalogo_productos').doc(eliteV55EditingId);const old=eliteV55Catalog.find(x=>x.id===eliteV55EditingId);await ref.set(data,{merge:true});
+        if(Number(old?.precio_actual||0)!==price||String(old?.tienda||'')!==data.tienda){try{await ref.collection('historial_precios').add({precio:price,tienda:data.tienda,fecha:firebase.firestore.FieldValue.serverTimestamp(),usuario:data.actualizado_por});}catch(e){console.warn(e);}}
+      }else{
+        data.creado=firebase.firestore.FieldValue.serverTimestamp();ref=await db.collection('catalogo_productos').add(data);try{await ref.collection('historial_precios').add({precio:price,tienda:data.tienda,fecha:firebase.firestore.FieldValue.serverTimestamp(),usuario:data.actualizado_por});}catch(e){console.warn(e);}
+      }
+      eliteV55SetSaveStatus('Producto y foto guardados correctamente.','success');
+      await eliteV55StopScanner();
+      setTimeout(()=>{document.querySelector('#elite-v5-module-modal .elite-v5-close')?.click();eliteV51OpenInventory();setTimeout(()=>eliteV55SwitchTab('catalogo'),120);},450);
+    }catch(error){console.error(error);eliteV55SetSaveStatus('No se pudo guardar: '+String(error?.message||error),'error');alert('No se pudo guardar el producto.\n\n'+String(error?.message||error));}
+    finally{if(button){button.disabled=false;button.textContent='Guardar producto';button.style.opacity='1';}}
+  };
+
+  const oldSwitch=window.eliteV55SwitchTab||eliteV55SwitchTab;
+  window.eliteV55SwitchTab=function(tab){
+    if(tab!=='agregar')return oldSwitch(tab);
+    ['catalogo','solicitudes','general','agregar'].forEach(x=>document.getElementById('v54-tab-'+x)?.classList.toggle('active',x===tab));
+    const c=document.getElementById('elite-v54-tab-content');if(!c)return;
+    const options=[...new Map([...(eliteV55Catalog||[]),...(eliteV51Inventario||[])].filter(x=>x?.nombre).map(x=>[norm(x.nombre),x])).values()]
+      .sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre)))
+      .map(x=>`<option value="${esc(x.nombre)}">`).join('');
+    c.innerHTML=`<div class="elite-v51-settings-section"><h3>Ajustar inventario físico</h3>
+      <div class="elite-v55-help"><b>¿Para qué sirve?</b><br>Úsalo después de contar físicamente los productos. Cambia la cantidad disponible del artículo existente. No crea un gasto y no agrega otra copia al catálogo.</div>
+      <div class="elite-v51-form-grid">
+        <div><input id="inv-name" list="elite-v685-stock-products" placeholder="Busca o escribe el producto" oninput="eliteV685LoadStockProduct()"><datalist id="elite-v685-stock-products">${options}</datalist></div>
+        <select id="inv-type"><option>Producto químico</option><option>Materiales</option><option>Herramienta</option><option>Máquina</option></select>
+        <input id="inv-qty" type="number" min="0" placeholder="Cantidad física contada">
+        <input id="inv-min" type="number" min="0" placeholder="Mínimo recomendado">
+        <input id="inv-cost" type="number" min="0" step="0.01" placeholder="Costo unitario">
+        <input id="inv-location" placeholder="Ubicación">
+      </div>
+      <div id="elite-v685-stock-preview" class="elite-v685-stock-preview">Selecciona un producto para ver sus datos actuales.</div>
+      <button class="elite-v51-action" style="background:#16a34a;width:100%;margin-top:12px" onclick="eliteV51SaveInventory()">Guardar cantidad física</button>
+      <div id="elite-v685-stock-status" class="elite-v685-stock-status"></div>
+    </div>`;
+  };
+  try{eliteV55SwitchTab=window.eliteV55SwitchTab;}catch(e){}
+
+  window.eliteV685LoadStockProduct=function(){
+    const name=document.getElementById('inv-name')?.value||'';const key=norm(name);
+    const inv=(eliteV51Inventario||[]).find(x=>norm(x.nombre)===key);const cat=(eliteV55Catalog||[]).find(x=>norm(x.nombre)===key);const x=inv||cat;
+    if(x){document.getElementById('inv-type').value=x.tipo||'Producto químico';document.getElementById('inv-qty').value=inv?Number(inv.cantidad||0):'';document.getElementById('inv-min').value=Number(x.minimo||0);document.getElementById('inv-cost').value=Number(x.costo||x.precio_actual||0);document.getElementById('inv-location').value=x.ubicacion||'';}
+    const preview=document.getElementById('elite-v685-stock-preview');if(preview)preview.innerHTML=x?`<b>${esc(x.nombre)}</b><br>Cantidad actual: ${inv?Number(inv.cantidad||0):'No registrada'} · Mínimo: ${Number(x.minimo||0)} · Ubicación: ${esc(x.ubicacion||'Sin ubicación')}`:'Producto nuevo: se creará únicamente en Inventario al guardar la cantidad.';
+  };
+
+  window.eliteV51SaveInventory=async function(){
+    const status=document.getElementById('elite-v685-stock-status');
+    const show=(msg,ok=true)=>{if(status){status.className='elite-v685-stock-status show';status.style.background=ok?'#052e16':'#450a0a';status.style.color=ok?'#bbf7d0':'#fecaca';status.style.border='1px solid '+(ok?'#16a34a':'#dc2626');status.textContent=msg;}};
+    const nombre=(document.getElementById('inv-name')?.value||'').trim();const cantidad=Number(document.getElementById('inv-qty')?.value);
+    if(!nombre)return show('Selecciona o escribe el nombre del producto.',false);
+    if(!Number.isFinite(cantidad)||cantidad<0)return show('Escribe una cantidad válida de 0 o más.',false);
+    const key=norm(nombre);const existing=(eliteV51Inventario||[]).find(x=>norm(x.nombre)===key);const catalog=(eliteV55Catalog||[]).find(x=>norm(x.nombre)===key);
+    const data={nombre,tipo:document.getElementById('inv-type')?.value||catalog?.tipo||'Producto químico',cantidad,minimo:Number(document.getElementById('inv-min')?.value||0),costo:Number(document.getElementById('inv-cost')?.value||0),ubicacion:(document.getElementById('inv-location')?.value||'').trim(),catalogo_id:catalog?.id||existing?.catalogo_id||'',actualizado:firebase.firestore.FieldValue.serverTimestamp(),actualizado_por:window.usuarioActual?.nombre||currentUser?.email||'Admin'};
+    try{
+      if(existing)await db.collection('inventario').doc(existing.id).set(data,{merge:true});else await db.collection('inventario').add(data);
+      show(`Stock actualizado: ${nombre} ahora tiene ${cantidad} unidad${cantidad===1?'':'es'}.`);
+      setTimeout(()=>eliteV685LoadStockProduct(),150);
+    }catch(e){console.error(e);show('No se pudo guardar el ajuste: '+String(e?.message||e),false);}
+  };
+  try{eliteV51SaveInventory=window.eliteV51SaveInventory;}catch(e){}
+})();
+</script>
+
 </body>
 </html>
