@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.8.2 | Nico solo en Clientes por recuperar -->
+<!-- Elite Admin v6.8.6 | Catálogo con imágenes persistentes y orden alfabético -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.8.2 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.8.6 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -7591,6 +7591,99 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
     }catch(e){console.error(e);show('No se pudo guardar el ajuste: '+String(e?.message||e),false);}
   };
   try{eliteV51SaveInventory=window.eliteV51SaveInventory;}catch(e){}
+})();
+</script>
+
+
+
+<style id="elite-v686-catalog-image-fix-css">
+.elite-v55-product-photo-wrap{width:72px;height:72px;border-radius:12px;overflow:hidden;background:#111827;border:1px solid #334155;display:flex;align-items:center;justify-content:center}
+.elite-v55-product-photo-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.elite-v55-product-placeholder{font-size:25px;line-height:1}
+@media(max-width:560px){.elite-v55-product-photo-wrap{width:58px;height:58px}}
+</style>
+<script id="elite-v686-catalog-image-fix">
+(function(){
+  const collator=new Intl.Collator('es',{sensitivity:'base',numeric:true,ignorePunctuation:true});
+
+  function esc(v){return typeof eliteV54Esc==='function'?eliteV54Esc(v):String(v||'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));}
+  function normalizePhotoValue(value){
+    if(!value)return '';
+    if(typeof value==='string')return value.trim();
+    if(typeof value==='object')return String(value.url||value.downloadURL||value.downloadUrl||value.src||'').trim();
+    return '';
+  }
+  function productPhoto(product){
+    return normalizePhotoValue(
+      product?.foto_url||product?.imagen_url||product?.image_url||product?.photo_url||
+      product?.fotoUrl||product?.imagenUrl||product?.imageUrl||product?.photoUrl||
+      product?.foto||product?.imagen||product?.image||product?.photo
+    );
+  }
+  window.eliteV686ProductPhoto=productPhoto;
+
+  window.eliteV686ImageError=function(img){
+    const wrap=img?.parentElement;if(!wrap)return;
+    wrap.innerHTML='<span class="elite-v55-product-placeholder">📦</span>';
+  };
+
+  window.eliteV55RenderCatalog=function(){
+    const box=document.getElementById('elite-v55-catalog-list');if(!box)return;
+    const q=typeof normalizarTexto==='function'?normalizarTexto(document.getElementById('elite-v55-search')?.value||''):String(document.getElementById('elite-v55-search')?.value||'').toLowerCase();
+    const rows=(eliteV55Catalog||[])
+      .filter(p=>{
+        const text=`${p.nombre||''} ${p.marca||''} ${p.codigo_barras||''} ${p.tienda||''} ${p.tipo||''}`;
+        return (typeof normalizarTexto==='function'?normalizarTexto(text):text.toLowerCase()).includes(q);
+      })
+      .sort((a,b)=>collator.compare(String(a.nombre||''),String(b.nombre||''))||collator.compare(String(a.marca||''),String(b.marca||'')));
+
+    if(!rows.length){box.innerHTML='<div class="elite-v51-empty">Todavía no hay productos guardados en el catálogo.</div>';return;}
+    box.innerHTML=rows.map(p=>{
+      const photo=productPhoto(p);
+      const visual=photo
+        ?`<div class="elite-v55-product-photo-wrap"><img src="${esc(photo)}" alt="${esc(p.nombre||'Producto')}" loading="lazy" referrerpolicy="no-referrer" onerror="eliteV686ImageError(this)"></div>`
+        :'<div class="elite-v55-product-photo-wrap"><span class="elite-v55-product-placeholder">📦</span></div>';
+      return `<div class="elite-v55-product-card">
+        ${visual}
+        <div><h4>${esc(p.nombre||'Producto')}</h4><p><b>Código:</b> ${esc(p.codigo_barras||'Sin código')}</p><p><b>${esc(p.marca||'Sin marca')}</b> · ${esc(p.tipo||'Sin tipo')} · ${esc(p.tamano||'Sin tamaño')}</p><p><b>Último precio:</b> $${Number(p.precio_actual||0).toFixed(2)} · ${esc(p.tienda||'Sin tienda')}</p></div>
+        <div class="elite-v55-card-actions"><button style="background:#2563eb" onclick="eliteV55EditProduct('${p.id}')">Editar</button><button style="background:#7c3aed" onclick="eliteV55ShowPriceHistory('${p.id}')">Historial</button><button style="background:#dc2626" onclick="eliteV55DeleteProduct('${p.id}')">Eliminar</button></div>
+      </div>`;
+    }).join('');
+  };
+
+  const originalOpen=window.eliteV55OpenProductForm||eliteV55OpenProductForm;
+  window.eliteV55OpenProductForm=function(id=''){
+    const result=originalOpen(id);
+    if(id){
+      const p=(eliteV55Catalog||[]).find(x=>x.id===id)||{};
+      const photo=productPhoto(p);
+      eliteV55PhotoExisting=photo;
+      setTimeout(()=>{
+        const preview=document.getElementById('v55-photo-preview');
+        if(preview&&photo){preview.src=photo;preview.style.display='block';}
+      },0);
+    }
+    return result;
+  };
+  try{eliteV55OpenProductForm=window.eliteV55OpenProductForm;}catch(_){ }
+
+  const originalUpload=window.eliteV54Upload||eliteV54Upload;
+  window.eliteV54Upload=async function(file,path){
+    if(!file)return '';
+    if(!firebase.storage)throw new Error('Firebase Storage no está disponible.');
+    const extension=(file.name&&file.name.includes('.'))?'.'+file.name.split('.').pop().replace(/[^a-zA-Z0-9]/g,'').toLowerCase():'';
+    const cleanPath=String(path||`catalogo_productos/${Date.now()}`).replace(/[^a-zA-Z0-9_\-\/]/g,'_')+extension;
+    const ref=firebase.storage().ref().child(cleanPath);
+    const snap=await ref.put(file,{contentType:file.type||'image/jpeg',customMetadata:{uploadedBy:window.usuarioActual?.nombre||currentUser?.email||'Admin'}});
+    return await snap.ref.getDownloadURL();
+  };
+  try{eliteV54Upload=window.eliteV54Upload;}catch(_){ }
+
+  const previousSave=window.eliteV55SaveProduct;
+  window.eliteV55SaveProduct=async function(){
+    await previousSave();
+  };
+  try{eliteV55SaveProduct=window.eliteV55SaveProduct;}catch(_){ }
 })();
 </script>
 
