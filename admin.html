@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.8.0 | Trimestral, nómina 25%, seguimiento 30+ y pagos corregidos -->
+<!-- Elite Admin v6.8.1 | Nómina: 25% por hora a cada empleado -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -1346,7 +1346,7 @@ style="width:100%;"></textarea>
 <div id="historial"></div>
     <div class="payroll-container">
         <div class="accordion-title" onclick="togglePayroll()">
-            Resumen de Nómina (Payroll)
+            Resumen de Nómina — 25% por hora a cada empleado
             <span>⌄</span>
         </div>
 
@@ -4991,7 +4991,7 @@ function eliteV51SetLayout(module){
   }
   if(module==='empleados'){
     [staff,payroll].forEach(x=>eliteV51Show(x,true));
-    eliteV51PageHeader('Empleados','Gestión de personal, pago por hora y nómina.');
+    eliteV51PageHeader('Empleados','Gestión de personal y nómina: 25% por hora a cada empleado.');
     staff?.classList.add('open');
   }
   if(module==='servicios'){
