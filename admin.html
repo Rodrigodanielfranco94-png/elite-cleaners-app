@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.8.8 | Visor de catálogo con botón Volver -->
+<!-- Elite Admin v6.8.9 | Solicitudes de compra desde catálogo y stock automático -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.8.8 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.8.9 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -7957,5 +7957,235 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
   document.addEventListener('touchend',e=>{const v=document.getElementById('elite-v687-viewer');if(!v?.classList.contains('open'))return;const t=e.changedTouches[0],dx=t.clientX-touchStartX,dy=t.clientY-touchStartY;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)){eliteV687Move(dx<0?1:-1);}},{passive:true});
 })();
 </script>
+
+<style id="elite-v689-purchase-reminders-css">
+.elite-v55-card-actions{grid-template-columns:repeat(4,1fr)}
+.elite-v689-request-btn{background:#f59e0b!important;color:#111!important}
+.elite-v689-buy-card{border-color:#f59e0b;background:linear-gradient(145deg,#111827,#05080d)}
+.elite-v689-buy-card h4{color:#fbbf24}
+.elite-v689-buy-note{margin-top:9px;padding:9px 10px;border:1px solid #92400e;border-radius:10px;background:#451a03;color:#fde68a;font-size:11px}
+.elite-v689-buy-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}
+.elite-v689-buy-actions button{min-height:42px;border:0;border-radius:10px;color:#fff;font-weight:900}
+@media(max-width:560px){
+  .elite-v55-card-actions{grid-template-columns:1fr}
+  .elite-v689-buy-actions{grid-template-columns:1fr}
+}
+</style>
+
+<script id="elite-v689-purchase-reminders">
+(function(){
+  function escJs(v){
+    return String(v??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,' ');
+  }
+
+  window.eliteV689RequestPurchase = async function(productId){
+    const p=(eliteV55Catalog||[]).find(x=>x.id===productId);
+    if(!p)return alert('No se encontró el producto.');
+
+    const duplicate=(eliteV54Requests||[]).find(r=>
+      r.origen==='catalogo_admin' &&
+      r.catalogo_id===productId &&
+      ['pendiente_compra','pendiente','aprobada'].includes(r.estado)
+    );
+    if(duplicate){
+      alert('Este producto ya está en la lista de compras.');
+      eliteV55SwitchTab('solicitudes');
+      return;
+    }
+
+    const qtyRaw=prompt(`¿Cuántas unidades necesitas comprar de "${p.nombre||'este producto'}"?`,'1');
+    if(qtyRaw===null)return;
+    const qty=Math.max(1,Number(qtyRaw||1));
+
+    const note=prompt('Nota opcional para recordar la compra:','') ?? '';
+
+    await db.collection('solicitudes_inventario').add({
+      origen:'catalogo_admin',
+      catalogo_id:p.id,
+      producto_nombre:p.nombre||'Producto',
+      marca:p.marca||'',
+      tipo:p.tipo||'Producto químico',
+      tamano:p.tamano||'',
+      codigo_barras:p.codigo_barras||'',
+      foto_producto_url:p.foto_url||'',
+      tienda_sugerida:p.tienda||'',
+      precio_estimado:Number(p.precio_actual||0),
+      cantidad_solicitada:qty,
+      cantidad:qty,
+      nota:note.trim(),
+      estado:'pendiente_compra',
+      empleado_nombre:'Administración',
+      solicitado_por:window.usuarioActual?.nombre||currentUser?.email||'Admin',
+      creado:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    alert('Producto agregado a la lista de compras ✅');
+  };
+
+  window.eliteV689MarkPurchased = async function(requestId){
+    const r=(eliteV54Requests||[]).find(x=>x.id===requestId);
+    if(!r)return alert('No se encontró la solicitud.');
+
+    const qtyRaw=prompt(`Cantidad comprada de "${r.producto_nombre||'Producto'}":`,String(r.cantidad_solicitada||r.cantidad||1));
+    if(qtyRaw===null)return;
+    const qty=Number(qtyRaw||0);
+    if(qty<=0)return alert('La cantidad debe ser mayor que cero.');
+
+    const costRaw=prompt('Costo unitario pagado (opcional):',r.precio_estimado ? String(r.precio_estimado) : '');
+    if(costRaw===null)return;
+    const unitCost=Math.max(0,Number(costRaw||0));
+
+    const location=prompt('Ubicación donde se guardará:',r.ubicacion||'Almacén') ?? 'Almacén';
+
+    if(!confirm(`¿Confirmar compra?\n\n${r.producto_nombre}\nCantidad: ${qty}\nSe agregará automáticamente al stock y desaparecerá de la lista de compras.`))return;
+
+    const inventory=(eliteV51Inventario||[]);
+    const normalizedName=normalizarTexto(r.producto_nombre||'');
+    let existing=inventory.find(i=>r.catalogo_id && i.catalogo_id===r.catalogo_id);
+    if(!existing) existing=inventory.find(i=>normalizarTexto(i.nombre||'')===normalizedName);
+
+    const batch=db.batch();
+
+    if(existing){
+      batch.set(
+        db.collection('inventario').doc(existing.id),
+        {
+          nombre:r.producto_nombre||existing.nombre||'Producto',
+          tipo:r.tipo||existing.tipo||'Producto químico',
+          cantidad:Number(existing.cantidad||0)+qty,
+          costo:unitCost || Number(existing.costo||0),
+          ubicacion:location.trim()||existing.ubicacion||'Almacén',
+          catalogo_id:r.catalogo_id||existing.catalogo_id||'',
+          foto_url:r.foto_producto_url||existing.foto_url||'',
+          actualizado:firebase.firestore.FieldValue.serverTimestamp()
+        },
+        {merge:true}
+      );
+    }else{
+      const invRef=db.collection('inventario').doc();
+      batch.set(invRef,{
+        nombre:r.producto_nombre||'Producto',
+        tipo:r.tipo||'Producto químico',
+        cantidad:qty,
+        minimo:0,
+        costo:unitCost,
+        ubicacion:location.trim()||'Almacén',
+        catalogo_id:r.catalogo_id||'',
+        codigo_barras:r.codigo_barras||'',
+        foto_url:r.foto_producto_url||'',
+        creado:firebase.firestore.FieldValue.serverTimestamp(),
+        actualizado:firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+    const purchaseRef=db.collection('compras_inventario').doc();
+    batch.set(purchaseRef,{
+      solicitud_id:requestId,
+      catalogo_id:r.catalogo_id||'',
+      producto_nombre:r.producto_nombre||'Producto',
+      cantidad:qty,
+      costo_unitario:unitCost,
+      total:qty*unitCost,
+      tienda:r.tienda_sugerida||'',
+      comprado_por:window.usuarioActual?.nombre||currentUser?.email||'Admin',
+      fecha:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    batch.delete(db.collection('solicitudes_inventario').doc(requestId));
+    await batch.commit();
+
+    alert('Compra registrada ✅\nEl producto se agregó al stock y se quitó de la lista de compras.');
+    eliteV55SwitchTab('general');
+  };
+
+  window.eliteV689CancelRequest = async function(id){
+    if(!confirm('¿Quitar este producto de la lista de compras?'))return;
+    await db.collection('solicitudes_inventario').doc(id).delete();
+  };
+
+  const originalRenderCatalog=window.eliteV55RenderCatalog;
+  window.eliteV55RenderCatalog=function(){
+    if(typeof originalRenderCatalog==='function')originalRenderCatalog();
+    const list=document.getElementById('elite-v55-catalog-list');
+    if(!list)return;
+
+    const cards=[...list.querySelectorAll('.elite-v55-product-card')];
+    const q=normalizarTexto(document.getElementById('elite-v55-search')?.value||'');
+    const rows=(eliteV55Catalog||[])
+      .filter(p=>normalizarTexto(`${p.nombre||''} ${p.marca||''} ${p.codigo_barras||''} ${p.tienda||''} ${p.tipo||''}`).includes(q))
+      .sort((a,b)=>String(a.nombre||'').localeCompare(String(b.nombre||''),'es',{sensitivity:'base'}));
+
+    cards.forEach((card,index)=>{
+      const p=rows[index];
+      const actions=card.querySelector('.elite-v55-card-actions');
+      if(!p||!actions||actions.querySelector('.elite-v689-request-btn'))return;
+      const btn=document.createElement('button');
+      btn.type='button';
+      btn.className='elite-v689-request-btn';
+      btn.textContent='Solicitar';
+      btn.onclick=()=>eliteV689RequestPurchase(p.id);
+      actions.insertBefore(btn,actions.firstChild);
+    });
+  };
+
+  const originalRenderRequests=window.eliteV54RenderRequests;
+  window.eliteV54RenderRequests=function(){
+    const box=document.getElementById('elite-v54-request-list');
+    if(!box)return;
+
+    const purchaseRequests=(eliteV54Requests||[]).filter(r=>
+      r.origen==='catalogo_admin' && r.estado==='pendiente_compra'
+    );
+    const otherRequests=(eliteV54Requests||[]).filter(r=>
+      !(r.origen==='catalogo_admin' && r.estado==='pendiente_compra')
+    );
+
+    let html='';
+    if(purchaseRequests.length){
+      html+=`<div class="elite-v51-settings-section">
+        <h3 style="color:#fbbf24;margin-top:0">🛒 Lista de compras</h3>
+        <div class="elite-v55-help">Estos son productos que marcaste desde el catálogo. Al pulsar <b>Marcar comprado</b>, se sumarán al stock y esta tarjeta desaparecerá para evitar compras repetidas.</div>
+        ${purchaseRequests.map(r=>`
+          <div class="elite-v54-card elite-v689-buy-card">
+            <h4>${eliteV54Esc(r.producto_nombre||'Producto')}</h4>
+            <span class="elite-v54-badge elite-v54-pending">Pendiente de compra</span>
+            <div class="elite-v54-meta">
+              ${r.marca?`<b>Marca:</b> ${eliteV54Esc(r.marca)}<br>`:''}
+              <b>Cantidad:</b> ${Number(r.cantidad_solicitada||r.cantidad||1)}<br>
+              <b>Tienda sugerida:</b> ${eliteV54Esc(r.tienda_sugerida||'Sin tienda')}<br>
+              <b>Precio estimado:</b> $${Number(r.precio_estimado||0).toFixed(2)}<br>
+              <b>Solicitado:</b> ${eliteV54Date(r.creado)}
+            </div>
+            ${r.nota?`<div class="elite-v689-buy-note">📝 ${eliteV54Esc(r.nota)}</div>`:''}
+            <div class="elite-v689-buy-actions">
+              <button style="background:#16a34a" onclick="eliteV689MarkPurchased('${r.id}')">✓ Marcar comprado</button>
+              <button style="background:#dc2626" onclick="eliteV689CancelRequest('${r.id}')">Quitar recordatorio</button>
+            </div>
+          </div>`).join('')}
+      </div>`;
+    }
+
+    if(otherRequests.length){
+      const saved=eliteV54Requests;
+      eliteV54Requests=otherRequests;
+      const temp=document.createElement('div');
+      temp.id='elite-v54-request-list-temp';
+      document.body.appendChild(temp);
+      const realId=box.id;
+      box.id='elite-v54-request-list-original';
+      temp.id='elite-v54-request-list';
+      if(typeof originalRenderRequests==='function')originalRenderRequests();
+      const otherHtml=temp.innerHTML;
+      temp.remove();
+      box.id=realId;
+      eliteV54Requests=saved;
+      html+=`<div class="elite-v51-settings-section"><h3 style="margin-top:0">Solicitudes de empleados</h3>${otherHtml}</div>`;
+    }
+
+    box.innerHTML=html||'<div class="elite-v51-empty">No hay productos pendientes de compra.</div>';
+  };
+})();
+</script>
+
 </body>
 </html>
