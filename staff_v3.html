@@ -2168,12 +2168,22 @@
     const halfBaths=Number(job.medios_banos||0);
     const rooms=Number(job.salas||0);
     const kitchens=Number(job.cocinas||0);
+    const diningRooms=Number(job.comedor||0);
+    const offices=Number(job.oficinas||0);
+    const laundryRooms=Number(job.lavanderia||0);
+    const garages=Number(job.garaje||0);
+    const gameRooms=Number(job.sala_juegos||0);
 
     if(bedrooms>0)add('🛏️',`${bedrooms} ${bedrooms===1?'habitación':'habitaciones'}`,'info');
     if(baths>0)add('🚿',`${baths} ${baths===1?'baño':'baños'}`,'info');
-    if(halfBaths>0)add('🚽',`${halfBaths} medio baño`,'info');
+    if(halfBaths>0)add('🚽',`${halfBaths} ${halfBaths===1?'medio baño':'medios baños'}`,'info');
     if(rooms>0)add('🛋️',`${rooms} ${rooms===1?'sala':'salas'}`,'info');
     if(kitchens>0)add('🍳',`${kitchens} ${kitchens===1?'cocina':'cocinas'}`,'info');
+    if(diningRooms>0)add('🍽️',`${diningRooms} ${diningRooms===1?'comedor':'comedores'}`,'info');
+    if(offices>0)add('💼',`${offices} ${offices===1?'oficina':'oficinas'}`,'info');
+    if(laundryRooms>0)add('🧺',`${laundryRooms} ${laundryRooms===1?'lavandería':'lavanderías'}`,'info');
+    if(garages>0)add('🚗',`${garages} ${garages===1?'garaje':'garajes'}`,'info');
+    if(gameRooms>0)add('🎮',`${gameRooms} ${gameRooms===1?'sala de juegos':'salas de juegos'}`,'info');
 
     const carpetRooms=Number(job.alfombra_habitaciones||0);
     const carpetFeet=Number(job.alfombra_pies_cuadrados||0);
@@ -2183,8 +2193,19 @@
     if(safeText(job.nevera)&&normalize(job.nevera)!=='no')add('🧊','Nevera: '+job.nevera);
     if(safeText(job.gabinetes)&&normalize(job.gabinetes)!=='no')add('🚪','Gabinetes: '+job.gabinetes);
     if(safeText(job.ventanas)&&normalize(job.ventanas)!=='no')add('🪟','Ventanas: '+job.ventanas);
-    if(Number(job.horno||0)>0)add('🔥','Horno');
-    if(['si','sí'].includes(normalize(job.baseboards)))add('🧽','Baseboards');
+
+    const ovenValue=safeText(job.horno);
+    if(ovenValue&&normalize(ovenValue)!=='no'&&ovenValue!=='0'){
+      const ovenNumber=Number(ovenValue);
+      add('🔥',Number.isFinite(ovenNumber)&&ovenNumber>0
+        ? `${ovenNumber} ${ovenNumber===1?'horno':'hornos'}`
+        : 'Horno: '+ovenValue);
+    }
+
+    const baseboardsValue=normalize(job.baseboards);
+    if(baseboardsValue&&baseboardsValue!=='no'&&baseboardsValue!=='0'){
+      add('🧽','Baseboards'+(['si','sí'].includes(baseboardsValue)?'':': '+safeText(job.baseboards)));
+    }
 
     if(!chips.children.length)add('✅','Sin extras especiales');
     box.appendChild(chips);
