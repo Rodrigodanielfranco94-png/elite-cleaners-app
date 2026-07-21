@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.8.7 | Gastos operativos editables -->
+<!-- Elite Admin v6.8.8 | Visor de catálogo con botón Volver -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.8.7 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.8.8 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -904,16 +904,27 @@ body.elite-v5-body{
 .elite-v55-product-photo-wrap:hover{transform:scale(1.03);box-shadow:0 0 0 2px #3b82f6}
 #elite-v687-viewer{display:none;position:fixed;inset:0;z-index:3000000;background:rgba(0,0,0,.94);padding:16px;box-sizing:border-box;align-items:center;justify-content:center;touch-action:pan-y}
 #elite-v687-viewer.open{display:flex}
-.elite-v687-box{position:relative;width:min(860px,96vw);max-height:94vh;background:#0f172a;border:1px solid #334155;border-radius:22px;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.6)}
-.elite-v687-image-stage{height:min(58vh,560px);background:#020617;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.elite-v687-box{position:relative;width:min(860px,96vw);max-height:94vh;background:#0f172a;border:1px solid #334155;border-radius:22px;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.6);display:flex;flex-direction:column}
+.elite-v687-topbar{position:relative;z-index:20;min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;background:#071a2c;border-bottom:1px solid #334155;box-sizing:border-box}
+.elite-v687-back,.elite-v687-close{min-height:42px;border:0;border-radius:12px;background:#2563eb;color:#fff;font-weight:900;cursor:pointer}
+.elite-v687-back{display:flex;align-items:center;gap:7px;padding:0 14px;font-size:13px}
+.elite-v687-close{position:static;width:42px;height:42px;padding:0;background:#ef4444;font-size:23px;line-height:1}
+.elite-v687-image-stage{height:min(58vh,560px);background:#020617;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 auto}
 .elite-v687-image-stage img{width:100%;height:100%;object-fit:contain;display:block}
 .elite-v687-placeholder{font-size:90px}
-.elite-v687-info{padding:18px 20px 20px;color:#fff}
+.elite-v687-info{padding:18px 20px 20px;color:#fff;overflow:auto}
 .elite-v687-info h2{margin:0 0 8px;color:#60a5fa;font-size:25px}.elite-v687-info p{margin:5px 0;color:#cbd5e1;font-size:13px}.elite-v687-counter{color:#93c5fd;font-size:11px;font-weight:900;text-transform:uppercase;margin-bottom:8px}
-.elite-v687-close{position:absolute;right:12px;top:12px;z-index:4;width:42px;height:42px;border:0;border-radius:50%;background:rgba(15,23,42,.88);color:#fff;font-size:23px;cursor:pointer}
-.elite-v687-nav{position:absolute;top:42%;transform:translateY(-50%);z-index:4;width:48px;height:58px;border:0;border-radius:14px;background:rgba(15,23,42,.82);color:#fff;font-size:31px;cursor:pointer}.elite-v687-prev{left:12px}.elite-v687-next{right:12px}
+.elite-v687-nav{position:absolute;top:48%;transform:translateY(-50%);z-index:10;width:48px;height:58px;border:0;border-radius:14px;background:rgba(15,23,42,.82);color:#fff;font-size:31px;cursor:pointer}.elite-v687-prev{left:12px}.elite-v687-next{right:12px}
 .elite-v687-hint{text-align:center;color:#94a3b8;font-size:10px;margin-top:12px}
-@media(max-width:620px){#elite-v687-viewer{padding:0}.elite-v687-box{width:100vw;max-height:100vh;height:100vh;border:0;border-radius:0;display:flex;flex-direction:column}.elite-v687-image-stage{height:62vh;flex:0 0 62vh}.elite-v687-info{overflow:auto}.elite-v687-nav{width:42px;height:52px}.elite-v687-prev{left:7px}.elite-v687-next{right:7px}}
+@media(max-width:620px){
+  #elite-v687-viewer{padding:0}
+  .elite-v687-box{width:100vw;max-height:100dvh;height:100dvh;border:0;border-radius:0}
+  .elite-v687-topbar{position:sticky;top:0;padding-top:max(8px,env(safe-area-inset-top));min-height:calc(58px + env(safe-area-inset-top))}
+  .elite-v687-image-stage{height:56vh;flex:0 0 56vh}
+  .elite-v687-info{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+  .elite-v687-nav{width:42px;height:52px;top:46%}
+  .elite-v687-prev{left:7px}.elite-v687-next{right:7px}
+}
 </style>
 </head>
 <body>
@@ -7882,7 +7893,10 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
 
 <div id="elite-v687-viewer" aria-hidden="true" onclick="eliteV687BackdropClose(event)">
   <div class="elite-v687-box">
-    <button class="elite-v687-close" type="button" onclick="eliteV687CloseViewer()" aria-label="Cerrar">×</button>
+    <div class="elite-v687-topbar">
+      <button class="elite-v687-back" type="button" onclick="eliteV687CloseViewer()" aria-label="Volver al catálogo">← Volver al catálogo</button>
+      <button class="elite-v687-close" type="button" onclick="eliteV687CloseViewer()" aria-label="Cerrar visor">×</button>
+    </div>
     <button class="elite-v687-nav elite-v687-prev" type="button" onclick="eliteV687Move(-1)" aria-label="Producto anterior">‹</button>
     <button class="elite-v687-nav elite-v687-next" type="button" onclick="eliteV687Move(1)" aria-label="Producto siguiente">›</button>
     <div id="elite-v687-image-stage" class="elite-v687-image-stage"></div>
@@ -7905,8 +7919,37 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
     stage.innerHTML=photo?`<img src="${escHtml(photo)}" alt="${escHtml(p.nombre||'Producto')}" onerror="this.parentElement.innerHTML='<span class=\'elite-v687-placeholder\'>📦</span>'">`:`<span class="elite-v687-placeholder">📦</span>`;
     info.innerHTML=`<div class="elite-v687-counter">Producto ${viewerIndex+1} de ${viewerRows.length}</div><h2>${escHtml(p.nombre||'Producto')}</h2><p><b>Marca:</b> ${escHtml(p.marca||'Sin marca')}</p><p><b>Tipo:</b> ${escHtml(p.tipo||'Sin tipo')}</p><p><b>Tamaño:</b> ${escHtml(p.tamano||'Sin tamaño')}</p><p><b>Código:</b> ${escHtml(p.codigo_barras||'Sin código')}</p><p><b>Último precio:</b> $${Number(p.precio_actual||0).toFixed(2)} · ${escHtml(p.tienda||'Sin tienda')}</p><div class="elite-v687-hint">Desliza a la izquierda o derecha para ver más productos</div>`;
   }
-  window.eliteV687OpenViewer=function(id){viewerRows=rows();viewerIndex=Math.max(0,viewerRows.findIndex(x=>x.id===id));const v=document.getElementById('elite-v687-viewer');v.classList.add('open');v.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';render();};
-  window.eliteV687CloseViewer=function(){const v=document.getElementById('elite-v687-viewer');v.classList.remove('open');v.setAttribute('aria-hidden','true');document.body.style.overflow='';};
+  let viewerHistoryActive=false;
+  window.eliteV687OpenViewer=function(id){
+    viewerRows=rows();
+    viewerIndex=Math.max(0,viewerRows.findIndex(x=>x.id===id));
+    const v=document.getElementById('elite-v687-viewer');
+    v.classList.add('open');
+    v.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+    if(!viewerHistoryActive){
+      history.pushState({eliteCatalogViewer:true},'',location.href);
+      viewerHistoryActive=true;
+    }
+    render();
+  };
+  window.eliteV687CloseViewer=function(fromPopState=false){
+    const v=document.getElementById('elite-v687-viewer');
+    if(!v)return;
+    v.classList.remove('open');
+    v.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+    if(viewerHistoryActive&&!fromPopState){
+      viewerHistoryActive=false;
+      history.back();
+    }else{
+      viewerHistoryActive=false;
+    }
+  };
+  window.addEventListener('popstate',function(){
+    const v=document.getElementById('elite-v687-viewer');
+    if(v?.classList.contains('open'))eliteV687CloseViewer(true);
+  });
   window.eliteV687Move=function(step){if(!viewerRows.length)return;viewerIndex=(viewerIndex+step+viewerRows.length)%viewerRows.length;render();};
   window.eliteV687BackdropClose=function(e){if(e.target?.id==='elite-v687-viewer')eliteV687CloseViewer();};
   document.addEventListener('keydown',e=>{const v=document.getElementById('elite-v687-viewer');if(!v?.classList.contains('open'))return;if(e.key==='ArrowLeft')eliteV687Move(-1);if(e.key==='ArrowRight')eliteV687Move(1);if(e.key==='Escape')eliteV687CloseViewer();});
