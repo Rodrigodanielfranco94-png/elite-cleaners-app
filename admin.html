@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.9.3 | Columna Tienda en inventario -->
+<!-- Elite Admin v6.9.4 | Columna Tienda en inventario -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.9.3 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.9.4 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -1185,7 +1185,7 @@ body.elite-v5-body{
 <div id="elite-recovery-page">
   <div class="recovery-hero">
     <div><h2 id="elite-recovery-greeting">Buenos días, Rodrigo.</h2><p id="elite-recovery-nico-text">Nico está revisando los clientes posibles por recuperar.</p></div>
-    <div class="recovery-nico-avatar" aria-label="Nico"><img id="elite-recovery-nico-img" src="saluda.png" alt="Nico"></div>
+    <div class="recovery-nico-avatar" aria-label="Nico"><img id="elite-recovery-nico-img" src="https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/saluda.png" alt="Nico"></div>
   </div>
   <div class="recovery-metrics">
     <div class="recovery-metric"><span>Clientes posibles</span><strong id="recovery-total">0</strong></div>
@@ -1736,9 +1736,27 @@ style="width:100%;"></textarea>
       <option>Máquinas / Equipos</option>
       <option>Vehículo</option>
       <option>Publicidad</option>
+      <option>Marketing</option>
+      <option>Préstamo</option>
+      <option>Inversión</option>
       <option>Seguro</option>
       <option>Otros</option>
     </select>
+
+    <div class="elite-expense-products">
+      <div class="elite-expense-products-head">
+        <div>
+          <span class="label-text" style="margin-left:0">Productos comprados del catálogo</span>
+          <small>Selecciona los productos incluidos en este gasto. Puedes indicar cantidad y costo unitario.</small>
+        </div>
+        <button type="button" onclick="eliteExpenseToggleProducts()">Seleccionar</button>
+      </div>
+      <div id="gasto-productos-panel" class="elite-expense-products-panel">
+        <input id="gasto-productos-buscar" type="search" placeholder="Buscar producto..." oninput="eliteExpenseRenderProducts()">
+        <div id="gasto-productos-lista"></div>
+      </div>
+      <div id="gasto-productos-resumen" class="elite-expense-products-summary">No hay productos seleccionados.</div>
+    </div>
 
     <span class="label-text">Monto</span>
     <input type="number" min="0" step="0.01" id="gasto-monto" placeholder="0.00">
@@ -5021,11 +5039,11 @@ function descargarContabilidadPDF(){window.print();}</script>
     }
 
     const candidates = {
-      normal: ["saluda.png", "bien.png", "alegre.png"],
-      notice: ["celular.png", "piensa.png", "saluda.png"],
-      success: ["alegre.png", "bien.png", "saluda.png"],
-      attention: ["piensa.png", "celular.png", "reposo.png"]
-    }[type] || ["saluda.png"];
+      normal: ["https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/saluda.png", "https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/bien.png", "https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/alegre.png"],
+      notice: ["https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/celular.png", "https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/piensa.png", "https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/saluda.png"],
+      success: ["https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/alegre.png", "https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/bien.png", "https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/saluda.png"],
+      attention: ["https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/piensa.png", "https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/celular.png", "https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/reposo.png"]
+    }[type] || ["https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/saluda.png"];
 
     const base = getNicoAssetBasePath();
     let index = 0;
@@ -7802,7 +7820,7 @@ window.eliteV51SetLayout=function(module){const page=document.getElementById('el
 const originalNav=window.eliteV5Navigate;
 window.eliteV5Navigate=function(module,button){if(module==='recuperacion'){eliteV5SetActive(module,button);cerrarEliteV5Menu();return eliteV51SetLayout('recuperacion')}return originalNav?.apply(this,arguments)};
 const originalDash=window.eliteV51RenderDashboardExtra;
-window.eliteV51RenderDashboardExtra=function(){originalDash?.apply(this,arguments);const box=document.getElementById('elite-v51-dashboard-extra');if(!box)return;const active=buildEliteRecoveryRows().filter(r=>!['recuperado','omitido'].includes(r.status));let banner=document.getElementById('elite-recovery-dashboard-banner');if(!banner){banner=document.createElement('div');banner.id='elite-recovery-dashboard-banner';banner.className='recovery-hero';box.prepend(banner)}banner.innerHTML=`<div><h2 style="font-size:21px">${greeting()}, Rodrigo.</h2><p>${active.length?`Mira, tengo <b>${active.length}</b> cliente${active.length===1?'':'s'} posible${active.length===1?'':'s'} por recuperar.`:'Por ahora no tengo clientes pendientes por recuperar.'}</p><button class="recovery-btn primary" style="margin-top:12px" onclick="eliteV5Navigate('recuperacion',document.querySelector('[data-module=recuperacion]'))">Ver clientes por recuperar</button></div><div class="recovery-nico-avatar"><img src="saluda.png" alt="Nico" onerror="this.onerror=null;this.src='bien.png';"></div>`;putBadge(active.length)};
+window.eliteV51RenderDashboardExtra=function(){originalDash?.apply(this,arguments);const box=document.getElementById('elite-v51-dashboard-extra');if(!box)return;const active=buildEliteRecoveryRows().filter(r=>!['recuperado','omitido'].includes(r.status));let banner=document.getElementById('elite-recovery-dashboard-banner');if(!banner){banner=document.createElement('div');banner.id='elite-recovery-dashboard-banner';banner.className='recovery-hero';box.prepend(banner)}banner.innerHTML=`<div><h2 style="font-size:21px">${greeting()}, Rodrigo.</h2><p>${active.length?`Mira, tengo <b>${active.length}</b> cliente${active.length===1?'':'s'} posible${active.length===1?'':'s'} por recuperar.`:'Por ahora no tengo clientes pendientes por recuperar.'}</p><button class="recovery-btn primary" style="margin-top:12px" onclick="eliteV5Navigate('recuperacion',document.querySelector('[data-module=recuperacion]'))">Ver clientes por recuperar</button></div><div class="recovery-nico-avatar"><img src="https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/saluda.png" alt="Nico" onerror="this.onerror=null;this.src='https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/bien.png';"></div>`;putBadge(active.length)};
 function putBadge(n){const e=document.getElementById('elite-recovery-menu-count');if(e)e.textContent=n}
 function refresh(){try{const a=buildEliteRecoveryRows().filter(r=>!['recuperado','omitido'].includes(r.status));putBadge(a.length);if(document.getElementById('elite-recovery-page')?.style.display==='block')renderEliteRecoveryPage()}catch(e){console.warn('Nico recuperación:',e)}}
 document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setInterval(refresh,15000);
@@ -7823,12 +7841,12 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
   "use strict";
 
   const NICO_RECOVERY_EXPRESSIONS = [
-    "saluda.png",
-    "alegre.png",
-    "bien.png",
-    "piensa.png",
-    "celular.png",
-    "reposo.png"
+    "https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/saluda.png",
+    "https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/alegre.png",
+    "https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/bien.png",
+    "https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/piensa.png",
+    "https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/celular.png",
+    "https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/reposo.png"
   ];
 
   let lastNicoRecoveryExpression = "";
@@ -7848,7 +7866,7 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
 
     window.setTimeout(() => {
       let fallbackIndex = 0;
-      const fallbacks = [selected, "saluda.png", "bien.png"];
+      const fallbacks = [selected, "https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/saluda.png", "https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/bien.png"];
 
       const tryImage = () => {
         if (fallbackIndex >= fallbacks.length) {
@@ -8106,7 +8124,7 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
       return `<div class="elite-v55-product-card">
         ${visual}
         <div><h4>${esc(p.nombre||'Producto')}</h4><p><b>Código:</b> ${esc(p.codigo_barras||'Sin código')}</p><p><b>${esc(p.marca||'Sin marca')}</b> · ${esc(p.tipo||'Sin tipo')} · ${esc(p.tamano||'Sin tamaño')}</p><p><b>Último precio:</b> $${Number(p.precio_actual||0).toFixed(2)} · ${esc(p.tienda||'Sin tienda')}</p></div>
-        <div class="elite-v55-card-actions"><button style="background:#2563eb" onclick="eliteV55EditProduct('${p.id}')">Editar</button><button style="background:#7c3aed" onclick="eliteV55ShowPriceHistory('${p.id}')">Historial</button><button style="background:#dc2626" onclick="eliteV55DeleteProduct('${p.id}')">Eliminar</button></div>
+        <div class="elite-v55-card-actions"><button style="background:#2563eb" onclick="eliteV55EditProduct('${p.id}')">Editar</button><button style="background:#dc2626" onclick="eliteV55DeleteProduct('${p.id}')">Eliminar</button></div>
       </div>`;
     }).join('');
   };
@@ -8695,6 +8713,206 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
     );
     eliteV55SwitchTab('general');
   };
+})();
+</script>
+
+
+<style id="elite-v694-expense-products-css">
+.elite-expense-products{margin:4px 0 12px;padding:12px;border:1px solid #334155;border-radius:14px;background:#07101f}
+.elite-expense-products-head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.elite-expense-products-head small{display:block;color:#94a3b8;font-size:10px;line-height:1.4}
+.elite-expense-products-head button{border:0;border-radius:9px;padding:9px 11px;background:#2563eb;color:#fff;font-weight:900;cursor:pointer}
+.elite-expense-products-panel{display:none;margin-top:11px}
+.elite-expense-products-panel.open{display:block}
+.elite-expense-product{display:grid;grid-template-columns:42px minmax(0,1fr) 72px 92px;gap:8px;align-items:center;padding:9px;margin-top:7px;border:1px solid #334155;border-radius:11px;background:#111827}
+.elite-expense-product img,.elite-expense-product-photo{width:42px;height:42px;border-radius:8px;object-fit:contain;background:#fff;display:flex;align-items:center;justify-content:center}
+.elite-expense-product b{display:block;font-size:11px;color:#fff}.elite-expense-product small{display:block;color:#94a3b8;font-size:9px;margin-top:2px}
+.elite-expense-product input{margin:0!important;padding:9px!important;font-size:12px!important}
+.elite-expense-product-check{width:20px!important;height:20px!important;margin:0 7px 0 0!important}
+.elite-expense-product-name{display:flex;align-items:center;min-width:0}
+.elite-expense-products-summary{margin-top:9px;padding:9px 10px;border-radius:9px;background:#0f172a;color:#cbd5e1;font-size:10px;line-height:1.45}
+.acc-gasto-item{cursor:default!important}
+.acc-gasto-item-actions{display:flex;gap:6px;align-items:center}
+.acc-gasto-item-actions button{border:0;border-radius:7px;padding:7px 9px;color:#fff;font-size:9px;font-weight:900;cursor:pointer}
+.acc-gasto-edit-btn{background:#2563eb}.acc-gasto-delete-btn{background:#dc2626}
+@media(max-width:600px){
+  .elite-expense-product{grid-template-columns:42px minmax(0,1fr)}
+  .elite-expense-product input{grid-column:auto}
+  .elite-expense-products-head{align-items:flex-start}
+  .acc-gasto-item{grid-template-columns:1fr}
+  .acc-gasto-item-actions{justify-content:flex-start;flex-wrap:wrap}
+}
+</style>
+
+<script id="elite-v694-expense-products-js">
+(function(){
+  const selected = new Map();
+
+  function esc(v){
+    return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+  }
+  function catalog(){
+    return Array.isArray(window.eliteV55Catalog) ? window.eliteV55Catalog : [];
+  }
+  function syncAmount(){
+    const total=[...selected.values()].reduce((sum,x)=>sum+(Number(x.cantidad)||0)*(Number(x.costo_unitario)||0),0);
+    const amount=document.getElementById("gasto-monto");
+    if(amount && total>0) amount.value=total.toFixed(2);
+    const summary=document.getElementById("gasto-productos-resumen");
+    if(!summary)return;
+    if(!selected.size){summary.textContent="No hay productos seleccionados.";return;}
+    summary.innerHTML=[...selected.values()].map(x=>`${esc(x.nombre)} × ${x.cantidad} — $${((Number(x.cantidad)||0)*(Number(x.costo_unitario)||0)).toFixed(2)}`).join("<br>");
+  }
+
+  window.eliteExpenseToggleProducts=function(){
+    document.getElementById("gasto-productos-panel")?.classList.toggle("open");
+    eliteExpenseRenderProducts();
+  };
+
+  window.eliteExpenseRenderProducts=function(){
+    const box=document.getElementById("gasto-productos-lista"); if(!box)return;
+    const q=(document.getElementById("gasto-productos-buscar")?.value||"").toLowerCase().trim();
+    const rows=catalog().filter(p=>`${p.nombre||""} ${p.marca||""} ${p.tienda||""}`.toLowerCase().includes(q))
+      .sort((a,b)=>String(a.nombre||"").localeCompare(String(b.nombre||""),"es",{sensitivity:"base"}));
+
+    box.innerHTML=rows.length ? rows.map(p=>{
+      const s=selected.get(p.id);
+      const photo=p.foto_url||p.foto_producto_url||"";
+      return `<div class="elite-expense-product">
+        ${photo?`<img src="${esc(photo)}" alt="">`:`<div class="elite-expense-product-photo">📦</div>`}
+        <label class="elite-expense-product-name">
+          <input class="elite-expense-product-check" type="checkbox" ${s?"checked":""} onchange="eliteExpenseSelectProduct('${p.id}',this.checked)">
+          <span><b>${esc(p.nombre||"Producto")}</b><small>${esc(p.marca||"")} ${p.tienda?`· ${esc(p.tienda)}`:""}</small></span>
+        </label>
+        <input type="number" min="1" step="1" value="${s?.cantidad||1}" ${s?"":"disabled"} aria-label="Cantidad"
+          onchange="eliteExpenseUpdateProduct('${p.id}','cantidad',this.value)">
+        <input type="number" min="0" step="0.01" value="${s?.costo_unitario ?? Number(p.precio_actual||0).toFixed(2)}" ${s?"":"disabled"} aria-label="Costo unitario"
+          onchange="eliteExpenseUpdateProduct('${p.id}','costo_unitario',this.value)">
+      </div>`;
+    }).join("") : '<div class="acc-gasto-empty">No se encontraron productos.</div>';
+  };
+
+  window.eliteExpenseSelectProduct=function(id,checked){
+    const p=catalog().find(x=>x.id===id); if(!p)return;
+    if(checked){
+      selected.set(id,{
+        catalogo_id:id,
+        nombre:p.nombre||"Producto",
+        marca:p.marca||"",
+        foto_url:p.foto_url||"",
+        cantidad:1,
+        costo_unitario:Number(p.precio_actual||0)
+      });
+    }else selected.delete(id);
+    eliteExpenseRenderProducts(); syncAmount();
+  };
+
+  window.eliteExpenseUpdateProduct=function(id,field,value){
+    const x=selected.get(id); if(!x)return;
+    x[field]=field==="cantidad"?Math.max(1,Number(value||1)):Math.max(0,Number(value||0));
+    selected.set(id,x); syncAmount();
+  };
+
+  window.eliteExpenseGetSelectedProducts=function(){ return [...selected.values()]; };
+  window.eliteExpenseLoadSelectedProducts=function(items){
+    selected.clear();
+    (Array.isArray(items)?items:[]).forEach(x=>{
+      if(x?.catalogo_id) selected.set(x.catalogo_id,{...x});
+    });
+    eliteExpenseRenderProducts(); syncAmount();
+  };
+  window.eliteExpenseClearSelectedProducts=function(){
+    selected.clear();
+    const panel=document.getElementById("gasto-productos-panel");
+    panel?.classList.remove("open");
+    const search=document.getElementById("gasto-productos-buscar");
+    if(search)search.value="";
+    eliteExpenseRenderProducts(); syncAmount();
+  };
+
+  // Upgrade expense list with explicit Edit and Delete buttons.
+  window.renderListaGastosContabilidad=function(d){
+    const box=document.getElementById("acc-gastos-list"); if(!box)return;
+    const gastos=[...(d.gastosMes||[])].sort((a,b)=>String(b.fecha||"").localeCompare(String(a.fecha||"")));
+    box.innerHTML=gastos.length ? gastos.map(g=>`
+      <div class="acc-gasto-item">
+        <div class="acc-gasto-item-main">
+          <b>${esc(g.fecha||"Sin fecha")} · ${esc(g.categoria||"Otros")}</b>
+          <span>${esc(g.nota||"Sin descripción")}</span>
+          ${Array.isArray(g.productos)&&g.productos.length?`<div class="acc-gasto-edit-hint">📦 ${g.productos.length} producto${g.productos.length===1?"":"s"} del catálogo</div>`:""}
+        </div>
+        <div>
+          <div class="acc-gasto-item-amount">${typeof dinero==="function"?dinero(g.monto):"$"+Number(g.monto||0).toFixed(2)}</div>
+          <div class="acc-gasto-item-actions">
+            <button class="acc-gasto-edit-btn" onclick="abrirEditarGasto('${g.id}')">Editar</button>
+            <button class="acc-gasto-delete-btn" onclick="eliteExpenseDeleteDirect('${g.id}')">Eliminar</button>
+          </div>
+        </div>
+      </div>`).join("") : '<div class="acc-gasto-empty">No hay gastos registrados en este mes.</div>';
+  };
+
+  window.eliteExpenseDeleteDirect=async function(id){
+    const g=(window.gastosContabilidad||[]).find(x=>x.id===id);
+    const label=g?`${g.categoria||"Gasto"} — ${typeof dinero==="function"?dinero(g.monto):"$"+Number(g.monto||0).toFixed(2)}`:"este gasto";
+    if(!confirm(`¿Eliminar ${label}?\n\nEsta acción recalculará automáticamente la contabilidad.`))return;
+    try{await db.collection("gastos_contabilidad").doc(id).delete();}
+    catch(e){console.error(e);alert("No se pudo eliminar el gasto.");}
+  };
+
+  // Wrap modal preparation to load/clear selected catalog products.
+  const oldPrepare=window.prepararModalGasto;
+  window.prepararModalGasto=function(modo,gasto=null){
+    oldPrepare?.apply(this,arguments);
+    if(modo==="editar"&&gasto) eliteExpenseLoadSelectedProducts(gasto.productos||[]);
+    else eliteExpenseClearSelectedProducts();
+  };
+
+  // Replace save handler so products are stored with the expense.
+  window.guardarGastoContabilidad=async function(){
+    const id=document.getElementById("gasto-editando-id").value.trim();
+    const fecha=document.getElementById("gasto-fecha").value;
+    const categoria=document.getElementById("gasto-categoria").value;
+    const monto=Number(document.getElementById("gasto-monto").value||0);
+    const nota=document.getElementById("gasto-nota").value.trim();
+    const productos=eliteExpenseGetSelectedProducts();
+    const boton=document.getElementById("gasto-boton-guardar");
+
+    if(!fecha||!categoria||!Number.isFinite(monto)||monto<=0){
+      return alert("Completa la fecha, la categoría y un monto válido.");
+    }
+    boton.disabled=true;
+    boton.textContent=id?"Guardando cambios...":"Guardando...";
+    try{
+      const datos={
+        fecha,categoria,monto:Math.round(monto*100)/100,nota,productos,
+        actualizado_en:firebase.firestore.FieldValue.serverTimestamp()
+      };
+      if(id) await db.collection("gastos_contabilidad").doc(id).update(datos);
+      else{
+        datos.timestamp=firebase.firestore.FieldValue.serverTimestamp();
+        await db.collection("gastos_contabilidad").add(datos);
+      }
+      cerrarAgregarGasto();
+    }catch(error){
+      console.error("Error al guardar gasto:",error);
+      alert("No se pudo guardar el gasto. Revisa tu conexión e inténtalo nuevamente.");
+    }finally{
+      boton.disabled=false;
+      boton.textContent=id?"Guardar cambios":"Guardar";
+    }
+  };
+
+  // Remove any catalog History button created by earlier renderers.
+  function removeCatalogHistory(){
+    document.querySelectorAll("#elite-v55-catalog-list button").forEach(btn=>{
+      if(btn.textContent.trim().toLowerCase()==="historial") btn.remove();
+    });
+  }
+  const observer=new MutationObserver(removeCatalogHistory);
+  document.addEventListener("DOMContentLoaded",()=>{
+    observer.observe(document.body,{childList:true,subtree:true});
+    removeCatalogHistory();
+  });
 })();
 </script>
 
