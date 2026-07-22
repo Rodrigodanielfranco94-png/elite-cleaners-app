@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.9.4 | Columna Tienda en inventario -->
+<!-- Elite Admin v6.9.6 | Columna Tienda en inventario -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.9.4 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.9.6 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -5556,12 +5556,19 @@ function eliteV51OpenInventory(){
 }
 async function eliteV51SaveInventory(){
   const nombre=eliteV51Get('inv-name').value.trim(),cantidad=Number(eliteV51Get('inv-qty').value||0);if(!nombre)return alert('Escribe el nombre del artículo.');
-  await db.collection('inventario').add({nombre,tipo:eliteV51Get('inv-type').value,cantidad,minimo:Number(eliteV51Get('inv-min').value||0),costo:Number(eliteV51Get('inv-cost').value||0),ubicacion:eliteV51Get('inv-location').value.trim(),actualizado:firebase.firestore.FieldValue.serverTimestamp()});
-  ['inv-name','inv-qty','inv-min','inv-cost','inv-location'].forEach(id=>eliteV51Get(id).value='');
+  await db.collection('inventario').add({nombre,tipo:eliteV51Get('inv-type').value,cantidad,minimo:Number(eliteV51Get('inv-min').value||0),costo:Number(eliteV51Get('inv-cost').value||0),ubicacion:eliteV51Get('inv-location').value.trim(),tienda:(eliteV51Get('inv-store')?.value||'').trim(),actualizado:firebase.firestore.FieldValue.serverTimestamp()});
+  ['inv-name','inv-qty','inv-min','inv-cost','inv-location','inv-store'].forEach(id=>eliteV51Get(id).value='');
 }
 function eliteV51RenderInventory(){
   const box=eliteV51Get('elite-v51-inventory-list');if(!box)return;
-  box.innerHTML=eliteV51Inventario.length?`<table class="elite-v51-table"><thead><tr><th>Artículo</th><th>Tipo</th><th>Cantidad</th><th>Mínimo</th><th>Ubicación</th><th>Tienda</th><th></th></tr></thead><tbody>${eliteV51Inventario.map(i=>`<tr><td>${i.nombre||''}</td><td>${i.tipo||''}</td><td style="color:${Number(i.cantidad||0)<=Number(i.minimo||0)?'#ef4444':'#22c55e'}">${i.cantidad||0}</td><td>${i.minimo||0}</td><td>${i.ubicacion||''}</td><td>${i.tienda||i.tienda_sugerida||'Sin tienda'}</td><td><button class="elite-v51-action" style="background:#ef4444" onclick="eliteV51DeleteInventory('${i.id}')">Borrar</button></td></tr>`).join('')}</tbody></table>`:`<div class="elite-v51-empty">Todavía no hay artículos registrados.</div>`;
+  const catalogStore=i=>{
+    const match=(eliteV55Catalog||[]).find(p=>
+      (i.catalogo_id&&p.id===i.catalogo_id) ||
+      normalizarTexto(p.nombre||'')===normalizarTexto(i.nombre||'')
+    );
+    return i.tienda||i.tienda_sugerida||match?.tienda||'Sin tienda';
+  };
+  box.innerHTML=eliteV51Inventario.length?`<table class="elite-v51-table"><thead><tr><th>Artículo</th><th>Tipo</th><th>Cantidad</th><th>Mínimo</th><th>Ubicación</th><th>Tienda</th><th></th></tr></thead><tbody>${eliteV51Inventario.map(i=>`<tr><td>${i.nombre||''}</td><td>${i.tipo||''}</td><td style="color:${Number(i.cantidad||0)<=Number(i.minimo||0)?'#ef4444':'#22c55e'}">${i.cantidad||0}</td><td>${i.minimo||0}</td><td>${i.ubicacion||''}</td><td>${catalogStore(i)}</td><td><button class="elite-v51-action" style="background:#ef4444" onclick="eliteV51DeleteInventory('${i.id}')">Borrar</button></td></tr>`).join('')}</tbody></table>`:`<div class="elite-v51-empty">Todavía no hay artículos registrados.</div>`;
 }
 async function eliteV51DeleteInventory(id){if(confirm('¿Borrar este artículo?'))await db.collection('inventario').doc(id).delete()}
 function eliteV51OpenReports(){
@@ -8006,6 +8013,11 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
           <span>Ubicación</span>
           <input id="inv-location" placeholder="Escribe la ubicación">
         </label>
+
+        <label class="elite-v690-field">
+          <span>Tienda / proveedor</span>
+          <input id="inv-store" placeholder="Ej: Costco, Walmart, Home Depot">
+        </label>
       </div>
 
       <div id="elite-v685-stock-preview" class="elite-v685-stock-preview">Selecciona un producto para ver sus datos actuales.</div>
@@ -8027,11 +8039,13 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
       document.getElementById('inv-min').value=Number(x.minimo||0);
       document.getElementById('inv-cost').value=Number(x.costo||x.precio_actual||0);
       document.getElementById('inv-location').value=x.ubicacion||'';
+      const storeInput=document.getElementById('inv-store');
+      if(storeInput)storeInput.value=inv?.tienda||inv?.tienda_sugerida||cat?.tienda||'';
     }
 
     const preview=document.getElementById('elite-v685-stock-preview');
     if(preview)preview.innerHTML=x
-      ?`<b>${esc(x.nombre)}</b><br>Cantidad actual: ${inv?Number(inv.cantidad||0):'No registrada'} · Mínimo: ${Number(x.minimo||0)} · Ubicación: ${esc(x.ubicacion||'Sin ubicación')}`
+      ?`<b>${esc(x.nombre)}</b><br>Cantidad actual: ${inv?Number(inv.cantidad||0):'No registrada'} · Mínimo: ${Number(x.minimo||0)} · Ubicación: ${esc(x.ubicacion||'Sin ubicación')} · Tienda: ${esc(inv?.tienda||inv?.tienda_sugerida||cat?.tienda||'Sin tienda')}`
       :'Producto nuevo: se creará únicamente en Inventario al guardar la cantidad.';
 
     const title=document.getElementById('elite-v690-stock-title');
@@ -8061,7 +8075,7 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
     if(!nombre)return show('Selecciona o escribe el nombre del producto.',false);
     if(!Number.isFinite(cantidad)||cantidad<0)return show('Escribe una cantidad válida de 0 o más.',false);
     const key=norm(nombre);const existing=(eliteV51Inventario||[]).find(x=>norm(x.nombre)===key);const catalog=(eliteV55Catalog||[]).find(x=>norm(x.nombre)===key);
-    const data={nombre,tipo:document.getElementById('inv-type')?.value||catalog?.tipo||'Producto químico',cantidad,minimo:Number(document.getElementById('inv-min')?.value||0),costo:Number(document.getElementById('inv-cost')?.value||0),ubicacion:(document.getElementById('inv-location')?.value||'').trim(),catalogo_id:catalog?.id||existing?.catalogo_id||'',actualizado:firebase.firestore.FieldValue.serverTimestamp(),actualizado_por:window.usuarioActual?.nombre||currentUser?.email||'Admin'};
+    const data={nombre,tipo:document.getElementById('inv-type')?.value||catalog?.tipo||'Producto químico',cantidad,minimo:Number(document.getElementById('inv-min')?.value||0),costo:Number(document.getElementById('inv-cost')?.value||0),ubicacion:(document.getElementById('inv-location')?.value||'').trim(),tienda:(document.getElementById('inv-store')?.value||existing?.tienda||existing?.tienda_sugerida||catalog?.tienda||'').trim(),catalogo_id:catalog?.id||existing?.catalogo_id||'',actualizado:firebase.firestore.FieldValue.serverTimestamp(),actualizado_por:window.usuarioActual?.nombre||currentUser?.email||'Admin'};
     try{
       if(existing)await db.collection('inventario').doc(existing.id).set(data,{merge:true});else await db.collection('inventario').add(data);
       show(`Stock actualizado: ${nombre} ahora tiene ${cantidad} unidad${cantidad===1?'':'es'}.`);
@@ -8330,6 +8344,7 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
           cantidad:Number(existing.cantidad||0)+qty,
           costo:unitCost || Number(existing.costo||0),
           ubicacion:location.trim()||existing.ubicacion||'Almacén',
+          tienda:store.trim()||r.tienda_sugerida||existing.tienda||'',
           catalogo_id:r.catalogo_id||existing.catalogo_id||'',
           foto_url:r.foto_producto_url||existing.foto_url||'',
           actualizado:firebase.firestore.FieldValue.serverTimestamp()
@@ -8386,20 +8401,26 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
     if(!list)return;
 
     const cards=[...list.querySelectorAll('.elite-v55-product-card')];
-    const q=normalizarTexto(document.getElementById('elite-v55-search')?.value||'');
-    const rows=(eliteV55Catalog||[])
-      .filter(p=>normalizarTexto(`${p.nombre||''} ${p.marca||''} ${p.codigo_barras||''} ${p.tienda||''} ${p.tipo||''}`).includes(q))
-      .sort((a,b)=>String(a.nombre||'').localeCompare(String(b.nombre||''),'es',{sensitivity:'base'}));
 
-    cards.forEach((card,index)=>{
-      const p=rows[index];
+    cards.forEach(card=>{
       const actions=card.querySelector('.elite-v55-card-actions');
-      if(!p||!actions||actions.querySelector('.elite-v689-request-btn'))return;
+      if(!actions||actions.querySelector('.elite-v689-request-btn'))return;
+
+      // Obtain the exact product ID already embedded in this card's Edit button.
+      // This avoids relying on array positions, which caused Blue to request Yellow.
+      const editBtn=[...actions.querySelectorAll('button')].find(btn=>
+        String(btn.getAttribute('onclick')||'').includes('eliteV55EditProduct')
+      );
+      const match=String(editBtn?.getAttribute('onclick')||'').match(/eliteV55EditProduct\(['"]([^'"]+)['"]\)/);
+      const productId=match?.[1]||'';
+      if(!productId)return;
+
       const btn=document.createElement('button');
       btn.type='button';
       btn.className='elite-v689-request-btn';
       btn.textContent='Solicitar';
-      btn.onclick=()=>eliteV689RequestPurchase(p.id);
+      btn.dataset.productId=productId;
+      btn.onclick=()=>eliteV689RequestPurchase(productId);
       actions.insertBefore(btn,actions.firstChild);
     });
   };
