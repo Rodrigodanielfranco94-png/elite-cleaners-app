@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.9.8 | Columna Tienda en inventario -->
+<!-- Elite Admin v6.9.9 | Columna Tienda en inventario -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.9.8 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.9.9 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -6105,7 +6105,9 @@ function eliteV55SubscribeCatalog(){
   if(eliteV55CatalogUnsub)return;
   eliteV55CatalogUnsub=db.collection('catalogo_productos').onSnapshot(s=>{
     eliteV55Catalog=s.docs.map(d=>({id:d.id,...d.data()}));
+    window.eliteV55Catalog=eliteV55Catalog;
     if(document.getElementById('elite-v55-catalog-list'))eliteV55RenderCatalog();
+    if(typeof eliteExpenseRenderProducts==="function")eliteExpenseRenderProducts();
   });
 }
 
@@ -8823,7 +8825,9 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
     return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
   }
   function catalog(){
-    return Array.isArray(window.eliteV55Catalog) ? window.eliteV55Catalog : [];
+    if(typeof eliteV55Catalog!=="undefined" && Array.isArray(eliteV55Catalog)) return eliteV55Catalog;
+    if(Array.isArray(window.eliteV55Catalog)) return window.eliteV55Catalog;
+    return [];
   }
   function syncAmount(){
     const total=[...selected.values()].reduce((sum,x)=>sum+(Number(x.cantidad)||0)*(Number(x.costo_unitario)||0),0);
@@ -8842,8 +8846,9 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
 
   window.eliteExpenseRenderProducts=function(){
     const box=document.getElementById("gasto-productos-lista"); if(!box)return;
-    const q=(document.getElementById("gasto-productos-buscar")?.value||"").toLowerCase().trim();
-    const rows=catalog().filter(p=>`${p.nombre||""} ${p.marca||""} ${p.tienda||""}`.toLowerCase().includes(q))
+    const norm=v=>String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+    const q=norm(document.getElementById("gasto-productos-buscar")?.value||"");
+    const rows=catalog().filter(p=>norm(`${p.nombre||""} ${p.marca||""} ${p.tienda||""} ${p.tipo||""} ${p.codigo_barras||""}`).includes(q))
       .sort((a,b)=>String(a.nombre||"").localeCompare(String(b.nombre||""),"es",{sensitivity:"base"}));
 
     box.innerHTML=rows.length ? rows.map(p=>{
@@ -8870,7 +8875,10 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
         catalogo_id:id,
         nombre:p.nombre||"Producto",
         marca:p.marca||"",
-        foto_url:p.foto_url||"",
+        tienda:p.tienda||"",
+        tipo:p.tipo||"",
+        tamano:p.tamano||"",
+        foto_url:p.foto_url||p.foto_producto_url||"",
         cantidad:1,
         costo_unitario:Number(p.precio_actual||0)
       });
@@ -8915,6 +8923,7 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
         <div>
           <div class="acc-gasto-item-amount">${typeof dinero==="function"?dinero(g.monto):"$"+Number(g.monto||0).toFixed(2)}</div>
           <div class="acc-gasto-item-actions">
+            <button class="acc-gasto-view-btn" onclick="eliteExpenseViewDetail('${g.id}')">Ver detalle</button>
             <button class="acc-gasto-edit-btn" onclick="abrirEditarGasto('${g.id}')">Editar</button>
             <button class="acc-gasto-delete-btn" onclick="eliteExpenseDeleteDirect('${g.id}')">Eliminar</button>
           </div>
@@ -8923,11 +8932,65 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
   };
 
   window.eliteExpenseDeleteDirect=async function(id){
-    const g=(window.gastosContabilidad||[]).find(x=>x.id===id);
+    const source=(typeof gastosContabilidad!=="undefined"&&Array.isArray(gastosContabilidad))?gastosContabilidad:(window.gastosContabilidad||[]);
+    const g=source.find(x=>x.id===id);
     const label=g?`${g.categoria||"Gasto"} — ${typeof dinero==="function"?dinero(g.monto):"$"+Number(g.monto||0).toFixed(2)}`:"este gasto";
     if(!confirm(`¿Eliminar ${label}?\n\nEsta acción recalculará automáticamente la contabilidad.`))return;
     try{await db.collection("gastos_contabilidad").doc(id).delete();}
     catch(e){console.error(e);alert("No se pudo eliminar el gasto.");}
+  };
+
+
+  window.eliteExpenseCloseDetail=function(){
+    const modal=document.getElementById("elite-expense-detail-modal");
+    if(modal)modal.style.display="none";
+  };
+
+  window.eliteExpenseViewDetail=function(id){
+    const source=(typeof gastosContabilidad!=="undefined"&&Array.isArray(gastosContabilidad))?gastosContabilidad:(window.gastosContabilidad||[]);
+    const g=source.find(x=>x.id===id);
+    if(!g)return alert("No se encontró este gasto.");
+
+    const products=Array.isArray(g.productos)?g.productos:[];
+    const productHtml=products.length
+      ? `<h3 style="margin:18px 0 8px;color:#93c5fd">Productos comprados</h3>
+         <div class="elite-expense-detail-products">
+           ${products.map(p=>{
+             const total=(Number(p.cantidad)||0)*(Number(p.costo_unitario)||0);
+             return `<div class="elite-expense-detail-product">
+               ${p.foto_url?`<img src="${esc(p.foto_url)}" alt="">`:`<div class="elite-expense-detail-photo">📦</div>`}
+               <div>
+                 <b>${esc(p.nombre||"Producto")}</b>
+                 <small>${esc(p.marca||"")}${p.tienda?` · ${esc(p.tienda)}`:""}${p.tipo?` · ${esc(p.tipo)}`:""}</small>
+                 <small>Cantidad: ${Number(p.cantidad)||0} · Unitario: $${Number(p.costo_unitario||0).toFixed(2)}</small>
+               </div>
+               <div class="elite-expense-detail-total">$${total.toFixed(2)}</div>
+             </div>`;
+           }).join("")}
+         </div>`
+      : `<div class="elite-expense-detail-note" style="margin-top:16px">Este gasto no tiene productos del catálogo vinculados.</div>`;
+
+    document.getElementById("elite-expense-detail-title").textContent=g.categoria||"Gasto";
+    document.getElementById("elite-expense-detail-content").innerHTML=`
+      <div class="elite-expense-detail-grid">
+        <div class="elite-expense-detail-card"><span>Fecha</span><b>${esc(g.fecha||"Sin fecha")}</b></div>
+        <div class="elite-expense-detail-card"><span>Monto total</span><b style="color:#22c55e">${typeof dinero==="function"?dinero(g.monto):"$"+Number(g.monto||0).toFixed(2)}</b></div>
+        <div class="elite-expense-detail-card"><span>Categoría</span><b>${esc(g.categoria||"Otros")}</b></div>
+        <div class="elite-expense-detail-card"><span>Productos vinculados</span><b>${products.length}</b></div>
+      </div>
+      <div class="elite-expense-detail-note"><b style="color:#93c5fd">Descripción</b><br>${esc(g.nota||"Sin descripción")}</div>
+      ${productHtml}
+    `;
+
+    document.getElementById("elite-expense-detail-edit").onclick=()=>{
+      eliteExpenseCloseDetail();
+      abrirEditarGasto(id);
+    };
+    document.getElementById("elite-expense-detail-delete").onclick=()=>{
+      eliteExpenseCloseDetail();
+      eliteExpenseDeleteDirect(id);
+    };
+    document.getElementById("elite-expense-detail-modal").style.display="block";
   };
 
   // Wrap modal preparation to load/clear selected catalog products.
@@ -9043,6 +9106,48 @@ async function eliteV697SendZeroStockToRequests(data, inventoryId=''){
   });
 }
 </script>
+
+
+<style id="elite-v699-expense-detail-css">
+#elite-expense-detail-modal{display:none;position:fixed;inset:0;z-index:3100000;background:rgba(0,0,0,.88);padding:18px;box-sizing:border-box;overflow:auto}
+.elite-expense-detail-box{width:min(620px,96vw);margin:35px auto;background:#111827;border:1px solid #3b82f6;border-radius:20px;padding:20px;color:#fff}
+.elite-expense-detail-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.elite-expense-detail-head h2{margin:0;color:#60a5fa}
+.elite-expense-detail-close{border:0;border-radius:10px;width:42px;height:42px;background:#ef4444;color:#fff;font-size:22px;font-weight:900;cursor:pointer}
+.elite-expense-detail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px}
+.elite-expense-detail-card{background:#05070b;border:1px solid #334155;border-radius:12px;padding:12px}
+.elite-expense-detail-card span{display:block;color:#94a3b8;font-size:10px;text-transform:uppercase;font-weight:800}
+.elite-expense-detail-card b{display:block;margin-top:5px;color:#fff;font-size:14px}
+.elite-expense-detail-note{margin-top:12px;padding:13px;border-radius:12px;background:#05070b;border:1px solid #334155;color:#d1d5db;white-space:pre-wrap}
+.elite-expense-detail-products{display:grid;gap:9px;margin-top:12px}
+.elite-expense-detail-product{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px;border-radius:12px;background:#05070b;border:1px solid #334155}
+.elite-expense-detail-product img,.elite-expense-detail-photo{width:54px;height:54px;border-radius:9px;object-fit:contain;background:#fff;display:flex;align-items:center;justify-content:center}
+.elite-expense-detail-product b{display:block;color:#fff}.elite-expense-detail-product small{display:block;color:#94a3b8;margin-top:3px}
+.elite-expense-detail-total{color:#22c55e;font-weight:900}
+.elite-expense-detail-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:17px}
+.elite-expense-detail-actions button{border:0;border-radius:11px;padding:12px;color:#fff;font-weight:900;cursor:pointer}
+.elite-expense-detail-edit{background:#2563eb}.elite-expense-detail-delete{background:#dc2626}
+.acc-gasto-view-btn{background:#475569!important}
+@media(max-width:620px){.elite-expense-detail-grid{grid-template-columns:1fr}.elite-expense-detail-actions{grid-template-columns:1fr}.elite-expense-detail-product{grid-template-columns:48px minmax(0,1fr)}.elite-expense-detail-product>div:last-child{grid-column:2}}
+</style>
+
+
+<div id="elite-expense-detail-modal">
+  <div class="elite-expense-detail-box">
+    <div class="elite-expense-detail-head">
+      <div>
+        <small style="color:#94a3b8;font-weight:900">DETALLE DEL GASTO</small>
+        <h2 id="elite-expense-detail-title">Gasto</h2>
+      </div>
+      <button class="elite-expense-detail-close" onclick="eliteExpenseCloseDetail()">×</button>
+    </div>
+    <div id="elite-expense-detail-content"></div>
+    <div class="elite-expense-detail-actions">
+      <button class="elite-expense-detail-edit" id="elite-expense-detail-edit">Editar gasto</button>
+      <button class="elite-expense-detail-delete" id="elite-expense-detail-delete">Eliminar gasto</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
