@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.9.6 | Columna Tienda en inventario -->
+<!-- Elite Admin v6.9.8 | Columna Tienda en inventario -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.9.6 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.9.8 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -5556,19 +5556,32 @@ function eliteV51OpenInventory(){
 }
 async function eliteV51SaveInventory(){
   const nombre=eliteV51Get('inv-name').value.trim(),cantidad=Number(eliteV51Get('inv-qty').value||0);if(!nombre)return alert('Escribe el nombre del artículo.');
-  await db.collection('inventario').add({nombre,tipo:eliteV51Get('inv-type').value,cantidad,minimo:Number(eliteV51Get('inv-min').value||0),costo:Number(eliteV51Get('inv-cost').value||0),ubicacion:eliteV51Get('inv-location').value.trim(),tienda:(eliteV51Get('inv-store')?.value||'').trim(),actualizado:firebase.firestore.FieldValue.serverTimestamp()});
+  const catalog=(eliteV55Catalog||[]).find(p=>normalizarTexto(p.nombre||'')===normalizarTexto(nombre));
+  const data={nombre,tipo:eliteV51Get('inv-type').value,cantidad,minimo:Number(eliteV51Get('inv-min').value||0),costo:Number(eliteV51Get('inv-cost').value||0),ubicacion:eliteV51Get('inv-location').value.trim(),tienda:(eliteV51Get('inv-store')?.value||catalog?.tienda||'').trim(),catalogo_id:catalog?.id||'',foto_url:catalog?.foto_url||'',actualizado:firebase.firestore.FieldValue.serverTimestamp()};
+  const created=await db.collection('inventario').add(data);
+  await eliteV697SendZeroStockToRequests(data,created.id);
   ['inv-name','inv-qty','inv-min','inv-cost','inv-location','inv-store'].forEach(id=>eliteV51Get(id).value='');
+  if(cantidad===0)alert('Artículo guardado. Como la cantidad es 0, se agregó automáticamente a Solicitudes.');
 }
 function eliteV51RenderInventory(){
   const box=eliteV51Get('elite-v51-inventory-list');if(!box)return;
+  const catalogMatch=i=>(eliteV55Catalog||[]).find(p=>
+    (i.catalogo_id&&p.id===i.catalogo_id) ||
+    normalizarTexto(p.nombre||'')===normalizarTexto(i.nombre||'')
+  )||null;
   const catalogStore=i=>{
-    const match=(eliteV55Catalog||[]).find(p=>
-      (i.catalogo_id&&p.id===i.catalogo_id) ||
-      normalizarTexto(p.nombre||'')===normalizarTexto(i.nombre||'')
-    );
+    const match=catalogMatch(i);
     return i.tienda||i.tienda_sugerida||match?.tienda||'Sin tienda';
   };
-  box.innerHTML=eliteV51Inventario.length?`<table class="elite-v51-table"><thead><tr><th>Artículo</th><th>Tipo</th><th>Cantidad</th><th>Mínimo</th><th>Ubicación</th><th>Tienda</th><th></th></tr></thead><tbody>${eliteV51Inventario.map(i=>`<tr><td>${i.nombre||''}</td><td>${i.tipo||''}</td><td style="color:${Number(i.cantidad||0)<=Number(i.minimo||0)?'#ef4444':'#22c55e'}">${i.cantidad||0}</td><td>${i.minimo||0}</td><td>${i.ubicacion||''}</td><td>${catalogStore(i)}</td><td><button class="elite-v51-action" style="background:#ef4444" onclick="eliteV51DeleteInventory('${i.id}')">Borrar</button></td></tr>`).join('')}</tbody></table>`:`<div class="elite-v51-empty">Todavía no hay artículos registrados.</div>`;
+  const productCell=i=>{
+    const match=catalogMatch(i);
+    const photo=i.foto_url||i.foto_producto_url||match?.foto_url||match?.foto_producto_url||'';
+    return `<div class="elite-v697-inventory-product">
+      <div class="elite-v697-inventory-photo">${photo?`<img src="${photo}" alt="${i.nombre||'Producto'}" onerror="this.parentElement.innerHTML='📦'">`:'📦'}</div>
+      <div><div class="elite-v697-inventory-name">${i.nombre||''}</div>${Number(i.cantidad||0)===0?'<span class="elite-v697-zero-badge">Agotado</span>':''}</div>
+    </div>`;
+  };
+  box.innerHTML=eliteV51Inventario.length?`<table class="elite-v51-table"><thead><tr><th>Artículo</th><th>Tipo</th><th>Cantidad</th><th>Mínimo</th><th>Ubicación</th><th>Tienda</th><th></th></tr></thead><tbody>${eliteV51Inventario.map(i=>`<tr><td>${productCell(i)}</td><td>${i.tipo||''}</td><td style="color:${Number(i.cantidad||0)<=Number(i.minimo||0)?'#ef4444':'#22c55e'}">${i.cantidad||0}</td><td>${i.minimo||0}</td><td>${i.ubicacion||''}</td><td>${catalogStore(i)}</td><td><button class="elite-v51-action" style="background:#ef4444" onclick="eliteV51DeleteInventory('${i.id}')">Borrar</button></td></tr>`).join('')}</tbody></table>`:`<div class="elite-v51-empty">Todavía no hay artículos registrados.</div>`;
 }
 async function eliteV51DeleteInventory(id){if(confirm('¿Borrar este artículo?'))await db.collection('inventario').doc(id).delete()}
 function eliteV51OpenReports(){
@@ -8077,9 +8090,33 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
     const key=norm(nombre);const existing=(eliteV51Inventario||[]).find(x=>norm(x.nombre)===key);const catalog=(eliteV55Catalog||[]).find(x=>norm(x.nombre)===key);
     const data={nombre,tipo:document.getElementById('inv-type')?.value||catalog?.tipo||'Producto químico',cantidad,minimo:Number(document.getElementById('inv-min')?.value||0),costo:Number(document.getElementById('inv-cost')?.value||0),ubicacion:(document.getElementById('inv-location')?.value||'').trim(),tienda:(document.getElementById('inv-store')?.value||existing?.tienda||existing?.tienda_sugerida||catalog?.tienda||'').trim(),catalogo_id:catalog?.id||existing?.catalogo_id||'',actualizado:firebase.firestore.FieldValue.serverTimestamp(),actualizado_por:window.usuarioActual?.nombre||currentUser?.email||'Admin'};
     try{
-      if(existing)await db.collection('inventario').doc(existing.id).set(data,{merge:true});else await db.collection('inventario').add(data);
-      show(`Stock actualizado: ${nombre} ahora tiene ${cantidad} unidad${cantidad===1?'':'es'}.`);
-      setTimeout(()=>eliteV685LoadStockProduct(),150);
+      let inventoryId=existing?.id||'';
+      if(existing){
+        await db.collection('inventario').doc(existing.id).set(data,{merge:true});
+      }else{
+        const created=await db.collection('inventario').add(data);
+        inventoryId=created.id;
+      }
+      await eliteV697SendZeroStockToRequests(data,inventoryId);
+      show(cantidad===0
+        ?`${nombre} quedó agotado y fue agregado automáticamente a Solicitudes. Ya puedes verificar otro producto.`
+        :`Stock actualizado: ${nombre} ahora tiene ${cantidad} unidad${cantidad===1?'':'es'}. Ya puedes verificar otro producto.`);
+
+      // Leave Ajustar stock open, but clear the previous product so the next one
+      // can be checked immediately without changing tabs.
+      const ids=['inv-name','inv-qty','inv-min','inv-cost','inv-location','inv-store'];
+      ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+      const type=document.getElementById('inv-type');
+      if(type)type.value='Producto químico';
+      const preview=document.getElementById('elite-v685-stock-preview');
+      if(preview)preview.textContent='Selecciona otro producto para verificar su cantidad física.';
+      const title=document.getElementById('elite-v690-stock-title');
+      if(title)title.textContent='Ningún producto seleccionado';
+      const subtitle=document.getElementById('elite-v690-stock-subtitle');
+      if(subtitle)subtitle.textContent='Busca otro producto para continuar.';
+      const image=document.getElementById('elite-v690-stock-image');
+      if(image)image.innerHTML='<span>📦</span>';
+      setTimeout(()=>document.getElementById('inv-name')?.focus(),120);
     }catch(e){console.error(e);show('No se pudo guardar el ajuste: '+String(e?.message||e),false);}
   };
   try{eliteV51SaveInventory=window.eliteV51SaveInventory;}catch(e){}
@@ -8325,14 +8362,24 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
     const unitCost=Math.max(0,Number(costRaw||0));
 
     const location=prompt('Ubicación donde se guardará:',r.ubicacion||'Almacén') ?? 'Almacén';
+    const store=prompt('Tienda donde fue comprado:',r.tienda_sugerida||'') ?? (r.tienda_sugerida||'');
 
-    if(!confirm(`¿Confirmar compra?\n\n${r.producto_nombre}\nCantidad: ${qty}\nSe agregará automáticamente al stock y desaparecerá de la lista de compras.`))return;
+    if(!confirm(`¿Confirmar compra?\n\n${r.producto_nombre}\nCantidad comprada: ${qty}\nSe actualizará automáticamente Inventario y desaparecerá de Solicitudes.`))return;
 
     const inventory=(eliteV51Inventario||[]);
+    const catalog=(eliteV55Catalog||[]).find(p=>
+      (r.catalogo_id&&p.id===r.catalogo_id) ||
+      normalizarTexto(p.nombre||'')===normalizarTexto(r.producto_nombre||'')
+    )||null;
     const normalizedName=normalizarTexto(r.producto_nombre||'');
     let existing=inventory.find(i=>r.catalogo_id && i.catalogo_id===r.catalogo_id);
     if(!existing) existing=inventory.find(i=>normalizarTexto(i.nombre||'')===normalizedName);
 
+    const recommendedMinimum=Math.max(
+      0,
+      Number(existing?.minimo ?? r.minimo ?? catalog?.minimo ?? 0)
+    );
+    const productPhoto=r.foto_producto_url||catalog?.foto_url||existing?.foto_url||'';
     const batch=db.batch();
 
     if(existing){
@@ -8342,11 +8389,12 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
           nombre:r.producto_nombre||existing.nombre||'Producto',
           tipo:r.tipo||existing.tipo||'Producto químico',
           cantidad:Number(existing.cantidad||0)+qty,
+          minimo:recommendedMinimum,
           costo:unitCost || Number(existing.costo||0),
           ubicacion:location.trim()||existing.ubicacion||'Almacén',
-          tienda:store.trim()||r.tienda_sugerida||existing.tienda||'',
-          catalogo_id:r.catalogo_id||existing.catalogo_id||'',
-          foto_url:r.foto_producto_url||existing.foto_url||'',
+          tienda:store.trim()||r.tienda_sugerida||existing.tienda||catalog?.tienda||'',
+          catalogo_id:r.catalogo_id||existing.catalogo_id||catalog?.id||'',
+          foto_url:productPhoto,
           actualizado:firebase.firestore.FieldValue.serverTimestamp()
         },
         {merge:true}
@@ -8357,13 +8405,13 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
         nombre:r.producto_nombre||'Producto',
         tipo:r.tipo||'Producto químico',
         cantidad:qty,
-        minimo:0,
+        minimo:recommendedMinimum,
         costo:unitCost,
         ubicacion:location.trim()||'Almacén',
-        tienda:store.trim()||r.tienda_sugerida||'',
-        catalogo_id:r.catalogo_id||'',
-        codigo_barras:r.codigo_barras||'',
-        foto_url:r.foto_producto_url||'',
+        tienda:store.trim()||r.tienda_sugerida||catalog?.tienda||'',
+        catalogo_id:r.catalogo_id||catalog?.id||'',
+        codigo_barras:r.codigo_barras||catalog?.codigo_barras||'',
+        foto_url:productPhoto,
         creado:firebase.firestore.FieldValue.serverTimestamp(),
         actualizado:firebase.firestore.FieldValue.serverTimestamp()
       });
@@ -8377,7 +8425,8 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
       cantidad:qty,
       costo_unitario:unitCost,
       total:qty*unitCost,
-      tienda:r.tienda_sugerida||'',
+      tienda:store.trim()||r.tienda_sugerida||catalog?.tienda||'',
+      minimo_recomendado:recommendedMinimum,
       comprado_por:window.usuarioActual?.nombre||currentUser?.email||'Admin',
       fecha:firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -8385,8 +8434,9 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
     batch.delete(db.collection('solicitudes_inventario').doc(requestId));
     await batch.commit();
 
-    alert('Compra registrada ✅\nEl producto se agregó al stock y se quitó de la lista de compras.');
+    alert(`Compra registrada ✅\n\n${r.producto_nombre}\nCantidad agregada: ${qty}\nMínimo recomendado: ${recommendedMinimum}\n\nEl producto ya aparece actualizado en Inventario.`);
     eliteV55SwitchTab('general');
+    setTimeout(()=>eliteV55SwitchTab('inventory'),180);
   };
 
   window.eliteV689CancelRequest = async function(id){
@@ -8935,6 +8985,63 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
     removeCatalogHistory();
   });
 })();
+</script>
+
+
+<style id="elite-v697-inventory-images-css">
+.elite-v697-inventory-product{display:flex;align-items:center;gap:10px;min-width:190px}
+.elite-v697-inventory-photo{width:48px;height:48px;flex:0 0 48px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid #334155;border-radius:10px;background:#fff;font-size:21px}
+.elite-v697-inventory-photo img{width:100%;height:100%;object-fit:contain;display:block}
+.elite-v697-inventory-name{font-weight:800;color:#fff}
+.elite-v697-zero-badge{display:inline-flex;margin-top:4px;padding:3px 7px;border-radius:999px;background:#450a0a;color:#fca5a5;font-size:8px;font-weight:900;text-transform:uppercase}
+</style>
+
+
+<script id="elite-v697-zero-stock-request-js">
+async function eliteV697SendZeroStockToRequests(data, inventoryId=''){
+  if(Number(data?.cantidad||0)!==0)return;
+
+  const catalog=(eliteV55Catalog||[]).find(p=>
+    (data.catalogo_id&&p.id===data.catalogo_id) ||
+    normalizarTexto(p.nombre||'')===normalizarTexto(data.nombre||'')
+  )||null;
+
+  const catalogId=data.catalogo_id||catalog?.id||'';
+  const productName=data.nombre||catalog?.nombre||'Producto';
+
+  const duplicate=(eliteV54Requests||[]).find(r=>
+    ['pendiente_compra','pendiente','aprobada'].includes(r.estado) &&
+    (
+      (catalogId&&r.catalogo_id===catalogId) ||
+      normalizarTexto(r.producto_nombre||'')===normalizarTexto(productName)
+    )
+  );
+  if(duplicate)return;
+
+  const qty=Math.max(1,Number(data.minimo||catalog?.minimo||1));
+
+  await db.collection('solicitudes_inventario').add({
+    origen:'catalogo_admin',
+    motivo_origen:'stock_cero_automatico',
+    inventario_id:inventoryId||'',
+    catalogo_id:catalogId,
+    producto_nombre:productName,
+    marca:catalog?.marca||'',
+    tipo:data.tipo||catalog?.tipo||'Producto químico',
+    tamano:catalog?.tamano||'',
+    codigo_barras:catalog?.codigo_barras||'',
+    foto_producto_url:data.foto_url||catalog?.foto_url||'',
+    tienda_sugerida:data.tienda||data.tienda_sugerida||catalog?.tienda||'',
+    precio_estimado:Number(data.costo||catalog?.precio_actual||0),
+    cantidad_solicitada:qty,
+    cantidad:qty,
+    nota:'Agregado automáticamente porque la cantidad física llegó a 0.',
+    estado:'pendiente_compra',
+    empleado_nombre:'Administración',
+    solicitado_por:window.usuarioActual?.nombre||currentUser?.email||'Admin',
+    creado:firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
 </script>
 
 </body>
