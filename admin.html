@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.10.2 | Inventario móvil corregido -->
+<!-- Elite Admin Core v7.0 | Elite Core Stabilization fases 1-7 -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.10.2 - Elite Cleaners Company</title>
+    <title>Elite Admin Core v7.0 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -9485,5 +9485,37 @@ document.addEventListener('click',function(e){
 })();
 </script>
 
+
+<!-- ===== ELITE CORE STABILIZATION v7.0 ===== -->
+<style id="elite-core-status-css">
+#elite-core-network{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:2147483646;padding:8px 13px;border-radius:999px;font:800 11px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35);display:none}
+#elite-core-network.offline{display:block;background:#7f1d1d;color:#fee2e2;border:1px solid #ef4444}
+#elite-core-network.online{display:block;background:#052e16;color:#bbf7d0;border:1px solid #22c55e;animation:eliteCoreFade 2.4s forwards}
+@keyframes eliteCoreFade{0%,70%{opacity:1}100%{opacity:0;visibility:hidden}}
+.elite-core-busy{pointer-events:none!important;opacity:.65!important}
+</style>
+<script id="elite-core-admin-js">
+(function(){
+'use strict';
+const CORE_VERSION='7.0.0';
+const STATES=['programado','en_ruta','llego','en_servicio','en_pausa','finalizado','pendiente_pago','pagado','cancelado'];
+const TRANSITIONS={programado:['en_ruta','cancelado'],en_ruta:['llego','cancelado'],llego:['en_servicio','cancelado'],en_servicio:['en_pausa','finalizado','cancelado'],en_pausa:['en_servicio','finalizado','cancelado'],finalizado:['pendiente_pago','pagado'],pendiente_pago:['pagado'],pagado:[],cancelado:[]};
+const locks=new Map();
+const normalizeState=v=>({asignado:'programado',en_camino:'en_ruta',limpiando:'en_servicio',pausado:'en_pausa',completado:'finalizado',terminado:'finalizado',pendiente:'pendiente_pago'}[String(v||'').toLowerCase()]||String(v||'programado').toLowerCase());
+async function audit(action,details={}){try{if(typeof db!=='undefined'&&db&&db.collection){await db.collection('auditoria_core').add({app:'admin',version:CORE_VERSION,action,details,createdAt:firebase.firestore.FieldValue.serverTimestamp(),createdAtLocal:new Date().toISOString()});}}catch(e){console.warn('[EliteCore audit]',e)}}
+async function reportError(error,context='runtime'){console.error('[EliteCore]',context,error);try{if(typeof db!=='undefined'&&db&&db.collection){await db.collection('errores_app').add({app:'admin',version:CORE_VERSION,context,message:String(error&&error.message||error),stack:String(error&&error.stack||''),url:location.href,createdAt:firebase.firestore.FieldValue.serverTimestamp(),createdAtLocal:new Date().toISOString()});}}catch(_){}}
+async function once(key,fn,button){if(locks.has(key))return locks.get(key);if(button)button.classList.add('elite-core-busy');const p=Promise.resolve().then(fn).finally(()=>{locks.delete(key);if(button)button.classList.remove('elite-core-busy')});locks.set(key,p);return p}
+function canTransition(from,to){from=normalizeState(from);to=normalizeState(to);return from===to||Boolean((TRANSITIONS[from]||[]).includes(to))}
+async function transitionService(id,to,extra={}){if(!id)throw new Error('Falta el ID del servicio.');to=normalizeState(to);if(!STATES.includes(to))throw new Error('Estado no reconocido: '+to);return once('service:'+id+':'+to,async()=>{const ref=db.collection('servicios').doc(id);return db.runTransaction(async tx=>{const snap=await tx.get(ref);if(!snap.exists)throw new Error('El servicio no existe.');const current=normalizeState(snap.data().estado_flujo||snap.data().estado||'programado');if(!canTransition(current,to))throw new Error('Transición no permitida: '+current+' → '+to);tx.update(ref,{...extra,estado_flujo:to,estado_core:to,core_version:CORE_VERSION,core_updated_at:firebase.firestore.FieldValue.serverTimestamp()});return {from:current,to};}).then(async result=>{await audit('service_transition',{id,...result});return result})})}
+function wrapOnce(name,keyBuilder){const original=window[name];if(typeof original!=='function'||original.__eliteCoreWrapped)return;const wrapped=function(...args){const ev=window.event;const btn=ev&&ev.currentTarget instanceof HTMLElement?ev.currentTarget:null;let key;try{key=keyBuilder?keyBuilder(args):name+':'+JSON.stringify(args)}catch(_){key=name}return once(key,()=>original.apply(this,args),btn).catch(e=>{reportError(e,name);throw e})};wrapped.__eliteCoreWrapped=true;wrapped.__eliteCoreOriginal=original;window[name]=wrapped}
+function installNetwork(){let n=document.getElementById('elite-core-network');if(!n){n=document.createElement('div');n.id='elite-core-network';document.body.appendChild(n)}const paint=()=>{const on=navigator.onLine;n.className=on?'online':'offline';n.textContent=on?'✓ Conexión recuperada':'⚠ Sin conexión · los cambios pueden quedar pendientes';if(on)setTimeout(()=>{if(navigator.onLine)n.className=''},2500)};addEventListener('online',paint);addEventListener('offline',paint);if(!navigator.onLine)paint()}
+function diagnostics(){const ids=[...document.querySelectorAll('[id]')].map(x=>x.id);const dup=[...new Set(ids.filter((x,i)=>ids.indexOf(x)!==i))];if(dup.length)console.warn('[EliteCore] IDs duplicados heredados detectados:',dup);audit('startup_diagnostics',{duplicateIds:dup,userAgent:navigator.userAgent})}
+window.addEventListener('error',e=>reportError(e.error||e.message,'window.error'));
+window.addEventListener('unhandledrejection',e=>reportError(e.reason,'unhandledrejection'));
+window.EliteCore=Object.freeze({version:CORE_VERSION,states:STATES,normalizeState,canTransition,transitionService,once,audit,reportError});
+function boot(){installNetwork();diagnostics();['guardarGastoContabilidad','guardarEditorEvento','eliminarEventoCalendario','eliteV689MarkPurchased','eliteV55SaveProduct','eliteV51SaveInventory'].forEach(n=>wrapOnce(n,args=>n+':'+String(args[0]||'global')));console.info('[EliteCore] Admin estabilizado',CORE_VERSION)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,0));else setTimeout(boot,0);
+})();
+</script>
 </body>
 </html>
