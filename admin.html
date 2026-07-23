@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v6.10.0 | Columna Tienda en inventario -->
+<!-- Elite Admin v6.10.1 | Solicitudes desde catálogo Staff -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v6.10.0 - Elite Cleaners Company</title>
+    <title>Elite Admin v6.10.1 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -9235,6 +9235,22 @@ document.addEventListener('click',function(e){
   const modal=document.getElementById('modal-editar-evento');
   if(e.target===modal) cerrarEditorEvento();
 });
+</script>
+
+<!-- ===== ELITE ADMIN v6.10.1 — RECEPCIÓN DE SOLICITUDES DESDE CATÁLOGO STAFF ===== -->
+<style id="elite-admin-v6101-staff-requests-css">
+.elite-v6101-source{display:inline-flex;margin-left:5px;padding:4px 7px;border-radius:999px;background:#172554;color:#bfdbfe;border:1px solid #2563eb;font-size:8px;font-weight:900;text-transform:uppercase}.elite-v6101-request-photo{width:58px;height:58px;object-fit:contain;background:#fff;border:1px solid #334155;border-radius:10px;float:right;margin:0 0 8px 10px}
+</style>
+<script id="elite-admin-v6101-staff-requests-js">
+(function(){
+  const oldRender=window.eliteV54RenderRequests||eliteV54RenderRequests;
+  window.eliteV54RenderRequests=eliteV54RenderRequests=function(){
+    const box=document.getElementById('elite-v54-request-list');if(!box)return;
+    const rows=(eliteV54Requests||[]).slice().sort((a,b)=>{const ta=a.creado?.toMillis?.()||a.fecha?.toMillis?.()||0;const tb=b.creado?.toMillis?.()||b.fecha?.toMillis?.()||0;return tb-ta});
+    if(!rows.length){box.innerHTML='<div class="elite-v51-empty">No hay solicitudes de inventario.</div>';return}
+    box.innerHTML=rows.map(r=>{const diff=Number(r.cantidad_comprada||0)-Number(r.cantidad_entregada||0);const photos=[r.foto_recibo_url,r.foto_compra_url,r.foto_entrega_url].filter(Boolean);const source=r.origen==='catalogo_staff'?'<span class="elite-v6101-source">Staff</span>':'';const photo=r.foto_producto_url?`<img class="elite-v6101-request-photo" src="${eliteV54Esc(r.foto_producto_url)}">`:'';return `<div class="elite-v54-card">${photo}<h4>${eliteV54Esc(r.producto_nombre||r.producto||'Producto')} ${source}</h4><span class="elite-v54-badge ${eliteV54StatusClass(r.estado)}">${eliteV54Esc(r.estado||'pendiente')}</span><div class="elite-v54-meta"><b>Empleado:</b> ${eliteV54Esc(r.empleado_nombre||'Sin nombre')}<br><b>Cantidad solicitada:</b> ${Number(r.cantidad_solicitada||r.cantidad||0)}<br><b>Urgencia:</b> ${eliteV54Esc((r.urgencia||'normal').replaceAll('_',' '))}<br><b>Solicitud:</b> ${eliteV54Date(r.creado||r.fecha)}${r.nota?`<br><b>Nota:</b> ${eliteV54Esc(r.nota)}`:''}</div>${photos.length?`<div class="elite-v54-photo-grid">${photos.map(u=>`<a class="elite-v54-photo" href="${u}" target="_blank"><img src="${u}"></a>`).join('')}</div>`:''}${['comprada','lista_entrega','entregada','confirmada'].includes(r.estado)?(diff!==0?`<div class="elite-v54-warning">⚠ Diferencia entre comprado y entregado: ${diff}</div>`:'<div class="elite-v54-ok">✅ Cantidades conciliadas</div>'):''}<div class="elite-v54-actions">${r.estado==='pendiente'?`<button style="background:#2563eb" onclick="eliteV54Approve('${r.id}')">Aprobar</button><button style="background:#dc2626" onclick="eliteV54Reject('${r.id}')">Rechazar</button>`:''}${r.estado==='aprobada'?`<button style="background:#7c3aed" onclick="eliteV54Purchase('${r.id}')">Registrar compra</button>`:''}${['comprada','lista_entrega'].includes(r.estado)?`<button style="background:#16a34a" onclick="eliteV54Deliver('${r.id}')">Registrar entrega</button>`:''}<button style="background:#475569" onclick="eliteV54History('${r.id}')">Historial</button></div></div>`}).join('');
+  };
+})();
 </script>
 
 </body>
