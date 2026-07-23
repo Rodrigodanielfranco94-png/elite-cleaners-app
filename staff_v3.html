@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Elite Staff v7.2 | Llegada con foto, GPS y alerta instantánea -->
+<!-- Elite Staff v7.4 | Catálogo de productos + llegada protegida -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#000000">
-  <title>Elite Staff v7.2 - Llegada verificada</title>
+  <title>Elite Staff v7.4 - Catálogo y llegada protegida</title>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -3067,5 +3067,96 @@ if (currentUser) {
   window.eliteOpenStaffJob=openJob;
 })();
 </script>
+<!-- ===== ELITE STAFF v7.4 — CATÁLOGO PRIVADO + PROTECCIÓN CONTRA CONGELAMIENTO ===== -->
+<style id="elite-staff-v74-catalog-css">
+.elite-staff-catalog-open{width:100%;min-height:54px;margin:0 0 18px;border:1px solid #3b82f6;border-radius:15px;background:linear-gradient(135deg,#172554,#1d4ed8);color:#fff;font-weight:950;text-transform:uppercase;cursor:pointer}
+#elite-staff-catalog-modal{display:none;position:fixed;inset:0;z-index:4000000;background:rgba(0,0,0,.94);padding:16px;box-sizing:border-box;overflow:auto}
+.elite-staff-catalog-box{width:min(680px,100%);margin:18px auto;background:#111827;border:1px solid #3b82f6;border-radius:22px;padding:16px;color:#fff}
+.elite-staff-catalog-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}.elite-staff-catalog-head h2{margin:0;color:#60a5fa;font-size:22px}.elite-staff-catalog-head p{margin:5px 0 0;color:#94a3b8;font-size:11px;line-height:1.4}
+.elite-staff-catalog-close{border:0;border-radius:11px;background:#27272a;color:#fff;padding:10px 13px;font-weight:900}
+#elite-staff-catalog-search{margin:0 0 13px;background:#0f172a;border:1px solid #334155}
+.elite-staff-catalog-list{display:grid;gap:10px}.elite-staff-product{display:grid;grid-template-columns:70px 1fr;gap:12px;background:#05080d;border:1px solid #334155;border-radius:15px;padding:12px}.elite-staff-product-img{width:70px;height:70px;border-radius:11px;object-fit:contain;background:#fff;border:1px solid #334155}.elite-staff-product-placeholder{width:70px;height:70px;border-radius:11px;background:#0f172a;display:grid;place-items:center;font-size:27px}
+.elite-staff-product h3{margin:0 0 4px;color:#93c5fd;font-size:16px}.elite-staff-product p{margin:2px 0;color:#cbd5e1;font-size:11px}.elite-staff-product-request{grid-column:1/-1;width:100%;min-height:44px;border:0;border-radius:11px;background:#2563eb;color:#fff;font-weight:900;text-transform:uppercase}.elite-staff-product-request:disabled{opacity:.6}
+.elite-staff-request-form{display:none;margin-top:14px;padding:14px;border:1px solid #3b82f6;border-radius:15px;background:#0f172a}.elite-staff-request-form.open{display:block}.elite-staff-request-form h3{margin:0 0 12px;color:#93c5fd}.elite-staff-request-form label{display:block;margin:9px 0 5px;color:#bfdbfe;font-size:10px;font-weight:900;text-transform:uppercase}.elite-staff-request-form input,.elite-staff-request-form select,.elite-staff-request-form textarea{width:100%;margin:0;padding:12px;border-radius:11px;border:1px solid #334155;background:#111827;color:#fff}.elite-staff-request-form textarea{min-height:78px;resize:vertical}.elite-staff-request-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}.elite-staff-request-actions button{min-height:46px;border:0;border-radius:11px;color:#fff;font-weight:900}.elite-staff-request-cancel{background:#475569}.elite-staff-request-send{background:#16a34a}.elite-staff-catalog-status{margin:10px 0;padding:10px;border-radius:11px;background:#172554;color:#bfdbfe;font-size:11px;display:none}.elite-staff-catalog-empty{padding:25px;text-align:center;border:1px dashed #475569;border-radius:14px;color:#94a3b8}
+@media(max-width:520px){.elite-staff-product{grid-template-columns:58px 1fr}.elite-staff-product-img,.elite-staff-product-placeholder{width:58px;height:58px}.elite-staff-request-actions{grid-template-columns:1fr}}
+</style>
+<div id="elite-staff-catalog-modal" aria-hidden="true">
+  <div class="elite-staff-catalog-box">
+    <div class="elite-staff-catalog-head"><div><h2>Catálogo de productos</h2><p>Selecciona lo que necesitas. Las existencias y cantidades disponibles solo se muestran en Admin.</p></div><button class="elite-staff-catalog-close" type="button" onclick="eliteStaffCloseCatalog()">Cerrar</button></div>
+    <input id="elite-staff-catalog-search" placeholder="Buscar producto..." oninput="eliteStaffRenderCatalog()">
+    <div id="elite-staff-catalog-status" class="elite-staff-catalog-status"></div>
+    <div id="elite-staff-catalog-list" class="elite-staff-catalog-list"></div>
+    <div id="elite-staff-request-form" class="elite-staff-request-form">
+      <h3 id="elite-staff-request-title">Solicitar producto</h3>
+      <label>Cantidad necesaria</label><input id="elite-staff-request-qty" type="number" min="1" value="1">
+      <label>Urgencia</label><select id="elite-staff-request-urgency"><option value="puede_esperar">Puede esperar</option><option value="proximo_trabajo">Para el próximo trabajo</option><option value="urgente">Urgente</option></select>
+      <label>Nota opcional</label><textarea id="elite-staff-request-note" placeholder="Ejemplo: queda muy poco en el bolso de trabajo"></textarea>
+      <div class="elite-staff-request-actions"><button class="elite-staff-request-cancel" type="button" onclick="eliteStaffCancelRequest()">Cancelar</button><button id="elite-staff-request-send" class="elite-staff-request-send" type="button" onclick="eliteStaffSendCatalogRequest()">Enviar solicitud</button></div>
+    </div>
+  </div>
+</div>
+<script id="elite-staff-v74-catalog-js">
+(function(){
+  let catalog=[];
+  let selected=null;
+  let catalogUnsub=null;
+  const esc=v=>String(v??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]));
+  const norm=v=>String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  function status(text){const el=document.getElementById('elite-staff-catalog-status');if(!el)return;el.textContent=text;el.style.display=text?'block':'none'}
+  function ensureButton(){
+    const app=document.getElementById('main-app');
+    if(!app||getComputedStyle(app).display==='none')return;
+    if(document.getElementById('elite-staff-catalog-open'))return;
+    const btn=document.createElement('button');btn.id='elite-staff-catalog-open';btn.className='elite-staff-catalog-open';btn.type='button';btn.textContent='📦 CATÁLOGO DE PRODUCTOS';btn.onclick=window.eliteStaffOpenCatalog;
+    const userInfo=app.querySelector('.user-info');
+    if(userInfo)userInfo.insertAdjacentElement('afterend',btn);else app.insertBefore(btn,app.firstChild);
+  }
+  window.eliteStaffOpenCatalog=function(){
+    const modal=document.getElementById('elite-staff-catalog-modal');modal.style.display='block';modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';status('Cargando catálogo...');
+    if(!catalogUnsub){catalogUnsub=db.collection('catalogo_productos').onSnapshot(s=>{catalog=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.nombre||'').localeCompare(String(b.nombre||''),'es'));status('');window.eliteStaffRenderCatalog()},e=>status('No se pudo cargar el catálogo: '+e.message));}else window.eliteStaffRenderCatalog();
+  };
+  window.eliteStaffCloseCatalog=function(){document.getElementById('elite-staff-catalog-modal').style.display='none';document.body.style.overflow='';window.eliteStaffCancelRequest()};
+  window.eliteStaffRenderCatalog=function(){const box=document.getElementById('elite-staff-catalog-list');if(!box)return;const q=norm(document.getElementById('elite-staff-catalog-search')?.value||'');const rows=catalog.filter(p=>norm(`${p.nombre||''} ${p.marca||''} ${p.tipo||''} ${p.tamano||''}`).includes(q));if(!rows.length){box.innerHTML='<div class="elite-staff-catalog-empty">No se encontraron productos.</div>';return}box.innerHTML=rows.map(p=>`<article class="elite-staff-product">${p.foto_url?`<img class="elite-staff-product-img" src="${esc(p.foto_url)}" alt="${esc(p.nombre||'Producto')}">`:'<div class="elite-staff-product-placeholder">📦</div>'}<div><h3>${esc(p.nombre||'Producto')}</h3><p>${esc(p.marca||'Sin marca')}</p><p>${esc(p.tipo||'Producto')}${p.tamano?' · '+esc(p.tamano):''}</p></div><button class="elite-staff-product-request" type="button" onclick="eliteStaffChooseProduct('${p.id}')">Solicitar</button></article>`).join('')};
+  window.eliteStaffChooseProduct=function(id){selected=catalog.find(p=>p.id===id)||null;if(!selected)return;document.getElementById('elite-staff-request-title').textContent='Solicitar: '+(selected.nombre||'Producto');document.getElementById('elite-staff-request-qty').value='1';document.getElementById('elite-staff-request-note').value='';document.getElementById('elite-staff-request-form').classList.add('open');document.getElementById('elite-staff-request-form').scrollIntoView({behavior:'smooth',block:'nearest'})};
+  window.eliteStaffCancelRequest=function(){selected=null;document.getElementById('elite-staff-request-form')?.classList.remove('open')};
+  window.eliteStaffSendCatalogRequest=async function(){
+    if(!selected||!currentUser)return status('No hay un producto seleccionado o la sesión no está activa.');
+    const btn=document.getElementById('elite-staff-request-send');const qty=Math.max(1,Number(document.getElementById('elite-staff-request-qty').value||1));const urgency=document.getElementById('elite-staff-request-urgency').value;const note=document.getElementById('elite-staff-request-note').value.trim();btn.disabled=true;btn.textContent='ENVIANDO...';
+    try{
+      const snap=await db.collection('solicitudes_inventario').where('catalogo_id','==',selected.id).get();
+      const duplicate=snap.docs.some(d=>{const r=d.data()||{};return r.resuelta!==true&&!['rechazada','entregada','confirmada','cancelada'].includes(r.estado)});
+      if(duplicate)throw new Error('Este producto ya tiene una solicitud pendiente.');
+      const ref=db.collection('solicitudes_inventario').doc();const nref=db.collection('notificaciones_admin').doc();const batch=db.batch();
+      batch.set(ref,{origen:'catalogo_staff',catalogo_id:selected.id,producto_nombre:selected.nombre||'Producto',marca:selected.marca||'',tipo:selected.tipo||'Producto',tamano:selected.tamano||'',codigo_barras:selected.codigo_barras||'',foto_producto_url:selected.foto_url||'',cantidad_solicitada:qty,cantidad:qty,urgencia,nota,estado:'pendiente',empleado_nombre:currentUser.nombre||'',empleado_email:currentUser.email||'',solicitado_por:currentUser.nombre||currentUser.email||'Staff',resuelta:false,creado:firebase.firestore.FieldValue.serverTimestamp(),fecha:firebase.firestore.FieldValue.serverTimestamp()});
+      batch.set(nref,{tipo:'solicitud_inventario',titulo:'📦 Solicitud de producto',mensaje:(currentUser.nombre||'Un empleado')+' solicitó '+qty+' de '+(selected.nombre||'Producto')+'.',solicitud_id:ref.id,catalogo_id:selected.id,producto_nombre:selected.nombre||'Producto',cantidad_solicitada:qty,urgencia,empleado_nombre:currentUser.nombre||'',empleado_email:currentUser.email||'',leida:false,fecha:firebase.firestore.FieldValue.serverTimestamp()});
+      await batch.commit();status('Solicitud enviada correctamente. Admin revisará las existencias y preparará o comprará el producto.');window.eliteStaffCancelRequest();
+    }catch(e){status(e.message||'No se pudo enviar la solicitud.');}finally{btn.disabled=false;btn.textContent='Enviar solicitud'}
+  };
+  const observer=new MutationObserver(ensureButton);observer.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class']});document.addEventListener('DOMContentLoaded',ensureButton);setInterval(ensureButton,1500);
+})();
+</script>
+<script id="elite-staff-v74-arrival-timeout-fix">
+(function(){
+  const priorArrival=window.eliteRegisterArrivalWithProof;
+  if(typeof priorArrival!=='function')return;
+  let active=false;
+  function timeoutPromise(ms){return new Promise((_,reject)=>setTimeout(()=>reject(new Error('El registro tardó demasiado. Revisa la conexión, actualiza la página y vuelve a intentarlo.')),ms))}
+  async function robustArrival(id){
+    if(active)throw new Error('La llegada ya se está registrando. Espera unos segundos.');active=true;
+    try{
+      const before=await Promise.race([db.collection('servicios').doc(id).get(),timeoutPromise(12000)]);
+      if(before.exists){const d=before.data()||{};if(d.llegada_verificada_con_foto||d.hora_llegada)return true;}
+      return await Promise.race([priorArrival(id),timeoutPromise(70000)]);
+    }catch(error){
+      try{const check=await Promise.race([db.collection('servicios').doc(id).get(),timeoutPromise(8000)]);const d=check.exists?(check.data()||{}):{};if(d.llegada_verificada_con_foto||d.hora_llegada){setMessage('La llegada sí quedó registrada correctamente.','success');return true;}}catch(_){}
+      throw error;
+    }finally{active=false}
+  }
+  window.eliteRegisterArrivalWithProof=robustArrival;
+  const previous=updateWorkflow;
+  updateWorkflow=async function(id,nextStage,inspectionConfirmed=false){if(nextStage==='llego')return robustArrival(id);return previous(id,nextStage,inspectionConfirmed)};
+})();
+</script>
+
 </body>
 </html>
