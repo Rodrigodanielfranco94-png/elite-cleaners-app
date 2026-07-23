@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Elite Staff v7.4 | Catálogo de productos + llegada protegida -->
+<!-- Elite Staff Core v8.0 | Elite Core Stabilization fases 1-7 -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#000000">
-  <title>Elite Staff v7.4 - Catálogo y llegada protegida</title>
+  <title>Elite Staff Core v8.0 - Operación estabilizada</title>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -3158,5 +3158,34 @@ if (currentUser) {
 })();
 </script>
 
+
+<!-- ===== ELITE CORE STABILIZATION v8.0 ===== -->
+<style id="elite-core-staff-css">
+#elite-staff-sync{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:2147483646;padding:9px 14px;border-radius:999px;font-size:11px;font-weight:900;box-shadow:0 8px 24px rgba(0,0,0,.4);display:none;text-align:center;max-width:92vw}
+#elite-staff-sync.offline{display:block;background:#7f1d1d;color:#fee2e2;border:1px solid #ef4444}
+#elite-staff-sync.online{display:block;background:#052e16;color:#bbf7d0;border:1px solid #22c55e;animation:eliteStaffFade 2.5s forwards}
+@keyframes eliteStaffFade{0%,72%{opacity:1}100%{opacity:0;visibility:hidden}}
+.elite-core-busy{pointer-events:none!important;opacity:.62!important}
+</style>
+<script id="elite-core-staff-js">
+(function(){
+'use strict';
+const CORE_VERSION='8.0.0';
+const locks=new Map();
+const STATE_MAP={asignado:'programado',en_camino:'en_ruta',llego:'llego',limpiando:'en_servicio',pausado:'en_pausa',completado:'finalizado'};
+const TRANSITIONS={programado:['en_ruta'],en_ruta:['llego'],llego:['en_servicio'],en_servicio:['en_pausa','finalizado'],en_pausa:['en_servicio','finalizado'],finalizado:[]};
+const norm=v=>STATE_MAP[String(v||'').toLowerCase()]||String(v||'programado').toLowerCase();
+function once(key,fn,button){if(locks.has(key))return locks.get(key);if(button)button.classList.add('elite-core-busy');const p=Promise.resolve().then(fn).finally(()=>{locks.delete(key);if(button)button.classList.remove('elite-core-busy')});locks.set(key,p);return p}
+async function reportError(error,context='runtime'){console.error('[EliteCore Staff]',context,error);try{await db.collection('errores_app').add({app:'staff',version:CORE_VERSION,context,message:String(error&&error.message||error),stack:String(error&&error.stack||''),employee:typeof currentEmployee!=='undefined'&&currentEmployee?currentEmployee.email||currentEmployee.nombre||'unknown':'unknown',createdAt:firebase.firestore.FieldValue.serverTimestamp(),createdAtLocal:new Date().toISOString()})}catch(_){}}
+function installNetwork(){let n=document.getElementById('elite-staff-sync');if(!n){n=document.createElement('div');n.id='elite-staff-sync';document.body.appendChild(n)}const paint=()=>{if(navigator.onLine){n.className='online';n.textContent='✓ Conexión recuperada · sincronizando';setTimeout(()=>{if(navigator.onLine)n.className=''},2600)}else{n.className='offline';n.textContent='⚠ Sin conexión · no cierres la app; se reintentará al volver la señal'}};addEventListener('online',paint);addEventListener('offline',paint);if(!navigator.onLine)paint()}
+function wrapWorkflow(){if(typeof window.updateWorkflow!=='function'||window.updateWorkflow.__eliteCoreWrapped)return;const original=window.updateWorkflow;window.updateWorkflow=async function(id,nextStage,inspectionConfirmed=false){const key='workflow:'+id+':'+nextStage;return once(key,async()=>{try{const job=(typeof getMergedJobs==='function'?getMergedJobs():[]).find(j=>j.id===id);if(job){const from=norm(typeof getWorkflowStage==='function'?getWorkflowStage(job):job.estado_flujo||job.estado);const to=norm(nextStage);if(from!==to&&!(TRANSITIONS[from]||[]).includes(to))throw new Error('Orden inválido del servicio: '+from+' → '+to)}const result=await original.call(this,id,nextStage,inspectionConfirmed);try{await db.collection('auditoria_core').add({app:'staff',version:CORE_VERSION,action:'workflow',serviceId:id,nextStage,createdAt:firebase.firestore.FieldValue.serverTimestamp()})}catch(_){}return result}catch(e){await reportError(e,'updateWorkflow');throw e}})};window.updateWorkflow.__eliteCoreWrapped=true;window.updateWorkflow.__eliteCoreOriginal=original}
+function wrapSupply(){if(typeof window.saveSupplyRequest!=='function'||window.saveSupplyRequest.__eliteCoreWrapped)return;const original=window.saveSupplyRequest;window.saveSupplyRequest=function(job,product,qty,urgency,note){const id=job&&job.id||'unknown';return once('supply:'+id+':'+String(product).toLowerCase(),()=>original.apply(this,arguments))};window.saveSupplyRequest.__eliteCoreWrapped=true}
+window.addEventListener('error',e=>reportError(e.error||e.message,'window.error'));
+window.addEventListener('unhandledrejection',e=>reportError(e.reason,'unhandledrejection'));
+window.EliteStaffCore=Object.freeze({version:CORE_VERSION,norm,once,reportError});
+function boot(){installNetwork();wrapWorkflow();wrapSupply();console.info('[EliteCore] Staff estabilizado',CORE_VERSION)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,0));else setTimeout(boot,0);
+})();
+</script>
 </body>
 </html>
