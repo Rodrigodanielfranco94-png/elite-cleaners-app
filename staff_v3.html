@@ -3271,5 +3271,216 @@ function boot(){installNetwork();wrapWorkflow();wrapSupply();console.info('[Elit
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,0));else setTimeout(boot,0);
 })();
 </script>
+
+
+<!-- ===== ELITE STAFF v8.2 — MILLAS RÁPIDAS + LLEGADA INSTANTÁNEA ===== -->
+<style id="elite-staff-v82-fast-route-arrival-css">
+.elite-route-fast-note{font-size:9px;color:#94a3b8;margin-top:3px}
+</style>
+<script id="elite-staff-v82-fast-route-arrival-js">
+(function(){
+  'use strict';
+  const ROUTE_CACHE_PREFIX='elite_route_dest_v82:';
+  const LOCATION_CACHE_KEY='elite_employee_location_v82';
+  let routeSeq=0;
+  let arrivalBusy=false;
+
+  const withTimeout=(promise,ms,message)=>Promise.race([
+    promise,
+    new Promise((_,reject)=>setTimeout(()=>reject(new Error(message||'Tiempo agotado')),ms))
+  ]);
+
+  function readJSON(key){try{return JSON.parse(localStorage.getItem(key)||'null')}catch(_){return null}}
+  function writeJSON(key,value){try{localStorage.setItem(key,JSON.stringify(value))}catch(_){}}
+  function validPoint(p){return p&&Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))}
+
+  function jobPoint(job){
+    const candidates=[
+      {lat:job?.latitud,lng:job?.longitud},
+      {lat:job?.latitude,lng:job?.longitude},
+      {lat:job?.lat,lng:job?.lng},
+      {lat:job?.gps_lat,lng:job?.gps_lng},
+      {lat:job?.ubicacion?.lat,lng:job?.ubicacion?.lng},
+      {lat:job?.coordenadas?.lat,lng:job?.coordenadas?.lng}
+    ];
+    const p=candidates.find(validPoint);
+    return p?{lat:Number(p.lat),lng:Number(p.lng)}:null;
+  }
+
+  function haversineMiles(a,b){
+    const rad=x=>x*Math.PI/180,R=3958.7613;
+    const dLat=rad(b.lat-a.lat),dLng=rad(b.lng-a.lng);
+    const q=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLng/2)**2;
+    return 2*R*Math.asin(Math.sqrt(q));
+  }
+  function milesLabel(n,approx=true){
+    n=Number(n||0); if(!Number.isFinite(n)||n<=0)return 'GPS listo';
+    return (n<10?n.toFixed(1):Math.round(n))+' mi'+(approx?' aprox.':'');
+  }
+
+  function cachedEmployeeLocation(maxAge=10*60*1000){
+    const c=readJSON(LOCATION_CACHE_KEY);
+    return c&&validPoint(c)&&Date.now()-Number(c.savedAt||0)<maxAge?c:null;
+  }
+
+  function getFastLocation(){
+    const cached=cachedEmployeeLocation();
+    if(cached) return Promise.resolve({lat:Number(cached.lat),lng:Number(cached.lng),cached:true});
+    return new Promise((resolve,reject)=>{
+      if(!navigator.geolocation)return reject(new Error('GPS no disponible'));
+      navigator.geolocation.getCurrentPosition(pos=>{
+        const p={lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:pos.coords.accuracy,savedAt:Date.now()};
+        writeJSON(LOCATION_CACHE_KEY,p); resolve(p);
+      },reject,{enableHighAccuracy:false,timeout:3500,maximumAge:10*60*1000});
+    });
+  }
+
+  function refreshPreciseLocation(){
+    if(!navigator.geolocation)return;
+    navigator.geolocation.getCurrentPosition(pos=>writeJSON(LOCATION_CACHE_KEY,{
+      lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:pos.coords.accuracy,savedAt:Date.now()
+    }),()=>{}, {enableHighAccuracy:true,timeout:8000,maximumAge:60000});
+  }
+
+  async function destinationPoint(job){
+    const direct=jobPoint(job); if(direct)return direct;
+    const address=String(job?.direccion||'').trim();
+    if(!address)throw new Error('Sin dirección');
+    const key=ROUTE_CACHE_PREFIX+address.toLowerCase();
+    const cached=readJSON(key);
+    if(cached&&validPoint(cached))return cached;
+    await withTimeout(loadEliteGoogleMaps(),5000,'Google Maps tardó demasiado');
+    const geocoder=new google.maps.Geocoder();
+    const result=await withTimeout(geocoder.geocode({address}),5000,'No se pudo ubicar la dirección');
+    const loc=result?.results?.[0]?.geometry?.location;
+    if(!loc)throw new Error('No se pudo ubicar la dirección');
+    const point={lat:loc.lat(),lng:loc.lng(),savedAt:Date.now()};
+    writeJSON(key,point); return point;
+  }
+
+  async function fastRoute(job){
+    const seq=++routeSeq;
+    if(!job?.direccion){setRouteCardState({distance:'Sin dirección',time:'No se puede calcular la ruta',loading:false});return;}
+
+    const cachedOrigin=cachedEmployeeLocation();
+    const directDest=jobPoint(job)||readJSON(ROUTE_CACHE_PREFIX+String(job.direccion).trim().toLowerCase());
+    if(validPoint(cachedOrigin)&&validPoint(directDest)){
+      const estimate=haversineMiles(cachedOrigin,directDest)*1.18;
+      setRouteCardState({distance:milesLabel(estimate,true),time:'Actualizando ruta…',trafficLabel:'Estimación instantánea',trafficType:'moderate',loading:false});
+    }else{
+      setRouteCardState({distance:'Calculando…',time:'Obteniendo ubicación rápida',loading:true});
+    }
+
+    try{
+      const [origin,dest]=await Promise.all([getFastLocation(),destinationPoint(job)]);
+      if(seq!==routeSeq)return;
+      const estimate=haversineMiles(origin,dest)*1.18;
+      setRouteCardState({distance:milesLabel(estimate,true),time:'Toca Abrir GPS para ruta exacta',trafficLabel:'Ubicación actual',trafficType:'normal',loading:false});
+      refreshPreciseLocation();
+
+      // Mejora silenciosa con distancia de carretera. Nunca bloquea la cifra visible.
+      try{
+        await withTimeout(loadEliteGoogleMaps(),4000,'');
+        const service=new google.maps.DistanceMatrixService();
+        const response=await withTimeout(service.getDistanceMatrix({
+          origins:[origin],destinations:[job.direccion],travelMode:google.maps.TravelMode.DRIVING,
+          unitSystem:google.maps.UnitSystem.IMPERIAL
+        }),6000,'');
+        if(seq!==routeSeq)return;
+        const element=response?.rows?.[0]?.elements?.[0];
+        if(element?.status==='OK'&&element.distance){
+          const mins=element.duration?Math.max(1,Math.round(element.duration.value/60)):0;
+          setRouteCardState({distance:formatRouteMiles(element.distance.value)||milesLabel(estimate,true),time:mins?'🚗 '+mins+' min aprox.':'Ruta disponible',trafficLabel:'Ruta en automóvil',trafficType:'normal',loading:false});
+        }
+      }catch(_){/* La estimación rápida ya está visible. */}
+    }catch(error){
+      if(seq!==routeSeq)return;
+      const msg=error?.code===1?'Permite ubicación en Safari':'Toca Abrir GPS para ver la ruta';
+      setRouteCardState({distance:'GPS listo',time:msg,loading:false});
+    }
+  }
+
+  // Sustituye también la referencia global usada por los wrappers anteriores.
+  window.calculateRealEmployeeRoute=fastRoute;
+  try{calculateRealEmployeeRoute=fastRoute}catch(_){}
+
+  function openArrivalCamera(){
+    return new Promise((resolve,reject)=>{
+      const input=document.createElement('input');
+      input.type='file'; input.accept='image/*'; input.capture='environment';
+      input.style.cssText='position:fixed;left:-10000px;top:0;width:1px;height:1px;opacity:0';
+      document.body.appendChild(input);
+      const cleanup=()=>setTimeout(()=>input.remove(),250);
+      input.onchange=()=>{const file=input.files&&input.files[0];cleanup();file?resolve(file):reject(new Error('Debes tomar la foto de la casa.'));};
+      input.addEventListener('cancel',()=>{cleanup();reject(new Error('La fotografía fue cancelada.'));},{once:true});
+      input.click();
+    });
+  }
+
+  function arrivalTimeText(){return new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true}).toLowerCase()}
+
+  async function fastArrival(serviceId){
+    if(arrivalBusy)throw new Error('La llegada ya se está procesando.');
+    if(!currentUser)throw new Error('No existe una sesión activa.');
+    arrivalBusy=true;
+
+    // La cámara se invoca antes de cualquier await: requisito de Safari/iPhone.
+    const photoPromise=openArrivalCamera();
+    const locationPromise=getFastLocation().catch(()=>null);
+
+    try{
+      const file=await photoPromise;
+      setMessage('Foto tomada. Confirmando llegada…','info');
+
+      const [snap,position,user,blob]=await Promise.all([
+        withTimeout(db.collection('servicios').doc(serviceId).get(),8000,'No se pudo abrir el trabajo.'),
+        locationPromise,
+        ensureStorageAuthentication(),
+        compressPhoto(file)
+      ]);
+      if(!snap.exists)throw new Error('El trabajo ya no existe.');
+      const job={id:serviceId,...snap.data()};
+      if(getWorkflowStage(job)==='llego'||hasRealTime(job.hora_llegada))return true;
+      if(!position)throw new Error('Activa la ubicación para confirmar la llegada.');
+
+      const now=new Date(),nowMs=now.getTime(),timeText=arrivalTimeText();
+      const coords={lat:Number(position.lat),lon:Number(position.lng),accuracy:Number(position.accuracy||0)};
+      const path='servicios/'+serviceId+'/arrival/'+nowMs+'_'+Math.random().toString(36).slice(2,9)+'.jpg';
+      const storageRef=storage.ref().child(path);
+      const upload=await withTimeout(storageRef.put(blob,{contentType:'image/jpeg',customMetadata:{
+        servicioId:serviceId,tipo:'arrival',area:'Fachada / número de casa',staffEmail:currentUser.email,staffNombre:currentUser.nombre
+      }}),30000,'La foto tardó demasiado en subir. Revisa la conexión.');
+      const photoUrl=await upload.ref.getDownloadURL();
+
+      const serviceRef=db.collection('servicios').doc(serviceId);
+      const photoRef=serviceRef.collection('fotos').doc();
+      const eventRef=serviceRef.collection('eventos_staff').doc();
+      const notificationRef=db.collection('notificaciones_admin').doc();
+      const batch=db.batch();
+      batch.set(photoRef,{url:photoUrl,path,tipo:'arrival',area:'Fachada / número de casa',detalle:'Evidencia obligatoria de llegada',staff_email:currentUser.email,staff_nombre:currentUser.nombre,auth_uid:user.uid,gps:coords,timestamp:firebase.firestore.FieldValue.serverTimestamp()});
+      batch.update(serviceRef,{etapa_staff:'llego',estado:'no_iniciado',estado_calendario:'pendiente',hora_llegada:timeText,llegada_timestamp:firebase.firestore.FieldValue.serverTimestamp(),llegada_ms:nowMs,gps_llegada:coords,foto_llegada_url:photoUrl,foto_llegada_path:path,foto_llegada_id:photoRef.id,llegada_verificada_con_foto:true,llegada_notificacion_id:notificationRef.id,ultima_actualizacion:firebase.firestore.FieldValue.serverTimestamp(),actualizado_por_staff_email:currentUser.email,actualizado_por_staff_nombre:currentUser.nombre});
+      batch.set(eventRef,{tipo:'llegada_con_foto',etiqueta:'Llegada verificada con foto',hora:timeText,fecha:firebase.firestore.FieldValue.serverTimestamp(),fecha_ms:nowMs,gps:coords,foto_url:photoUrl,empleado_nombre:currentUser.nombre,empleado_email:currentUser.email});
+      batch.set(notificationRef,{tipo:'llegada_staff',titulo:'📍 Empleado llegó al servicio',mensaje:currentUser.nombre+' llegó al servicio de '+safeText(job.cliente,'cliente')+'.',servicio_id:serviceId,cliente:safeText(job.cliente,'Servicio'),direccion:safeText(job.direccion,'Dirección no disponible'),empleado_nombre:currentUser.nombre,empleado_email:currentUser.email,hora_llegada:timeText,foto_url:photoUrl,foto_llegada_url:photoUrl,latitud:coords.lat,longitud:coords.lon,precision_gps:coords.accuracy,ubicacion:{lat:coords.lat,lng:coords.lon,latitud:coords.lat,longitud:coords.lon},gps:coords,leida:false,revisada_por_admin:false,fecha:firebase.firestore.FieldValue.serverTimestamp(),fecha_ms:nowMs});
+      await withTimeout(batch.commit(),15000,'La llegada tardó demasiado en guardarse.');
+      setMessage('Llegada confirmada. Foto y ubicación enviadas a Admin.','success');
+      return true;
+    }finally{arrivalBusy=false;}
+  }
+
+  window.eliteRegisterArrivalWithProof=fastArrival;
+  const previousWorkflow=window.updateWorkflow||updateWorkflow;
+  const fastWorkflow=async function(id,nextStage,inspectionConfirmed=false){
+    if(nextStage==='llego')return fastArrival(id);
+    return previousWorkflow.call(this,id,nextStage,inspectionConfirmed);
+  };
+  window.updateWorkflow=fastWorkflow;
+  try{updateWorkflow=fastWorkflow}catch(_){}
+
+  // Precarga ubicación apenas se abre Staff para que las millas aparezcan rápido.
+  const warm=()=>{getFastLocation().then(refreshPreciseLocation).catch(()=>{});};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(warm,200));else setTimeout(warm,200);
+})();
+</script>
+
 </body>
 </html>
