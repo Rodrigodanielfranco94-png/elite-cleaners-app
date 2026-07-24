@@ -3809,9 +3809,15 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(sending)return;
     const btn=document.getElementById('elite-staff-request-send');
     if(!selectedCatalogId){showStatus('Selecciona nuevamente el producto.',true);return;}
-    if(!window.db){showStatus('No hay conexión con Firebase. Actualiza la página.',true);return;}
+    let activeDb;
+    try{
+      activeDb=(typeof db!=='undefined'&&db)?db:firebase.firestore();
+    }catch(error){
+      showStatus('No se pudo conectar con Firebase. Revisa tu internet.',true);
+      return;
+    }
 
-    const user=window.currentUser||{};
+    const user=(typeof currentUser!=='undefined'&&currentUser)?currentUser:(window.currentUser||{});
     const qty=Math.max(1,Number(document.getElementById('elite-staff-request-qty')?.value||1));
     const urgency=document.getElementById('elite-staff-request-urgency')?.value||'puede_esperar';
     const note=(document.getElementById('elite-staff-request-note')?.value||'').trim();
@@ -3821,12 +3827,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     showStatus('Enviando solicitud...',false);
 
     try{
-      const productSnap=await db.collection('catalogo_productos').doc(selectedCatalogId).get();
+      const productSnap=await activeDb.collection('catalogo_productos').doc(selectedCatalogId).get();
       if(!productSnap.exists)throw new Error('El producto ya no existe en el catálogo.');
       const product=productSnap.data()||{};
 
-      const ref=db.collection('solicitudes_inventario').doc();
-      const nref=db.collection('notificaciones_admin').doc();
+      const ref=activeDb.collection('solicitudes_inventario').doc();
+      const nref=activeDb.collection('notificaciones_admin').doc();
       const payload={
         origen:'catalogo_staff',
         catalogo_id:selectedCatalogId,
@@ -3849,7 +3855,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         creado:firebase.firestore.FieldValue.serverTimestamp(),
         fecha:firebase.firestore.FieldValue.serverTimestamp()
       };
-      const batch=db.batch();
+      const batch=activeDb.batch();
       batch.set(ref,payload);
       batch.set(nref,{
         tipo:'solicitud_inventario',
