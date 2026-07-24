@@ -1167,7 +1167,7 @@ body.elite-v5-body{
     <button class="elite-v5-nav-btn" data-module="resenas" onclick="eliteV5Navigate('resenas',this)"><span class="elite-v5-nav-icon">☆</span>Reseñas</button>
     <button class="elite-v5-nav-btn" data-module="contabilidad" onclick="eliteV5Navigate('contabilidad',this)"><span class="elite-v5-nav-icon">▣</span>Contabilidad</button>
     <button class="elite-v5-nav-btn" data-module="gastos" onclick="eliteV5Navigate('gastos',this)"><span class="elite-v5-nav-icon">▱</span>Gastos</button>
-    <button class="elite-v5-nav-btn" data-module="inventario" onclick="eliteV5Navigate('inventario',this)"><span class="elite-v5-nav-icon">▤</span>Inventario</button>
+    <button class="elite-v5-nav-btn" data-module="inventario" onclick="eliteV5Navigate('inventario',this)"><span class="elite-v5-nav-icon">▤</span>Inventario <span id="elite-inventory-menu-count" class="elite-menu-live-count elite-menu-live-count-inventory" hidden></span></button>
     <button class="elite-v5-nav-btn" data-module="informes" onclick="eliteV5Navigate('informes',this)"><span class="elite-v5-nav-icon">▥</span>Informes</button>
     <button class="elite-v5-nav-btn" data-module="configuracion" onclick="eliteV5Navigate('configuracion',this)"><span class="elite-v5-nav-icon">⚙</span>Configuración</button>
     <button id="elite-reset-sidebar-btn" class="elite-v5-nav-btn" onclick="eliteOpenResetPanel()"
@@ -9707,5 +9707,121 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshOpenSummary,4
 })();
 </script>
 
+
+
+<style id="elite-v74-menu-badges-css">
+.elite-menu-live-count,
+.elite-recovery-menu-count{
+  margin-left:auto;
+  min-width:21px;
+  height:21px;
+  padding:0 7px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:999px;
+  color:#fff;
+  font-size:10px;
+  font-weight:900;
+  line-height:1;
+  box-sizing:border-box;
+  box-shadow:0 4px 12px rgba(0,0,0,.28);
+}
+.elite-menu-live-count-inventory{background:#f59e0b;color:#111827}
+.elite-recovery-menu-count{background:#ef4444}
+.elite-menu-live-count[hidden],
+.elite-recovery-menu-count[hidden]{display:none!important}
+</style>
+<script id="elite-v74-menu-badges-js">
+(function(){
+  'use strict';
+  if(window.__eliteV74MenuBadgesLoaded)return;
+  window.__eliteV74MenuBadgesLoaded=true;
+
+  let inventoryUnsubscribe=null;
+
+  function setBadge(id,value){
+    const badge=document.getElementById(id);
+    if(!badge)return;
+    const count=Math.max(0,Number(value)||0);
+    if(count>0){
+      badge.textContent=count>99?'99+':String(count);
+      badge.hidden=false;
+      badge.style.display='inline-flex';
+      badge.setAttribute('aria-label',count+' pendiente'+(count===1?'':'s'));
+    }else{
+      badge.textContent='';
+      badge.hidden=true;
+      badge.style.display='none';
+      badge.removeAttribute('aria-label');
+    }
+  }
+
+  function normalizeRecoveryBadge(){
+    const badge=document.getElementById('elite-recovery-menu-count');
+    if(!badge)return;
+    setBadge('elite-recovery-menu-count',badge.textContent);
+  }
+
+  function watchRecoveryBadge(){
+    const badge=document.getElementById('elite-recovery-menu-count');
+    if(!badge)return false;
+    normalizeRecoveryBadge();
+    if(!badge.__eliteZeroObserver){
+      const observer=new MutationObserver(normalizeRecoveryBadge);
+      observer.observe(badge,{childList:true,characterData:true,subtree:true});
+      badge.__eliteZeroObserver=observer;
+    }
+    return true;
+  }
+
+  function isInventoryActionable(data){
+    const status=String(data?.estado||'pendiente').trim().toLowerCase();
+    const closed=new Set([
+      'rechazada','rejected','cancelada','cancelado','canceled','cancelled',
+      'entregada','entregado','confirmada','confirmado','completada','completado','cerrada','cerrado'
+    ]);
+    return !closed.has(status);
+  }
+
+  function connectInventoryBadge(){
+    if(inventoryUnsubscribe)return true;
+    if(typeof db==='undefined'||!db||typeof db.collection!=='function')return false;
+    try{
+      inventoryUnsubscribe=db.collection('solicitudes_inventario').onSnapshot(function(snapshot){
+        let count=0;
+        snapshot.forEach(function(doc){
+          if(isInventoryActionable(doc.data()||{}))count++;
+        });
+        setBadge('elite-inventory-menu-count',count);
+      },function(error){
+        console.warn('[Elite v7.4] No se pudo actualizar el contador de Inventario:',error);
+        setBadge('elite-inventory-menu-count',0);
+      });
+      return true;
+    }catch(error){
+      console.warn('[Elite v7.4] Error conectando contador de Inventario:',error);
+      return false;
+    }
+  }
+
+  function initialize(){
+    watchRecoveryBadge();
+    connectInventoryBadge();
+    let attempts=0;
+    const timer=setInterval(function(){
+      attempts++;
+      const recoveryReady=watchRecoveryBadge();
+      const inventoryReady=connectInventoryBadge();
+      if((recoveryReady&&inventoryReady)||attempts>=30)clearInterval(timer);
+    },500);
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize,{once:true});
+  else initialize();
+
+  window.eliteSetMenuBadge=setBadge;
+})();
+</script>
 </body>
 </html>
