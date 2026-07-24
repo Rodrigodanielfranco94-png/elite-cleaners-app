@@ -2751,7 +2751,7 @@ if (currentUser) {
   const previousCreateJobCard=createJobCard;
   createJobCard=function(job,isToday=false){
     const card=previousCreateJobCard(job,isToday);
-    // Elite Staff v8.5: las solicitudes de productos se realizan únicamente
+    // Elite Staff v8.6: las solicitudes de productos se realizan únicamente
     // desde el Catálogo de productos superior. No insertar el módulo duplicado
     // dentro de la tarjeta del servicio.
     card.querySelectorAll('.supply-box').forEach(box=>box.remove());
@@ -3776,5 +3776,123 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   });
 })();
 </script>
+
+<script id="elite-staff-v86-catalog-request-fix">
+(function(){
+  let selectedCatalogId='';
+  let sending=false;
+
+  const priorChoose=window.eliteStaffChooseProduct;
+  window.eliteStaffChooseProduct=function(id){
+    selectedCatalogId=String(id||'');
+    return typeof priorChoose==='function' ? priorChoose(id) : undefined;
+  };
+
+  const priorCancel=window.eliteStaffCancelRequest;
+  window.eliteStaffCancelRequest=function(){
+    selectedCatalogId='';
+    return typeof priorCancel==='function' ? priorCancel() : undefined;
+  };
+
+  function showStatus(message,isError){
+    const el=document.getElementById('elite-staff-catalog-status');
+    if(el){
+      el.textContent=message||'';
+      el.style.display=message?'block':'none';
+      el.style.background=isError?'#450a0a':'#052e16';
+      el.style.color=isError?'#fecaca':'#bbf7d0';
+      el.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+  }
+
+  async function sendRequest(){
+    if(sending)return;
+    const btn=document.getElementById('elite-staff-request-send');
+    if(!selectedCatalogId){showStatus('Selecciona nuevamente el producto.',true);return;}
+    if(!window.db){showStatus('No hay conexión con Firebase. Actualiza la página.',true);return;}
+
+    const user=window.currentUser||{};
+    const qty=Math.max(1,Number(document.getElementById('elite-staff-request-qty')?.value||1));
+    const urgency=document.getElementById('elite-staff-request-urgency')?.value||'puede_esperar';
+    const note=(document.getElementById('elite-staff-request-note')?.value||'').trim();
+
+    sending=true;
+    if(btn){btn.disabled=true;btn.textContent='ENVIANDO...';}
+    showStatus('Enviando solicitud...',false);
+
+    try{
+      const productSnap=await db.collection('catalogo_productos').doc(selectedCatalogId).get();
+      if(!productSnap.exists)throw new Error('El producto ya no existe en el catálogo.');
+      const product=productSnap.data()||{};
+
+      const ref=db.collection('solicitudes_inventario').doc();
+      const nref=db.collection('notificaciones_admin').doc();
+      const payload={
+        origen:'catalogo_staff',
+        catalogo_id:selectedCatalogId,
+        producto_nombre:product.nombre||'Producto',
+        marca:product.marca||'',
+        tipo:product.tipo||'Producto',
+        tamano:product.tamano||'',
+        codigo_barras:product.codigo_barras||'',
+        foto_producto_url:product.foto_url||'',
+        cantidad_solicitada:qty,
+        cantidad:qty,
+        urgencia:urgency,
+        nota:note,
+        estado:'pendiente',
+        empleado_nombre:user.nombre||user.displayName||'Staff',
+        empleado_email:user.email||'',
+        empleado_uid:(firebase.auth().currentUser&&firebase.auth().currentUser.uid)||'',
+        solicitado_por:user.nombre||user.displayName||user.email||'Staff',
+        resuelta:false,
+        creado:firebase.firestore.FieldValue.serverTimestamp(),
+        fecha:firebase.firestore.FieldValue.serverTimestamp()
+      };
+      const batch=db.batch();
+      batch.set(ref,payload);
+      batch.set(nref,{
+        tipo:'solicitud_inventario',
+        titulo:'📦 Solicitud de producto',
+        mensaje:(payload.empleado_nombre||'Un empleado')+' solicitó '+qty+' de '+payload.producto_nombre+'.',
+        solicitud_id:ref.id,
+        catalogo_id:selectedCatalogId,
+        producto_nombre:payload.producto_nombre,
+        cantidad_solicitada:qty,
+        urgencia:urgency,
+        empleado_nombre:payload.empleado_nombre,
+        empleado_email:payload.empleado_email,
+        leida:false,
+        fecha:firebase.firestore.FieldValue.serverTimestamp()
+      });
+      await batch.commit();
+
+      showStatus('✅ Solicitud enviada correctamente.',false);
+      const form=document.getElementById('elite-staff-request-form');
+      if(form)form.classList.remove('open');
+      selectedCatalogId='';
+      setTimeout(()=>showStatus('',false),3500);
+    }catch(error){
+      console.error('[Elite Staff] Error enviando solicitud',error);
+      showStatus('No se pudo enviar: '+(error&&error.message?error.message:'error desconocido'),true);
+      alert('No se pudo enviar la solicitud: '+(error&&error.message?error.message:'error desconocido'));
+    }finally{
+      sending=false;
+      if(btn){btn.disabled=false;btn.textContent='Enviar solicitud';}
+    }
+  }
+
+  window.eliteStaffSendCatalogRequest=sendRequest;
+
+  document.addEventListener('click',function(event){
+    const btn=event.target.closest&&event.target.closest('#elite-staff-request-send');
+    if(!btn)return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    sendRequest();
+  },true);
+})();
+</script>
+
 </body>
 </html>
