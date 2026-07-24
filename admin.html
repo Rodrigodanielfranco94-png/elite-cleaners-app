@@ -9658,5 +9658,54 @@ setInterval(wire,700);
 })();
 </script>
 
+
+<style id="elite-ops-summary-v73-css">
+.ops-summary-compact{margin-top:12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ops-summary-metric{background:#f8fafc;border:1px solid #dbe3ef;border-radius:14px;padding:14px;min-height:88px}
+.ops-summary-metric b{display:block;color:#334155;font-size:12px;margin-bottom:7px}
+.ops-summary-metric strong{display:block;color:#0f172a;font-size:20px;line-height:1.2}
+@media(max-width:600px){.ops-summary-compact{grid-template-columns:1fr 1fr}.ops-summary-metric{padding:12px}.ops-summary-metric strong{font-size:17px}}
+</style>
+<script id="elite-ops-summary-v73-js">
+(function(){
+'use strict';
+function normalizeTime(value){
+  if(value===null||value===undefined||value===''||value==='--:--')return 'No registrado';
+  let s=String(value).trim().toLowerCase().replace(/\./g,'').replace(/\s+/g,' ');
+  const iso=s.match(/t(\d{1,2}):(\d{2})/i);
+  if(iso){s=iso[1]+':'+iso[2]}
+  const m=s.match(/(\d{1,2}):(\d{2})(?:\s*(am|pm))?/i);
+  if(!m)return String(value);
+  let h=Number(m[1]),min=m[2],ampm=(m[3]||'').toUpperCase();
+  if(!ampm){ampm=h>=12?'PM':'AM';h=h%12||12}
+  else {h=h%12||12}
+  return h+':'+min+' '+ampm;
+}
+window.opsStaffTime=normalizeTime;
+window.eliteNormalizeOpsTime=normalizeTime;
+window.opsStaffTimeline=function(service){
+  const pause=Number(service?.pausa_total_minutos||0);
+  const worked=(typeof opsWorkedTime==='function'?opsWorkedTime(service):'No disponible');
+  return `<div class="ops-summary-compact">
+    <div class="ops-summary-metric"><b>🧹 Hora de inicio</b><strong>${normalizeTime(service?.hora_inicio)}</strong></div>
+    <div class="ops-summary-metric"><b>✅ Hora de finalización</b><strong>${normalizeTime(service?.hora_fin)}</strong></div>
+    <div class="ops-summary-metric"><b>⏱ Tiempo trabajado</b><strong>${worked}</strong></div>
+    <div class="ops-summary-metric"><b>⏸ Pausa total</b><strong>${pause} min</strong></div>
+  </div>`;
+};
+function refreshOpenSummary(){
+  try{
+    const root=document.getElementById('ops-job-detail');
+    if(!root)return;
+    const active=root.querySelector('.ops-detail-tabs button.active');
+    if(active && (active.dataset.opsTab==='summary'||active.textContent.trim()==='Resumen')){
+      if(typeof renderOpsJobDetail==='function')renderOpsJobDetail();
+    }
+  }catch(e){}
+}
+document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshOpenSummary,400));
+})();
+</script>
+
 </body>
 </html>
