@@ -3609,5 +3609,140 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   window.updateWorkflow=wrapped; try{updateWorkflow=wrapped}catch(_){}
 })();
 </script>
+
+
+<!-- ===== ELITE STAFF v8.4 — MILLAGE ROBUSTO + SOLICITUD SOLO DESDE CATÁLOGO ===== -->
+<style id="elite-staff-v84-css">
+#dashboard-route-distance{white-space:nowrap}
+</style>
+<script id="elite-staff-v84-mileage-catalog-fix">
+(function(){
+  'use strict';
+  const DEST_CACHE='elite_v84_dest:';
+  const LOC_CACHE='elite_employee_location_v82';
+  let requestId=0;
+
+  function getJSON(k){try{return JSON.parse(localStorage.getItem(k)||'null')}catch(_){return null}}
+  function putJSON(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(_){}}
+  function valid(p){return p&&Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))}
+  function rad(v){return v*Math.PI/180}
+  function directMiles(a,b){
+    const R=3958.7613,dLat=rad(Number(b.lat)-Number(a.lat)),dLng=rad(Number(b.lng)-Number(a.lng));
+    const q=Math.sin(dLat/2)**2+Math.cos(rad(Number(a.lat)))*Math.cos(rad(Number(b.lat)))*Math.sin(dLng/2)**2;
+    return 2*R*Math.asin(Math.sqrt(q));
+  }
+  function showMiles(n,exact){
+    n=Number(n||0);
+    if(!Number.isFinite(n)||n<=0)return 'GPS listo';
+    return (n<10?n.toFixed(1):Math.round(n))+' mi'+(exact?'':' aprox.');
+  }
+  function withTimeout(p,ms){return Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),ms))])}
+
+  function coordsFromJob(job){
+    const list=[
+      [job?.latitud,job?.longitud],[job?.latitude,job?.longitude],[job?.lat,job?.lng],
+      [job?.gps_lat,job?.gps_lng],[job?.ubicacion?.lat,job?.ubicacion?.lng],
+      [job?.coordenadas?.lat,job?.coordenadas?.lng],[job?.cliente_lat,job?.cliente_lng]
+    ];
+    for(const [lat,lng] of list){const p={lat:Number(lat),lng:Number(lng)};if(valid(p))return p}
+    return null;
+  }
+
+  async function employeePosition(){
+    const saved=getJSON(LOC_CACHE);
+    if(valid(saved)&&Date.now()-Number(saved.savedAt||0)<30*60*1000)return saved;
+    return new Promise((resolve,reject)=>{
+      if(!navigator.geolocation)return reject(new Error('GPS no disponible'));
+      navigator.geolocation.getCurrentPosition(pos=>{
+        const p={lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:pos.coords.accuracy,savedAt:Date.now()};
+        putJSON(LOC_CACHE,p);resolve(p);
+      },reject,{enableHighAccuracy:false,timeout:7000,maximumAge:30*60*1000});
+    });
+  }
+
+  function normalizedAddress(job){
+    let a=String(job?.direccion||job?.address||'').trim();
+    if(!a)return '';
+    if(!/\b[A-Z]{2}\b|California|USA|United States/i.test(a))a+=', California, USA';
+    return a;
+  }
+
+  async function googleGeocode(address){
+    await withTimeout(loadEliteGoogleMaps(),5000);
+    const geocoder=new google.maps.Geocoder();
+    const r=await withTimeout(geocoder.geocode({address}),5000);
+    const loc=r?.results?.[0]?.geometry?.location;
+    if(!loc)throw new Error('google no result');
+    return {lat:loc.lat(),lng:loc.lng()};
+  }
+  async function photonGeocode(address){
+    const url='https://photon.komoot.io/api/?limit=1&q='+encodeURIComponent(address);
+    const r=await withTimeout(fetch(url,{headers:{Accept:'application/json'}}),5500);
+    if(!r.ok)throw new Error('photon failed');
+    const d=await r.json();
+    const c=d?.features?.[0]?.geometry?.coordinates;
+    if(!c)throw new Error('photon no result');
+    return {lat:Number(c[1]),lng:Number(c[0])};
+  }
+  async function nominatimGeocode(address){
+    const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q='+encodeURIComponent(address);
+    const r=await withTimeout(fetch(url,{headers:{Accept:'application/json','Accept-Language':'en'}}),5500);
+    if(!r.ok)throw new Error('nominatim failed');
+    const d=await r.json();
+    if(!d?.[0])throw new Error('nominatim no result');
+    return {lat:Number(d[0].lat),lng:Number(d[0].lon)};
+  }
+  async function destination(job){
+    const direct=coordsFromJob(job);if(direct)return direct;
+    const address=normalizedAddress(job);if(!address)throw new Error('Sin dirección');
+    const key=DEST_CACHE+address.toLowerCase();
+    const cached=getJSON(key);if(valid(cached))return cached;
+    const methods=[googleGeocode,photonGeocode,nominatimGeocode];
+    for(const fn of methods){
+      try{const p=await fn(address);if(valid(p)){p.savedAt=Date.now();putJSON(key,p);return p}}catch(_){}
+    }
+    throw new Error('No se pudo ubicar la dirección');
+  }
+
+  async function robustMileage(job){
+    const id=++requestId;
+    const saved=Number(job?.millas||job?.millas_servicio||job?.millaje||job?.distancia_millas||0);
+    if(saved>0)setRouteCardState({distance:showMiles(saved,true),time:'Distancia guardada',trafficLabel:'Servicio',trafficType:'normal',loading:false});
+    else setRouteCardState({distance:'Ubicando…',time:'Calculando distancia',loading:true});
+    try{
+      const origin=await employeePosition();
+      if(id!==requestId)return;
+      const dest=await destination(job);
+      if(id!==requestId)return;
+      const approx=directMiles(origin,dest)*1.22;
+      setRouteCardState({distance:showMiles(approx,false),time:'Desde tu ubicación actual',trafficLabel:'Distancia aproximada',trafficType:'normal',loading:false});
+      try{putJSON('elite_last_route_v84',{serviceId:job?.id,miles:approx,at:Date.now()})}catch(_){}
+    }catch(err){
+      if(id!==requestId)return;
+      const last=getJSON('elite_last_route_v84');
+      if(last&&last.serviceId===job?.id&&Number(last.miles)>0){
+        setRouteCardState({distance:showMiles(last.miles,false),time:'Última distancia calculada',trafficLabel:'Guardada',trafficType:'moderate',loading:false});
+      }else{
+        setRouteCardState({distance:'Sin cálculo',time:'Abre GPS y permite ubicación',trafficLabel:'Ubicación requerida',trafficType:'moderate',loading:false});
+      }
+    }
+  }
+
+  window.calculateRealEmployeeRoute=robustMileage;
+  try{calculateRealEmployeeRoute=robustMileage}catch(_){}
+
+  // El catálogo superior es la única vía para solicitar suministros.
+  const noInlineSupply=function(){};
+  window.appendSupplyRequest=noInlineSupply;
+  try{appendSupplyRequest=noInlineSupply}catch(_){}
+
+  // Recalcular automáticamente al regresar de Maps o al recuperar ubicación.
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden){
+      try{const jobs=typeof getMergedJobs==='function'?getMergedJobs():[];const next=jobs.find(j=>typeof isTodayJob==='function'?isTodayJob(j):true);if(next)robustMileage(next)}catch(_){}
+    }
+  });
+})();
+</script>
 </body>
 </html>
