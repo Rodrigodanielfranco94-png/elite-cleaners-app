@@ -9588,5 +9588,75 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  window.renderOpsJobDetail=function(){old.apply(this,arguments);const s=selected(),root=document.getElementById('ops-job-detail');if(!s||!root)return;const b=body();if(b)window.eliteOpsSummaryCache=Object.assign(window.eliteOpsSummaryCache||{},{[s.id]:b.innerHTML});const buttons=[...root.querySelectorAll('.ops-detail-tabs button')];const tabs=['summary','details','checklist','photos','inventory','notes','history'];buttons.forEach((btn,i)=>{btn.dataset.opsTab=tabs[i];btn.onclick=()=>eliteOpsShowTab(tabs[i],s.id)});if(buttons[0])buttons[0].classList.add('active')};
 })();
 </script>
+
+<style id="elite-ops-tabs-v72-css">
+.ops-detail-tabs button{cursor:pointer!important;touch-action:manipulation}
+.ops-detail-tabs button.active{color:#2563eb!important;border-bottom:3px solid #2563eb!important}
+</style>
+<script id="elite-ops-tabs-v72-js">
+(function(){
+'use strict';
+function getServices(){
+  try{if(typeof todosLosServicios!=='undefined'&&Array.isArray(todosLosServicios))return todosLosServicios}catch(e){}
+  if(Array.isArray(window.todosLosServicios))return window.todosLosServicios;
+  return [];
+}
+function currentService(id){return getServices().find(x=>x.id===id)||null}
+function detailRoot(){return document.getElementById('ops-job-detail')}
+function detailBody(){return detailRoot()?.querySelector('.ops-detail-body')||null}
+function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function setActive(tab){detailRoot()?.querySelectorAll('.ops-detail-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.opsTab===tab))}
+function summaryCache(s){window.eliteOpsSummaryCache=window.eliteOpsSummaryCache||{};return window.eliteOpsSummaryCache[s.id]||''}
+function checklistItems(s){
+ const raw=s.checklist_staff||s.checklist||{};
+ const labels=[]; const add=(x,on=true)=>{if(on)labels.push(x)};
+ const n=(...ks)=>{for(const k of ks){const v=Number(s[k]||0);if(v>0)return v}return 0};
+ let v=n('habitaciones','cuartos','bedrooms');add(`🛏️ ${v} habitación${v===1?'':'es'}`,v>0);
+ v=n('banos','baños','bathrooms');add(`🚿 ${v} baño${v===1?'':'s'}`,v>0);
+ v=n('cocinas','cocina');add(`🍳 ${v} cocina${v===1?'':'s'}`,v>0);
+ v=n('salas','sala');add(`🛋️ ${v} sala${v===1?'':'s'}`,v>0);
+ v=n('comedores','comedor');add(`🍽️ ${v} comedor${v===1?'':'es'}`,v>0);
+ v=n('oficinas','oficina');add(`💻 ${v} oficina${v===1?'':'s'}`,v>0);
+ add(`🧊 Nevera: ${s.nevera||s.extra_nevera}`,!!(s.nevera||s.extra_nevera)&&String(s.nevera||s.extra_nevera).toLowerCase()!=='no');
+ add(`🔥 Horno: ${s.horno||s.extra_horno}`,!!(s.horno||s.extra_horno)&&String(s.horno||s.extra_horno).toLowerCase()!=='no');
+ return labels.map((label,i)=>({label,done:raw['item_'+i]===true||raw[i]===true||Array.isArray(raw)&&raw[i]===true}));
+}
+async function show(tab,id){
+ const s=currentService(id); if(!s)return alert('No se encontró el servicio seleccionado.');
+ if(tab==='details'){if(typeof abrirEditorEvento==='function')abrirEditorEvento(id);return}
+ if(tab==='photos'){if(typeof abrirEvidenciaServicio==='function')abrirEvidenciaServicio(id);else alert('No se encontró el visor de evidencias.');return}
+ const body=detailBody(); if(!body)return;
+ setActive(tab); const actions=detailRoot()?.querySelector('.ops-actions'); if(actions)actions.style.display=tab==='summary'?'grid':'none';
+ if(tab==='summary'){body.innerHTML=summaryCache(s);return}
+ if(tab==='checklist'){
+   const items=checklistItems(s);const done=items.filter(x=>x.done).length;const total=items.length;const savedDone=Number(s.checklist_completado||done);const pct=total?Math.round(savedDone/total*100):0;
+   body.innerHTML=`<div class="ops-v71-panel"><div class="ops-v71-help"><b>Supervisión del trabajo contratado</b><br>Muestra las áreas y extras que Staff marcó como terminados.</div><b>${savedDone}/${total} tareas completadas</b><div class="ops-v71-progress"><div style="width:${pct}%"></div></div><div class="ops-v71-list">${items.length?items.map(x=>`<div class="ops-v71-item ${x.done?'done':'pending'}"><span class="mark">${x.done?'✓':'!'}</span><div><b>${esc(x.label)}</b><small>${x.done?'Terminado por Staff':'Pendiente o sin marcar'}</small></div></div>`).join(''):'<div class="ops-v71-empty">No hay checklist disponible para este servicio.</div>'}</div></div>`;return;
+ }
+ if(tab==='inventory'){
+   body.innerHTML='<div class="ops-v71-panel"><div class="ops-v71-empty">Buscando solicitudes vinculadas…</div></div>';
+   try{const snap=await db.collection('solicitudes_inventario').where('servicio_id','==',id).get();const rows=[];snap.forEach(d=>rows.push({id:d.id,...d.data()}));body.innerHTML=`<div class="ops-v71-panel"><div class="ops-v71-help">Solicitudes de inventario vinculadas únicamente a este servicio.</div><div class="ops-v71-list">${rows.length?rows.map(r=>`<div class="ops-v71-item"><span class="mark">📦</span><div><b>${esc(r.producto_nombre||r.producto||'Producto')}</b><small>Cantidad: ${Number(r.cantidad_solicitada||r.cantidad||0)} · Estado: ${esc(r.estado||'pendiente')}</small></div></div>`).join(''):'<div class="ops-v71-empty">No hay solicitudes vinculadas a este trabajo.</div>'}</div></div>`}catch(e){body.innerHTML=`<div class="ops-v71-panel"><div class="ops-v71-empty">No se pudo consultar Inventario: ${esc(e.message)}</div></div>`}return;
+ }
+ if(tab==='notes'){
+   const base=[s.notas_internas,s.notas,s.instrucciones,s.ultimo_informe_staff].filter(Boolean);
+   let reports=[];try{const snap=await db.collection('servicios').doc(id).collection('informes_staff').get();snap.forEach(d=>reports.push(d.data()))}catch(e){}
+   body.innerHTML=`<div class="ops-v71-panel"><div class="ops-v71-help">Instrucciones administrativas e informes enviados por Staff.</div>${base.map((n,i)=>`<div class="ops-v71-note"><strong>${i===0?'Instrucciones del servicio':'Nota / informe'}</strong>${esc(n)}</div>`).join('')}${reports.map(r=>`<div class="ops-v71-note"><strong>${esc(r.empleado_nombre||'Staff')}</strong>${esc(r.mensaje||'')}</div>`).join('')||(!base.length?'<div class="ops-v71-empty">No existen notas ni informes.</div>':'')}</div>`;return;
+ }
+ if(tab==='history'){
+   const events=[['🚗 En camino',s.hora_en_camino],['📍 Llegada',s.hora_llegada],['🧹 Inicio',s.hora_inicio],['☕ Pausa',s.hora_pausa],['▶ Reanudación',s.hora_reanudacion],['✅ Finalización',s.hora_fin]].filter(x=>x[1]);
+   body.innerHTML=`<div class="ops-v71-panel"><div class="ops-v71-help">Recorrido cronológico completo del trabajo.</div><div class="ops-v71-list">${events.map(e=>`<div class="ops-v71-item done"><span class="mark">✓</span><div><b>${e[0]}</b><small>${esc(typeof opsStaffTime==='function'?opsStaffTime(e[1]):e[1])}</small></div></div>`).join('')||'<div class="ops-v71-empty">No hay eventos registrados.</div>'}</div></div>`;return;
+ }
+}
+function wire(){
+ const root=detailRoot();if(!root)return;const s=currentService(typeof opsSelectedJobId!=='undefined'?opsSelectedJobId:window.opsSelectedJobId);if(!s)return;
+ const body=detailBody();window.eliteOpsSummaryCache=window.eliteOpsSummaryCache||{};if(body&&!window.eliteOpsSummaryCache[s.id])window.eliteOpsSummaryCache[s.id]=body.innerHTML;
+ const tabs=['summary','details','checklist','photos','inventory','notes','history'];root.querySelectorAll('.ops-detail-tabs button').forEach((b,i)=>{b.dataset.opsTab=tabs[i]||'';b.type='button'});
+}
+window.eliteOpsShowTabV72=show;
+document.addEventListener('click',function(e){const btn=e.target.closest('#ops-job-detail .ops-detail-tabs button');if(!btn)return;e.preventDefault();e.stopImmediatePropagation();wire();const tab=btn.dataset.opsTab;const id=(typeof opsSelectedJobId!=='undefined'?opsSelectedJobId:window.opsSelectedJobId);if(tab&&id)show(tab,id)},true);
+const observer=new MutationObserver(()=>wire());document.addEventListener('DOMContentLoaded',()=>{const box=document.getElementById('ops-job-detail');if(box)observer.observe(box,{childList:true,subtree:true});wire()});
+setInterval(wire,700);
+})();
+</script>
+
 </body>
 </html>
