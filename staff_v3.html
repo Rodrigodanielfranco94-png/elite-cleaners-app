@@ -2749,7 +2749,14 @@ if (currentUser) {
   async function saveSupplyRequest(job,product,qty,urgency,note){if(product==='Otro producto'){const custom=prompt('Escribe el nombre del producto:');if(!custom)throw new Error('Debes escribir el producto.');product=custom.trim()}const inventory=await findInventoryProduct(product);const available=Number(inventory?.cantidad??inventory?.stock??inventory?.existencia??0);const status=inventory&&available>=qty?'disponible_en_inventario':available>0?'existencia_insuficiente':'requiere_compra';const ref=db.collection('solicitudes_inventario').doc();const batch=db.batch();batch.set(ref,{producto:product,cantidad_solicitada:qty,urgencia:urgency,nota:note,estado:status,inventario_id:inventory?.id||null,existencia_detectada:available,servicio_id:job.id,cliente:safeText(job.cliente,'Servicio'),empleado_nombre:currentUser.nombre,empleado_email:currentUser.email,fecha:firebase.firestore.FieldValue.serverTimestamp(),resuelta:false});const n=db.collection('notificaciones_admin').doc();batch.set(n,{tipo:'solicitud_inventario',titulo:status==='requiere_compra'?'Producto agotado / comprar':'Solicitud de producto',mensaje:product+' · solicita '+qty+' · inventario detectado: '+available,servicio_id:job.id,cliente:safeText(job.cliente,'Servicio'),empleado_nombre:currentUser.nombre,empleado_email:currentUser.email,solicitud_id:ref.id,leida:false,fecha:firebase.firestore.FieldValue.serverTimestamp()});await batch.commit();return status==='disponible_en_inventario'?'Solicitud enviada. Admin detectó '+available+' unidad(es) disponibles.':status==='existencia_insuficiente'?'Solicitud enviada. Solo quedan '+available+' unidad(es); Admin fue avisado.':'Solicitud enviada. No hay existencias; quedó marcada para compra.'}
 
   const previousCreateJobCard=createJobCard;
-  createJobCard=function(job,isToday=false){const card=previousCreateJobCard(job,isToday);const stage=getWorkflowStage(job);if(['llego','limpiando','pausado','completado'].includes(stage)){const workflow=card.querySelector('.workflow-box');const marker=document.createElement('div');appendSupplyRequest(marker,job,isToday);const supply=marker.firstElementChild;if(workflow)card.insertBefore(supply,workflow);else card.appendChild(supply)}return card};
+  createJobCard=function(job,isToday=false){
+    const card=previousCreateJobCard(job,isToday);
+    // Elite Staff v8.5: las solicitudes de productos se realizan únicamente
+    // desde el Catálogo de productos superior. No insertar el módulo duplicado
+    // dentro de la tarjeta del servicio.
+    card.querySelectorAll('.supply-box').forEach(box=>box.remove());
+    return card;
+  };
 
   const previousRender=renderMergedJobs;
   renderMergedJobs=function(){previousRender();detectServiceUpdates()};
@@ -3741,6 +3748,31 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(!document.hidden){
       try{const jobs=typeof getMergedJobs==='function'?getMergedJobs():[];const next=jobs.find(j=>typeof isTodayJob==='function'?isTodayJob(j):true);if(next)robustMileage(next)}catch(_){}
     }
+  });
+})();
+</script>
+
+<style id="elite-v85-remove-inline-supplies">
+/* Solicitudes de suministros disponibles exclusivamente desde el catálogo superior. */
+.supply-box{display:none!important;}
+</style>
+<script id="elite-v85-remove-inline-supplies-js">
+(function(){
+  function removeInlineSupplyBoxes(root){
+    (root||document).querySelectorAll('.supply-box').forEach(function(box){ box.remove(); });
+  }
+  document.addEventListener('DOMContentLoaded',function(){ removeInlineSupplyBoxes(document); });
+  var observer=new MutationObserver(function(mutations){
+    mutations.forEach(function(m){
+      m.addedNodes.forEach(function(node){
+        if(node.nodeType!==1)return;
+        if(node.matches&&node.matches('.supply-box'))node.remove();
+        else if(node.querySelectorAll)removeInlineSupplyBoxes(node);
+      });
+    });
+  });
+  document.addEventListener('DOMContentLoaded',function(){
+    if(document.body)observer.observe(document.body,{childList:true,subtree:true});
   });
 })();
 </script>
