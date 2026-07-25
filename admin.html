@@ -10135,5 +10135,160 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshOpenSummary,4
   });
 })();
 </script>
+
+
+<!-- ===== ELITE ADMIN CORE v7.8 — FLUJO COMPLETO DE COMPRA ===== -->
+<style id="elite-admin-v78-purchase-css">
+.elite-v78-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.elite-v78-field{display:flex;flex-direction:column;gap:6px;margin-bottom:11px}
+.elite-v78-field label{font-size:10px;font-weight:900;color:#93c5fd;text-transform:uppercase;letter-spacing:.05em}
+.elite-v78-field input,.elite-v78-field textarea{margin:0!important;background:#0b1220!important;border:1px solid #334155!important;color:#fff!important}
+.elite-v78-total{padding:14px;border:1px solid #22c55e;border-radius:12px;background:#052e16;color:#bbf7d0;font-size:17px;font-weight:900;text-align:center;margin:9px 0 13px}
+.elite-v78-help{padding:11px 13px;border:1px solid #2563eb;border-radius:11px;background:#172554;color:#bfdbfe;font-size:11px;line-height:1.45;margin-bottom:13px}
+.elite-v78-save{width:100%;min-height:52px;border:0;border-radius:12px;background:#16a34a;color:#fff;font-weight:900;font-size:14px;cursor:pointer}
+.elite-v78-save:disabled{opacity:.55;cursor:wait}
+.elite-v78-receipt-preview{display:none;max-width:170px;max-height:170px;object-fit:contain;background:#fff;border-radius:10px;border:1px solid #475569;margin-top:8px}
+.elite-v78-history{display:grid;gap:10px;max-height:60vh;overflow:auto}
+.elite-v78-history-item{padding:13px;border:1px solid #334155;border-radius:12px;background:#05070b}
+.elite-v78-history-item b{color:#93c5fd;font-size:13px}.elite-v78-history-item p{margin:5px 0;color:#cbd5e1;font-size:11px;line-height:1.45}
+.elite-v78-history-item a{display:inline-block;margin-top:6px;padding:8px 10px;border-radius:8px;background:#2563eb;color:#fff;text-decoration:none;font-size:10px;font-weight:900}
+@media(max-width:620px){.elite-v78-grid{grid-template-columns:1fr}}
+</style>
+<script id="elite-admin-v78-purchase-js">
+(function(){
+  const purchaseLocks=new Set();
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const reqs=()=>{try{return window.eliteV54Requests||eliteV54Requests||[]}catch(_){return []}};
+  const invs=()=>{try{return window.eliteV51Inventario||eliteV51Inventario||[]}catch(_){return []}};
+  const normalize=v=>String(v||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const adminName=()=>window.usuarioActual?.nombre||window.currentUser?.email||'Administración';
+
+  function updateTotal(){
+    const q=Number(document.getElementById('v78-qty')?.value||0);
+    const u=Number(document.getElementById('v78-unit')?.value||0);
+    const t=Math.max(0,q*u);
+    const box=document.getElementById('v78-total');if(box)box.textContent=`Total: $${t.toFixed(2)}`;
+  }
+  window.eliteV78UpdateTotal=updateTotal;
+  window.eliteV78PreviewReceipt=function(input){
+    const img=document.getElementById('v78-receipt-preview');if(!img)return;
+    const f=input?.files?.[0];if(!f){img.style.display='none';img.removeAttribute('src');return}
+    img.src=URL.createObjectURL(f);img.style.display='block';
+  };
+
+  window.eliteV78OpenPurchase=function(id){
+    const r=reqs().find(x=>x.id===id);if(!r)return alert('No se encontró la solicitud.');
+    const qty=Number(r.cantidad_aprobada||r.cantidad_solicitada||r.cantidad||1)||1;
+    const unit=Number(r.precio_unitario||r.precio_estimado||0)||0;
+    const store=String(r.tienda||r.tienda_sugerida||'');
+    const location=String(r.ubicacion||'Almacén');
+    abrirEliteV5ModuleModal('Registrar compra',`Compra protegida de ${r.producto_nombre||r.producto||'producto'}.`,
+      `<div class="elite-v78-help">Al guardar, la aplicación actualizará el stock, creará un solo gasto, conservará el historial y cerrará esta solicitud. Aunque pulses dos veces, no se duplicará la transacción.</div>
+      <div class="elite-v78-grid">
+        <div class="elite-v78-field"><label>Cantidad comprada</label><input id="v78-qty" type="number" min="0.01" step="1" value="${qty}" oninput="eliteV78UpdateTotal()"></div>
+        <div class="elite-v78-field"><label>Precio unitario</label><input id="v78-unit" type="number" min="0" step="0.01" value="${unit}" oninput="eliteV78UpdateTotal()"></div>
+        <div class="elite-v78-field"><label>Tienda / proveedor</label><input id="v78-store" value="${esc(store)}" placeholder="Walmart, Home Depot..."></div>
+        <div class="elite-v78-field"><label>Ubicación de almacenamiento</label><input id="v78-location" value="${esc(location)}"></div>
+        <div class="elite-v78-field"><label>Fecha de compra</label><input id="v78-date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+        <div class="elite-v78-field"><label>Método de pago</label><input id="v78-method" placeholder="Tarjeta, efectivo..."></div>
+      </div>
+      <div id="v78-total" class="elite-v78-total">Total: $${(qty*unit).toFixed(2)}</div>
+      <div class="elite-v78-field"><label>Foto del recibo</label><input id="v78-receipt" type="file" accept="image/*" capture="environment" onchange="eliteV78PreviewReceipt(this)"><img id="v78-receipt-preview" class="elite-v78-receipt-preview"></div>
+      <div class="elite-v78-field"><label>Nota opcional</label><textarea id="v78-note" rows="3" placeholder="Detalles de la compra"></textarea></div>
+      <button id="v78-save" class="elite-v78-save" onclick="eliteV78SavePurchase('${id}')">Guardar compra</button>`);
+  };
+
+  window.eliteV78SavePurchase=async function(id){
+    if(purchaseLocks.has(id))return;
+    const r=reqs().find(x=>x.id===id);if(!r)return alert('No se encontró la solicitud.');
+    const qty=Number(document.getElementById('v78-qty')?.value||0);
+    const unit=Number(document.getElementById('v78-unit')?.value||0);
+    const store=document.getElementById('v78-store')?.value.trim()||'';
+    const location=document.getElementById('v78-location')?.value.trim()||'Almacén';
+    const date=document.getElementById('v78-date')?.value||new Date().toISOString().slice(0,10);
+    const method=document.getElementById('v78-method')?.value.trim()||'';
+    const note=document.getElementById('v78-note')?.value.trim()||'';
+    const receipt=document.getElementById('v78-receipt')?.files?.[0]||null;
+    if(!(qty>0))return alert('La cantidad debe ser mayor que cero.');
+    if(!(unit>=0))return alert('El precio unitario no es válido.');
+    const total=qty*unit;
+    if(!confirm(`¿Registrar esta compra?\n\n${r.producto_nombre||r.producto||'Producto'}\nCantidad: ${qty}\nTotal: $${total.toFixed(2)}`))return;
+    purchaseLocks.add(id);
+    const btn=document.getElementById('v78-save');if(btn){btn.disabled=true;btn.textContent='Guardando compra…'}
+    let receiptUrl='';
+    try{
+      if(receipt){receiptUrl=await eliteV54Upload(receipt,`inventario_compras/${id}/${Date.now()}_recibo`)}
+      const purchaseRef=db.collection('compras_inventario').doc(id);
+      const requestRef=db.collection('solicitudes_inventario').doc(id);
+      const expenseRef=db.collection('gastos_contabilidad').doc(`inventario_${id}`);
+      const catalogId=r.catalogo_id||r.producto_id||'';
+      let existing=invs().find(x=>catalogId&&(x.catalogo_id===catalogId||x.producto_id===catalogId));
+      if(!existing)existing=invs().find(x=>normalize(x.nombre)===normalize(r.producto_nombre||r.producto));
+      const inventoryRef=existing?db.collection('inventario').doc(existing.id):db.collection('inventario').doc();
+
+      await db.runTransaction(async tx=>{
+        const purchaseSnap=await tx.get(purchaseRef);
+        if(purchaseSnap.exists)throw new Error('ALREADY_PURCHASED');
+        let currentQty=0,currentData={};
+        if(existing){const invSnap=await tx.get(inventoryRef);if(invSnap.exists){currentData=invSnap.data()||{};currentQty=Number(currentData.cantidad||0)}}
+        const common={
+          solicitud_id:id,catalogo_id:catalogId,producto_nombre:r.producto_nombre||r.producto||'Producto',
+          cantidad:qty,costo_unitario:unit,total,tienda:store,ubicacion:location,metodo_pago:method,
+          fecha_compra:date,nota:note,recibo_url:receiptUrl,comprado_por:adminName(),
+          creado:firebase.firestore.FieldValue.serverTimestamp()
+        };
+        tx.set(purchaseRef,common);
+        tx.set(expenseRef,{
+          fecha:date,categoria:'Inventario',monto:total,
+          nota:`Compra de inventario: ${r.producto_nombre||r.producto||'Producto'} (${qty} × $${unit.toFixed(2)})${note?` — ${note}`:''}`,
+          tienda:store,metodo_pago:method,recibo_url:receiptUrl,solicitud_inventario_id:id,
+          compra_inventario_id:id,origen:'inventario_compra',creado_por:adminName(),
+          timestamp:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+        tx.set(inventoryRef,{
+          nombre:r.producto_nombre||r.producto||currentData.nombre||'Producto',tipo:r.tipo||currentData.tipo||'Producto químico',
+          cantidad:currentQty+qty,costo:unit,ubicacion:location,tienda:store,catalogo_id:catalogId,
+          codigo_barras:r.codigo_barras||currentData.codigo_barras||'',foto_url:r.foto_producto_url||currentData.foto_url||'',
+          minimo:Number(currentData.minimo||0),actualizado:firebase.firestore.FieldValue.serverTimestamp(),
+          ...(existing?{}:{creado:firebase.firestore.FieldValue.serverTimestamp()})
+        },{merge:true});
+        tx.set(requestRef,{
+          estado:'comprada',cantidad_comprada:qty,precio_unitario:unit,total_pagado:total,tienda:store,
+          ubicacion_compra:location,metodo_pago:method,fecha_compra_texto:date,nota_compra:note,
+          foto_recibo_url:receiptUrl,comprado_por:adminName(),fecha_compra:firebase.firestore.FieldValue.serverTimestamp(),
+          compra_inventario_id:id,gasto_contabilidad_id:`inventario_${id}`
+        },{merge:true});
+      });
+      try{await eliteV54Audit(id,'comprada',{cantidad:qty,precio_unitario:unit,total,tienda:store,recibo:!!receiptUrl})}catch(_){ }
+      alert(`Compra registrada ✅\n\n• Stock actualizado\n• Gasto de $${total.toFixed(2)} creado una sola vez\n• Historial actualizado\n• Solicitud cerrada`);
+      try{cerrarEliteV5ModuleModal()}catch(_){document.getElementById('elite-v5-module-modal').style.display='none'}
+      try{eliteV51OpenInventory();setTimeout(()=>eliteV55SwitchTab('solicitudes'),120)}catch(_){ }
+    }catch(e){
+      if(String(e?.message||e).includes('ALREADY_PURCHASED'))alert('Esta solicitud ya fue comprada. No se creó una segunda transacción.');
+      else alert('No se pudo registrar la compra: '+(e?.message||e));
+    }finally{purchaseLocks.delete(id);if(btn){btn.disabled=false;btn.textContent='Guardar compra'}}
+  };
+
+  // Todos los botones Comprar usan el nuevo flujo profesional.
+  window.eliteV75BuyRequest=function(id){eliteV78OpenPurchase(id)};
+  window.eliteV54Purchase=function(id){eliteV78OpenPurchase(id)};
+
+  window.eliteV54History=async function(id){
+    const r=reqs().find(x=>x.id===id);if(!r)return alert('No se encontró el producto.');
+    const catalogId=r.catalogo_id||r.producto_id||'';
+    let rows=[];
+    try{
+      let snap;
+      if(catalogId)snap=await db.collection('compras_inventario').where('catalogo_id','==',catalogId).get();
+      else snap=await db.collection('compras_inventario').where('producto_nombre','==',r.producto_nombre||r.producto||'').get();
+      snap.forEach(d=>rows.push({id:d.id,...d.data()}));
+      rows.sort((a,b)=>(b.creado?.toMillis?.()||0)-(a.creado?.toMillis?.()||0));
+    }catch(e){console.warn('[Elite v7.8 historial]',e)}
+    const title=r.producto_nombre||r.producto||'Producto';
+    abrirEliteV5ModuleModal(`Historial — ${title}`,`Comprado ${rows.length} ${rows.length===1?'vez':'veces'}.`,
+      rows.length?`<div class="elite-v78-history">${rows.map((x,i)=>`<div class="elite-v78-history-item"><b>Compra ${rows.length-i} · ${esc(x.fecha_compra||'Sin fecha')}</b><p>Cantidad: ${Number(x.cantidad||0)}<br>Precio unitario: $${Number(x.costo_unitario||0).toFixed(2)}<br>Total: $${Number(x.total||0).toFixed(2)}<br>Tienda: ${esc(x.tienda||'Sin tienda')}<br>Compró: ${esc(x.comprado_por||'Administración')}${x.nota?`<br>Nota: ${esc(x.nota)}`:''}</p>${x.recibo_url?`<a href="${esc(x.recibo_url)}" target="_blank">📷 Ver recibo</a>`:'<p>Sin recibo adjunto.</p>'}</div>`).join('')}</div>`:'<div class="elite-v51-empty">Este producto todavía no tiene compras registradas.</div>');
+  };
+})();
+</script>
 </body>
 </html>
