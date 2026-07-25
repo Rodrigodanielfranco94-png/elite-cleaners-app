@@ -10031,5 +10031,109 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshOpenSummary,4
 })();
 </script>
 
+
+
+<!-- ===== ELITE ADMIN CORE v7.7 — INVENTARIO DE ESCRITORIO A TODO ANCHO ===== -->
+<style id="elite-admin-v77-desktop-inventory-layout">
+@media (min-width: 1000px){
+  /* El modal de Inventario aprovecha el espacio disponible del escritorio. */
+  #elite-v5-module-modal.elite-v77-inventory-open{
+    padding:24px 28px!important;
+  }
+  #elite-v5-module-modal.elite-v77-inventory-open .elite-v5-module-box{
+    width:min(1380px, calc(100vw - 270px))!important;
+    max-width:1380px!important;
+    margin:18px auto 40px!important;
+    padding:28px!important;
+  }
+  #elite-v5-module-modal.elite-v77-inventory-open .elite-v54-tabs{
+    grid-template-columns:repeat(4,minmax(160px,1fr))!important;
+    gap:12px!important;
+  }
+  #elite-v5-module-modal.elite-v77-inventory-open .elite-v54-tab{
+    min-height:52px;
+    font-size:13px!important;
+  }
+  #elite-v5-module-modal.elite-v77-inventory-open #elite-v54-request-list{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:16px!important;
+    align-items:start;
+  }
+  #elite-v5-module-modal.elite-v77-inventory-open #elite-v54-request-list .elite-v54-card{
+    margin:0!important;
+    min-width:0;
+    height:100%;
+    padding:18px!important;
+  }
+  #elite-v5-module-modal.elite-v77-inventory-open #elite-v54-request-list .elite-v54-actions{
+    margin-top:14px;
+  }
+  #elite-v5-module-modal.elite-v77-inventory-open #elite-v55-catalog-list{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:14px;
+  }
+  #elite-v5-module-modal.elite-v77-inventory-open #elite-v55-catalog-list .elite-v55-product-card{
+    margin:0;
+    height:100%;
+  }
+  #elite-v5-module-modal.elite-v77-inventory-open #elite-v51-inventory-list .elite-v6102-inventory-cards{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:16px;
+  }
+  #elite-v5-module-modal.elite-v77-inventory-open .elite-v51-settings-section{
+    max-width:none!important;
+  }
+  #elite-v5-module-modal.elite-v77-inventory-open .elite-v51-form-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:14px!important;
+  }
+}
+@media (min-width: 1500px){
+  #elite-v5-module-modal.elite-v77-inventory-open #elite-v54-request-list,
+  #elite-v5-module-modal.elite-v77-inventory-open #elite-v55-catalog-list,
+  #elite-v5-module-modal.elite-v77-inventory-open #elite-v51-inventory-list .elite-v6102-inventory-cards{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+@media (max-width: 999px){
+  #elite-v5-module-modal.elite-v77-inventory-open .elite-v5-module-box{
+    width:min(700px,100%)!important;
+    max-width:700px!important;
+  }
+}
+</style>
+<script id="elite-admin-v77-desktop-inventory-layout-js">
+(function(){
+  function markInventoryModal(){
+    const modal=document.getElementById('elite-v5-module-modal');
+    if(!modal)return;
+    const title=modal.querySelector('.elite-v5-module-box h2')?.textContent?.trim().toLowerCase()||'';
+    modal.classList.toggle('elite-v77-inventory-open',title==='inventario');
+  }
+  const originalOpen=window.abrirEliteV5ModuleModal;
+  if(typeof originalOpen==='function'){
+    window.abrirEliteV5ModuleModal=function(title,subtitle,content){
+      const result=originalOpen.apply(this,arguments);
+      setTimeout(markInventoryModal,0);
+      return result;
+    };
+  }
+  const originalClose=window.cerrarEliteV5ModuleModal;
+  if(typeof originalClose==='function'){
+    window.cerrarEliteV5ModuleModal=function(){
+      const modal=document.getElementById('elite-v5-module-modal');
+      modal?.classList.remove('elite-v77-inventory-open');
+      return originalClose.apply(this,arguments);
+    };
+  }
+  const observer=new MutationObserver(markInventoryModal);
+  document.addEventListener('DOMContentLoaded',()=>{
+    const modal=document.getElementById('elite-v5-module-modal');
+    if(modal)observer.observe(modal,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});
+  });
+})();
+</script>
 </body>
 </html>
