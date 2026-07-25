@@ -9935,5 +9935,101 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshOpenSummary,4
   };
 })();
 </script>
+
+
+<!-- ===== ELITE ADMIN CORE v7.6 — SOLICITUDES + CIERRE ESCÁNER + VINCULAR CÓDIGO ===== -->
+<style id="elite-core-v76-css">
+.elite-v76-link-list{display:grid;gap:8px;max-height:48vh;overflow:auto;margin-top:12px}
+.elite-v76-link-item{display:grid;grid-template-columns:54px 1fr auto;gap:10px;align-items:center;padding:10px;border:1px solid #334155;border-radius:12px;background:#080b12}
+.elite-v76-link-item img{width:54px;height:54px;object-fit:contain;border-radius:9px;background:#fff}
+.elite-v76-link-item b{color:#93c5fd}.elite-v76-link-item small{display:block;color:#94a3b8;margin-top:3px}
+.elite-v76-link-item button{border:0;border-radius:9px;padding:10px 12px;background:#16a34a;color:#fff;font-weight:900}
+</style>
+<script id="elite-core-v76-js">
+(function(){
+  const actionableStates=new Set(['pendiente','pendiente_compra','aprobada','solicitada','por_comprar']);
+  const finishedStates=new Set(['comprada','lista_entrega','entregada','confirmada','rechazada','eliminada','cancelada','cerrada']);
+  function requests(){try{return (window.eliteV54Requests||eliteV54Requests||[])}catch(_){return []}}
+  function catalog(){try{return (window.eliteV55Catalog||eliteV55Catalog||[])}catch(_){return []}}
+  function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+  function key(r){return String(r?.producto_id||r?.catalogo_id||r?.producto_nombre||r?.producto||'').trim().toLowerCase()}
+  function countPurchases(r){const k=key(r);return !k?0:requests().filter(x=>key(x)===k&&['comprada','lista_entrega','entregada','confirmada'].includes(String(x.estado||'').toLowerCase())).length}
+
+  window.eliteV75BuyRequest=async function(id){
+    const r=requests().find(x=>x.id===id); if(!r)return alert('No se encontró la solicitud.');
+    const st=String(r.estado||'pendiente').toLowerCase();
+    try{
+      if(actionableStates.has(st) && st!=='aprobada'){
+        await db.collection('solicitudes_inventario').doc(id).set({
+          estado:'aprobada', cantidad_aprobada:Number(r.cantidad_solicitada||r.cantidad||1),
+          aprobado_por:window.usuarioActual?.nombre||'Admin', fecha_aprobacion:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+        try{await eliteV54Audit(id,'aprobada',{cantidad:Number(r.cantidad_solicitada||r.cantidad||1),origen:'boton_comprar'})}catch(_){ }
+        r.estado='aprobada';r.cantidad_aprobada=Number(r.cantidad_solicitada||r.cantidad||1);
+      }
+      eliteV54Purchase(id);
+    }catch(e){alert('No se pudo abrir la compra: '+(e?.message||e));}
+  };
+
+  window.eliteV54RenderRequests=eliteV54RenderRequests=function(){
+    const box=document.getElementById('elite-v54-request-list');if(!box)return;
+    const rows=requests().slice().sort((a,b)=>(b.creado?.toMillis?.()||b.fecha?.toMillis?.()||0)-(a.creado?.toMillis?.()||a.fecha?.toMillis?.()||0));
+    if(!rows.length){box.innerHTML='<div class="elite-v51-empty">No hay solicitudes de inventario.</div>';return;}
+    box.innerHTML=rows.map(r=>{
+      const st=String(r.estado||'pendiente').toLowerCase(), diff=Number(r.cantidad_comprada||0)-Number(r.cantidad_entregada||0), c=countPurchases(r);
+      const photos=[r.foto_recibo_url,r.foto_compra_url,r.foto_entrega_url].filter(Boolean);
+      const photo=r.foto_producto_url?`<img class="elite-v6101-request-photo" src="${esc(r.foto_producto_url)}">`:'';
+      const source=r.origen==='catalogo_staff'?'<span class="elite-v6101-source">Staff</span>':'';
+      const buyDelete=!finishedStates.has(st)?`<button style="background:#16a34a" onclick="eliteV75BuyRequest('${r.id}')">Comprar</button><button style="background:#dc2626" onclick="eliteV75DeleteRequest('${r.id}')">Eliminar</button>`:'';
+      const delivery=['comprada','lista_entrega'].includes(st)?`<button style="background:#16a34a" onclick="eliteV54Deliver('${r.id}')">Registrar entrega</button>`:'';
+      return `<div class="elite-v54-card">${photo}<h4>${esc(r.producto_nombre||r.producto||'Producto')} ${source}</h4><span class="elite-v54-badge ${eliteV54StatusClass(st)}">${esc(st)}</span><div class="elite-v54-meta"><b>Empleado:</b> ${esc(r.empleado_nombre||'Administración')}<br><b>Cantidad solicitada:</b> ${Number(r.cantidad_solicitada||r.cantidad||0)}<br><b>Urgencia:</b> ${esc((r.urgencia||'normal').replaceAll('_',' '))}<br><b>Solicitud:</b> ${eliteV54Date(r.creado||r.fecha)}${r.nota?`<br><b>Nota:</b> ${esc(r.nota)}`:''}</div><div class="elite-v75-purchase-count">🛒 Comprado ${c} ${c===1?'vez':'veces'}</div>${photos.length?`<div class="elite-v54-photo-grid">${photos.map(u=>`<a class="elite-v54-photo" href="${esc(u)}" target="_blank"><img src="${esc(u)}"></a>`).join('')}</div>`:''}${['comprada','lista_entrega','entregada','confirmada'].includes(st)?(diff!==0?`<div class="elite-v54-warning">⚠ Diferencia entre comprado y entregado: ${diff}</div>`:'<div class="elite-v54-ok">✅ Cantidades conciliadas</div>'):''}<div class="elite-v54-actions">${buyDelete}${delivery}<button style="background:#475569" onclick="eliteV54History('${r.id}')">Historial</button></div></div>`;
+    }).join('');
+  };
+
+  // Cierre resistente: detiene biblioteca, pistas de cámara y restaura la interfaz.
+  window.eliteV55StopScanner=eliteV55StopScanner=async function(hideBox=true){
+    const scanner=window.eliteV55Scanner||(()=>{try{return eliteV55Scanner}catch(_){return null}})();
+    try{if(scanner?.isScanning)await Promise.race([scanner.stop(),new Promise(r=>setTimeout(r,1200))]);}catch(_){ }
+    try{await Promise.race([scanner?.clear?.(),new Promise(r=>setTimeout(r,500))]);}catch(_){ }
+    try{document.querySelectorAll('#elite-v55-reader video').forEach(v=>{const s=v.srcObject;s?.getTracks?.().forEach(t=>t.stop());v.srcObject=null;});}catch(_){ }
+    try{eliteV55Scanner=null}catch(_){ } window.eliteV55Scanner=null;
+    const box=document.getElementById('elite-v55-scan-box'); if(box&&hideBox)box.style.display='none';
+    const reader=document.getElementById('elite-v55-reader'); if(reader)reader.innerHTML='';
+    document.body.style.overflow='';
+    // En escaneo rápido, "Cerrar cámara" funciona como volver atrás y cierra el modal.
+    if(hideBox && document.getElementById('v55-quick-code')){
+      try{cerrarEliteV5ModuleModal()}catch(_){const m=document.getElementById('elite-v5-module-modal');if(m)m.style.display='none';}
+    }
+  };
+
+  window.eliteV76LinkBarcode=async function(productId,code){
+    const clean=String(code||'').replace(/\D/g,''); if(!clean)return alert('No hay un código válido.');
+    const p=catalog().find(x=>x.id===productId); if(!p)return alert('No se encontró el producto.');
+    const used=catalog().find(x=>x.id!==productId&&String(x.codigo_barras||'').replace(/\D/g,'')===clean);
+    if(used)return alert('Ese código ya está asignado a '+(used.nombre||'otro producto')+'.');
+    try{
+      await db.collection('catalogo_productos').doc(productId).set({codigo_barras:clean,actualizado:firebase.firestore.FieldValue.serverTimestamp(),actualizado_por:window.usuarioActual?.nombre||'Admin'},{merge:true});
+      p.codigo_barras=clean;
+      alert('Código '+clean+' agregado a '+(p.nombre||'producto')+'.');
+      try{cerrarEliteV5ModuleModal()}catch(_){ }
+      try{eliteV51OpenInventory();setTimeout(()=>eliteV55SwitchTab('catalogo'),150)}catch(_){ }
+    }catch(e){alert('No se pudo vincular el código: '+(e?.message||e));}
+  };
+
+  window.eliteV76ChooseExistingProduct=function(code){
+    const clean=String(code||document.getElementById('v55-quick-code')?.value||'').replace(/\D/g,'');
+    const rows=catalog().filter(p=>!String(p.codigo_barras||'').trim()).sort((a,b)=>String(a.nombre||'').localeCompare(String(b.nombre||''),'es'));
+    abrirEliteV5ModuleModal('Vincular código a producto existente','Selecciona el producto que ya tienes guardado. No se creará un duplicado.',rows.length?`<div class="elite-v76-link-list">${rows.map(p=>`<div class="elite-v76-link-item">${p.foto_url?`<img src="${esc(p.foto_url)}">`:'<div style="font-size:30px;text-align:center">📦</div>'}<div><b>${esc(p.nombre||'Producto')}</b><small>${esc(p.marca||'')} ${esc(p.tamano||'')}</small></div><button onclick="eliteV76LinkBarcode('${p.id}','${esc(clean)}')">Vincular</button></div>`).join('')}</div>`:'<div class="elite-v51-empty">Todos los productos del catálogo ya tienen código.</div>');
+  };
+
+  const oldQuick=window.eliteV55QuickResult||(()=>{try{return eliteV55QuickResult}catch(_){return null}})();
+  window.eliteV55QuickResult=eliteV55QuickResult=function(code){
+    const clean=String(code||'').replace(/\D/g,''); const p=catalog().find(x=>String(x.codigo_barras||'').replace(/\D/g,'')===clean); const box=document.getElementById('v55-quick-result');if(!box)return;
+    if(p){box.innerHTML=`<b>${esc(p.nombre)}</b><br>${esc(p.marca||'')} · ${esc(p.tamano||'')}<br>Precio: $${Number(p.precio_actual||0).toFixed(2)} · ${esc(p.tienda||'Sin tienda')}`;return;}
+    box.innerHTML=`Código ${esc(clean)} no está registrado.<button class="elite-v51-action" style="background:#16a34a;margin-top:9px;width:100%" onclick="eliteV76ChooseExistingProduct('${esc(clean)}')">Vincular a producto existente</button><button class="elite-v51-action" style="background:#2563eb;margin-top:9px;width:100%" onclick="eliteV55OpenProductForm();setTimeout(()=>{const i=document.getElementById('v55-code');if(i){i.value='${esc(clean)}';i.dispatchEvent(new Event('input',{bubbles:true}))}},80)">Crear producto nuevo</button>`;
+  };
+})();
+</script>
+
 </body>
 </html>
