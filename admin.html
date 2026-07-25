@@ -9823,5 +9823,117 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshOpenSummary,4
   window.eliteSetMenuBadge=setBadge;
 })();
 </script>
+
+
+<!-- ===== ELITE ADMIN CORE v7.5 — ESCÁNER + COMPRAS + HISTORIAL ===== -->
+<style id="elite-core-v75-css">
+.elite-v75-scan-result{margin:10px 0;padding:12px;border:1px solid #22c55e;border-radius:12px;background:#052e16;color:#bbf7d0;font-size:13px;font-weight:900;text-align:center;display:none}
+.elite-v75-purchase-count{margin-top:10px;padding:9px 11px;border-radius:10px;background:#172554;border:1px solid #2563eb;color:#bfdbfe;font-size:11px;font-weight:900}
+#elite-v55-reader video{object-fit:cover!important;filter:contrast(1.08) saturate(1.05)}
+</style>
+<script id="elite-core-v75-js">
+(function(){
+  function esc75(v){return String(v??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));}
+  function productKey(r){return String(r?.producto_id||r?.catalogo_id||r?.producto_nombre||r?.producto||'').trim().toLowerCase();}
+  function purchaseCountFor(r){
+    const key=productKey(r); if(!key)return 0;
+    return (window.eliteV54Requests||eliteV54Requests||[]).filter(x=>productKey(x)===key && ['comprada','lista_entrega','entregada','confirmada'].includes(String(x.estado||'').toLowerCase())).length;
+  }
+
+  window.eliteV75DeleteRequest=async function(id){
+    const r=(window.eliteV54Requests||eliteV54Requests||[]).find(x=>x.id===id);
+    if(!confirm(`¿Eliminar la solicitud de ${r?.producto_nombre||r?.producto||'este producto'}?`))return;
+    try{
+      await db.collection('solicitudes_inventario').doc(id).delete();
+    }catch(e){ alert('No se pudo eliminar la solicitud: '+(e?.message||e)); }
+  };
+
+  window.eliteV75BuyRequest=async function(id){
+    const r=(window.eliteV54Requests||eliteV54Requests||[]).find(x=>x.id===id);
+    if(!r)return alert('No se encontró la solicitud.');
+    try{
+      if(String(r.estado||'').toLowerCase()==='pendiente'){
+        await db.collection('solicitudes_inventario').doc(id).set({
+          estado:'aprobada',
+          cantidad_aprobada:Number(r.cantidad_solicitada||r.cantidad||1),
+          aprobado_por:window.usuarioActual?.nombre||'Admin',
+          fecha_aprobacion:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+        try{ await eliteV54Audit(id,'aprobada',{cantidad:Number(r.cantidad_solicitada||r.cantidad||1),origen:'boton_comprado'}); }catch(_e){}
+        r.estado='aprobada'; r.cantidad_aprobada=Number(r.cantidad_solicitada||r.cantidad||1);
+      }
+      eliteV54Purchase(id);
+    }catch(e){ alert('No se pudo preparar la compra: '+(e?.message||e)); }
+  };
+
+  window.eliteV54History=async function(id){
+    const r=(window.eliteV54Requests||eliteV54Requests||[]).find(x=>x.id===id);
+    let lines=[];
+    try{
+      const s=await db.collection('solicitudes_inventario').doc(id).collection('auditoria').orderBy('fecha','desc').get();
+      lines=s.docs.map(d=>{const x=d.data();return `${eliteV54Date(x.fecha)} — ${x.accion||'movimiento'} — ${x.usuario||''}`});
+    }catch(e){ console.warn(e); }
+    const count=purchaseCountFor(r);
+    alert(`${r?.producto_nombre||r?.producto||'Producto'}\n\nComprado ${count} ${count===1?'vez':'veces'}\n\n${lines.join('\n')||'Sin movimientos registrados.'}`);
+  };
+
+  window.eliteV54RenderRequests=eliteV54RenderRequests=function(){
+    const box=document.getElementById('elite-v54-request-list');if(!box)return;
+    const rows=(window.eliteV54Requests||eliteV54Requests||[]).slice().sort((a,b)=>{const ta=a.creado?.toMillis?.()||a.fecha?.toMillis?.()||0;const tb=b.creado?.toMillis?.()||b.fecha?.toMillis?.()||0;return tb-ta});
+    if(!rows.length){box.innerHTML='<div class="elite-v51-empty">No hay solicitudes de inventario.</div>';return;}
+    box.innerHTML=rows.map(r=>{
+      const diff=Number(r.cantidad_comprada||0)-Number(r.cantidad_entregada||0);
+      const photos=[r.foto_recibo_url,r.foto_compra_url,r.foto_entrega_url].filter(Boolean);
+      const source=r.origen==='catalogo_staff'?'<span class="elite-v6101-source">Staff</span>':'';
+      const photo=r.foto_producto_url?`<img class="elite-v6101-request-photo" src="${eliteV54Esc(r.foto_producto_url)}">`:'';
+      const st=String(r.estado||'pendiente').toLowerCase();
+      const count=purchaseCountFor(r);
+      return `<div class="elite-v54-card">${photo}<h4>${eliteV54Esc(r.producto_nombre||r.producto||'Producto')} ${source}</h4><span class="elite-v54-badge ${eliteV54StatusClass(st)}">${eliteV54Esc(st)}</span><div class="elite-v54-meta"><b>Empleado:</b> ${eliteV54Esc(r.empleado_nombre||'Sin nombre')}<br><b>Cantidad solicitada:</b> ${Number(r.cantidad_solicitada||r.cantidad||0)}<br><b>Urgencia:</b> ${eliteV54Esc((r.urgencia||'normal').replaceAll('_',' '))}<br><b>Solicitud:</b> ${eliteV54Date(r.creado||r.fecha)}${r.nota?`<br><b>Nota:</b> ${eliteV54Esc(r.nota)}`:''}</div><div class="elite-v75-purchase-count">🛒 Comprado ${count} ${count===1?'vez':'veces'}</div>${photos.length?`<div class="elite-v54-photo-grid">${photos.map(u=>`<a class="elite-v54-photo" href="${u}" target="_blank"><img src="${u}"></a>`).join('')}</div>`:''}${['comprada','lista_entrega','entregada','confirmada'].includes(st)?(diff!==0?`<div class="elite-v54-warning">⚠ Diferencia entre comprado y entregado: ${diff}</div>`:'<div class="elite-v54-ok">✅ Cantidades conciliadas</div>'):''}<div class="elite-v54-actions">${st==='pendiente'?`<button style="background:#16a34a" onclick="eliteV75BuyRequest('${r.id}')">Comprado</button><button style="background:#dc2626" onclick="eliteV75DeleteRequest('${r.id}')">Eliminar</button>`:''}${st==='aprobada'?`<button style="background:#16a34a" onclick="eliteV54Purchase('${r.id}')">Comprado</button><button style="background:#dc2626" onclick="eliteV75DeleteRequest('${r.id}')">Eliminar</button>`:''}${['comprada','lista_entrega'].includes(st)?`<button style="background:#16a34a" onclick="eliteV54Deliver('${r.id}')">Registrar entrega</button>`:''}<button style="background:#475569" onclick="eliteV54History('${r.id}')">Historial</button></div></div>`;
+    }).join('');
+  };
+
+  const originalApply=window.eliteV55ApplyDetectedCode||eliteV55ApplyDetectedCode;
+  window.eliteV55ApplyDetectedCode=eliteV55ApplyDetectedCode=function(decoded,targetId,quick=false){
+    const code=String(decoded||'').replace(/\s/g,'').trim();
+    const input=document.getElementById(targetId||'v55-code');
+    if(input){ input.value=code; input.dispatchEvent(new Event('input',{bubbles:true})); }
+    let status=document.getElementById('elite-v75-scan-result');
+    if(!status){
+      const reader=document.getElementById('elite-v55-reader');
+      if(reader){status=document.createElement('div');status.id='elite-v75-scan-result';status.className='elite-v75-scan-result';reader.parentElement?.appendChild(status);}
+    }
+    if(status){status.style.display='block';status.textContent='✅ Código detectado: '+code;}
+    return originalApply.call(this,code,targetId,quick);
+  };
+
+  window.eliteV55StartScanner=async function(targetId,quick=false){
+    if(typeof Html5Qrcode==='undefined')return alert('No se pudo cargar el lector de códigos.');
+    await eliteV55StopScanner(false);
+    const box=document.getElementById('elite-v55-scan-box'), reader=document.getElementById('elite-v55-reader');
+    if(!box||!reader)return alert('No se encontró el área del escáner.');
+    box.style.display='block';reader.innerHTML='';
+    eliteV55Scanner=new Html5Qrcode('elite-v55-reader',{experimentalFeatures:{useBarCodeDetectorIfSupported:true},verbose:false});
+    try{
+      await eliteV55Scanner.start(
+        {facingMode:{exact:'environment'}},
+        {fps:30,qrbox:(w,h)=>({width:Math.max(240,Math.min(w*.88,520)),height:Math.max(130,Math.min(h*.34,210))}),aspectRatio:1.3333,disableFlip:true,
+         formatsToSupport:[Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.UPC_E,Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.CODE_39,Html5QrcodeSupportedFormats.ITF]},
+        decoded=>{eliteV55ApplyDetectedCode(decoded,targetId,quick);setTimeout(()=>eliteV55StopScanner(),120);},()=>{}
+      );
+      setTimeout(async()=>{
+        try{
+          const track=eliteV55Scanner?.getRunningTrackCameraCapabilities?.();
+          const settings=eliteV55Scanner?.getRunningTrackSettings?.();
+          if(track?.focusMode?.includes?.('continuous')) await eliteV55Scanner.applyVideoConstraints({advanced:[{focusMode:'continuous'}]});
+          if(track?.zoom?.max && (!settings?.zoom || settings.zoom<1.5)) await eliteV55Scanner.applyVideoConstraints({advanced:[{zoom:Math.min(2,track.zoom.max)}]});
+        }catch(e){console.debug('Enfoque automático no disponible',e);}
+      },500);
+    }catch(e){
+      console.error(e);await eliteV55StopScanner();
+      alert('No se pudo abrir la cámara. Verifica que Safari tenga permiso para usarla.');
+    }
+  };
+})();
+</script>
 </body>
 </html>
