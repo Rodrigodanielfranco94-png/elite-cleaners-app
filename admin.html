@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin Core v7.0 | Elite Core Stabilization fases 1-7 -->
+<!-- Elite Admin Core v8.1 | Elite Core Stabilization fases 1-7 -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin Core v7.0 - Elite Cleaners Company</title>
+    <title>Elite Admin Core v8.1 - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -10443,6 +10443,181 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshOpenSummary,4
   if(document.readyState!=='loading'){ensureBadge();startListener()}
 })();
 </script>
+
+
+<!-- ===== ELITE ADMIN CORE v8.0 — MENSAJES / RECORDATORIOS A TODO ANCHO ===== -->
+<style id="elite-admin-v80-messages-fullwidth">
+@media (min-width: 900px){
+  #elite-v5-module-modal.elite-v80-messages-open{
+    padding:20px 26px 42px!important;
+  }
+  #elite-v5-module-modal.elite-v80-messages-open .elite-v5-module-box{
+    width:calc(100vw - 265px)!important;
+    max-width:1500px!important;
+    min-height:calc(100vh - 70px)!important;
+    margin:12px auto 30px!important;
+    padding:28px!important;
+    box-sizing:border-box!important;
+  }
+  #elite-v5-module-modal.elite-v80-messages-open .elite-rem-shell{
+    width:100%!important;
+    max-width:none!important;
+  }
+  #elite-v5-module-modal.elite-v80-messages-open .elite-rem-toolbar{
+    display:grid!important;
+    grid-template-columns:minmax(260px,1fr) auto!important;
+    gap:14px!important;
+  }
+  #elite-v5-module-modal.elite-v80-messages-open .elite-rem-toolbar .elite-rem-btn.primary{
+    min-height:58px!important;
+    font-size:16px!important;
+  }
+  #elite-v5-module-modal.elite-v80-messages-open .elite-rem-summary{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  }
+  #elite-v5-module-modal.elite-v80-messages-open .elite-rem-list{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:16px!important;
+    align-items:start!important;
+  }
+  #elite-v5-module-modal.elite-v80-messages-open .elite-rem-card,
+  #elite-v5-module-modal.elite-v80-messages-open .elite-rem-operational{
+    margin:0!important;
+    height:100%;
+  }
+}
+@media (min-width: 1450px){
+  #elite-v5-module-modal.elite-v80-messages-open .elite-rem-list{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+@media (max-width: 899px){
+  #elite-v5-module-modal.elite-v80-messages-open{
+    padding:10px!important;
+  }
+  #elite-v5-module-modal.elite-v80-messages-open .elite-v5-module-box{
+    width:100%!important;
+    max-width:none!important;
+    margin:8px auto 24px!important;
+  }
+}
+</style>
+<script id="elite-admin-v80-messages-navigation-fix">
+(function(){
+  function markMessagesModal(){
+    const modal=document.getElementById('elite-v5-module-modal');
+    if(modal) modal.classList.add('elite-v80-messages-open');
+  }
+  function clearMessagesModal(){
+    const modal=document.getElementById('elite-v5-module-modal');
+    if(modal) modal.classList.remove('elite-v80-messages-open');
+  }
+
+  const openReminders=window.eliteV79OpenMessages;
+  if(typeof openReminders==='function'){
+    window.eliteV79OpenMessages=function(){
+      clearMessagesModal();
+      openReminders.apply(this,arguments);
+      markMessagesModal();
+      setTimeout(()=>{
+        markMessagesModal();
+        const primary=document.querySelector('#elite-reminder-root .elite-rem-toolbar .elite-rem-btn.primary');
+        if(primary) primary.textContent='＋ Anotar nuevo recordatorio';
+      },0);
+    };
+    window.eliteV51OpenMessages=window.eliteV79OpenMessages;
+  }
+
+  const previousNavigate=window.eliteV5Navigate;
+  window.eliteV5Navigate=function(module,button){
+    if(module==='mensajes'){
+      if(typeof eliteV5SetActive==='function') eliteV5SetActive(module,button);
+      if(typeof cerrarEliteV5Menu==='function') cerrarEliteV5Menu();
+      return window.eliteV79OpenMessages();
+    }
+    clearMessagesModal();
+    return previousNavigate?.apply(this,arguments);
+  };
+
+  const previousClose=window.cerrarEliteV5ModuleModal || (typeof cerrarEliteV5ModuleModal==='function'?cerrarEliteV5ModuleModal:null);
+  if(previousClose){
+    window.cerrarEliteV5ModuleModal=function(){
+      clearMessagesModal();
+      return previousClose.apply(this,arguments);
+    };
+  }
+})();
+</script>
+
+
+
+<!-- ===== ELITE ADMIN CORE v8.1 — MÓDULOS GENERALES A PANTALLA COMPLETA EN COMPUTADORA ===== -->
+<style id="elite-admin-v81-desktop-fullwidth-general-modules">
+@media (min-width: 901px){
+  body.elite-v607-module-active #elite-v5-module-modal{
+    padding:0 0 24px 0 !important;
+    width:100% !important;
+    min-height:calc(100vh - 30px) !important;
+    box-sizing:border-box !important;
+    overflow-x:hidden !important;
+  }
+
+  body.elite-v607-module-active #elite-v5-module-modal .elite-v5-module-box{
+    width:100% !important;
+    max-width:none !important;
+    min-height:calc(100vh - 30px) !important;
+    margin:0 !important;
+    padding:22px 24px 28px !important;
+    box-sizing:border-box !important;
+  }
+
+  body.elite-v607-module-active #elite-v5-module-modal .elite-v5-module-box > *{
+    max-width:100% !important;
+  }
+
+  body.elite-v607-module-active #elite-v5-module-modal .elite-v51-page-title,
+  body.elite-v607-module-active #elite-v5-module-modal .elite-v51-settings-section,
+  body.elite-v607-module-active #elite-v5-module-modal .elite-v51-module-list,
+  body.elite-v607-module-active #elite-v5-module-modal #elite-v54-tab-content,
+  body.elite-v607-module-active #elite-v5-module-modal #elite-v51-inventory-list,
+  body.elite-v607-module-active #elite-v5-module-modal .elite-v6102-inventory-cards,
+  body.elite-v607-module-active #elite-v5-module-modal .elite-rem-shell,
+  body.elite-v607-module-active #elite-v5-module-modal .elite-rem-list{
+    width:100% !important;
+    max-width:none !important;
+  }
+
+  body.elite-v607-module-active #elite-v5-module-modal .elite-v51-dashboard-grid{
+    grid-template-columns:repeat(4, minmax(0,1fr)) !important;
+  }
+
+  body.elite-v607-module-active #elite-v5-module-modal .elite-v51-form-grid{
+    grid-template-columns:repeat(2, minmax(0,1fr)) !important;
+  }
+
+  body.elite-v607-module-active #elite-v5-module-modal .elite-v51-row{
+    grid-template-columns:minmax(0,1fr) auto !important;
+  }
+
+  body.elite-v607-module-active #elite-v5-module-modal .elite-v51-actions{
+    justify-content:flex-end !important;
+  }
+}
+
+@media (min-width: 1200px){
+  body.elite-v607-module-active #elite-v5-module-modal .elite-v51-dashboard-grid{
+    grid-template-columns:repeat(4, minmax(0,1fr)) !important;
+  }
+}
+
+@media (max-width: 900px){
+  body.elite-v607-module-active #elite-v5-module-modal .elite-v5-module-box{
+    width:100% !important;
+    max-width:none !important;
+  }
+}
+</style>
 
 </body>
 </html>
