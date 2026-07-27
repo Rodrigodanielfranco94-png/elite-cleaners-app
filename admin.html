@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin Core v8.1 | Elite Core Stabilization fases 1-7 -->
+<!-- Elite Admin Core v8.3 — Modo pruebas | Elite Core Stabilization fases 1-7 -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin Core v8.1 - Elite Cleaners Company</title>
+    <title>Elite Admin Core v8.3 — Modo pruebas - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -2713,9 +2713,13 @@ setTimeout(activarCalculadoraAutomatica, 500);
             console.warn("El trabajo se guardó, pero no se pudo actualizar la ficha del cliente:", clienteError);
         }
 
-        if (!editId) {
-            await crearRepeticiones(data, data.repetir);
-        }
+        /*
+         * Sincroniza la serie tanto al crear como al editar. Antes, las
+         * repeticiones solo se generaban al crear el trabajo; por eso cambiar
+         * posteriormente un servicio a semanal no añadía los domingos que
+         * faltaban.
+         */
+        await sincronizarRepeticionesServicio(data, data.repetir, editIdReal || data.id);
 
         alert(editId
             ? "Cambios guardados correctamente ✅"
@@ -2742,45 +2746,182 @@ setTimeout(activarCalculadoraAutomatica, 500);
         }
     }
 }
-        async function crearRepeticiones(data, repeticion) {
-    if (!data.fecha || repeticion === "ninguno") return;
-    if (data.repeticion_generada) return;
+        function eliteV82NormalizarRepeticion(valor) {
+    const v = String(valor || "ninguno").trim().toLowerCase();
+    const mapa = {
+        weekly: "semanal",
+        biweekly: "quincenal",
+        monthly: "mensual",
+        quarterly: "trimestral",
+        none: "ninguno",
+        once: "ninguno"
+    };
+    return mapa[v] || v;
+}
 
-    const fechaBase = new Date(data.fecha + "T00:00:00");
+function eliteV82ParseFechaLocal(fecha) {
+    const partes = String(fecha || "").split("-").map(Number);
+    if (partes.length !== 3 || partes.some(n => !Number.isFinite(n))) return null;
+    return new Date(partes[0], partes[1] - 1, partes[2], 12, 0, 0, 0);
+}
 
-    const cantidad = 12; // crea 12 trabajos futuros
+function eliteV82FechaTexto(fecha) {
+    return [
+        fecha.getFullYear(),
+        String(fecha.getMonth() + 1).padStart(2, "0"),
+        String(fecha.getDate()).padStart(2, "0")
+    ].join("-");
+}
 
-    for (let i = 1; i <= cantidad; i++) {
-        const nuevaFecha = new Date(fechaBase);
+function eliteV82FechaRepetida(fechaBase, repeticion, indice) {
+    const nueva = new Date(fechaBase.getTime());
+    if (repeticion === "semanal") nueva.setDate(nueva.getDate() + (7 * indice));
+    else if (repeticion === "quincenal") nueva.setDate(nueva.getDate() + (14 * indice));
+    else if (repeticion === "mensual") nueva.setMonth(nueva.getMonth() + indice);
+    else if (repeticion === "trimestral") nueva.setMonth(nueva.getMonth() + (3 * indice));
+    return nueva;
+}
 
-        if (repeticion === "semanal") nuevaFecha.setDate(fechaBase.getDate() + (7 * i));
-        if (repeticion === "quincenal") nuevaFecha.setDate(fechaBase.getDate() + (14 * i));
-        if (repeticion === "mensual") nuevaFecha.setMonth(fechaBase.getMonth() + i);
-        if (repeticion === "trimestral") nuevaFecha.setMonth(fechaBase.getMonth() + (3 * i));
+function eliteV82ClaveTexto(valor) {
+    return String(valor || "").trim().toLowerCase().replace(/\s+/g, " ");
+}
 
-        const fechaTexto = nuevaFecha.toISOString().slice(0, 10);
+function eliteV82EsMismaSerie(documento, data, repeticion, serieId) {
+    if (!documento) return false;
+    if (serieId && (documento.serie_id === serieId || documento.serie_origen_id === serieId)) return true;
+    return eliteV82ClaveTexto(documento.cliente) === eliteV82ClaveTexto(data.cliente) &&
+        eliteV82ClaveTexto(documento.direccion) === eliteV82ClaveTexto(data.direccion) &&
+        eliteV82NormalizarRepeticion(documento.repetir || documento.frecuencia) === repeticion &&
+        eliteV82ClaveTexto(documento.hora) === eliteV82ClaveTexto(data.hora);
+}
 
-        const datosRepeticion = { ...data };
-        delete datosRepeticion.id;
-        delete datosRepeticion.firestore_id;
+async function sincronizarRepeticionesServicio(data, repeticion, documentoOrigenId) {
+    repeticion = eliteV82NormalizarRepeticion(repeticion);
+    if (!data?.fecha || repeticion === "ninguno") return;
 
-        await db.collection("servicios").add({
-            ...datosRepeticion,
+    const fechaBase = eliteV82ParseFechaLocal(data.fecha);
+    if (!fechaBase) return;
+
+    const origenId = String(documentoOrigenId || data.id || data.firestore_id || "").trim();
+    if (!origenId) return;
+
+    const serieId = String(data.serie_id || data.serie_origen_id || origenId);
+    const snap = await db.collection("servicios").get();
+    const existentes = new Map();
+    const refsSerie = [];
+
+    snap.forEach(doc => {
+        const item = doc.data() || {};
+        if (doc.id === origenId || eliteV82EsMismaSerie(item, data, repeticion, serieId)) {
+            if (item.fecha) existentes.set(String(item.fecha), doc.id);
+            refsSerie.push({ ref: doc.ref, data: item, id: doc.id });
+        }
+    });
+
+    // Marca toda la serie con un identificador estable para futuras ediciones.
+    let batchEtiquetas = db.batch();
+    let etiquetas = 0;
+    refsSerie.forEach(item => {
+        if (item.data.serie_id !== serieId || item.data.repetir !== repeticion) {
+            batchEtiquetas.set(item.ref, {
+                serie_id: serieId,
+                serie_origen_id: serieId,
+                repetir: repeticion,
+                actualizado_en: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+            etiquetas++;
+        }
+    });
+    if (!refsSerie.some(x => x.id === origenId)) {
+        batchEtiquetas.set(db.collection("servicios").doc(origenId), {
+            serie_id: serieId,
+            serie_origen_id: serieId,
+            repetir: repeticion,
+            actualizado_en: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        etiquetas++;
+    }
+    if (etiquetas) await batchEtiquetas.commit();
+
+    // Mantiene doce ocurrencias futuras y rellena cualquier semana intermedia
+    // que falte, sin duplicar fechas ya existentes.
+    const cantidadFutura = 12;
+    const baseLimpia = { ...data };
+    delete baseLimpia.id;
+    delete baseLimpia.firestore_id;
+
+    let batch = db.batch();
+    let operaciones = 0;
+    for (let i = 1; i <= cantidadFutura; i++) {
+        const fechaTexto = eliteV82FechaTexto(eliteV82FechaRepetida(fechaBase, repeticion, i));
+        if (existentes.has(fechaTexto)) continue;
+
+        const ref = db.collection("servicios").doc();
+        batch.set(ref, {
+            ...baseLimpia,
             fecha: fechaTexto,
+            repetir: repeticion,
+            serie_id: serieId,
+            serie_origen_id: serieId,
             estado: "no_iniciado",
             estado_calendario: "pendiente",
             hora_inicio: "--:--",
             hora_fin: "--:--",
+            hora_llegada: "--:--",
+            hora_pausa: "--:--",
+            hora_regreso: "--:--",
             firma_cliente: false,
             deposito_pagado: false,
+            balance_pagado: false,
             fecha_pago_deposito: "",
             metodo_pago_deposito: "",
             comprobante_deposito: "",
             repeticion_generada: true,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            actualizado_en: firebase.firestore.FieldValue.serverTimestamp()
         });
+        existentes.set(fechaTexto, ref.id);
+        operaciones++;
+    }
+    if (operaciones) await batch.commit();
+}
+
+// Compatibilidad con llamadas antiguas.
+async function crearRepeticiones(data, repeticion) {
+    return sincronizarRepeticionesServicio(data, repeticion, data.id || data.firestore_id);
+}
+
+async function eliteV82RepararSeriesRecurrentes() {
+    try {
+        if (typeof db === "undefined" || typeof firebase === "undefined") return;
+        const snap = await db.collection("servicios").get();
+        const grupos = new Map();
+
+        snap.forEach(doc => {
+            const d = { ...(doc.data() || {}), id: doc.id, firestore_id: doc.id };
+            const rep = eliteV82NormalizarRepeticion(d.repetir || d.frecuencia);
+            if (!d.fecha || rep === "ninguno") return;
+            const clave = d.serie_id || [
+                eliteV82ClaveTexto(d.cliente),
+                eliteV82ClaveTexto(d.direccion),
+                eliteV82ClaveTexto(d.hora),
+                rep
+            ].join("|");
+            if (!grupos.has(clave)) grupos.set(clave, []);
+            grupos.get(clave).push(d);
+        });
+
+        for (const filas of grupos.values()) {
+            filas.sort((a,b) => String(a.fecha).localeCompare(String(b.fecha)));
+            const base = filas[0];
+            await sincronizarRepeticionesServicio(base, base.repetir || base.frecuencia, base.serie_id || base.id);
+        }
+        console.log(`Elite v8.2: ${grupos.size} series recurrentes verificadas.`);
+    } catch (error) {
+        console.error("No se pudieron reparar las series recurrentes:", error);
     }
 }
+
         db.collection("servicios").onSnapshot(snap => {
     todosLosServicios = [];
     snap.forEach(doc => {
@@ -4648,7 +4789,7 @@ function descargarContabilidadPDF(){window.print();}</script>
 <script src="nico-memory.js"></script>
 <script src="nico-chat.js"></script>
 <script src="nico-estimates.js"></script>
-<script src="nico-email.js"></script>
+<!-- nico-email.js DESACTIVADO TEMPORALMENTE: MODO DE DESARROLLO SEGURO -->
 <script src="nico-jobs.js"></script>
 <script src="nico-pdf.js"></script>
 <script src="nico-voice.js"></script>
@@ -10618,6 +10759,93 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshOpenSummary,4
   }
 }
 </style>
+
+
+
+<!-- ===== ELITE ADMIN CORE v8.2 — REPARACIÓN AUTOMÁTICA DE SERVICIOS RECURRENTES ===== -->
+<script id="elite-admin-v82-recurring-repair-startup">
+(function(){
+  let ejecutado=false;
+  function iniciar(){
+    if(ejecutado || typeof window.eliteV82RepararSeriesRecurrentes!=='function') return;
+    ejecutado=true;
+    setTimeout(()=>window.eliteV82RepararSeriesRecurrentes(),1800);
+  }
+  document.addEventListener('DOMContentLoaded',iniciar);
+  if(document.readyState!=='loading') iniciar();
+})();
+</script>
+
+
+
+<!-- ===== ELITE ADMIN CORE v8.3 — MODO DE DESARROLLO SEGURO / SIN MENSAJES A CLIENTES ===== -->
+<style id="elite-v83-safe-mode-css">
+#elite-v83-safe-banner{
+  position:fixed;right:16px;bottom:16px;z-index:4000000;
+  max-width:380px;padding:12px 15px;border-radius:13px;
+  background:#450a0a;border:1px solid #ef4444;color:#fee2e2;
+  box-shadow:0 16px 45px rgba(0,0,0,.45);font:800 12px/1.4 Arial,sans-serif;
+}
+#elite-v83-safe-banner b{display:block;color:#fff;margin-bottom:3px;font-size:13px}
+@media(max-width:700px){#elite-v83-safe-banner{left:10px;right:10px;bottom:10px;max-width:none;font-size:11px}}
+</style>
+<script id="elite-v83-safe-mode-js">
+(function(){
+  'use strict';
+  window.ELITE_MODO_PRUEBAS_SIN_MENSAJES = true;
+
+  function avisoBloqueado(tipo){
+    const texto='MODO DE PRUEBAS: '+(tipo||'La comunicación')+' fue bloqueada. No se envió nada al cliente.';
+    console.warn(texto);
+    try{alert(texto)}catch(_){ }
+    return false;
+  }
+
+  // Bloqueo central: todas las funciones actuales de contratos, balances,
+  // depósitos, recordatorios y reseñas terminan usando abrirSMS.
+  window.abrirSMS=function(){ return avisoBloqueado('El mensaje/SMS'); };
+  window.abrirChat=function(){ return avisoBloqueado('El chat'); };
+
+  // Bloqueos explícitos adicionales por si alguna versión futura intenta saltarse abrirSMS.
+  window.enviarContrato=function(){ return avisoBloqueado('El contrato'); };
+  window.enviarRecordatorio=function(){ return avisoBloqueado('El recordatorio'); };
+  window.solicitarResenaGoogle=function(){ return avisoBloqueado('La solicitud de reseña'); };
+
+  // Intercepta enlaces de comunicación creados dinámicamente.
+  document.addEventListener('click',function(e){
+    const link=e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    if(!link) return;
+    const href=String(link.getAttribute('href')||'').trim().toLowerCase();
+    if(href.startsWith('sms:')||href.startsWith('mailto:')||href.includes('wa.me')||href.includes('api.whatsapp.com')){
+      e.preventDefault();e.stopImmediatePropagation();
+      avisoBloqueado('El enlace de comunicación');
+    }
+  },true);
+
+  // Bloquea redirecciones window.open hacia canales de comunicación.
+  const originalOpen=window.open;
+  window.open=function(url){
+    const href=String(url||'').toLowerCase();
+    if(href.startsWith('sms:')||href.startsWith('mailto:')||href.includes('wa.me')||href.includes('api.whatsapp.com')){
+      avisoBloqueado('La comunicación externa');
+      return null;
+    }
+    return originalOpen ? originalOpen.apply(this,arguments) : null;
+  };
+
+  // Evita que location.assign/replace se usen mediante botones nuevos para SMS/email.
+  // Los enlaces normales del sistema (Google Maps, firma para visualizar, etc.) siguen funcionando.
+  function addBanner(){
+    if(document.getElementById('elite-v83-safe-banner')) return;
+    const banner=document.createElement('div');
+    banner.id='elite-v83-safe-banner';
+    banner.innerHTML='<b>🔒 MODO DE PRUEBAS ACTIVO</b>No se enviarán SMS, correos, contratos, balances, depósitos, recordatorios ni reseñas a clientes.';
+    document.body.appendChild(banner);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',addBanner);
+  else addBanner();
+})();
+</script>
 
 </body>
 </html>
