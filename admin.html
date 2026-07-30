@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin Core v8.3.4 — Calendario corregido | Elite Core Stabilization fases 1-7 -->
+<!-- Elite Admin Core v8.3.5 — Calendario con excepciones persistentes | Elite Core Stabilization fases 1-7 -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin Core v8.3.4 — Calendario corregido - Elite Cleaners Company</title>
+    <title>Elite Admin Core v8.3.5 — Calendario con excepciones persistentes - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -2804,6 +2804,59 @@ function eliteV82EsMismaSerie(documento, data, repeticion, serieId) {
         eliteV82ClaveTexto(documento.hora) === eliteV82ClaveTexto(data.hora);
 }
 
+const ELITE_FECHAS_SIN_TRABAJO = new Set([
+    "2026-07-28",
+    "2026-07-30",
+    "2026-07-31"
+]);
+
+function eliteV835IdExcepcion(serieId, fecha) {
+    const texto = `${String(serieId || "sin-serie")}|${String(fecha || "")}`;
+    let hash = 2166136261;
+    for (let i = 0; i < texto.length; i++) {
+        hash ^= texto.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+    }
+    return `ex_${String(fecha || "").replace(/\D/g, "")}_${(hash >>> 0).toString(36)}`;
+}
+
+async function eliteV835RegistrarExcepcionCalendario(servicio) {
+    if (!servicio?.fecha || typeof db === "undefined") return;
+    const serieId = String(
+        servicio.serie_id ||
+        servicio.serie_origen_id ||
+        servicio.id ||
+        servicio.firestore_id ||
+        "sin-serie"
+    );
+    await db.collection("excepciones_calendario")
+        .doc(eliteV835IdExcepcion(serieId, servicio.fecha))
+        .set({
+            serie_id: serieId,
+            fecha: String(servicio.fecha),
+            servicio_id_eliminado: String(servicio.id || servicio.firestore_id || ""),
+            cliente: servicio.cliente || "",
+            motivo: "Trabajo individual eliminado por el administrador",
+            creado_en: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+}
+
+async function eliteV835FechasExcluidas(serieId) {
+    const fechas = new Set(ELITE_FECHAS_SIN_TRABAJO);
+    try {
+        const snap = await db.collection("excepciones_calendario")
+            .where("serie_id", "==", String(serieId || ""))
+            .get();
+        snap.forEach(doc => {
+            const fecha = String(doc.data()?.fecha || "");
+            if (fecha) fechas.add(fecha);
+        });
+    } catch (error) {
+        console.warn("No se pudieron consultar las excepciones del calendario:", error);
+    }
+    return fechas;
+}
+
 async function sincronizarRepeticionesServicio(data, repeticion, documentoOrigenId) {
     repeticion = eliteV82NormalizarRepeticion(repeticion);
     if (!data?.fecha || repeticion === "ninguno") return;
@@ -2815,6 +2868,7 @@ async function sincronizarRepeticionesServicio(data, repeticion, documentoOrigen
     if (!origenId) return;
 
     const serieId = String(data.serie_id || data.serie_origen_id || origenId);
+    const fechasExcluidas = await eliteV835FechasExcluidas(serieId);
     const snap = await db.collection("servicios").get();
     const existentes = new Map();
     const refsSerie = [];
@@ -2863,6 +2917,7 @@ async function sincronizarRepeticionesServicio(data, repeticion, documentoOrigen
     let operaciones = 0;
     for (let i = 1; i <= cantidadFutura; i++) {
         const fechaTexto = eliteV82FechaTexto(eliteV82FechaRepetida(fechaBase, repeticion, i));
+        if (fechasExcluidas.has(fechaTexto)) continue;
         if (existentes.has(fechaTexto)) continue;
 
         const ref = db.collection("servicios").doc();
@@ -2935,10 +2990,9 @@ let eliteCalendarMaintenanceRunning = false;
 let eliteCalendarMaintenanceTimer = null;
 
 async function aplicarEstadosAutomaticosEneroJulio2026() {
-    if (eliteCalendarMaintenanceRunning || !window.db || !Array.isArray(todosLosServicios)) return;
+    if (eliteCalendarMaintenanceRunning || typeof db === "undefined" || !Array.isArray(todosLosServicios)) return;
 
-    const fechasSinTrabajo = new Set(["2026-07-28", "2026-07-30", "2026-07-31"]);
-    const eliminar = todosLosServicios.filter(s => fechasSinTrabajo.has(String(s.fecha || "")));
+    const eliminar = todosLosServicios.filter(s => ELITE_FECHAS_SIN_TRABAJO.has(String(s.fecha || "")));
     const finalizar = todosLosServicios.filter(s => {
         const fecha = String(s.fecha || "");
         return fecha >= "2026-01-01" && fecha <= "2026-07-31" &&
@@ -6732,7 +6786,7 @@ async function eliteV55StopScanner(hideBox=true){
 .ops-job-detail{min-height:520px}.ops-detail-head{padding:17px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;gap:10px;align-items:center}.ops-detail-head h3{margin:0;font-size:19px}.ops-status-select{padding:9px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:#111827}.ops-detail-tabs{display:flex;gap:4px;padding:10px 14px;border-bottom:1px solid #e2e8f0;overflow:auto}.ops-detail-tabs button{border:0;background:transparent;padding:8px 10px;color:#64748b;font-weight:700;white-space:nowrap}.ops-detail-tabs button.active{color:#2563eb;border-bottom:2px solid #2563eb}.ops-detail-body{padding:17px}.ops-detail-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px}.ops-info-list{border:1px solid #e2e8f0;border-radius:12px;overflow:hidden}.ops-info-row{display:grid;grid-template-columns:150px 1fr;padding:11px;border-bottom:1px solid #e2e8f0;font-size:12px}.ops-info-row:last-child{border-bottom:0}.ops-info-row b{color:#475569}.ops-payment-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.ops-payment{padding:11px;border:1px solid #e2e8f0;border-radius:10px;text-align:center}.ops-payment small{display:block;color:#64748b}.ops-payment strong{display:block;margin-top:5px}.ops-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:15px}.ops-actions button{border:0;border-radius:9px;padding:11px;font-weight:800;color:#fff}.ops-actions .start{background:#2563eb}.ops-actions .edit{background:#10b981}.ops-actions .reschedule{background:#f59e0b}.ops-actions .cancel{background:#ef4444}.ops-mini-map{min-height:190px;border-radius:12px;background:linear-gradient(135deg,#dbeafe,#ecfeff);display:flex;align-items:center;justify-content:center;text-align:center;padding:15px}.ops-mini-map a{color:#2563eb;font-weight:900;text-decoration:none}
 .ops-side{display:grid;gap:14px}.ops-map-placeholder{height:150px;margin:12px;border-radius:12px;background:linear-gradient(135deg,#dcfce7,#dbeafe);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#334155}.ops-route-line{font-size:35px}.ops-route-list,.ops-team-status,#ops-alerts{padding:8px 13px 13px}.ops-route-item,.ops-team-item,.ops-alert{display:grid;grid-template-columns:auto 1fr auto;gap:8px;padding:9px 3px;border-bottom:1px solid #eef2f7;font-size:11px;align-items:center}.ops-route-item:last-child,.ops-team-item:last-child,.ops-alert:last-child{border-bottom:0}.ops-route-item a{color:#2563eb;text-decoration:none;font-weight:800}.ops-dot{width:9px;height:9px;border-radius:50%;background:#8b5cf6}.ops-dot.green{background:#22c55e}.ops-dot.orange{background:#f97316}.ops-alert.warning{color:#b45309}.ops-alert.danger{color:#dc2626}.ops-alert.info{color:#2563eb}
 .ops-inventory-strip{margin-top:14px}.ops-inventory-items{display:flex;gap:10px;overflow:auto;padding:14px}.ops-inventory-item{min-width:180px;padding:11px;border:1px solid #e2e8f0;border-radius:12px;display:flex;gap:9px;align-items:center}.ops-inventory-item span{font-size:25px}.ops-inventory-item b{font-size:12px}.ops-inventory-item small{display:block;color:#64748b;margin-top:3px}.ops-empty{padding:70px 20px;text-align:center;color:#94a3b8}
-.ops-month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;padding:14px}.ops-month-day{min-height:115px;border:1px solid #e2e8f0;border-radius:11px;padding:8px;background:#fff;cursor:pointer}.ops-month-day.muted{opacity:.4}.ops-month-day.today{border:2px solid #2563eb}.ops-month-num{font-weight:900;margin-bottom:7px}.ops-month-job{font-size:9px;padding:4px 5px;border-radius:5px;background:#ede9fe;margin:3px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ops-month-job.completed{background:#dcfce7!important;color:#166534!important;border:1px solid #86efac;font-weight:800}.ops-month-job.progress{background:#dbeafe!important;color:#1d4ed8!important}.ops-month-job.pending{background:#ede9fe!important;color:#4c1d95!important}.ops-agenda-list{padding:14px}.ops-agenda-date{font-size:14px;font-weight:900;margin:16px 0 8px;color:#1d4ed8}
+.ops-month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;padding:14px}.ops-month-weekday{padding:7px 4px 9px;text-align:center;color:#475569;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.03em;border-bottom:2px solid #dbeafe}.ops-month-day{min-height:115px;border:1px solid #e2e8f0;border-radius:11px;padding:8px;background:#fff;cursor:pointer}.ops-month-day.muted{opacity:.4}.ops-month-day.today{border:2px solid #2563eb}.ops-month-num{font-weight:900;margin-bottom:7px}.ops-month-job{font-size:9px;padding:4px 5px;border-radius:5px;background:#ede9fe;margin:3px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ops-month-job.completed{background:#dcfce7!important;color:#166534!important;border:1px solid #86efac;font-weight:800}.ops-month-job.progress{background:#dbeafe!important;color:#1d4ed8!important}.ops-month-job.pending{background:#ede9fe!important;color:#4c1d95!important}.ops-agenda-list{padding:14px}.ops-agenda-date{font-size:14px;font-weight:900;margin:16px 0 8px;color:#1d4ed8}
 @media(max-width:1100px){.ops-header{grid-template-columns:1fr auto}.ops-view-tabs,.ops-date-nav{grid-column:1/-1;justify-content:flex-start;overflow:auto}.ops-metrics{grid-template-columns:repeat(3,1fr)}.ops-layout{grid-template-columns:1fr}.ops-side{grid-template-columns:repeat(3,1fr)}.ops-timeline{max-height:none}}
 @media(max-width:700px){.ops-shell{padding:8px}.ops-header{padding:12px}.ops-header h2{font-size:22px}.ops-view-tabs button{padding:8px 11px}.ops-date-nav strong{font-size:12px}.ops-metrics{grid-template-columns:repeat(2,1fr)}.ops-layout{display:block}.ops-card{margin-bottom:10px}.ops-side{display:block}.ops-detail-grid{grid-template-columns:1fr}.ops-actions{grid-template-columns:1fr 1fr}.ops-info-row{grid-template-columns:110px 1fr}.ops-month-grid{gap:4px;padding:7px}.ops-month-day{min-height:75px;padding:5px}.ops-month-job{font-size:7px}.ops-inventory-items{padding:10px}.ops-inventory-item{min-width:155px}}</style>
 
@@ -6930,7 +6984,7 @@ function renderOpsAlerts(jobs){const alerts=[];jobs.forEach(s=>{const p=opsPayme
 function renderOpsInventory(){const box=document.getElementById('ops-inventory-today');const items=(window.inventarioItems||window.inventarioGeneral||[]).filter(x=>Number(x.cantidad||0)<=Number(x.minimo||0));box.innerHTML=items.length?items.slice(0,8).map(x=>`<div class="ops-inventory-item"><span>📦</span><div><b>${x.nombre||'Producto'}</b><small>${x.cantidad||0} disponibles · mínimo ${x.minimo||0}</small></div></div>`).join(''):'<div class="ops-inventory-item"><span>✅</span><div><b>Inventario sin alertas</b><small>No hay productos críticos registrados.</small></div></div>'}
 
 function renderOpsMonth(){
- const y=opsCalendarDate.getFullYear(),m=opsCalendarDate.getMonth();const first=new Date(y,m,1),start=new Date(y,m,1-first.getDay());let html='<div class="ops-month-grid">';const all=[];
+ const y=opsCalendarDate.getFullYear(),m=opsCalendarDate.getMonth();const first=new Date(y,m,1),start=new Date(y,m,1-first.getDay());let html='<div class="ops-month-grid">'+['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'].map(d=>`<div class="ops-month-weekday">${d}</div>`).join('');const all=[];
  for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const key=opsDateKey(d),jobs=opsJobsForDate(key);all.push(...jobs);html+=`<div class="ops-month-day ${d.getMonth()!==m?'muted':''} ${key===opsDateKey(new Date())?'today':''}" onclick="opsCalendarDate=new Date('${key}T12:00:00');setOpsView('day')"><div class="ops-month-num">${d.getDate()}</div>${jobs.slice(0,3).map(s=>`<div class="ops-month-job ${opsStateClass(s)}" onclick="event.stopPropagation();opsSelectedJobId='${s.id}';abrirEditorEvento('${s.id}')" style="cursor:pointer" title="${opsStateLabel(s)}">${s.hora||''} ${s.cliente||''}</div>`).join('')}${jobs.length>3?`<small>+${jobs.length-3} más</small>`:''}</div>`}html+='</div>';
  document.getElementById('ops-timeline').innerHTML=html;document.getElementById('ops-list-title').textContent='Vista mensual';document.getElementById('ops-list-badge').textContent=all.length;document.querySelector('.ops-timeline-card').style.gridColumn='1 / 3';document.querySelector('.ops-detail-card').style.display='none';updateOpsMetrics(all);renderOpsRoute([]);renderOpsTeam([]);renderOpsAlerts(all);renderOpsInventory();
 }
@@ -8916,6 +8970,13 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
     if(!confirm(message))return;
 
     try {
+      /*
+       * Si se elimina una sola ocurrencia recurrente, se guarda primero una
+       * excepción. Así la reparación automática de series no vuelve a crearla.
+       */
+      if(scope==='this' && isRecurring(ev)){
+        await eliteV835RegistrarExcepcionCalendario(ev);
+      }
       const batch=db.batch();
       rows.forEach(row=>batch.delete(db.collection('servicios').doc(row.id)));
       await batch.commit();
