@@ -1589,14 +1589,19 @@ style="width:100%;"></textarea>
 
 </div>
 
-<div class="search-jobs-box">
-    <span>🔍</span>
+<div class="search-jobs-box" id="elite-service-search-box">
+    <button type="button" id="elite-service-search-button" aria-label="Buscar servicios" title="Buscar servicios" onclick="eliteRunServiceSearch()" style="background:none;border:0;padding:0;cursor:pointer;font-size:18px;line-height:1;">🔍</button>
     <input
-        type="text"
+        type="search"
         id="buscarTrabajo"
         placeholder="Buscar trabajo por cliente, dirección, fecha o staff..."
-        oninput="renderHistorial()"
+        autocomplete="off"
+        oninput="eliteRunServiceSearch()"
+        onkeyup="eliteRunServiceSearch()"
+        onsearch="eliteRunServiceSearch()"
+        onchange="eliteRunServiceSearch()"
     >
+    <button type="button" id="elite-service-search-clear" aria-label="Limpiar búsqueda" title="Limpiar búsqueda" onclick="eliteClearServiceSearch()" style="display:none;background:none;border:0;padding:0 4px;cursor:pointer;font-size:18px;line-height:1;color:#94a3b8;">✕</button>
 </div>
 
 <div id="historial"></div>
@@ -10915,5 +10920,68 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshOpenSummary,4
 })();
 </script>
 
+
+<script id="elite-v832-service-search-fix">
+(function(){
+  let serviceSearchFrame = 0;
+
+  window.eliteRunServiceSearch = function(){
+    const input = document.getElementById('buscarTrabajo');
+    const clear = document.getElementById('elite-service-search-clear');
+    if (clear) clear.style.display = input && input.value ? 'inline-flex' : 'none';
+
+    cancelAnimationFrame(serviceSearchFrame);
+    serviceSearchFrame = requestAnimationFrame(function(){
+      try {
+        if (typeof window.renderHistorial === 'function') {
+          window.renderHistorial();
+        } else {
+          console.warn('El buscador no pudo encontrar la función renderHistorial.');
+        }
+      } catch (error) {
+        console.error('Error al buscar servicios:', error);
+      }
+    });
+  };
+
+  window.eliteClearServiceSearch = function(){
+    const input = document.getElementById('buscarTrabajo');
+    if (!input) return;
+    input.value = '';
+    input.focus();
+    window.eliteRunServiceSearch();
+  };
+
+  function bindServiceSearch(){
+    const input = document.getElementById('buscarTrabajo');
+    const button = document.getElementById('elite-service-search-button');
+    if (!input || input.dataset.eliteSearchBound === '1') return;
+
+    input.dataset.eliteSearchBound = '1';
+    ['input','keyup','change','search','paste'].forEach(function(eventName){
+      input.addEventListener(eventName, window.eliteRunServiceSearch);
+    });
+    input.addEventListener('keydown', function(event){
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        window.eliteRunServiceSearch();
+      }
+      if (event.key === 'Escape') {
+        window.eliteClearServiceSearch();
+      }
+    });
+    if (button) button.addEventListener('click', window.eliteRunServiceSearch);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindServiceSearch);
+  } else {
+    bindServiceSearch();
+  }
+
+  const observer = new MutationObserver(bindServiceSearch);
+  observer.observe(document.documentElement, {childList:true, subtree:true});
+})();
+</script>
 </body>
 </html>
