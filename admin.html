@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin Core v8.3 — Modo pruebas | Elite Core Stabilization fases 1-7 -->
+<!-- Elite Admin Core v8.3.1 — SMS manuales con confirmación | Elite Core Stabilization fases 1-7 -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin Core v8.3 — Modo pruebas - Elite Cleaners Company</title>
+    <title>Elite Admin Core v8.3.1 — SMS manuales con confirmación - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -3631,7 +3631,7 @@ calcularPrecioAutomatico();
             if(!telefono) return alert("El cliente no tiene teléfono.");
 
             const empresa = "Elite Cleaners Company";
-            const linkGoogle = "https://maps.app.goo.gl/VZjAsLsYbKYhszx27?g_st=ic";
+            const linkGoogle = "https://elitecleanerscompany.com/review";
 
             const mensaje =
 `Hello ${nombre},
@@ -5775,7 +5775,11 @@ function eliteV51OpenSettings(){
   <div class="elite-v51-form-grid">
     <div class="elite-v51-field"><label>Email o teléfono de Zelle</label><input id="cfg-zelle" value="${c.zelle||'rodrigodanielfranco94@gmail.com'}" placeholder="Correo o teléfono de Zelle"><small>Dato que se envía al cliente para pagar.</small></div>
     <div class="elite-v51-field"><label>Usuario de Venmo</label><input id="cfg-venmo" value="${c.venmo||'Elite-Cleaners-Company'}" placeholder="Elite-Cleaners-Company"><small>Sin @. Se usa para crear enlaces de pago.</small></div>
-    <div class="elite-v51-field"><label>Enlace de Google Reviews</label><input id="cfg-review" value="${c.review_link||'https://maps.app.goo.gl/VZjAsLsYbKYhszx27?g_st=ic'}" placeholder="https://maps.app.goo.gl/..."><small>Se envía únicamente al presionar Solicitar reseña.</small></div>
+    <div class="elite-v51-field"><label>Enlace de Google Reviews</label><input id="cfg-review" value="${c.review_link||'https://elitecleanerscompany.com/review'}" placeholder="https://elitecleanerscompany.com/review"><small>Se usa solamente cuando presionas manualmente Solicitar reseña.</small></div>
+    <div class="elite-v51-field"><label>Descuento de agradecimiento ($)</label><input id="cfg-review-discount" type="number" min="0" step="1" value="${c.review_discount??30}" placeholder="30"><small>Importe ofrecido para la próxima limpieza.</small></div>
+    <div class="elite-v51-field"><label>Recompensa por reseña</label><select id="cfg-review-reward" style="width:100%;padding:14px;border-radius:12px;background:#0b1220;color:#fff;border:1px solid #334155"><option value="true" ${c.review_reward_enabled===false?'':'selected'}>Activada</option><option value="false" ${c.review_reward_enabled===false?'selected':''}>Desactivada</option></select><small>Permite quitar la oferta sin modificar el código.</small></div>
+    <div class="elite-v51-field"><label>Confirmar antes de abrir SMS</label><select id="cfg-sms-confirm" style="width:100%;padding:14px;border-radius:12px;background:#0b1220;color:#fff;border:1px solid #334155"><option value="true" ${c.sms_confirmations===false?'':'selected'}>Sí, siempre preguntar</option><option value="false" ${c.sms_confirmations===false?'selected':''}>No preguntar</option></select><small>Recomendado: mantener activado para evitar mensajes accidentales.</small></div>
+    <div class="elite-v51-field" style="grid-column:1/-1"><label>Mensaje personalizado de reseña (opcional)</label><textarea id="cfg-review-message" rows="8" placeholder="Déjalo vacío para usar el mensaje oficial en inglés.">${c.review_message||''}</textarea><small>Puedes usar {CLIENT_NAME}, {REVIEW_LINK} y {DISCOUNT}. Los SMS para clientes siempre se preparan en inglés.</small></div>
     <div class="elite-v51-field"><label>Precio por milla ($)</label><input id="cfg-mile" type="number" min="0" step="0.01" value="${c.precio_milla??0.22}" placeholder="0.22"><small>Utiliza punto decimal: 0.22, no 0,22.</small></div>
   </div>
 </div>
@@ -6032,7 +6036,7 @@ async function eliteV51SaveSettings(){
   if(totalPct!==100)return alert('Los porcentajes de Rodrigo, Dayana y Empresa deben sumar exactamente 100%.');
   const precioMilla=Number(document.getElementById('cfg-mile').value||0);
   if(precioMilla<0)return alert('El precio por milla no puede ser negativo.');
-  const data={nombre_empresa:eliteV51Get('cfg-company').value.trim(),telefono_empresa:eliteV51Get('cfg-phone').value.trim(),email_empresa:eliteV51Get('cfg-email').value.trim(),web_empresa:eliteV51Get('cfg-site').value.trim(),zelle:eliteV51Get('cfg-zelle').value.trim(),venmo:eliteV51Get('cfg-venmo').value.trim(),review_link:eliteV51Get('cfg-review').value.trim(),precio_milla:Number(eliteV51Get('cfg-mile').value||0),rodrigo:Number(eliteV51Get('cfg-rodrigo').value||0),dayana:Number(eliteV51Get('cfg-dayana').value||0),empresa:Number(eliteV51Get('cfg-companypct').value||0),actualizado:firebase.firestore.FieldValue.serverTimestamp()};
+  const data={nombre_empresa:eliteV51Get('cfg-company').value.trim(),telefono_empresa:eliteV51Get('cfg-phone').value.trim(),email_empresa:eliteV51Get('cfg-email').value.trim(),web_empresa:eliteV51Get('cfg-site').value.trim(),zelle:eliteV51Get('cfg-zelle').value.trim(),venmo:eliteV51Get('cfg-venmo').value.trim(),review_link:eliteV51Get('cfg-review').value.trim()||'https://elitecleanerscompany.com/review',review_discount:Number(eliteV51Get('cfg-review-discount').value||0),review_reward_enabled:eliteV51Get('cfg-review-reward').value==='true',sms_confirmations:eliteV51Get('cfg-sms-confirm').value==='true',review_message:eliteV51Get('cfg-review-message').value.trim(),precio_milla:Number(eliteV51Get('cfg-mile').value||0),rodrigo:Number(eliteV51Get('cfg-rodrigo').value||0),dayana:Number(eliteV51Get('cfg-dayana').value||0),empresa:Number(eliteV51Get('cfg-companypct').value||0),actualizado:firebase.firestore.FieldValue.serverTimestamp()};
   if(data.rodrigo+data.dayana+data.empresa!==100)return alert('Los porcentajes deben sumar 100%.');
   await db.collection('configuracion').doc('app').set(data,{merge:true});eliteV51Config=data;alert('Configuración guardada ✅');
 }
@@ -10778,72 +10782,136 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshOpenSummary,4
 
 
 
-<!-- ===== ELITE ADMIN CORE v8.3 — MODO DE DESARROLLO SEGURO / SIN MENSAJES A CLIENTES ===== -->
-<style id="elite-v83-safe-mode-css">
-#elite-v83-safe-banner{
-  position:fixed;right:16px;bottom:16px;z-index:4000000;
-  max-width:380px;padding:12px 15px;border-radius:13px;
-  background:#450a0a;border:1px solid #ef4444;color:#fee2e2;
-  box-shadow:0 16px 45px rgba(0,0,0,.45);font:800 12px/1.4 Arial,sans-serif;
-}
-#elite-v83-safe-banner b{display:block;color:#fff;margin-bottom:3px;font-size:13px}
-@media(max-width:700px){#elite-v83-safe-banner{left:10px;right:10px;bottom:10px;max-width:none;font-size:11px}}
+
+<!-- ===== ELITE ADMIN CORE v8.3.1 — SMS MANUALES, CONFIRMACIÓN Y RESEÑAS ===== -->
+<style id="elite-v831-sms-css">
+#elite-v831-sms-status{position:fixed;right:16px;bottom:16px;z-index:4000000;max-width:390px;padding:12px 15px;border-radius:13px;background:#052e16;border:1px solid #22c55e;color:#dcfce7;box-shadow:0 16px 45px rgba(0,0,0,.45);font:800 12px/1.4 Arial,sans-serif}
+#elite-v831-sms-status b{display:block;color:#fff;margin-bottom:3px;font-size:13px}
+@media(max-width:700px){#elite-v831-sms-status{left:10px;right:10px;bottom:10px;max-width:none;font-size:11px}}
 </style>
-<script id="elite-v83-safe-mode-js">
+<script id="elite-v831-sms-js">
 (function(){
   'use strict';
-  window.ELITE_MODO_PRUEBAS_SIN_MENSAJES = true;
 
-  function avisoBloqueado(tipo){
-    const texto='MODO DE PRUEBAS: '+(tipo||'La comunicación')+' fue bloqueada. No se envió nada al cliente.';
-    console.warn(texto);
-    try{alert(texto)}catch(_){ }
-    return false;
+  window.ELITE_MODO_PRUEBAS_SIN_MENSAJES = false;
+  const REVIEW_DEFAULT_LINK='https://elitecleanerscompany.com/review';
+  const REVIEW_LOG_KEY='elite_review_requests_v831';
+
+  function cfg(){
+    return (window.eliteV51Config && typeof window.eliteV51Config==='object') ? window.eliteV51Config : {};
+  }
+  function limpiarTelefono(telefono){ return String(telefono||'').replace(/\D/g,''); }
+  function telefonoVisible(telefono){
+    const n=limpiarTelefono(telefono);
+    if(n.length===10)return `(${n.slice(0,3)}) ${n.slice(3,6)}-${n.slice(6)}`;
+    if(n.length===11&&n[0]==='1')return `+1 (${n.slice(1,4)}) ${n.slice(4,7)}-${n.slice(7)}`;
+    return telefono||n;
+  }
+  function detectarTipo(mensaje){
+    const m=String(mensaje||'').toLowerCase();
+    if(m.includes('google review')||m.includes('/review'))return 'solicitud de reseña';
+    if(m.includes('service agreement')||m.includes('firmar.html'))return 'contrato';
+    if(m.includes('friendly reminder')||m.includes('upcoming cleaning'))return 'recordatorio';
+    if(m.includes('balance')||m.includes('remaining'))return 'balance';
+    if(m.includes('deposit'))return 'depósito';
+    return 'SMS';
+  }
+  function confirmarSMS(telefono,mensaje,tipo){
+    if(cfg().sms_confirmations===false)return true;
+    const vista=String(mensaje||'').length>650?String(mensaje).slice(0,650)+'\n\n… (vista previa recortada)':String(mensaje||'');
+    return window.confirm(
+      `¿Abrir la aplicación Mensajes para preparar este ${tipo}?\n\n`+
+      `Teléfono: ${telefonoVisible(telefono)}\n\n`+
+      `${vista}\n\n`+
+      `IMPORTANTE: La app Admin no lo enviará automáticamente. Después de abrir Mensajes, tú decides si presionas Enviar.\n\n`+
+      `Aceptar = Abrir Mensajes\nCancelar = No hacer nada`
+    );
   }
 
-  // Bloqueo central: todas las funciones actuales de contratos, balances,
-  // depósitos, recordatorios y reseñas terminan usando abrirSMS.
-  window.abrirSMS=function(){ return avisoBloqueado('El mensaje/SMS'); };
-  window.abrirChat=function(){ return avisoBloqueado('El chat'); };
-
-  // Bloqueos explícitos adicionales por si alguna versión futura intenta saltarse abrirSMS.
-  window.enviarContrato=function(){ return avisoBloqueado('El contrato'); };
-  window.enviarRecordatorio=function(){ return avisoBloqueado('El recordatorio'); };
-  window.solicitarResenaGoogle=function(){ return avisoBloqueado('La solicitud de reseña'); };
-
-  // Intercepta enlaces de comunicación creados dinámicamente.
-  document.addEventListener('click',function(e){
-    const link=e.target && e.target.closest ? e.target.closest('a[href]') : null;
-    if(!link) return;
-    const href=String(link.getAttribute('href')||'').trim().toLowerCase();
-    if(href.startsWith('sms:')||href.startsWith('mailto:')||href.includes('wa.me')||href.includes('api.whatsapp.com')){
-      e.preventDefault();e.stopImmediatePropagation();
-      avisoBloqueado('El enlace de comunicación');
+  window.abrirSMS=function(telefono,mensaje='',opciones={}){
+    const numero=limpiarTelefono(telefono);
+    if(!numero){ alert('El cliente no tiene un teléfono registrado.'); return false; }
+    const tipo=opciones.tipo||detectarTipo(mensaje);
+    if(!opciones.omitirConfirmacion && !confirmarSMS(telefono,mensaje,tipo)){
+      alert('Acción cancelada. No se abrió ningún SMS.');
+      return false;
     }
-  },true);
-
-  // Bloquea redirecciones window.open hacia canales de comunicación.
-  const originalOpen=window.open;
-  window.open=function(url){
-    const href=String(url||'').toLowerCase();
-    if(href.startsWith('sms:')||href.startsWith('mailto:')||href.includes('wa.me')||href.includes('api.whatsapp.com')){
-      avisoBloqueado('La comunicación externa');
-      return null;
-    }
-    return originalOpen ? originalOpen.apply(this,arguments) : null;
+    const body=encodeURIComponent(String(mensaje||''));
+    window.location.href=body?`sms:${numero}&body=${body}`:`sms:${numero}`;
+    return true;
   };
 
-  // Evita que location.assign/replace se usen mediante botones nuevos para SMS/email.
-  // Los enlaces normales del sistema (Google Maps, firma para visualizar, etc.) siguen funcionando.
-  function addBanner(){
-    if(document.getElementById('elite-v83-safe-banner')) return;
-    const banner=document.createElement('div');
-    banner.id='elite-v83-safe-banner';
-    banner.innerHTML='<b>🔒 MODO DE PRUEBAS ACTIVO</b>No se enviarán SMS, correos, contratos, balances, depósitos, recordatorios ni reseñas a clientes.';
-    document.body.appendChild(banner);
+  function leerHistorialResenas(){
+    try{return JSON.parse(localStorage.getItem(REVIEW_LOG_KEY)||'{}')||{};}catch(_){return {};}
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',addBanner);
-  else addBanner();
+  function guardarHistorialResenas(data){
+    try{localStorage.setItem(REVIEW_LOG_KEY,JSON.stringify(data));}catch(_){ }
+  }
+  function claveResena(nombre,telefono){return `${limpiarTelefono(telefono)}|${String(nombre||'').trim().toLowerCase()}`;}
+  function fechaEsp(fecha){
+    try{return new Date(fecha).toLocaleString('es-US',{dateStyle:'medium',timeStyle:'short'});}catch(_){return fecha;}
+  }
+  function mensajeResena(nombre){
+    const c=cfg();
+    const link=String(c.review_link||REVIEW_DEFAULT_LINK).trim()||REVIEW_DEFAULT_LINK;
+    const descuento=Math.max(0,Number(c.review_discount??30));
+    const recompensa=c.review_reward_enabled!==false;
+    const personalizado=String(c.review_message||'').trim();
+    if(personalizado){
+      return personalizado
+        .replaceAll('{CLIENT_NAME}',nombre||'Customer')
+        .replaceAll('{REVIEW_LINK}',link)
+        .replaceAll('{DISCOUNT}',String(descuento));
+    }
+    const recompensaTexto=recompensa&&descuento>0
+      ? `\n\nAs a small thank-you for taking the time to share your experience, we'd love to offer you $${descuento} OFF your next cleaning service. 😊`
+      : '';
+    return `Hello ${nombre||'Customer'},\n\nThank you for choosing Elite Cleaners Company! 🌟\n\nIt was truly a pleasure serving you.\n\nIf you were happy with our service, we would be incredibly grateful if you could take a moment to share your experience with us on Google.\n\n⭐ Leave your review here:\n\n${link}${recompensaTexto}\n\nYour feedback helps our family-owned business continue to grow and serve more wonderful families in our community.\n\nThank you again for trusting Elite Cleaners Company.\n\nWe truly appreciate your support! 💙`;
+  }
+
+  window.solicitarResenaGoogle=function(nombre,telefono){
+    if(!limpiarTelefono(telefono)){alert('El cliente no tiene un teléfono registrado.');return false;}
+    const historial=leerHistorialResenas();
+    const clave=claveResena(nombre,telefono);
+    const anterior=historial[clave];
+    if(anterior){
+      const repetir=window.confirm(
+        `Este cliente ya tuvo una solicitud de reseña preparada anteriormente.\n\n`+
+        `Cliente: ${nombre||'Sin nombre'}\nFecha: ${fechaEsp(anterior.fecha)}\n\n`+
+        `¿Deseas preparar otro SMS de reseña?\n\nAceptar = Preparar nuevamente\nCancelar = No hacer nada`
+      );
+      if(!repetir){alert('Acción cancelada. No se abrió ningún SMS.');return false;}
+    }
+    const mensaje=mensajeResena(nombre);
+    const c=cfg();
+    const descuento=Math.max(0,Number(c.review_discount??30));
+    const detalleOferta=c.review_reward_enabled===false||descuento<=0?'Sin recompensa activa':`Incluye $${descuento} OFF en la próxima limpieza`;
+    const confirmar=window.confirm(
+      `¿Preparar solicitud de reseña?\n\n`+
+      `Cliente: ${nombre||'Sin nombre'}\nTeléfono: ${telefonoVisible(telefono)}\n`+
+      `${detalleOferta}\nEnlace: ${String(c.review_link||REVIEW_DEFAULT_LINK)}\n\n`+
+      `El SMS estará en inglés. La aplicación solo abrirá Mensajes; tú deberás presionar Enviar manualmente.\n\n`+
+      `Aceptar = Abrir Mensajes\nCancelar = No hacer nada`
+    );
+    if(!confirmar){alert('Solicitud cancelada. No se abrió ningún SMS.');return false;}
+
+    historial[clave]={nombre:nombre||'',telefono:limpiarTelefono(telefono),fecha:new Date().toISOString(),estado:'preparada'};
+    guardarHistorialResenas(historial);
+    return window.abrirSMS(telefono,mensaje,{tipo:'solicitud de reseña',omitirConfirmacion:true});
+  };
+
+  // Mantiene todo envío de reseñas estrictamente manual: no existe temporizador ni evento de finalización que la invoque.
+  // Los botones “Reseña” y “Solicitar reseña” son los únicos puntos de entrada.
+
+  function addStatus(){
+    const old=document.getElementById('elite-v83-safe-banner');if(old)old.remove();
+    if(document.getElementById('elite-v831-sms-status'))return;
+    const b=document.createElement('div');b.id='elite-v831-sms-status';
+    b.innerHTML='<b>✅ SMS MANUALES PROTEGIDOS</b>La app pregunta antes de abrir Mensajes. Las reseñas nunca se preparan automáticamente.';
+    document.body.appendChild(b);
+    setTimeout(()=>{b.style.opacity='0';b.style.transition='opacity .5s';setTimeout(()=>b.remove(),550)},7000);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',addStatus);else addStatus();
 })();
 </script>
 
