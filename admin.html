@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin Core v8.3.3 — Calendario corregido | Elite Core Stabilization fases 1-7 -->
+<!-- Elite Admin Core v8.3.4 — Calendario corregido | Elite Core Stabilization fases 1-7 -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin Core v8.3.3 — Calendario corregido - Elite Cleaners Company</title>
+    <title>Elite Admin Core v8.3.4 — Calendario corregido - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -1957,7 +1957,7 @@ Elite Cleaners Company`;
     snap.forEach(doc => todosLosClientes.push({ id: doc.id, ...doc.data() }));
     renderHistorial();
     generarNomina();
-    programarCorreccionCalendarioJulio2026();
+    programarEstadosAutomaticosEneroJulio2026();
     if (document.getElementById("ops-center-modal-v601")?.style.display === "block") {
         setTimeout(renderCentroOperacionesV601, 150);
     }
@@ -2934,14 +2934,14 @@ async function eliteV82RepararSeriesRecurrentes() {
 let eliteCalendarMaintenanceRunning = false;
 let eliteCalendarMaintenanceTimer = null;
 
-async function aplicarCorreccionCalendarioJulio2026() {
+async function aplicarEstadosAutomaticosEneroJulio2026() {
     if (eliteCalendarMaintenanceRunning || !window.db || !Array.isArray(todosLosServicios)) return;
 
     const fechasSinTrabajo = new Set(["2026-07-28", "2026-07-30", "2026-07-31"]);
     const eliminar = todosLosServicios.filter(s => fechasSinTrabajo.has(String(s.fecha || "")));
     const finalizar = todosLosServicios.filter(s => {
         const fecha = String(s.fecha || "");
-        return fecha >= "2026-01-01" && fecha <= "2026-06-30" &&
+        return fecha >= "2026-01-01" && fecha <= "2026-07-31" &&
                !(s.estado === "completado" && s.estado_calendario === "completado");
     });
 
@@ -2973,7 +2973,7 @@ async function aplicarCorreccionCalendarioJulio2026() {
             await batch.commit();
         }
 
-        console.log(`Calendario corregido: ${eliminar.length} trabajos eliminados y ${finalizar.length} trabajos anteriores marcados como terminados.`);
+        console.log(`Calendario corregido: ${eliminar.length} trabajos eliminados y ${finalizar.length} trabajos de enero a julio marcados como terminados.`);
     } catch (error) {
         console.error("No se pudo aplicar la corrección del calendario:", error);
         alert("No se pudo completar la corrección automática del calendario. Revisa tu conexión e inténtalo nuevamente.");
@@ -2982,9 +2982,9 @@ async function aplicarCorreccionCalendarioJulio2026() {
     }
 }
 
-function programarCorreccionCalendarioJulio2026() {
+function programarEstadosAutomaticosEneroJulio2026() {
     clearTimeout(eliteCalendarMaintenanceTimer);
-    eliteCalendarMaintenanceTimer = setTimeout(aplicarCorreccionCalendarioJulio2026, 700);
+    eliteCalendarMaintenanceTimer = setTimeout(aplicarEstadosAutomaticosEneroJulio2026, 700);
 }
 
         db.collection("servicios").onSnapshot(snap => {
@@ -2994,8 +2994,20 @@ function programarCorreccionCalendarioJulio2026() {
         todosLosServicios.push({ ...s, id: doc.id, firestore_id: doc.id });
     });
 
-    document.getElementById('count-pendientes').innerText = todosLosServicios.filter(s => s.estado !== 'completado').length;
-    document.getElementById('count-completados').innerText = todosLosServicios.filter(s => s.estado === 'completado').length;
+    // Enero a julio de 2026 se consideran terminados automáticamente.
+    // Agosto en adelante conserva el estado manual configurado por el administrador.
+    programarEstadosAutomaticosEneroJulio2026();
+
+    document.getElementById('count-pendientes').innerText = todosLosServicios.filter(s => {
+        const fecha = String(s.fecha || '');
+        const autoTerminado = fecha >= '2026-01-01' && fecha <= '2026-07-31';
+        return !autoTerminado && s.estado !== 'completado' && s.estado_calendario !== 'completado' && s.estado !== 'terminado';
+    }).length;
+    document.getElementById('count-completados').innerText = todosLosServicios.filter(s => {
+        const fecha = String(s.fecha || '');
+        const autoTerminado = fecha >= '2026-01-01' && fecha <= '2026-07-31';
+        return autoTerminado || s.estado === 'completado' || s.estado_calendario === 'completado' || s.estado === 'terminado';
+    }).length;
 
     renderNotificacionesPagos();
     renderHistorial();
@@ -6734,8 +6746,18 @@ function opsMinutes(t){if(!t||t==='--:--')return 0;const p=String(t).split(':');
 function opsEndTime(s){if(s.hora_final_estimada)return s.hora_final_estimada;const start=opsMinutes(s.hora);const mins=120;return `${String(Math.floor((start+mins)/60)%24).padStart(2,'0')}:${String((start+mins)%60).padStart(2,'0')}`}
 function opsPayment(s){const total=Math.max(0,Number(s.precio_total||0)),state=elitePaymentState(s),depAmount=Math.max(0,Number(s.deposito_monto||total*.5));const dep=state.deposito?Math.min(depAmount,total):0;const balanceAmount=Math.max(0,Number(s.balance_restante!==undefined&&s.balance_restante!==''?s.balance_restante:total-depAmount));let bal=state.balance?Math.min(balanceAmount,Math.max(total-dep,0)):0;if(state.completo&&dep+bal<total)bal=Math.max(total-dep,0);return {total,collected:Math.min(total,dep+bal),pending:Math.max(total-dep-bal,0),dep,bal}}
 function opsJobsForDate(key){return todosLosServicios.filter(s=>s.fecha===key).sort((a,b)=>(a.hora||'').localeCompare(b.hora||''))}
-function opsStateClass(s){const done=s.estado==='completado'||s.estado_calendario==='completado'||s.estado==='terminado';return done?'completed':s.estado==='en_progreso'?'progress':'pending'}
-function opsStateLabel(s){const done=s.estado==='completado'||s.estado_calendario==='completado'||s.estado==='terminado';return done?'Terminado':s.estado==='en_progreso'?'En progreso':'No iniciado'}
+function opsEsTerminadoAutomatico(s){
+  const fecha=String(s?.fecha||'');
+  return fecha>='2026-01-01' && fecha<='2026-07-31';
+}
+function opsStateClass(s){
+  const done=opsEsTerminadoAutomatico(s)||s.estado==='completado'||s.estado_calendario==='completado'||s.estado==='terminado';
+  return done?'completed':s.estado==='en_progreso'?'progress':'pending';
+}
+function opsStateLabel(s){
+  const done=opsEsTerminadoAutomatico(s)||s.estado==='completado'||s.estado_calendario==='completado'||s.estado==='terminado';
+  return done?'Terminado':s.estado==='en_progreso'?'En progreso':'No iniciado';
+}
 
 window.agregarTrabajoDesdeCentroOperaciones = function(fechaElegida) {
   const fecha = fechaElegida ||
