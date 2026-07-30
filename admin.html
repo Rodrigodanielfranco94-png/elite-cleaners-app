@@ -1554,6 +1554,9 @@ style="width:100%;"></textarea>
 
 <span class="label-text">Precio Recurrente</span>
 <input type="number" id="precio_recurrente" readonly>
+<div id="desglose_precio" style="margin:10px 0 14px;padding:14px;border:1px solid #334155;border-radius:12px;background:#0f172a;color:#e2e8f0;font-size:13px;line-height:1.55;">
+    Completa los datos para ver el desglose del precio.
+</div>
 <div id="admin-correction" style="display: none;">
     <span class="label-text" style="color: #f59e0b;">Corrección de Horas Reales</span>
 
@@ -2362,54 +2365,57 @@ function calcularPrecioAutomatico() {
     const base = ELITE_PRICING.bases[tipoParaCalculo] || ELITE_PRICING.bases["ESTÁNDAR"];
 
     let total = base;
+    const desglose = [{ concepto: `Precio base — ${tipoParaCalculo}`, monto: base }];
+    const agregarCargo = (concepto, monto) => {
+        const valor = Number(monto || 0);
+        if (valor <= 0) return;
+        total += valor;
+        desglose.push({ concepto, monto: valor });
+    };
 
-    total += valorNumero("habitaciones") * ELITE_PRICING.ambientes.habitacion;
-    total += valorNumero("banos") * ELITE_PRICING.ambientes.bano;
-    total += valorNumero("medios_banos") * ELITE_PRICING.ambientes.medio_bano;
-    total += valorNumero("salas") * ELITE_PRICING.ambientes.sala;
-    total += valorNumero("cocinas") * ELITE_PRICING.ambientes.cocina;
-    total += valorNumero("oficinas") * ELITE_PRICING.ambientes.oficina;
-    total += valorNumero("lavanderia") * ELITE_PRICING.ambientes.lavanderia;
-    total += valorNumero("garaje") * ELITE_PRICING.ambientes.garaje;
-    total += valorNumero("comedor") * ELITE_PRICING.ambientes.comedor;
-    total += valorNumero("sala_juegos") * ELITE_PRICING.ambientes.sala_juegos;
+    /*
+     * Habitaciones, baños, sala, cocina, oficina, lavandería y comedor
+     * describen la propiedad. No se vuelven a cobrar sobre el precio base.
+     * Así se evita que una vivienda normal pague dos veces por sus ambientes.
+     * Los extras elegidos y los recargos por tamaño/millaje sí se cobran.
+     */
 
     const ft2 = valorNumero("pies_cuadrados");
     const tarifaFt2 = obtenerTarifaPieCuadrado(tipoParaCalculo, ft2);
-    total += ft2 * tarifaFt2;
+    agregarCargo(`Recargo por tamaño (${ft2} ft²)`, ft2 * tarifaFt2);
 
     const horno = valorSelect("horno");
-    if (horno === "Outside") total += 20;
-    if (horno === "Inside") total += 65;
-    if (horno === "Inside + Outside") total += 85;
+    if (horno === "Outside") agregarCargo("Horno — exterior", 20);
+    if (horno === "Inside") agregarCargo("Horno — interior", 65);
+    if (horno === "Inside + Outside") agregarCargo("Horno — interior y exterior", 85);
 
     const nevera = valorSelect("nevera");
-    if (nevera === "Outside") total += precioExtraPorTipo("nevera_outside", tipoParaCalculo);
-    if (nevera === "1 Puerta Inside") total += precioExtraPorTipo("nevera_1_puerta_inside", tipoParaCalculo);
-    if (nevera === "2 Puertas Inside") total += precioExtraPorTipo("nevera_2_puertas_inside", tipoParaCalculo);
-    if (nevera === "1 Puerta Inside + Outside") total += precioExtraPorTipo("nevera_1_puerta_inside_outside", tipoParaCalculo);
-    if (nevera === "2 Puertas Inside + Outside") total += precioExtraPorTipo("nevera_2_puertas_inside_outside", tipoParaCalculo);
+    if (nevera === "Outside") agregarCargo("Nevera — exterior", precioExtraPorTipo("nevera_outside", tipoParaCalculo));
+    if (nevera === "1 Puerta Inside") agregarCargo("Nevera de 1 puerta — interior", precioExtraPorTipo("nevera_1_puerta_inside", tipoParaCalculo));
+    if (nevera === "2 Puertas Inside") agregarCargo("Nevera de 2 puertas — interior", precioExtraPorTipo("nevera_2_puertas_inside", tipoParaCalculo));
+    if (nevera === "1 Puerta Inside + Outside") agregarCargo("Nevera de 1 puerta — interior y exterior", precioExtraPorTipo("nevera_1_puerta_inside_outside", tipoParaCalculo));
+    if (nevera === "2 Puertas Inside + Outside") agregarCargo("Nevera de 2 puertas — interior y exterior", precioExtraPorTipo("nevera_2_puertas_inside_outside", tipoParaCalculo));
 
     const gabinetes = valorSelect("gabinetes");
-    if (gabinetes === "Outside") total += precioExtraPorTipo("gabinetes_outside", tipoParaCalculo);
-    if (gabinetes === "Inside") total += precioExtraPorTipo("gabinetes_inside", tipoParaCalculo);
-    if (gabinetes === "Inside & Outside") total += precioExtraPorTipo("gabinetes_inside_outside", tipoParaCalculo);
+    if (gabinetes === "Outside") agregarCargo("Gabinetes — exterior", precioExtraPorTipo("gabinetes_outside", tipoParaCalculo));
+    if (gabinetes === "Inside") agregarCargo("Gabinetes — interior", precioExtraPorTipo("gabinetes_inside", tipoParaCalculo));
+    if (gabinetes === "Inside & Outside") agregarCargo("Gabinetes — interior y exterior", precioExtraPorTipo("gabinetes_inside_outside", tipoParaCalculo));
 
     const ventanas = valorSelect("ventanas");
-    if (ventanas === "Outside") total += precioExtraPorTipo("ventanas_outside", tipoParaCalculo);
-    if (ventanas === "Inside") total += precioExtraPorTipo("ventanas_inside", tipoParaCalculo);
-    if (ventanas === "Inside & Outside") total += precioExtraPorTipo("ventanas_inside_outside", tipoParaCalculo);
+    if (ventanas === "Outside") agregarCargo("Ventanas — exterior", precioExtraPorTipo("ventanas_outside", tipoParaCalculo));
+    if (ventanas === "Inside") agregarCargo("Ventanas — interior", precioExtraPorTipo("ventanas_inside", tipoParaCalculo));
+    if (ventanas === "Inside & Outside") agregarCargo("Ventanas — interior y exterior", precioExtraPorTipo("ventanas_inside_outside", tipoParaCalculo));
 
     const baseboards = valorSelect("baseboards");
-    if (baseboards === "Sí") total += precioExtraPorTipo("baseboards", tipoParaCalculo);
+    if (baseboards === "Sí") agregarCargo("Baseboards", precioExtraPorTipo("baseboards", tipoParaCalculo));
 
     const perros = valorSelect("perros");
-    if (perros === "Sí") total += ELITE_PRICING.extras.perros;
+    if (perros === "Sí") agregarCargo("Perros en la casa", ELITE_PRICING.extras.perros);
 
-    total += valorNumero("alfombra_habitaciones") * ELITE_PRICING.extras.alfombra_habitacion;
-    total += valorNumero("alfombra_pies_cuadrados") * ELITE_PRICING.extras.alfombra_ft2;
+    agregarCargo("Lavado de alfombra por habitaciones", valorNumero("alfombra_habitaciones") * ELITE_PRICING.extras.alfombra_habitacion);
+    agregarCargo("Lavado de alfombra por pies cuadrados", valorNumero("alfombra_pies_cuadrados") * ELITE_PRICING.extras.alfombra_ft2);
 
-    total += valorNumero("millas_servicio") * ELITE_PRICING.extras.milla;
+    agregarCargo("Millaje de ida y vuelta", valorNumero("millas_servicio") * ELITE_PRICING.extras.milla);
 
     const precioInicial = total;
 
@@ -2440,6 +2446,22 @@ function calcularPrecioAutomatico() {
         precioInput.value = repetir === "ninguno"
             ? precioInicial.toFixed(2)
             : precioRecurrente.toFixed(2);
+    }
+
+    const desgloseBox = document.getElementById("desglose_precio");
+    if (desgloseBox) {
+        const filas = desglose.map(item =>
+            `<div style="display:flex;justify-content:space-between;gap:12px;"><span>${item.concepto}</span><strong>$${item.monto.toFixed(2)}</strong></div>`
+        ).join("");
+        const descuento = precioInicial - precioRecurrente;
+        desgloseBox.innerHTML =
+            `<div style="font-weight:900;color:#60a5fa;margin-bottom:7px;">DESGLOSE DEL PRECIO</div>` +
+            filas +
+            (descuento > 0
+                ? `<div style="display:flex;justify-content:space-between;gap:12px;color:#22c55e;"><span>Descuento por frecuencia</span><strong>−$${descuento.toFixed(2)}</strong></div>`
+                : "") +
+            `<div style="display:flex;justify-content:space-between;gap:12px;border-top:1px solid #475569;margin-top:8px;padding-top:8px;font-size:15px;"><strong>TOTAL</strong><strong style="color:#22c55e;">$${(repetir === "ninguno" ? precioInicial : precioRecurrente).toFixed(2)}</strong></div>` +
+            `<small style="display:block;margin-top:8px;color:#94a3b8;">Las habitaciones y áreas comunes describen la propiedad y ya están cubiertas por el precio base.</small>`;
     }
 }
 
