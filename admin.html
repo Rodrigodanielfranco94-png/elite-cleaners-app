@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin Core v8.3.5 — Calendario con excepciones persistentes | Elite Core Stabilization fases 1-7 -->
+<!-- Elite Admin Core v8.5.3 — Device-Aware Document Sending | Primary-First Service Save -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin Core v8.3.5 — Calendario con excepciones persistentes - Elite Cleaners Company</title>
+    <title>Elite Admin Core v8.5.3 — Device-Aware Document Sending - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -13,6 +13,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
 
     <style>body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; padding-bottom: 100px; }
         h1 { font-style: italic; font-weight: 900; font-size: 22px; text-transform: uppercase; margin-bottom: 20px; }
@@ -1164,7 +1166,7 @@ body.elite-v5-body{
     <button class="elite-v5-nav-btn" data-module="servicios" onclick="eliteV5Navigate('servicios',this)"><span class="elite-v5-nav-icon">♧</span>Servicios</button>
     <button class="elite-v5-nav-btn" data-module="recuperacion" onclick="eliteV5Navigate('recuperacion',this)"><span class="elite-v5-nav-icon">♥</span>Clientes por recuperar <span id="elite-recovery-menu-count" class="elite-recovery-menu-count">0</span></button>
     <button class="elite-v5-nav-btn" data-module="mensajes" onclick="eliteV5Navigate('mensajes',this)"><span class="elite-v5-nav-icon">▢</span>Mensajes</button>
-    <button class="elite-v5-nav-btn" data-module="resenas" onclick="eliteV5Navigate('resenas',this)"><span class="elite-v5-nav-icon">☆</span>Reseñas</button>
+    <button class="elite-v5-nav-btn" data-module="estimates" onclick="eliteV5Navigate('estimates',this)"><span class="elite-v5-nav-icon">▤</span>Estimates</button>
     <button class="elite-v5-nav-btn" data-module="contabilidad" onclick="eliteV5Navigate('contabilidad',this)"><span class="elite-v5-nav-icon">▣</span>Contabilidad</button>
     <button class="elite-v5-nav-btn" data-module="gastos" onclick="eliteV5Navigate('gastos',this)"><span class="elite-v5-nav-icon">▱</span>Gastos</button>
     <button class="elite-v5-nav-btn" data-module="inventario" onclick="eliteV5Navigate('inventario',this)"><span class="elite-v5-nav-icon">▤</span>Inventario <span id="elite-inventory-menu-count" class="elite-menu-live-count elite-menu-live-count-inventory" hidden></span></button>
@@ -1554,9 +1556,6 @@ style="width:100%;"></textarea>
 
 <span class="label-text">Precio Recurrente</span>
 <input type="number" id="precio_recurrente" readonly>
-<div id="desglose_precio" style="margin:10px 0 14px;padding:14px;border:1px solid #334155;border-radius:12px;background:#0f172a;color:#e2e8f0;font-size:13px;line-height:1.55;">
-    Completa los datos para ver el desglose del precio.
-</div>
 <div id="admin-correction" style="display: none;">
     <span class="label-text" style="color: #f59e0b;">Corrección de Horas Reales</span>
 
@@ -1692,7 +1691,7 @@ style="width:100%;"></textarea>
   <div class="acc-shell">
     <aside class="acc-sidebar">
       <div class="acc-brand acc-brand-logo-wrap"><img data-elite-shared-logo class="acc-brand-logo" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="Elite Cleaners Company"><div><strong>Elite Admin</strong><small>v6.0.2</small></div></div>
-      <div class="acc-nav">⌂ Dashboard</div><div class="acc-nav">▣ Agenda</div><div class="acc-nav">♙ Clientes</div><div class="acc-nav">♙ Empleados</div><div class="acc-nav">♧ Servicios</div><div class="acc-nav">▢ Mensajes</div><div class="acc-nav">☆ Reseñas</div><div class="acc-nav active">▣ Contabilidad</div><div class="acc-nav" onclick="abrirAgregarGasto()">▱ Gastos</div><div class="acc-nav">▣ Inventario</div><div class="acc-nav">▥ Informes</div><div class="acc-nav">⚙ Configuración</div><div class="acc-nav" onclick="cerrarContabilidadElite()">↪ Volver al Admin</div>
+      <div class="acc-nav">⌂ Dashboard</div><div class="acc-nav">▣ Agenda</div><div class="acc-nav">♙ Clientes</div><div class="acc-nav">♙ Empleados</div><div class="acc-nav">♧ Servicios</div><div class="acc-nav">▢ Mensajes</div><div class="acc-nav" data-module="estimates" onclick="cerrarContabilidadElite();setTimeout(function(){eliteDocHistoryOpen()},80)">▤ Estimates</div><div class="acc-nav active">▣ Contabilidad</div><div class="acc-nav" onclick="abrirAgregarGasto()">▱ Gastos</div><div class="acc-nav">▣ Inventario</div><div class="acc-nav">▥ Informes</div><div class="acc-nav">⚙ Configuración</div><div class="acc-nav" onclick="cerrarContabilidadElite()">↪ Volver al Admin</div>
       <div class="acc-side-spacer"></div><div class="acc-company"><div class="acc-company-logo"><img data-elite-shared-logo src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="Elite Cleaners" style="width:100%;height:100%;object-fit:contain"></div><div><b>Elite Cleaners</b><small>Limpieza de Calidad</small></div></div>
     </aside>
     <main class="acc-main" id="accounting-capture-area">
@@ -2365,57 +2364,54 @@ function calcularPrecioAutomatico() {
     const base = ELITE_PRICING.bases[tipoParaCalculo] || ELITE_PRICING.bases["ESTÁNDAR"];
 
     let total = base;
-    const desglose = [{ concepto: `Precio base — ${tipoParaCalculo}`, monto: base }];
-    const agregarCargo = (concepto, monto) => {
-        const valor = Number(monto || 0);
-        if (valor <= 0) return;
-        total += valor;
-        desglose.push({ concepto, monto: valor });
-    };
 
-    /*
-     * Habitaciones, baños, sala, cocina, oficina, lavandería y comedor
-     * describen la propiedad. No se vuelven a cobrar sobre el precio base.
-     * Así se evita que una vivienda normal pague dos veces por sus ambientes.
-     * Los extras elegidos y los recargos por tamaño/millaje sí se cobran.
-     */
+    total += valorNumero("habitaciones") * ELITE_PRICING.ambientes.habitacion;
+    total += valorNumero("banos") * ELITE_PRICING.ambientes.bano;
+    total += valorNumero("medios_banos") * ELITE_PRICING.ambientes.medio_bano;
+    total += valorNumero("salas") * ELITE_PRICING.ambientes.sala;
+    total += valorNumero("cocinas") * ELITE_PRICING.ambientes.cocina;
+    total += valorNumero("oficinas") * ELITE_PRICING.ambientes.oficina;
+    total += valorNumero("lavanderia") * ELITE_PRICING.ambientes.lavanderia;
+    total += valorNumero("garaje") * ELITE_PRICING.ambientes.garaje;
+    total += valorNumero("comedor") * ELITE_PRICING.ambientes.comedor;
+    total += valorNumero("sala_juegos") * ELITE_PRICING.ambientes.sala_juegos;
 
     const ft2 = valorNumero("pies_cuadrados");
     const tarifaFt2 = obtenerTarifaPieCuadrado(tipoParaCalculo, ft2);
-    agregarCargo(`Recargo por tamaño (${ft2} ft²)`, ft2 * tarifaFt2);
+    total += ft2 * tarifaFt2;
 
     const horno = valorSelect("horno");
-    if (horno === "Outside") agregarCargo("Horno — exterior", 20);
-    if (horno === "Inside") agregarCargo("Horno — interior", 65);
-    if (horno === "Inside + Outside") agregarCargo("Horno — interior y exterior", 85);
+    if (horno === "Outside") total += 20;
+    if (horno === "Inside") total += 65;
+    if (horno === "Inside + Outside") total += 85;
 
     const nevera = valorSelect("nevera");
-    if (nevera === "Outside") agregarCargo("Nevera — exterior", precioExtraPorTipo("nevera_outside", tipoParaCalculo));
-    if (nevera === "1 Puerta Inside") agregarCargo("Nevera de 1 puerta — interior", precioExtraPorTipo("nevera_1_puerta_inside", tipoParaCalculo));
-    if (nevera === "2 Puertas Inside") agregarCargo("Nevera de 2 puertas — interior", precioExtraPorTipo("nevera_2_puertas_inside", tipoParaCalculo));
-    if (nevera === "1 Puerta Inside + Outside") agregarCargo("Nevera de 1 puerta — interior y exterior", precioExtraPorTipo("nevera_1_puerta_inside_outside", tipoParaCalculo));
-    if (nevera === "2 Puertas Inside + Outside") agregarCargo("Nevera de 2 puertas — interior y exterior", precioExtraPorTipo("nevera_2_puertas_inside_outside", tipoParaCalculo));
+    if (nevera === "Outside") total += precioExtraPorTipo("nevera_outside", tipoParaCalculo);
+    if (nevera === "1 Puerta Inside") total += precioExtraPorTipo("nevera_1_puerta_inside", tipoParaCalculo);
+    if (nevera === "2 Puertas Inside") total += precioExtraPorTipo("nevera_2_puertas_inside", tipoParaCalculo);
+    if (nevera === "1 Puerta Inside + Outside") total += precioExtraPorTipo("nevera_1_puerta_inside_outside", tipoParaCalculo);
+    if (nevera === "2 Puertas Inside + Outside") total += precioExtraPorTipo("nevera_2_puertas_inside_outside", tipoParaCalculo);
 
     const gabinetes = valorSelect("gabinetes");
-    if (gabinetes === "Outside") agregarCargo("Gabinetes — exterior", precioExtraPorTipo("gabinetes_outside", tipoParaCalculo));
-    if (gabinetes === "Inside") agregarCargo("Gabinetes — interior", precioExtraPorTipo("gabinetes_inside", tipoParaCalculo));
-    if (gabinetes === "Inside & Outside") agregarCargo("Gabinetes — interior y exterior", precioExtraPorTipo("gabinetes_inside_outside", tipoParaCalculo));
+    if (gabinetes === "Outside") total += precioExtraPorTipo("gabinetes_outside", tipoParaCalculo);
+    if (gabinetes === "Inside") total += precioExtraPorTipo("gabinetes_inside", tipoParaCalculo);
+    if (gabinetes === "Inside & Outside") total += precioExtraPorTipo("gabinetes_inside_outside", tipoParaCalculo);
 
     const ventanas = valorSelect("ventanas");
-    if (ventanas === "Outside") agregarCargo("Ventanas — exterior", precioExtraPorTipo("ventanas_outside", tipoParaCalculo));
-    if (ventanas === "Inside") agregarCargo("Ventanas — interior", precioExtraPorTipo("ventanas_inside", tipoParaCalculo));
-    if (ventanas === "Inside & Outside") agregarCargo("Ventanas — interior y exterior", precioExtraPorTipo("ventanas_inside_outside", tipoParaCalculo));
+    if (ventanas === "Outside") total += precioExtraPorTipo("ventanas_outside", tipoParaCalculo);
+    if (ventanas === "Inside") total += precioExtraPorTipo("ventanas_inside", tipoParaCalculo);
+    if (ventanas === "Inside & Outside") total += precioExtraPorTipo("ventanas_inside_outside", tipoParaCalculo);
 
     const baseboards = valorSelect("baseboards");
-    if (baseboards === "Sí") agregarCargo("Baseboards", precioExtraPorTipo("baseboards", tipoParaCalculo));
+    if (baseboards === "Sí") total += precioExtraPorTipo("baseboards", tipoParaCalculo);
 
     const perros = valorSelect("perros");
-    if (perros === "Sí") agregarCargo("Perros en la casa", ELITE_PRICING.extras.perros);
+    if (perros === "Sí") total += ELITE_PRICING.extras.perros;
 
-    agregarCargo("Lavado de alfombra por habitaciones", valorNumero("alfombra_habitaciones") * ELITE_PRICING.extras.alfombra_habitacion);
-    agregarCargo("Lavado de alfombra por pies cuadrados", valorNumero("alfombra_pies_cuadrados") * ELITE_PRICING.extras.alfombra_ft2);
+    total += valorNumero("alfombra_habitaciones") * ELITE_PRICING.extras.alfombra_habitacion;
+    total += valorNumero("alfombra_pies_cuadrados") * ELITE_PRICING.extras.alfombra_ft2;
 
-    agregarCargo("Millaje de ida y vuelta", valorNumero("millas_servicio") * ELITE_PRICING.extras.milla);
+    total += valorNumero("millas_servicio") * ELITE_PRICING.extras.milla;
 
     const precioInicial = total;
 
@@ -2446,22 +2442,6 @@ function calcularPrecioAutomatico() {
         precioInput.value = repetir === "ninguno"
             ? precioInicial.toFixed(2)
             : precioRecurrente.toFixed(2);
-    }
-
-    const desgloseBox = document.getElementById("desglose_precio");
-    if (desgloseBox) {
-        const filas = desglose.map(item =>
-            `<div style="display:flex;justify-content:space-between;gap:12px;"><span>${item.concepto}</span><strong>$${item.monto.toFixed(2)}</strong></div>`
-        ).join("");
-        const descuento = precioInicial - precioRecurrente;
-        desgloseBox.innerHTML =
-            `<div style="font-weight:900;color:#60a5fa;margin-bottom:7px;">DESGLOSE DEL PRECIO</div>` +
-            filas +
-            (descuento > 0
-                ? `<div style="display:flex;justify-content:space-between;gap:12px;color:#22c55e;"><span>Descuento por frecuencia</span><strong>−$${descuento.toFixed(2)}</strong></div>`
-                : "") +
-            `<div style="display:flex;justify-content:space-between;gap:12px;border-top:1px solid #475569;margin-top:8px;padding-top:8px;font-size:15px;"><strong>TOTAL</strong><strong style="color:#22c55e;">$${(repetir === "ninguno" ? precioInicial : precioRecurrente).toFixed(2)}</strong></div>` +
-            `<small style="display:block;margin-top:8px;color:#94a3b8;">Las habitaciones y áreas comunes describen la propiedad y ya están cubiertas por el precio base.</small>`;
     }
 }
 
@@ -2701,13 +2681,39 @@ setTimeout(activarCalculadoraAutomatica, 500);
          * Primero se guarda el trabajo. El guardado del cliente es secundario:
          * si sus reglas fallan, no impedirá actualizar el servicio.
          */
+        let servicioGuardadoRef = null;
         if (editId) {
             await editRef.set(data, { merge: true });
+            servicioGuardadoRef = editRef;
+            data.id = editIdReal;
+            data.firestore_id = editIdReal;
         } else {
             const nuevoRef = await db.collection("servicios").add(data);
+            servicioGuardadoRef = nuevoRef;
             data.id = nuevoRef.id;
             data.firestore_id = nuevoRef.id;
         }
+
+        // No anuncia éxito hasta comprobar que Firebase puede leer el trabajo recién guardado.
+        const confirmacionGuardado = await servicioGuardadoRef.get();
+        if (!confirmacionGuardado.exists) {
+            throw new Error("Firebase no confirmó el guardado del servicio.");
+        }
+
+        // Lo incorpora inmediatamente a la memoria para que aparezca en Servicios y en la lupa
+        // sin depender de la velocidad de la suscripción en tiempo real.
+        const servicioConfirmado = {
+            ...(confirmacionGuardado.data() || data),
+            id: confirmacionGuardado.id,
+            firestore_id: confirmacionGuardado.id
+        };
+        const indiceLocal = todosLosServicios.findIndex(s =>
+            String(s.id || s.firestore_id) === String(confirmacionGuardado.id)
+        );
+        if (indiceLocal >= 0) todosLosServicios[indiceLocal] = servicioConfirmado;
+        else todosLosServicios.push(servicioConfirmado);
+        window.todosLosServicios = todosLosServicios;
+        renderHistorial();
 
         try {
             await db.collection("clientes").doc(cliNombre).set({
@@ -2750,12 +2756,18 @@ setTimeout(activarCalculadoraAutomatica, 500);
          * posteriormente un servicio a semanal no añadía los domingos que
          * faltaban.
          */
-        await sincronizarRepeticionesServicio(data, data.repetir, editIdReal || data.id);
+        let avisoRepeticion = "";
+        try {
+            await sincronizarRepeticionesServicio(data, data.repetir, editIdReal || data.id);
+        } catch (repeticionError) {
+            console.error("El servicio se guardó, pero falló la sincronización de repeticiones:", repeticionError);
+            avisoRepeticion = "\n\nEl servicio principal quedó guardado, pero no se pudieron crear todas las repeticiones. Puedes encontrarlo con la lupa y volver a editar la frecuencia.";
+        }
 
-        alert(editId
+        alert((editId
             ? "Cambios guardados correctamente ✅"
             : "Trabajo asignado correctamente ✅"
-        );
+        ) + avisoRepeticion);
 
         location.reload();
 
@@ -2851,31 +2863,32 @@ async function eliteV835RegistrarExcepcionCalendario(servicio) {
         servicio.firestore_id ||
         "sin-serie"
     );
-    await db.collection("excepciones_calendario")
-        .doc(eliteV835IdExcepcion(serieId, servicio.fecha))
-        .set({
-            serie_id: serieId,
-            fecha: String(servicio.fecha),
-            servicio_id_eliminado: String(servicio.id || servicio.firestore_id || ""),
-            cliente: servicio.cliente || "",
-            motivo: "Trabajo individual eliminado por el administrador",
-            creado_en: firebase.firestore.FieldValue.serverTimestamp()
+    const mismaSerie = (todosLosServicios || []).filter(item => {
+        if (!item || item.id === servicio.id) return false;
+        const itemSerie = String(item.serie_id || item.serie_origen_id || "");
+        if (itemSerie && itemSerie === serieId) return true;
+        return eliteV82ClaveTexto(item.cliente) === eliteV82ClaveTexto(servicio.cliente) &&
+            eliteV82ClaveTexto(item.direccion) === eliteV82ClaveTexto(servicio.direccion) &&
+            eliteV82NormalizarRepeticion(item.repetir || item.frecuencia) ===
+                eliteV82NormalizarRepeticion(servicio.repetir || servicio.frecuencia);
+    });
+
+    if (!mismaSerie.length) return;
+
+    const batch = db.batch();
+    mismaSerie.forEach(item => {
+        batch.set(db.collection("servicios").doc(item.id), {
+            fechas_excluidas: firebase.firestore.FieldValue.arrayUnion(String(servicio.fecha)),
+            actualizado_en: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
+    });
+    await batch.commit();
 }
 
-async function eliteV835FechasExcluidas(serieId) {
+async function eliteV835FechasExcluidas(serieId, data) {
     const fechas = new Set(ELITE_FECHAS_SIN_TRABAJO);
-    try {
-        const snap = await db.collection("excepciones_calendario")
-            .where("serie_id", "==", String(serieId || ""))
-            .get();
-        snap.forEach(doc => {
-            const fecha = String(doc.data()?.fecha || "");
-            if (fecha) fechas.add(fecha);
-        });
-    } catch (error) {
-        console.warn("No se pudieron consultar las excepciones del calendario:", error);
-    }
+    const guardadas = Array.isArray(data?.fechas_excluidas) ? data.fechas_excluidas : [];
+    guardadas.forEach(fecha => fechas.add(String(fecha)));
     return fechas;
 }
 
@@ -2890,7 +2903,7 @@ async function sincronizarRepeticionesServicio(data, repeticion, documentoOrigen
     if (!origenId) return;
 
     const serieId = String(data.serie_id || data.serie_origen_id || origenId);
-    const fechasExcluidas = await eliteV835FechasExcluidas(serieId);
+    const fechasExcluidas = await eliteV835FechasExcluidas(serieId, data);
     const snap = await db.collection("servicios").get();
     const existentes = new Map();
     const refsSerie = [];
@@ -2899,6 +2912,9 @@ async function sincronizarRepeticionesServicio(data, repeticion, documentoOrigen
         const item = doc.data() || {};
         if (doc.id === origenId || eliteV82EsMismaSerie(item, data, repeticion, serieId)) {
             if (item.fecha) existentes.set(String(item.fecha), doc.id);
+            if (Array.isArray(item.fechas_excluidas)) {
+                item.fechas_excluidas.forEach(fecha => fechasExcluidas.add(String(fecha)));
+            }
             refsSerie.push({ ref: doc.ref, data: item, id: doc.id });
         }
     });
@@ -3018,6 +3034,7 @@ async function aplicarEstadosAutomaticosEneroJulio2026() {
     const finalizar = todosLosServicios.filter(s => {
         const fecha = String(s.fecha || "");
         return fecha >= "2026-01-01" && fecha <= "2026-07-31" &&
+               !ELITE_FECHAS_SIN_TRABAJO.has(fecha) &&
                !(s.estado === "completado" && s.estado_calendario === "completado");
     });
 
@@ -3052,7 +3069,15 @@ async function aplicarEstadosAutomaticosEneroJulio2026() {
         console.log(`Calendario corregido: ${eliminar.length} trabajos eliminados y ${finalizar.length} trabajos de enero a julio marcados como terminados.`);
     } catch (error) {
         console.error("No se pudo aplicar la corrección del calendario:", error);
-        alert("No se pudo completar la corrección automática del calendario. Revisa tu conexión e inténtalo nuevamente.");
+        const codigo = String(error?.code || "").replace("firestore/", "");
+        const detalle = String(error?.message || error || "Error desconocido");
+        alert(
+            "No se pudo completar la corrección automática del calendario.\n\n" +
+            (codigo ? `Código: ${codigo}\n` : "") +
+            `Detalle: ${detalle}\n\n` +
+            "Esto no necesariamente significa que falle tu internet. " +
+            "La aplicación no modificó los trabajos y puedes volver a intentarlo."
+        );
     } finally {
         eliteCalendarMaintenanceRunning = false;
     }
@@ -3069,6 +3094,7 @@ function programarEstadosAutomaticosEneroJulio2026() {
         const s = doc.data() || {};
         todosLosServicios.push({ ...s, id: doc.id, firestore_id: doc.id });
     });
+    window.todosLosServicios = todosLosServicios;
 
     // Enero a julio de 2026 se consideran terminados automáticamente.
     // Agosto en adelante conserva el estado manual configurado por el administrador.
@@ -3314,6 +3340,14 @@ s.estado === "completado"
 
     <button class="btn-action elite-evidence-btn" onclick="abrirEvidenciaServicio('${s.id}')">
         📸 Ver evidencia (${Number(s.fotos_iniciales_count || 0) + Number(s.fotos_evidencia_count || 0) + Number(s.fotos_finales_count || 0)})
+    </button>
+
+    <button class="btn-action" style="background:#2563eb" onclick="eliteDocOpen('${s.id}','estimate')">
+        📄 Estimate
+    </button>
+
+    <button class="btn-action" style="background:#0f766e" onclick="eliteDocOpen('${s.id}','invoice')">
+        🧾c Invoice
     </button>
 
     <button class="btn-action btn-edit" id="edit-btn-${s.id}">
@@ -8239,6 +8273,159 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,1200));setIn
 })();
 </script>
 
+<!-- Elite Client Documents v8.4.0: Estimates and Invoices -->
+<style id="elite-docs-v840-style">
+.edoc-modal{display:none;position:fixed;inset:0;z-index:1000000;background:#f3f6fb;color:#111827;overflow:auto;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.edoc-shell{max-width:940px;margin:0 auto;padding:18px 14px 80px}.edoc-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.edoc-head h2{margin:0;font-size:23px}.edoc-close{border:0;border-radius:50%;width:42px;height:42px;background:#111827;color:#fff;font-size:22px;cursor:pointer}.edoc-help{background:#dbeafe;border:1px solid #93c5fd;color:#1e3a8a;padding:11px;border-radius:12px;font-size:12px;line-height:1.45;margin-bottom:12px}.edoc-card{background:#fff;border:1px solid #dbe2ea;border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 4px 18px rgba(15,23,42,.05)}.edoc-card h3{margin:0 0 11px;font-size:15px}.edoc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.edoc-field label{display:block;font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;margin:0 0 4px}.edoc-field input,.edoc-field select,.edoc-field textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;background:#fff;color:#0f172a;border-radius:10px;padding:10px;font-size:13px;margin:0}.edoc-span2{grid-column:1/-1}.edoc-items{width:100%;border-collapse:collapse}.edoc-items th{font-size:10px;text-align:left;color:#475569;padding:7px 5px;border-bottom:1px solid #cbd5e1}.edoc-items td{padding:5px;vertical-align:top}.edoc-items input,.edoc-items textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:8px;background:#fff;color:#111827;margin:0}.edoc-items textarea{min-height:58px;resize:vertical}.edoc-remove{border:0;border-radius:8px;background:#dc2626;color:#fff;padding:9px;cursor:pointer}.edoc-add{border:1px dashed #2563eb;border-radius:10px;background:#eff6ff;color:#1d4ed8;padding:10px;width:100%;font-weight:800;margin-top:8px;cursor:pointer}.edoc-totals{margin-left:auto;max-width:360px}.edoc-total-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px}.edoc-total-row.grand{font-size:20px;font-weight:900;border-top:2px solid #0f172a;margin-top:5px;padding-top:10px}.edoc-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;position:sticky;bottom:8px;background:rgba(243,246,251,.94);backdrop-filter:blur(8px);padding:10px;border-radius:14px}.edoc-actions button{border:0;border-radius:11px;padding:12px 8px;color:#fff;font-weight:850;cursor:pointer}.edoc-send-choice{display:none;position:fixed;inset:0;z-index:1000002;background:rgba(0,0,0,.72);padding:20px;align-items:center;justify-content:center}.edoc-choice-card{width:min(420px,100%);background:#fff;color:#111827;border-radius:18px;padding:18px}.edoc-choice-card h3{margin:0 0 7px}.edoc-choice-card p{color:#475569;font-size:13px}.edoc-choice-grid{display:grid;gap:9px}.edoc-choice-grid button{border:0;border-radius:12px;padding:14px;color:#fff;font-weight:900;cursor:pointer}
+@media(max-width:650px){.edoc-grid{grid-template-columns:1fr}.edoc-span2{grid-column:auto}.edoc-actions{grid-template-columns:1fr 1fr}.edoc-items th:nth-child(2),.edoc-items td:nth-child(2){display:none}.edoc-shell{padding:12px 8px 70px}}
+</style>
+
+<div id="elite-doc-modal" class="edoc-modal" aria-hidden="true">
+  <div class="edoc-shell">
+    <div class="edoc-head"><h2 id="edoc-title">Estimate</h2><button class="edoc-close" onclick="eliteDocClose()" aria-label="Cerrar">×</button></div>
+    <div class="edoc-help">La pantalla administrativa está en español, pero el documento que recibirá el cliente se genera completamente en inglés. Revisa toda la información antes de guardarlo o enviarlo.</div>
+    <div class="edoc-card"><h3>Customer and document information</h3><div class="edoc-grid">
+      <div class="edoc-field"><label>Customer name</label><input id="edoc-customer"></div>
+      <div class="edoc-field"><label>Phone</label><input id="edoc-phone" inputmode="tel"></div>
+      <div class="edoc-field edoc-span2"><label>Service address</label><input id="edoc-address"></div>
+      <div class="edoc-field edoc-span2"><label>Email</label><input id="edoc-email" type="email"></div>
+      <div class="edoc-field"><label>Document number</label><input id="edoc-number"></div>
+      <div class="edoc-field"><label>Status</label><select id="edoc-status"><option value="DRAFT">DRAFT</option><option value="SENT">SENT</option><option value="APPROVED">APPROVED</option><option value="DECLINED">DECLINED</option><option value="PARTIALLY PAID">PARTIALLY PAID</option><option value="PAID">PAID</option><option value="EXPIRED">EXPIRED</option></select></div>
+      <div class="edoc-field"><label>Issued</label><input id="edoc-issued" type="date"></div>
+      <div class="edoc-field"><label id="edoc-due-label">Valid until</label><input id="edoc-due" type="date"></div>
+    </div></div>
+    <div class="edoc-card"><h3>Services and prices</h3><div style="overflow:auto"><table class="edoc-items"><thead><tr><th>Description</th><th style="width:90px">Quantity</th><th style="width:110px">Unit price</th><th style="width:105px">Total</th><th style="width:42px"></th></tr></thead><tbody id="edoc-items"></tbody></table></div><button class="edoc-add" onclick="eliteDocAddItem()">+ Add custom item</button></div>
+    <div class="edoc-card"><div class="edoc-grid">
+      <div class="edoc-field"><label>Discount ($)</label><input id="edoc-discount" type="number" min="0" step="0.01" value="0" oninput="eliteDocTotals()"></div>
+      <div class="edoc-field"><label>Sales tax (%)</label><input id="edoc-tax" type="number" min="0" step="0.01" value="0" oninput="eliteDocTotals()"></div>
+      <div class="edoc-field"><label>Deposit / amount paid ($)</label><input id="edoc-paid" type="number" min="0" step="0.01" value="0" oninput="eliteDocTotals()"></div>
+      <div class="edoc-field"><label>Payment due</label><select id="edoc-payment-terms"><option>Due upon receipt</option><option>50% deposit required</option><option>Due on service date</option><option>Net 7</option><option>Net 15</option><option>Net 30</option></select></div>
+      <div class="edoc-field edoc-span2"><label>Notes shown to customer</label><textarea id="edoc-notes" rows="3">Includes supplies, equipment, and all work materials. This document includes only the services listed above. Additional services require prior approval and may result in additional charges.</textarea></div>
+      <div class="edoc-field edoc-span2"><label>Terms and conditions</label><textarea id="edoc-terms" rows="4">Please review the service details before approval. A deposit may be required to reserve the service date. The remaining balance is due upon completion unless otherwise stated. Changes requested after approval may affect the final price.</textarea></div>
+    </div><div class="edoc-totals"><div class="edoc-total-row"><span>Subtotal</span><b id="edoc-subtotal">$0.00</b></div><div class="edoc-total-row"><span>Discount</span><b id="edoc-discount-view">-$0.00</b></div><div class="edoc-total-row"><span>Tax</span><b id="edoc-tax-view">$0.00</b></div><div class="edoc-total-row"><span>Amount paid</span><b id="edoc-paid-view">-$0.00</b></div><div class="edoc-total-row grand"><span id="edoc-grand-label">Estimate total</span><span id="edoc-grand">$0.00</span></div><div class="edoc-total-row"><span>Balance due</span><b id="edoc-balance">$0.00</b></div></div></div>
+    <div class="edoc-actions"><button style="background:#475569" onclick="eliteDocSave()">Save draft</button><button style="background:#7c3aed" onclick="eliteDocDownload()">Download PDF</button><button style="background:#2563eb" onclick="eliteDocOpenSend()">Send</button><button style="background:#111827" onclick="eliteDocClose()">Close</button></div>
+  </div>
+</div>
+
+<div id="elite-doc-send-choice" class="edoc-send-choice">
+  <div class="edoc-choice-card"><h3>¿Cómo quieres enviarlo?</h3><p>El documento y el mensaje están en inglés. La aplicación pedirá una confirmación final antes de abrir el método elegido.</p><div class="edoc-choice-grid"><button style="background:#16a34a" onclick="eliteDocSend('sms')">📱 Enviar por SMS</button><button style="background:#2563eb" onclick="eliteDocSend('email')">✉️ Enviar por correo electrónico</button><button style="background:#64748b" onclick="eliteDocCloseSend()">Cancelar</button></div></div>
+</div>
+
+<script id="elite-docs-v840-js">
+(function(){
+  const $=id=>document.getElementById(id); const money=n=>'$'+(Number(n)||0).toFixed(2); const num=v=>Math.max(0,Number(v)||0);
+  const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  let state={service:null,type:'estimate',items:[],savedId:null};
+  function serviceById(id){
+    const rows=typeof todosLosServicios!=='undefined'&&Array.isArray(todosLosServicios)
+      ? todosLosServicios
+      : (Array.isArray(window.todosLosServicios)?window.todosLosServicios:[]);
+    return rows.find(x=>String(x.id||x.firestore_id)===String(id));
+  }
+  async function resolveService(id){
+    const local=serviceById(id);
+    if(local)return local;
+    try{
+      const snap=await db.collection('servicios').doc(String(id)).get();
+      if(snap.exists)return{id:snap.id,firestore_id:snap.id,...(snap.data()||{})};
+    }catch(error){console.warn('No se pudo consultar el servicio directamente.',error)}
+    return null;
+  }
+  const isoDate=d=>{const x=new Date(d);return x.toISOString().slice(0,10)};
+  function plusDays(date,days){const d=new Date(date+'T12:00:00');d.setDate(d.getDate()+days);return isoDate(d)}
+  function cleanType(t){return String(t||'Cleaning').replaceAll('_',' ').replace('ESTÁNDAR','Standard').replace('PROFUNDA','Deep').replace('PRIMERA','First-Time').replace('POST-CONSTRUCCION','Post-Construction')}
+  function scopeForType(t){
+    const type=cleanType(t).toLowerCase();
+    const standard=`KITCHEN\n• Sweep and mop floors\n• Clean countertops, backsplash and sink\n• Clean appliance exteriors\n• Wipe cabinet exteriors\n• Clean and disinfect high-touch surfaces\n• Empty trash bins\n\nBATHROOMS\n• Clean and disinfect toilets, sinks, tubs and showers\n• Clean mirrors, fixtures and cabinet exteriors\n• Sweep and mop floors\n• Empty trash bins\n\nLIVING, DINING AND BEDROOMS\n• Dust reachable surfaces, furniture and fixtures\n• Vacuum carpets and mop hard floors\n• Clean doors, handles and light switches\n• Empty trash bins`;
+    const deep=`${standard}\n\nDEEP-CLEANING DETAIL\n• Detailed baseboard and edge cleaning\n• Extra attention to buildup and reachable corners\n• Detailed cleaning of doors, frames and fixtures`;
+    if(type.includes('post-construction'))return`POST-CONSTRUCTION CLEANING\n• Remove fine construction dust from reachable surfaces\n• Vacuum and mop floors in detail\n• Clean cabinets, counters, fixtures and baseboards\n• Clean interior glass and remove light labels or residue when safe\n• Final detail cleaning of kitchens, bathrooms and living areas`;
+    if(type.includes('move'))return`MOVE-IN / MOVE-OUT CLEANING\n${deep}\n• Clean inside empty cabinets and drawers\n• Detail empty closets and storage areas\n• Prepare the property for turnover`;
+    if(type.includes('deep')||type.includes('first-time')||type.includes('profunda')||type.includes('primera'))return deep;
+    return standard;
+  }
+  function priceForExtra(s,key){
+    try{const type=normalizarTipoLimpieza(s.tipo||'ESTÁNDAR');const recurring=(s.repetir&&s.repetir!=='ninguno');const calcType=recurring?'ESTÁNDAR':type;
+      const map={baseboards:'baseboards'};return precioExtraPorTipo(map[key]||key,calcType)||0;
+    }catch(_){return 0}
+  }
+  function initialItems(s){
+    const lines=[]; const extras=[]; const qty=(v)=>num(v);
+    const add=(description,q,unit)=>{q=num(q);unit=num(unit);if(q>0&&unit>=0)extras.push({description,quantity:q,unitPrice:unit})};
+    const pricing=window.ELITE_PRICING||{}; const env=pricing.ambientes||{};
+    add('Additional bedroom',qty(s.habitaciones),env.habitacion||25); add('Bathroom',qty(s.banos),env.bano||40); add('Half bathroom',qty(s.medios_banos),env.medio_bano||20); add('Living room',qty(s.salas),env.sala||25); add('Kitchen',qty(s.cocinas),env.cocina||35); add('Office',qty(s.oficinas),env.oficina||25); add('Laundry room',qty(s.lavanderia),env.lavanderia||20); add('Garage',qty(s.garaje||s.garage),env.garaje||35); add('Dining room',qty(s.comedor),env.comedor||15); add('Game room',qty(s.sala_juegos),env.sala_juegos||25);
+    const extraMap=[['Oven',s.horno,s.horno==='Outside'?20:s.horno==='Inside'?65:s.horno==='Inside + Outside'?85:0],['Refrigerator',s.nevera,s.nevera==='Outside'?priceForExtra(s,'nevera_outside'):s.nevera==='1 Puerta Inside'?priceForExtra(s,'nevera_1_puerta_inside'):s.nevera==='2 Puertas Inside'?priceForExtra(s,'nevera_2_puertas_inside'):s.nevera==='1 Puerta Inside + Outside'?priceForExtra(s,'nevera_1_puerta_inside_outside'):s.nevera==='2 Puertas Inside + Outside'?priceForExtra(s,'nevera_2_puertas_inside_outside'):0],['Cabinets',s.gabinetes,s.gabinetes==='Outside'?priceForExtra(s,'gabinetes_outside'):s.gabinetes==='Inside'?priceForExtra(s,'gabinetes_inside'):s.gabinetes==='Inside & Outside'?priceForExtra(s,'gabinetes_inside_outside'):0],['Windows',s.ventanas,s.ventanas==='Outside'?priceForExtra(s,'ventanas_outside'):s.ventanas==='Inside'?priceForExtra(s,'ventanas_inside'):s.ventanas==='Inside & Outside'?priceForExtra(s,'ventanas_inside_outside'):0],['Baseboard cleaning',s.baseboards,s.baseboards==='Sí'?priceForExtra(s,'baseboards'):0]];
+    extraMap.forEach(([n,opt,p])=>{if(opt&&opt!=='No'&&p>0)add(n+(opt&&opt!=='Sí'?' ('+opt+')':''),1,p)}); if(s.perros==='Sí')add('Pet-related cleaning surcharge',1,50); add('Carpet cleaning - room',s.alfombra_habitaciones,(pricing.extras||{}).alfombra_habitacion||35); if(num(s.alfombra_pies_cuadrados)>0)add('Carpet cleaning - square feet',s.alfombra_pies_cuadrados,(pricing.extras||{}).alfombra_ft2||.15);
+    const target=num(s.precio_total||s.precio_inicial); let extrasTotal=extras.reduce((a,x)=>a+x.quantity*x.unitPrice,0); const detail=`${qty(s.habitaciones)} bedroom(s), ${qty(s.banos)} bathroom(s)${qty(s.medios_banos)?', '+qty(s.medios_banos)+' half bathroom(s)':''}${qty(s.pies_cuadrados)?', '+qty(s.pies_cuadrados)+' sq ft':''}. Service date: ${s.fecha||'To be scheduled'}.`;
+    if(extrasTotal<=target){lines.push({description:`${cleanType(s.tipo)} Cleaning Service\n${detail}\n\n${scopeForType(s.tipo)}`,quantity:1,unitPrice:target-extrasTotal});lines.push(...extras)}else{lines.push({description:`${cleanType(s.tipo)} Cleaning Service\n${detail}\n\n${scopeForType(s.tipo)}\n\nIncludes the selected property details and extras.`,quantity:1,unitPrice:target})}
+    if(!lines.length)lines.push({description:'Professional Cleaning Service',quantity:1,unitPrice:target}); return lines;
+  }
+  function renderItems(){const body=$('edoc-items');body.innerHTML=state.items.map((x,i)=>`<tr><td><textarea oninput="eliteDocItem(${i},'description',this.value)">${esc(x.description)}</textarea></td><td><input type="number" min="0" step="1" value="${num(x.quantity)}" oninput="eliteDocItem(${i},'quantity',this.value)"></td><td><input type="number" min="0" step="0.01" value="${num(x.unitPrice).toFixed(2)}" oninput="eliteDocItem(${i},'unitPrice',this.value)"></td><td style="font-weight:800;padding-top:14px" id="edoc-line-${i}">${money(num(x.quantity)*num(x.unitPrice))}</td><td><button class="edoc-remove" onclick="eliteDocRemoveItem(${i})">×</button></td></tr>`).join('');eliteDocTotals()}
+  window.eliteDocItem=(i,k,v)=>{state.items[i][k]=k==='description'?v:num(v);const el=$('edoc-line-'+i);if(el)el.textContent=money(num(state.items[i].quantity)*num(state.items[i].unitPrice));eliteDocTotals()};
+  window.eliteDocAddItem=()=>{state.items.push({description:'Custom service',quantity:1,unitPrice:0});renderItems()}; window.eliteDocRemoveItem=i=>{if(state.items.length===1)return alert('El documento debe conservar al menos un concepto.');state.items.splice(i,1);renderItems()};
+  window.eliteDocTotals=()=>{const subtotal=state.items.reduce((a,x)=>a+num(x.quantity)*num(x.unitPrice),0),discount=Math.min(num($('edoc-discount')?.value),subtotal),taxable=Math.max(0,subtotal-discount),tax=taxable*num($('edoc-tax')?.value)/100,total=taxable+tax,paid=Math.min(num($('edoc-paid')?.value),total),balance=Math.max(0,total-paid);$('edoc-subtotal').textContent=money(subtotal);$('edoc-discount-view').textContent='-'+money(discount);$('edoc-tax-view').textContent=money(tax);$('edoc-paid-view').textContent='-'+money(paid);$('edoc-grand').textContent=money(total);$('edoc-balance').textContent=money(balance);return{subtotal,discount,tax,total,paid,balance}};
+  window.eliteDocOpen=async(id,type,documentId='')=>{const s=await resolveService(id);if(!s)return alert('No pude localizar este servicio. Verifica que el trabajo todavía exista e inténtalo nuevamente.');state={service:s,type:type==='invoice'?'invoice':'estimate',items:initialItems(s),savedId:null};const today=isoDate(new Date()),prefix=state.type==='invoice'?'INV':'EST';$('edoc-title').textContent=state.type==='invoice'?'Invoice':'Estimate';$('edoc-grand-label').textContent=state.type==='invoice'?'Invoice total':'Estimate total';$('edoc-due-label').textContent=state.type==='invoice'?'Due date':'Valid until';$('edoc-customer').value=s.cliente||'';$('edoc-phone').value=s.whatsapp||s.telefono||'';$('edoc-email').value=s.email_cliente||'';$('edoc-address').value=s.direccion||'';$('edoc-number').value=`${prefix}-${String(s.fecha||today).replaceAll('-','')}-${String(s.id).slice(0,5).toUpperCase()}`;$('edoc-status').value='DRAFT';$('edoc-issued').value=today;$('edoc-due').value=plusDays(today,state.type==='invoice'?7:14);$('edoc-discount').value=0;$('edoc-tax').value=0;$('edoc-paid').value=state.type==='invoice'&&elitePaymentState(s).deposito?num(s.deposito_monto||num(s.precio_total)*.5):0;$('edoc-payment-terms').value=state.type==='estimate'?'50% deposit required':'Due upon receipt';renderItems();$('elite-doc-modal').style.display='block';$('elite-doc-modal').setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
+    try{const snap=await db.collection('servicios').doc(s.id).collection('documentos_cliente').get();const matches=snap.docs.filter(x=>x.data().tipo===state.type).sort((a,b)=>{const av=a.data().actualizado_en?.toMillis?.()||0,bv=b.data().actualizado_en?.toMillis?.()||0;return bv-av});const prior=documentId?matches.find(x=>x.id===documentId):matches[0];if(prior){const d=prior.data();if(documentId||confirm(`Ya existe un ${state.type==='invoice'?'Invoice':'Estimate'} guardado para este trabajo.\n\n¿Quieres abrir la versión guardada?`)){state.savedId=prior.id;loadSaved(d)}}}catch(e){console.warn('No se pudo consultar un documento anterior.',e)}};
+  function loadSaved(d){$('edoc-customer').value=d.customer||'';$('edoc-phone').value=d.phone||'';$('edoc-email').value=d.email||'';$('edoc-address').value=d.address||'';$('edoc-number').value=d.number||'';$('edoc-status').value=d.status||'DRAFT';$('edoc-issued').value=d.issued||'';$('edoc-due').value=d.due||'';$('edoc-discount').value=num(d.discount);$('edoc-tax').value=num(d.taxRate);$('edoc-paid').value=num(d.paid);$('edoc-payment-terms').value=d.paymentTerms||'Due upon receipt';$('edoc-notes').value=d.notes||'';$('edoc-terms').value=d.terms||'';state.items=Array.isArray(d.items)&&d.items.length?d.items:state.items;renderItems()}
+  window.eliteDocClose=()=>{$('elite-doc-modal').style.display='none';$('elite-doc-modal').setAttribute('aria-hidden','true');document.body.style.overflow='';eliteDocCloseSend()};
+  function data(){return{tipo:state.type,servicio_id:state.service.id,customer:$('edoc-customer').value.trim(),phone:$('edoc-phone').value.trim(),email:$('edoc-email').value.trim(),address:$('edoc-address').value.trim(),number:$('edoc-number').value.trim(),status:$('edoc-status').value,issued:$('edoc-issued').value,due:$('edoc-due').value,items:state.items.map(x=>({description:String(x.description||''),quantity:num(x.quantity),unitPrice:num(x.unitPrice)})),discount:num($('edoc-discount').value),taxRate:num($('edoc-tax').value),paid:num($('edoc-paid').value),paymentTerms:$('edoc-payment-terms').value,notes:$('edoc-notes').value.trim(),terms:$('edoc-terms').value.trim(),totals:eliteDocTotals()}}
+  window.eliteDocSave=async(silent=false)=>{if(!state.service)return false;const d=data();if(!d.customer||!d.number)return alert('Completa el nombre del cliente y el número del documento.');try{const col=db.collection('servicios').doc(state.service.id).collection('documentos_cliente');if(state.savedId){await col.doc(state.savedId).set({...d,actualizado_en:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})}else{const ref=await col.add({...d,creado_en:firebase.firestore.FieldValue.serverTimestamp(),actualizado_en:firebase.firestore.FieldValue.serverTimestamp()});state.savedId=ref.id}if(!silent)alert(`${state.type==='invoice'?'Invoice':'Estimate'} guardado correctamente.`);return true}catch(e){console.error(e);alert('No se pudo guardar el documento. Revisa la conexión e inténtalo nuevamente.');return false}};
+  function company(){const c=window.eliteV51Config||window.configuracionEmpresa||{};return{name:c.nombre_empresa||'Elite Cleaners Company',address:'Pleasanton, CA 94566',phone:c.telefono_empresa||'(925) 336-2884',email:c.email_empresa||'elitecleanerscompany@gmail.com',web:c.web_empresa||'elitecleanerscompany.com'}}
+  function pdfOutput(kind='blob'){if(!window.jspdf?.jsPDF)throw new Error('El generador PDF todavía no está disponible.');const d=data(),c=company(),doc=new window.jspdf.jsPDF({unit:'pt',format:'letter'}),blue=[30,64,175],gray=[71,85,105];const logo=document.getElementById('elite-shared-logo-master')?.src||'';if(/^data:image\//.test(logo)){try{doc.addImage(logo,logo.includes('image/jpeg')?'JPEG':'PNG',445,30,112,54,undefined,'FAST')}catch(e){console.warn('No se pudo agregar el logo al PDF.',e)}}doc.setFont('helvetica','bold');doc.setFontSize(24);doc.setTextColor(...blue);doc.text(state.type==='invoice'?'INVOICE':'ESTIMATE',558,103,{align:'right'});doc.setFontSize(13);doc.setTextColor(15,23,42);doc.text(c.name,42,48);doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...gray);doc.text([c.address,c.phone,c.email,c.web],42,63);
+    doc.setDrawColor(203,213,225);doc.line(42,105,570,105);doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(15,23,42);doc.text('BILL TO',42,126);doc.setFont('helvetica','normal');doc.text([d.customer,d.address,d.phone,d.email].filter(Boolean),42,142);doc.setFont('helvetica','bold');doc.text(['Document #:','Issued:',state.type==='invoice'?'Due date:':'Valid until:','Status:'],385,126);doc.setFont('helvetica','normal');doc.text([d.number,d.issued,d.due,d.status],455,126);
+    doc.autoTable({startY:195,head:[['Item description','Qty','Price','Total']],body:d.items.map(x=>[x.description,String(x.quantity),money(x.unitPrice),money(x.quantity*x.unitPrice)]),theme:'grid',styles:{fontSize:8,cellPadding:6,overflow:'linebreak',valign:'top'},headStyles:{fillColor:blue,textColor:255},columnStyles:{0:{cellWidth:330},1:{cellWidth:45,halign:'right'},2:{cellWidth:70,halign:'right'},3:{cellWidth:75,halign:'right'}},margin:{left:42,right:42}});let y=doc.lastAutoTable.finalY+18;const totals=d.totals;const rows=[['Subtotal',money(totals.subtotal)],['Discount','-'+money(totals.discount)],['Tax',money(totals.tax)],[state.type==='invoice'?'Invoice total':'Estimate total',money(totals.total)],['Amount paid','-'+money(totals.paid)],['Balance due',money(totals.balance)]];doc.setFontSize(9);rows.forEach((r,i)=>{if(y>690){doc.addPage();y=50}doc.setFont('helvetica',i===3||i===5?'bold':'normal');doc.text(r[0],410,y);doc.text(r[1],570,y,{align:'right'});y+=15});const sections=[['PAYMENT TERMS',d.paymentTerms],['NOTES',d.notes],['TERMS AND CONDITIONS',d.terms]];sections.forEach(([h,t])=>{if(!t)return;const lines=doc.splitTextToSize(t,520);if(y+lines.length*11+28>740){doc.addPage();y=50}y+=12;doc.setFont('helvetica','bold');doc.setTextColor(...blue);doc.text(h,42,y);y+=14;doc.setFont('helvetica','normal');doc.setTextColor(...gray);doc.text(lines,42,y);y+=lines.length*11});const pages=doc.getNumberOfPages();for(let p=1;p<=pages;p++){doc.setPage(p);doc.setFontSize(8);doc.setTextColor(100);doc.text(`${c.name} · Page ${p} of ${pages}`,306,770,{align:'center'})}const filename=(d.number||state.type).replace(/[^a-z0-9_-]/gi,'_')+'.pdf';if(kind==='save'){doc.save(filename);return filename}return{blob:doc.output('blob'),filename,d}}
+  window.eliteDocDownload=async()=>{try{await eliteDocSave(true);pdfOutput('save')}catch(e){console.error(e);alert(e.message||'No se pudo generar el PDF.')}};
+  window.eliteDocOpenSend=()=>{$('elite-doc-send-choice').style.display='flex'};window.eliteDocCloseSend=()=>{$('elite-doc-send-choice').style.display='none'};
+  window.eliteDocSend=async method=>{
+    const d=data(),label=state.type==='invoice'?'Invoice':'Estimate',dest=method==='sms'?(d.phone||'el teléfono registrado'):(d.email||'el correo registrado');
+    if(method==='sms'&&!d.phone)return alert('Este cliente no tiene un teléfono registrado.');
+    if(method==='email'&&!d.email)return alert('Este cliente no tiene un correo electrónico registrado.');
+    eliteDocCloseSend();
+    if(!confirm(`¿Confirmas que deseas preparar este ${label} por ${method==='sms'?'SMS':'correo electrónico'} para ${d.customer} (${dest})?\n\nLa aplicación abrirá el método elegido, pero tú deberás presionar Enviar manualmente.`))return;
+    const subject=`${label} ${d.number} - Elite Cleaners Company`;
+    const message=`Hello ${d.customer},\n\nPlease find your ${label.toLowerCase()} ${d.number} from Elite Cleaners Company. The total is ${money(d.totals.total)}.\n\nThank you for choosing Elite Cleaners Company.`;
+    try{
+      const out=pdfOutput('blob'),file=new File([out.blob],out.filename,{type:'application/pdf'});
+      const appleMobile=/iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const android=/Android/i.test(navigator.userAgent);
+      const mobile=appleMobile||android;
+      const canShareFile=!!navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}));
+
+      // Inicia el guardado, pero no espera antes de abrir la hoja móvil para
+      // conservar el permiso del clic del usuario requerido por iPhone/Android.
+      const savePromise=eliteDocSave(true);
+      if(mobile&&canShareFile){
+        try{
+          await navigator.share({title:subject,text:message,files:[file]});
+          $('edoc-status').value='SENT';
+          await savePromise;
+          await eliteDocSave(true);
+          return;
+        }catch(shareError){
+          if(shareError?.name==='AbortError'){await savePromise;return}
+          console.warn('La hoja móvil no pudo compartir el PDF; se usará el método de respaldo.',shareError);
+        }
+      }
+
+      await savePromise;
+      pdfOutput('save');
+      const attachmentNote='\n\nThe PDF was downloaded. Please attach it before sending.';
+      try{await navigator.clipboard?.writeText(message+attachmentNote)}catch(_){ }
+      if(method==='sms'){
+        const phone=String(d.phone).replace(/[^\d+]/g,'');
+        const separator=appleMobile?'&':'?';
+        location.href=`sms:${phone}${separator}body=${encodeURIComponent(message+attachmentNote)}`;
+        if(!mobile)setTimeout(()=>alert('El PDF fue descargado y el mensaje fue copiado.\n\nSi Windows no abre una aplicación de SMS, envía el archivo desde tu iPhone o desde Phone Link. Nada se envió automáticamente.'),500);
+      }else{
+        location.href=`mailto:${encodeURIComponent(d.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message+attachmentNote)}`;
+      }
+    }catch(e){
+      console.error(e);
+      alert(`No se pudo preparar el envío.\n\n${String(e?.message||e)}\n\nEl documento no fue enviado.`);
+    }
+  };
+})();
+</script>
+
 
 <style id="elite-v685-inventory-fix-css">
 .elite-v685-stock-status{display:none;margin-top:10px;padding:11px 13px;border-radius:11px;font-size:12px;line-height:1.45}
@@ -11099,6 +11286,33 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshOpenSummary,4
 <script id="elite-v832-service-search-fix">
 (function(){
   let serviceSearchFrame = 0;
+  let serviceSearchRefreshTimer = 0;
+  let serviceSearchRefreshing = false;
+
+  async function refreshServicesFromFirebaseIfNeeded(query){
+    if(!query || serviceSearchRefreshing) return;
+    const history=document.getElementById('historial');
+    if(history?.querySelector('.card-servicio')) return;
+    serviceSearchRefreshing=true;
+    try{
+      const snap=await db.collection('servicios').get();
+      const fresh=[];
+      snap.forEach(doc=>fresh.push({...doc.data(),id:doc.id,firestore_id:doc.id}));
+      if(typeof todosLosServicios!=='undefined' && Array.isArray(todosLosServicios)){
+        todosLosServicios.length=0;
+        fresh.forEach(item=>todosLosServicios.push(item));
+        window.todosLosServicios=todosLosServicios;
+      }else if(Array.isArray(window.todosLosServicios)){
+        window.todosLosServicios.length=0;
+        fresh.forEach(item=>window.todosLosServicios.push(item));
+      }else window.todosLosServicios=fresh;
+      if(typeof window.renderHistorial==='function') window.renderHistorial();
+    }catch(error){
+      console.error('No se pudo actualizar la búsqueda desde Firebase:',error);
+    }finally{
+      serviceSearchRefreshing=false;
+    }
+  }
 
   window.eliteRunServiceSearch = function(){
     const input = document.getElementById('buscarTrabajo');
@@ -11117,6 +11331,13 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshOpenSummary,4
         console.error('Error al buscar servicios:', error);
       }
     });
+
+    // Si la copia local todavía no recibió el servicio recién creado,
+    // vuelve a cargar Firebase y repite la búsqueda automáticamente.
+    clearTimeout(serviceSearchRefreshTimer);
+    serviceSearchRefreshTimer=setTimeout(function(){
+      refreshServicesFromFirebaseIfNeeded(String(input?.value||'').trim());
+    },350);
   };
 
   window.eliteClearServiceSearch = function(){
@@ -11156,6 +11377,114 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshOpenSummary,4
 
   const observer = new MutationObserver(bindServiceSearch);
   observer.observe(document.documentElement, {childList:true, subtree:true});
+})();
+</script>
+<!-- Elite Admin v8.5.0 — Invoice Maker layout and document history -->
+<style id="elite-docs-v850-style">
+.edoc-modal{background:#edf2f7!important}.edoc-shell{max-width:1460px!important;padding:18px 20px 95px!important}.edoc-head{position:sticky;top:0;z-index:30;background:rgba(237,242,247,.96);backdrop-filter:blur(12px);padding:9px 2px 12px;margin:0!important}.edoc-head h2{font-size:28px!important}.edoc-workspace{display:grid;grid-template-columns:minmax(500px,720px) minmax(420px,1fr);gap:22px;align-items:start}.edoc-editor{min-width:0}.edoc-preview-wrap{position:sticky;top:78px;min-width:0}.edoc-preview-label{display:flex;justify-content:space-between;align-items:center;margin:0 0 8px;color:#475569;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}.edoc-preview-page{background:#fff;min-height:790px;padding:40px 42px;box-shadow:0 14px 40px rgba(15,23,42,.16);border:1px solid #dbe2ea;color:#111827;font-family:Arial,sans-serif}.edoc-pv-top{display:flex;justify-content:space-between;gap:22px;padding-bottom:24px}.edoc-pv-title{font-size:31px;font-weight:500;margin:0 0 20px}.edoc-pv-company,.edoc-pv-client{font-size:11px;line-height:1.55;color:#334155}.edoc-pv-logo{width:150px;height:74px;object-fit:contain;display:block;margin-left:auto}.edoc-pv-meta{margin-top:18px;font-size:11px;line-height:1.7;text-align:right}.edoc-pv-summary{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;border-top:1px solid #e2e8f0;padding:17px 0}.edoc-pv-status{display:inline-block;border:2px solid #86efac;color:#15803d;padding:5px 12px;font-size:15px;font-weight:800;transform:rotate(-2deg);margin-left:15px}.edoc-pv-total-label{font-size:11px;text-align:right}.edoc-pv-total{font-size:36px;text-align:right}.edoc-pv-table{width:100%;border-collapse:collapse;font-size:11px}.edoc-pv-table th{background:#334155;color:#fff;padding:9px;text-align:left}.edoc-pv-table th:not(:first-child),.edoc-pv-table td:not(:first-child){text-align:right}.edoc-pv-table td{vertical-align:top;padding:13px 9px;border-bottom:1px solid #e2e8f0;white-space:pre-line;line-height:1.45}.edoc-pv-notes{font-size:10px;line-height:1.5;color:#475569;padding:20px 0;white-space:pre-line}.edoc-pv-bottom{width:52%;margin-left:auto;font-size:11px}.edoc-pv-bottom div{display:flex;justify-content:space-between;padding:7px 0}.edoc-pv-bottom .grand{border-top:2px solid #334155;font-size:17px;font-weight:800;padding-top:12px}.edoc-card{border-radius:8px!important;box-shadow:0 2px 8px rgba(15,23,42,.06)!important}.edoc-help{font-size:13px!important}.edoc-actions{max-width:720px;position:fixed!important;left:20px;right:auto;width:calc(50% - 30px);bottom:12px;z-index:40;box-shadow:0 8px 28px rgba(15,23,42,.18)}.edoc-mobile-tabs{display:none}.elite-doc-history{display:none;position:fixed;inset:0;z-index:999999;background:#f1f5f9;color:#0f172a;overflow:auto}.edh-shell{max-width:1280px;margin:auto;padding:22px}.edh-head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:20px}.edh-head h2{margin:0}.edh-close{width:44px;height:44px;border:0;border-radius:50%;background:#0f172a;color:#fff;font-size:24px}.edh-toolbar{display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:16px}.edh-search{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:12px;padding:13px;font-size:15px}.edh-new{border:0;border-radius:12px;background:#087ea4;color:#fff;font-weight:800;padding:0 18px}.edh-tabs{display:flex;gap:8px;margin-bottom:16px;overflow:auto}.edh-tab{border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:9px 15px;font-weight:750;white-space:nowrap}.edh-tab.active{background:#0f172a;color:#fff;border-color:#0f172a}.edh-list{display:grid;gap:11px}.edh-card{background:#fff;border:1px solid #dbe2ea;border-radius:13px;padding:15px;display:grid;grid-template-columns:minmax(220px,1.4fr) repeat(3,minmax(100px,.6fr)) auto;gap:14px;align-items:center;box-shadow:0 3px 12px rgba(15,23,42,.05)}.edh-card h3{margin:0 0 5px;font-size:16px}.edh-small{font-size:12px;color:#64748b;line-height:1.45}.edh-kind{display:inline-block;font-size:10px;font-weight:900;border-radius:999px;padding:5px 8px;background:#dbeafe;color:#1d4ed8;margin-right:6px}.edh-kind.invoice{background:#ccfbf1;color:#0f766e}.edh-status{font-weight:850;font-size:12px}.edh-money{font-size:18px;font-weight:900}.edh-actions{display:flex;gap:7px}.edh-actions button{border:0;border-radius:9px;padding:9px 11px;color:#fff;font-weight:800}.edh-empty{padding:45px;text-align:center;background:#fff;border:1px dashed #94a3b8;border-radius:14px;color:#64748b}
+@media(max-width:900px){.edoc-shell{padding:8px 8px 105px!important}.edoc-head h2{font-size:22px!important}.edoc-workspace{display:block}.edoc-preview-wrap{display:none;position:static}.edoc-modal.preview-mode .edoc-editor{display:none}.edoc-modal.preview-mode .edoc-preview-wrap{display:block}.edoc-preview-page{min-height:660px;padding:24px 18px;box-shadow:none}.edoc-pv-logo{width:112px;height:58px}.edoc-pv-title{font-size:25px}.edoc-pv-total{font-size:29px}.edoc-mobile-tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:8px 0 12px}.edoc-mobile-tabs button{border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#fff;color:#334155;font-weight:800}.edoc-mobile-tabs button.active{background:#087ea4;color:#fff;border-color:#087ea4}.edoc-actions{left:8px;right:8px;width:auto;max-width:none;grid-template-columns:1fr 1fr!important}.edoc-actions button{padding:11px 5px!important}.edoc-items th:nth-child(2),.edoc-items td:nth-child(2){display:table-cell!important}.edoc-items{min-width:580px}.edh-shell{padding:14px 10px}.edh-toolbar{grid-template-columns:1fr}.edh-new{padding:12px}.edh-card{grid-template-columns:1fr 1fr}.edh-card>div:first-child,.edh-actions{grid-column:1/-1}.edh-actions button{flex:1}}
+</style>
+
+<div id="elite-doc-history" class="elite-doc-history" aria-hidden="true"><div class="edh-shell">
+  <div class="edh-head"><div><h2>Estimates e Invoices</h2><div class="edh-small">Historial de documentos de todos los clientes</div></div><button class="edh-close" onclick="eliteDocHistoryClose()">×</button></div>
+  <div class="edh-toolbar"><input id="edh-search" class="edh-search" placeholder="Buscar cliente, teléfono, dirección o número…" oninput="eliteDocHistoryRender()"><button class="edh-new" onclick="eliteDocHistoryCreate()">＋ Crear desde un servicio</button></div>
+  <div class="edh-tabs"><button class="edh-tab active" data-kind="all" onclick="eliteDocHistoryTab('all',this)">Todos</button><button class="edh-tab" data-kind="estimate" onclick="eliteDocHistoryTab('estimate',this)">Estimates</button><button class="edh-tab" data-kind="invoice" onclick="eliteDocHistoryTab('invoice',this)">Invoices</button></div>
+  <div id="edh-list" class="edh-list"><div class="edh-empty">Cargando documentos…</div></div>
+</div></div>
+
+<script id="elite-docs-v850-js">
+(function(){
+  const by=id=>document.getElementById(id);let historyRows=[],historyKind='all';
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const money=v=>'$'+Number(v||0).toFixed(2);
+  function enhanceEditor(){
+    const modal=by('elite-doc-modal'),shell=modal?.querySelector('.edoc-shell');if(!shell||shell.dataset.v850==='1')return;shell.dataset.v850='1';
+    const head=shell.querySelector('.edoc-head'),actions=shell.querySelector('.edoc-actions'),nodes=[...shell.children].filter(x=>x!==head&&x!==actions);
+    const tabs=document.createElement('div');tabs.className='edoc-mobile-tabs';tabs.innerHTML='<button class="active" onclick="eliteDocViewMode(false,this)">Editar</button><button onclick="eliteDocViewMode(true,this)">Vista previa</button>';head.after(tabs);
+    const workspace=document.createElement('div');workspace.className='edoc-workspace';const editor=document.createElement('div');editor.className='edoc-editor';nodes.forEach(n=>editor.appendChild(n));
+    const preview=document.createElement('div');preview.className='edoc-preview-wrap';preview.innerHTML='<div class="edoc-preview-label"><span>Vista previa del cliente</span><span>PDF en inglés</span></div><div id="edoc-preview-page" class="edoc-preview-page"></div>';workspace.append(editor,preview);tabs.after(workspace);
+    shell.addEventListener('input',()=>setTimeout(renderPreview,0));shell.addEventListener('change',()=>setTimeout(renderPreview,0));new MutationObserver(renderPreview).observe(by('edoc-items'),{childList:true,subtree:true,characterData:true});renderPreview();
+  }
+  window.eliteDocViewMode=function(preview,button){by('elite-doc-modal')?.classList.toggle('preview-mode',preview);button?.parentElement?.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));renderPreview()};
+  function val(id){return by(id)?.value||''}function text(id){return by(id)?.textContent||'$0.00'}
+  function renderPreview(){
+    const page=by('edoc-preview-page');if(!page)return;const invoice=(by('edoc-title')?.textContent||'').toLowerCase().includes('invoice');const logo=by('elite-shared-logo-master')?.src||'';
+    const rows=[...(by('edoc-items')?.querySelectorAll('tr')||[])].map(tr=>{const ta=tr.querySelector('textarea'),ins=tr.querySelectorAll('input');return{d:ta?.value||'',q:ins[0]?.value||'1',p:Number(ins[1]?.value||0),t:tr.querySelector('[id^="edoc-line-"]')?.textContent||'$0.00'}});
+    page.innerHTML=`<div class="edoc-pv-top"><div><div class="edoc-pv-title">${invoice?'Invoice':'Estimate'}</div><div class="edoc-pv-company"><b>Bill From:</b><br>Elite Cleaners Company<br>Pleasanton, CA 94566<br>elitecleanerscompany@gmail.com<br>(925) 336-2884<br>elitecleanerscompany.com</div><div class="edoc-pv-client" style="margin-top:20px"><b>Bill To:</b><br>${esc(val('edoc-customer'))}<br>${esc(val('edoc-address'))}<br>${esc(val('edoc-phone'))}<br>${esc(val('edoc-email'))}</div></div><div>${logo?`<img class="edoc-pv-logo" src="${logo}">`:''}<div class="edoc-pv-meta"><b>${invoice?'Invoice':'Estimate'} #:</b> ${esc(val('edoc-number'))}<br><b>Issued:</b> ${esc(val('edoc-issued'))}<br><b>${invoice?'Due Date':'Valid Until'}:</b> ${esc(val('edoc-due'))}</div></div></div><div class="edoc-pv-summary"><div><span class="edoc-pv-status">${esc(val('edoc-status'))}</span></div><div><div class="edoc-pv-total-label">${invoice?'Invoice':'Estimate'} Total</div><div class="edoc-pv-total">${text('edoc-grand')}</div></div></div><table class="edoc-pv-table"><thead><tr><th>Item Description</th><th>Price</th><th>Quantity</th><th>Total</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.d)}</td><td>${money(r.p)}</td><td>${esc(r.q)}</td><td>${esc(r.t)}</td></tr>`).join('')}</tbody></table><div class="edoc-pv-notes"><b>Notes:</b><br>${esc(val('edoc-notes'))}</div><div class="edoc-pv-bottom"><div><span>Subtotal</span><b>${text('edoc-subtotal')}</b></div><div><span>Discount</span><b>${text('edoc-discount-view')}</b></div><div><span>Tax</span><b>${text('edoc-tax-view')}</b></div><div><span>Amount paid</span><b>${text('edoc-paid-view')}</b></div><div class="grand"><span>${invoice?'Invoice':'Estimate'} Total</span><span>${text('edoc-grand')}</span></div><div><span>Balance due</span><b>${text('edoc-balance')}</b></div></div>`;
+  }
+  const oldOpen=window.eliteDocOpen;window.eliteDocOpen=async function(){enhanceEditor();const result=await oldOpen?.apply(this,arguments);setTimeout(renderPreview,80);return result};window.eliteDocOpenSaved=(sid,type,did)=>window.eliteDocOpen(sid,type,did);
+  window.eliteDocHistoryOpen=async function(){by('elite-doc-history').style.display='block';by('elite-doc-history').setAttribute('aria-hidden','false');document.body.style.overflow='hidden';const list=by('edh-list');list.innerHTML='<div class="edh-empty">Cargando Estimates e Invoices…</div>';try{const services=Array.isArray(window.todosLosServicios)?window.todosLosServicios:[];const groups=await Promise.all(services.map(async s=>{try{const snap=await db.collection('servicios').doc(String(s.id||s.firestore_id)).collection('documentos_cliente').get();return snap.docs.map(d=>({id:d.id,serviceId:String(s.id||s.firestore_id),service:s,...d.data()}))}catch(_){return[]}}));historyRows=groups.flat().sort((a,b)=>{const av=a.actualizado_en?.toMillis?.()||a.creado_en?.toMillis?.()||0,bv=b.actualizado_en?.toMillis?.()||b.creado_en?.toMillis?.()||0;return bv-av});eliteDocHistoryRender()}catch(e){console.error(e);list.innerHTML='<div class="edh-empty">No se pudo cargar el historial. Revisa la conexión e inténtalo nuevamente.</div>'}};
+  window.eliteDocHistoryClose=function(){by('elite-doc-history').style.display='none';by('elite-doc-history').setAttribute('aria-hidden','true');document.body.style.overflow=''};
+  window.eliteDocHistoryTab=function(kind,button){historyKind=kind;document.querySelectorAll('.edh-tab').forEach(b=>b.classList.toggle('active',b===button));eliteDocHistoryRender()};
+  window.eliteDocHistoryRender=function(){const q=String(val('edh-search')).trim().toLowerCase();const rows=historyRows.filter(r=>(historyKind==='all'||r.tipo===historyKind)&&(!q||[r.customer,r.phone,r.email,r.address,r.number,r.status].some(x=>String(x||'').toLowerCase().includes(q))));const list=by('edh-list');if(!rows.length){list.innerHTML='<div class="edh-empty">No hay documentos que coincidan con esta búsqueda.</div>';return}list.innerHTML=rows.map(r=>{const total=r.totals?.total??0,balance=r.totals?.balance??total;return`<div class="edh-card"><div><h3><span class="edh-kind ${r.tipo==='invoice'?'invoice':''}">${r.tipo==='invoice'?'INVOICE':'ESTIMATE'}</span>${esc(r.customer||'Cliente sin nombre')}</h3><div class="edh-small">${esc(r.number||'Sin número')} · ${esc(r.address||r.service?.direccion||'Sin dirección')}</div></div><div><div class="edh-small">Fecha</div><b>${esc(r.issued||'—')}</b></div><div><div class="edh-small">Estado</div><span class="edh-status">${esc(r.status||'DRAFT')}</span></div><div><div class="edh-small">Total / Balance</div><div class="edh-money">${money(total)}</div><div class="edh-small">Pendiente: ${money(balance)}</div></div><div class="edh-actions"><button style="background:#087ea4" onclick="eliteDocHistoryClose();eliteDocOpenSaved('${esc(r.serviceId)}','${r.tipo}','${esc(r.id)}')">Ver / Editar</button></div></div>`}).join('')};
+  window.eliteDocHistoryCreate=function(){eliteDocHistoryClose();if(typeof eliteV51SetLayout==='function')eliteV51SetLayout('servicios');if(typeof eliteV5SetActive==='function')eliteV5SetActive('servicios');setTimeout(()=>by('historial')?.scrollIntoView({behavior:'smooth'}),100);alert('Selecciona un servicio y presiona Estimate o Invoice para crear el documento.')};
+  const previousNav=window.eliteV5Navigate;window.eliteV5Navigate=function(module,button){if(module==='estimates'){if(typeof eliteV5SetActive==='function')eliteV5SetActive(module,button);if(typeof cerrarEliteV5Menu==='function')cerrarEliteV5Menu();return eliteDocHistoryOpen()}return previousNav?.apply(this,arguments)};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enhanceEditor);else enhanceEditor();
+})();
+</script>
+<style id="elite-v852-service-save-style">
+#elite-service-save-status{display:none;margin:12px 0 4px;padding:13px 14px;border-radius:12px;font-size:13px;line-height:1.45;font-weight:700}
+#elite-service-save-status.show{display:block}#elite-service-save-status.saving{background:#dbeafe;color:#1e40af;border:1px solid #93c5fd}#elite-service-save-status.success{background:#dcfce7;color:#166534;border:1px solid #86efac}#elite-service-save-status.error{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+</style>
+<script id="elite-v852-primary-service-save">
+(function(){
+  let saving=false;
+  const get=id=>document.getElementById(id);
+  const value=(id,fallback='')=>get(id)?.value??fallback;
+  const number=(id,fallback=0)=>{const n=Number(value(id,fallback));return Number.isFinite(n)?n:Number(fallback||0)};
+  function status(type,message){let box=get('elite-service-save-status');if(!box){box=document.createElement('div');box.id='elite-service-save-status';get('main-button')?.insertAdjacentElement('afterend',box)}box.className='show '+type;box.textContent=message;box.scrollIntoView({behavior:'smooth',block:'nearest'})}
+  function localUpsert(row){
+    if(typeof todosLosServicios!=='undefined'&&Array.isArray(todosLosServicios)){
+      const i=todosLosServicios.findIndex(x=>String(x.id||x.firestore_id)===String(row.id));if(i>=0)todosLosServicios[i]=row;else todosLosServicios.push(row);window.todosLosServicios=todosLosServicios;
+    }else{window.todosLosServicios=Array.isArray(window.todosLosServicios)?window.todosLosServicios:[];const i=window.todosLosServicios.findIndex(x=>String(x.id||x.firestore_id)===String(row.id));if(i>=0)window.todosLosServicios[i]=row;else window.todosLosServicios.push(row)}
+  }
+  function collect(existing={},editing=false){
+    const price=number('precio_total',0),phone=String(value('whatsapp')).replace(/\D/g,'');
+    const data={cliente:String(value('cliente')).trim(),direccion:String(value('direccion')).trim(),whatsapp:phone,telefono:phone,email_cliente:String(value('email_cliente')).trim(),precio_total:price,precio_inicial:number('precio_inicial',price),precio_recurrente:number('precio_recurrente',0),millas_servicio:number('millas_servicio',0),empleado_nombre:String(value('search-empleado')).trim(),empleado_email:String(value('email-empleado')).trim(),empleado_nombre_2:String(value('search-empleado-2')).trim(),empleado_email_2:String(value('email-empleado-2')).trim(),fecha:value('fecha'),hora:value('hora'),hora_final_estimada:value('hora_final_estimada'),repetir:value('repetir','ninguno')||'ninguno',estado_calendario:value('estado_calendario','pendiente')||'pendiente',estado:editing?(value('estado_trabajo',existing.estado||'no_iniciado')||'no_iniciado'):'no_iniciado',pies_cuadrados:value('pies_cuadrados'),habitaciones:value('habitaciones'),banos:value('banos'),medios_banos:value('medios_banos'),salas:value('salas'),cocinas:value('cocinas'),oficinas:value('oficinas'),horno:value('horno','No')||'No',nevera:value('nevera','No')||'No',gabinetes:value('gabinetes','No')||'No',ventanas:value('ventanas','No')||'No',baseboards:value('baseboards','No')||'No',perros:value('perros','No')||'No',lavanderia:value('lavanderia'),garaje:value('garaje'),comedor:value('comedor'),sala_juegos:value('sala_juegos'),alfombra_habitaciones:value('alfombra_habitaciones'),alfombra_pies_cuadrados:value('alfombra_pies_cuadrados'),alfombra_notas:value('alfombra_notas'),notas_internas:value('notas_internas'),tipo:(typeof tipoSeleccionado!=='undefined'?tipoSeleccionado:'ESTÁNDAR')||existing.tipo||'ESTÁNDAR',actualizado_en:firebase.firestore.FieldValue.serverTimestamp()};
+    if(editing){data.hora_inicio=value('hora_inicio_real',existing.hora_inicio||'--:--')||existing.hora_inicio||'--:--';data.hora_fin=value('hora_fin_real',existing.hora_fin||'--:--')||existing.hora_fin||'--:--';data.millas_reales=value('millas_reales',existing.millas_reales||'');data.deposito_requerido=existing.deposito_requerido!==false;data.deposito_monto=Number(existing.deposito_monto??price*.5);data.deposito_pagado=existing.deposito_pagado===true;data.balance_pagado=existing.balance_pagado===true;data.balance_restante=data.balance_pagado?0:(data.deposito_pagado?Math.max(0,price-data.deposito_monto):Number(existing.balance_restante??price*.5))}
+    else Object.assign(data,{timestamp:firebase.firestore.FieldValue.serverTimestamp(),hora_inicio:'--:--',hora_fin:'--:--',firma_cliente:false,deposito_requerido:true,deposito_pagado:false,deposito_monto:price*.5,balance_pagado:false,balance_restante:price*.5,metodo_pago_deposito:'',comprobante_deposito:'',fecha_pago_deposito:''});
+    return data;
+  }
+  async function secondary(data,id){
+    try{await db.collection('clientes').doc(data.cliente).set({nombre:data.cliente,direccion:data.direccion,whatsapp:data.whatsapp,telefono:data.whatsapp,email:data.email_cliente,millas_servicio:data.millas_servicio||0,repetir:data.repetir||'ninguno',pies_cuadrados:data.pies_cuadrados||'',habitaciones:data.habitaciones||'',banos:data.banos||'',medios_banos:data.medios_banos||'',salas:data.salas||'',cocinas:data.cocinas||'',oficinas:data.oficinas||'',horno:data.horno||'No',nevera:data.nevera||'No',gabinetes:data.gabinetes||'No',ventanas:data.ventanas||'No',baseboards:data.baseboards||'No',perros:data.perros||'No',lavanderia:data.lavanderia||'',garaje:data.garaje||'',comedor:data.comedor||'',sala_juegos:data.sala_juegos||'',alfombra_habitaciones:data.alfombra_habitaciones||'',alfombra_pies_cuadrados:data.alfombra_pies_cuadrados||'',alfombra_notas:data.alfombra_notas||'',notas_internas:data.notas_internas||''},{merge:true})}catch(e){console.warn('Servicio guardado; no se actualizó la ficha del cliente.',e)}
+    try{if(typeof sincronizarRepeticionesServicio==='function')await sincronizarRepeticionesServicio({...data,id,firestore_id:id},data.repetir,id)}catch(e){console.warn('Servicio guardado; no se completaron las repeticiones.',e);status('success',`Servicio guardado con ID ${id}. Algunas repeticiones no pudieron crearse; el trabajo principal está seguro.`)}
+  }
+  window.asignarTrabajo=async function(){
+    if(saving)return;const button=get('main-button'),client=String(value('cliente')).trim(),date=String(value('fecha')).trim(),editId=String(value('edit-id')).trim();if(!client){alert('Falta el nombre del cliente.');get('cliente')?.focus();return}if(!date){alert('Selecciona la fecha del trabajo.');get('fecha')?.focus();return}
+    saving=true;const original=button?.textContent||'ASIGNAR TRABAJO';if(button){button.disabled=true;button.textContent=editId?'GUARDANDO CAMBIOS…':'GUARDANDO SERVICIO…'}status('saving','Guardando el servicio en Firebase…');
+    try{
+      let ref,existing={};if(editId){ref=db.collection('servicios').doc(editId);const old=await ref.get();if(!old.exists)throw new Error('No se encontró el servicio que intentas editar.');existing=old.data()||{}}else ref=db.collection('servicios').doc();
+      const data=collect(existing,!!editId);await ref.set(data,{merge:!!editId});const check=await ref.get();if(!check.exists)throw new Error('Firebase no devolvió el servicio después de guardarlo.');const row={...(check.data()||data),id:ref.id,firestore_id:ref.id};localUpsert(row);
+      if(typeof vistaActual!=='undefined')vistaActual='pendiente';get('btn-pendientes')?.classList.add('active');get('btn-completados')?.classList.remove('active');const search=get('buscarTrabajo');if(search)search.value=client;if(typeof renderHistorial==='function')renderHistorial();get('historial')?.scrollIntoView({behavior:'smooth',block:'start'});status('success',`Servicio guardado correctamente ✅ ID: ${ref.id}`);
+      secondary(data,ref.id);setTimeout(()=>{if(typeof renderHistorial==='function')renderHistorial()},250);
+    }catch(error){console.error('Error definitivo al guardar servicio:',error);const code=String(error?.code||'').replace('firestore/','');const detail=String(error?.message||error||'Error desconocido');status('error',`NO SE GUARDÓ EL SERVICIO. ${code?`Código: ${code}. `:''}${detail}`);alert(`No se pudo registrar el servicio.\n\n${code?`Código: ${code}\n`:''}${detail}\n\nLa información permanece en el formulario para que no tengas que escribirla nuevamente.`)}finally{saving=false;if(button){button.disabled=false;button.textContent=editId?'GUARDAR CAMBIOS':original}}
+  };
+  function install(){if(!get('elite-service-save-status')&&get('main-button')){const box=document.createElement('div');box.id='elite-service-save-status';get('main-button').insertAdjacentElement('afterend',box)}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
+})();
+</script>
+<script id="elite-v854-mobile-estimates-menu-fix">
+(function(){
+  function repairEstimatesMenu(){
+    document.querySelectorAll('#elite-v5-sidebar .elite-v5-nav-btn, #elite-accounting-modal .acc-nav').forEach(function(item){
+      var moduleName=String(item.getAttribute('data-module')||'').toLowerCase();
+      var label=String(item.textContent||'').trim().toLowerCase();
+      if(moduleName!=='resenas' && label!=='reseñas' && label!=='resenas' && !/^☆\s*reseñas$/i.test(String(item.textContent||'').trim())) return;
+      item.setAttribute('data-module','estimates');
+      item.innerHTML='<span class="elite-v5-nav-icon">▤</span>Estimates';
+      item.onclick=function(event){
+        event.preventDefault();
+        event.stopPropagation();
+        if(typeof cerrarContabilidadElite==='function' && item.closest('#elite-accounting-modal')) cerrarContabilidadElite();
+        if(typeof cerrarEliteV5Menu==='function') cerrarEliteV5Menu();
+        if(typeof eliteDocHistoryOpen==='function') eliteDocHistoryOpen();
+      };
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',repairEstimatesMenu);
+  else repairEstimatesMenu();
+  new MutationObserver(repairEstimatesMenu).observe(document.documentElement,{childList:true,subtree:true});
+  window.addEventListener('pageshow',repairEstimatesMenu);
 })();
 </script>
 </body>
