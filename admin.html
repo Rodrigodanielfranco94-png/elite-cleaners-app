@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin Core v8.5.0 — Professional Estimates, Invoices & History | Elite Core Stabilization fases 1-7 -->
+<!-- Elite Admin Core v8.5.1 — Reliable Service Save & Search | Professional Estimates, Invoices & History -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin Core v8.5.0 — Estimates, Invoices & History - Elite Cleaners Company</title>
+    <title>Elite Admin Core v8.5.1 — Reliable Service Save & Search - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -2681,13 +2681,39 @@ setTimeout(activarCalculadoraAutomatica, 500);
          * Primero se guarda el trabajo. El guardado del cliente es secundario:
          * si sus reglas fallan, no impedirá actualizar el servicio.
          */
+        let servicioGuardadoRef = null;
         if (editId) {
             await editRef.set(data, { merge: true });
+            servicioGuardadoRef = editRef;
+            data.id = editIdReal;
+            data.firestore_id = editIdReal;
         } else {
             const nuevoRef = await db.collection("servicios").add(data);
+            servicioGuardadoRef = nuevoRef;
             data.id = nuevoRef.id;
             data.firestore_id = nuevoRef.id;
         }
+
+        // No anuncia éxito hasta comprobar que Firebase puede leer el trabajo recién guardado.
+        const confirmacionGuardado = await servicioGuardadoRef.get();
+        if (!confirmacionGuardado.exists) {
+            throw new Error("Firebase no confirmó el guardado del servicio.");
+        }
+
+        // Lo incorpora inmediatamente a la memoria para que aparezca en Servicios y en la lupa
+        // sin depender de la velocidad de la suscripción en tiempo real.
+        const servicioConfirmado = {
+            ...(confirmacionGuardado.data() || data),
+            id: confirmacionGuardado.id,
+            firestore_id: confirmacionGuardado.id
+        };
+        const indiceLocal = todosLosServicios.findIndex(s =>
+            String(s.id || s.firestore_id) === String(confirmacionGuardado.id)
+        );
+        if (indiceLocal >= 0) todosLosServicios[indiceLocal] = servicioConfirmado;
+        else todosLosServicios.push(servicioConfirmado);
+        window.todosLosServicios = todosLosServicios;
+        renderHistorial();
 
         try {
             await db.collection("clientes").doc(cliNombre).set({
@@ -2730,12 +2756,18 @@ setTimeout(activarCalculadoraAutomatica, 500);
          * posteriormente un servicio a semanal no añadía los domingos que
          * faltaban.
          */
-        await sincronizarRepeticionesServicio(data, data.repetir, editIdReal || data.id);
+        let avisoRepeticion = "";
+        try {
+            await sincronizarRepeticionesServicio(data, data.repetir, editIdReal || data.id);
+        } catch (repeticionError) {
+            console.error("El servicio se guardó, pero falló la sincronización de repeticiones:", repeticionError);
+            avisoRepeticion = "\n\nEl servicio principal quedó guardado, pero no se pudieron crear todas las repeticiones. Puedes encontrarlo con la lupa y volver a editar la frecuencia.";
+        }
 
-        alert(editId
+        alert((editId
             ? "Cambios guardados correctamente ✅"
             : "Trabajo asignado correctamente ✅"
-        );
+        ) + avisoRepeticion);
 
         location.reload();
 
@@ -3062,6 +3094,7 @@ function programarEstadosAutomaticosEneroJulio2026() {
         const s = doc.data() || {};
         todosLosServicios.push({ ...s, id: doc.id, firestore_id: doc.id });
     });
+    window.todosLosServicios = todosLosServicios;
 
     // Enero a julio de 2026 se consideran terminados automáticamente.
     // Agosto en adelante conserva el estado manual configurado por el administrador.
@@ -11206,6 +11239,33 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshOpenSummary,4
 <script id="elite-v832-service-search-fix">
 (function(){
   let serviceSearchFrame = 0;
+  let serviceSearchRefreshTimer = 0;
+  let serviceSearchRefreshing = false;
+
+  async function refreshServicesFromFirebaseIfNeeded(query){
+    if(!query || serviceSearchRefreshing) return;
+    const history=document.getElementById('historial');
+    if(history?.querySelector('.card-servicio')) return;
+    serviceSearchRefreshing=true;
+    try{
+      const snap=await db.collection('servicios').get();
+      const fresh=[];
+      snap.forEach(doc=>fresh.push({...doc.data(),id:doc.id,firestore_id:doc.id}));
+      if(typeof todosLosServicios!=='undefined' && Array.isArray(todosLosServicios)){
+        todosLosServicios.length=0;
+        fresh.forEach(item=>todosLosServicios.push(item));
+        window.todosLosServicios=todosLosServicios;
+      }else if(Array.isArray(window.todosLosServicios)){
+        window.todosLosServicios.length=0;
+        fresh.forEach(item=>window.todosLosServicios.push(item));
+      }else window.todosLosServicios=fresh;
+      if(typeof window.renderHistorial==='function') window.renderHistorial();
+    }catch(error){
+      console.error('No se pudo actualizar la búsqueda desde Firebase:',error);
+    }finally{
+      serviceSearchRefreshing=false;
+    }
+  }
 
   window.eliteRunServiceSearch = function(){
     const input = document.getElementById('buscarTrabajo');
@@ -11224,6 +11284,13 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshOpenSummary,4
         console.error('Error al buscar servicios:', error);
       }
     });
+
+    // Si la copia local todavía no recibió el servicio recién creado,
+    // vuelve a cargar Firebase y repite la búsqueda automáticamente.
+    clearTimeout(serviceSearchRefreshTimer);
+    serviceSearchRefreshTimer=setTimeout(function(){
+      refreshServicesFromFirebaseIfNeeded(String(input?.value||'').trim());
+    },350);
   };
 
   window.eliteClearServiceSearch = function(){
