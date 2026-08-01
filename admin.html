@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin Core v8.5.1 — Reliable Service Save & Search | Professional Estimates, Invoices & History -->
+<!-- Elite Admin Core v8.5.2 — Primary-First Service Save | Reliable Search & Professional Documents -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin Core v8.5.1 — Reliable Service Save & Search - Elite Cleaners Company</title>
+    <title>Elite Admin Core v8.5.2 — Primary-First Service Save - Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -11373,6 +11373,47 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshOpenSummary,4
   window.eliteDocHistoryCreate=function(){eliteDocHistoryClose();if(typeof eliteV51SetLayout==='function')eliteV51SetLayout('servicios');if(typeof eliteV5SetActive==='function')eliteV5SetActive('servicios');setTimeout(()=>by('historial')?.scrollIntoView({behavior:'smooth'}),100);alert('Selecciona un servicio y presiona Estimate o Invoice para crear el documento.')};
   const previousNav=window.eliteV5Navigate;window.eliteV5Navigate=function(module,button){if(module==='estimates'){if(typeof eliteV5SetActive==='function')eliteV5SetActive(module,button);if(typeof cerrarEliteV5Menu==='function')cerrarEliteV5Menu();return eliteDocHistoryOpen()}return previousNav?.apply(this,arguments)};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enhanceEditor);else enhanceEditor();
+})();
+</script>
+<style id="elite-v852-service-save-style">
+#elite-service-save-status{display:none;margin:12px 0 4px;padding:13px 14px;border-radius:12px;font-size:13px;line-height:1.45;font-weight:700}
+#elite-service-save-status.show{display:block}#elite-service-save-status.saving{background:#dbeafe;color:#1e40af;border:1px solid #93c5fd}#elite-service-save-status.success{background:#dcfce7;color:#166534;border:1px solid #86efac}#elite-service-save-status.error{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+</style>
+<script id="elite-v852-primary-service-save">
+(function(){
+  let saving=false;
+  const get=id=>document.getElementById(id);
+  const value=(id,fallback='')=>get(id)?.value??fallback;
+  const number=(id,fallback=0)=>{const n=Number(value(id,fallback));return Number.isFinite(n)?n:Number(fallback||0)};
+  function status(type,message){let box=get('elite-service-save-status');if(!box){box=document.createElement('div');box.id='elite-service-save-status';get('main-button')?.insertAdjacentElement('afterend',box)}box.className='show '+type;box.textContent=message;box.scrollIntoView({behavior:'smooth',block:'nearest'})}
+  function localUpsert(row){
+    if(typeof todosLosServicios!=='undefined'&&Array.isArray(todosLosServicios)){
+      const i=todosLosServicios.findIndex(x=>String(x.id||x.firestore_id)===String(row.id));if(i>=0)todosLosServicios[i]=row;else todosLosServicios.push(row);window.todosLosServicios=todosLosServicios;
+    }else{window.todosLosServicios=Array.isArray(window.todosLosServicios)?window.todosLosServicios:[];const i=window.todosLosServicios.findIndex(x=>String(x.id||x.firestore_id)===String(row.id));if(i>=0)window.todosLosServicios[i]=row;else window.todosLosServicios.push(row)}
+  }
+  function collect(existing={},editing=false){
+    const price=number('precio_total',0),phone=String(value('whatsapp')).replace(/\D/g,'');
+    const data={cliente:String(value('cliente')).trim(),direccion:String(value('direccion')).trim(),whatsapp:phone,telefono:phone,email_cliente:String(value('email_cliente')).trim(),precio_total:price,precio_inicial:number('precio_inicial',price),precio_recurrente:number('precio_recurrente',0),millas_servicio:number('millas_servicio',0),empleado_nombre:String(value('search-empleado')).trim(),empleado_email:String(value('email-empleado')).trim(),empleado_nombre_2:String(value('search-empleado-2')).trim(),empleado_email_2:String(value('email-empleado-2')).trim(),fecha:value('fecha'),hora:value('hora'),hora_final_estimada:value('hora_final_estimada'),repetir:value('repetir','ninguno')||'ninguno',estado_calendario:value('estado_calendario','pendiente')||'pendiente',estado:editing?(value('estado_trabajo',existing.estado||'no_iniciado')||'no_iniciado'):'no_iniciado',pies_cuadrados:value('pies_cuadrados'),habitaciones:value('habitaciones'),banos:value('banos'),medios_banos:value('medios_banos'),salas:value('salas'),cocinas:value('cocinas'),oficinas:value('oficinas'),horno:value('horno','No')||'No',nevera:value('nevera','No')||'No',gabinetes:value('gabinetes','No')||'No',ventanas:value('ventanas','No')||'No',baseboards:value('baseboards','No')||'No',perros:value('perros','No')||'No',lavanderia:value('lavanderia'),garaje:value('garaje'),comedor:value('comedor'),sala_juegos:value('sala_juegos'),alfombra_habitaciones:value('alfombra_habitaciones'),alfombra_pies_cuadrados:value('alfombra_pies_cuadrados'),alfombra_notas:value('alfombra_notas'),notas_internas:value('notas_internas'),tipo:(typeof tipoSeleccionado!=='undefined'?tipoSeleccionado:'ESTÁNDAR')||existing.tipo||'ESTÁNDAR',actualizado_en:firebase.firestore.FieldValue.serverTimestamp()};
+    if(editing){data.hora_inicio=value('hora_inicio_real',existing.hora_inicio||'--:--')||existing.hora_inicio||'--:--';data.hora_fin=value('hora_fin_real',existing.hora_fin||'--:--')||existing.hora_fin||'--:--';data.millas_reales=value('millas_reales',existing.millas_reales||'');data.deposito_requerido=existing.deposito_requerido!==false;data.deposito_monto=Number(existing.deposito_monto??price*.5);data.deposito_pagado=existing.deposito_pagado===true;data.balance_pagado=existing.balance_pagado===true;data.balance_restante=data.balance_pagado?0:(data.deposito_pagado?Math.max(0,price-data.deposito_monto):Number(existing.balance_restante??price*.5))}
+    else Object.assign(data,{timestamp:firebase.firestore.FieldValue.serverTimestamp(),hora_inicio:'--:--',hora_fin:'--:--',firma_cliente:false,deposito_requerido:true,deposito_pagado:false,deposito_monto:price*.5,balance_pagado:false,balance_restante:price*.5,metodo_pago_deposito:'',comprobante_deposito:'',fecha_pago_deposito:''});
+    return data;
+  }
+  async function secondary(data,id){
+    try{await db.collection('clientes').doc(data.cliente).set({nombre:data.cliente,direccion:data.direccion,whatsapp:data.whatsapp,telefono:data.whatsapp,email:data.email_cliente,millas_servicio:data.millas_servicio||0,repetir:data.repetir||'ninguno',pies_cuadrados:data.pies_cuadrados||'',habitaciones:data.habitaciones||'',banos:data.banos||'',medios_banos:data.medios_banos||'',salas:data.salas||'',cocinas:data.cocinas||'',oficinas:data.oficinas||'',horno:data.horno||'No',nevera:data.nevera||'No',gabinetes:data.gabinetes||'No',ventanas:data.ventanas||'No',baseboards:data.baseboards||'No',perros:data.perros||'No',lavanderia:data.lavanderia||'',garaje:data.garaje||'',comedor:data.comedor||'',sala_juegos:data.sala_juegos||'',alfombra_habitaciones:data.alfombra_habitaciones||'',alfombra_pies_cuadrados:data.alfombra_pies_cuadrados||'',alfombra_notas:data.alfombra_notas||'',notas_internas:data.notas_internas||''},{merge:true})}catch(e){console.warn('Servicio guardado; no se actualizó la ficha del cliente.',e)}
+    try{if(typeof sincronizarRepeticionesServicio==='function')await sincronizarRepeticionesServicio({...data,id,firestore_id:id},data.repetir,id)}catch(e){console.warn('Servicio guardado; no se completaron las repeticiones.',e);status('success',`Servicio guardado con ID ${id}. Algunas repeticiones no pudieron crearse; el trabajo principal está seguro.`)}
+  }
+  window.asignarTrabajo=async function(){
+    if(saving)return;const button=get('main-button'),client=String(value('cliente')).trim(),date=String(value('fecha')).trim(),editId=String(value('edit-id')).trim();if(!client){alert('Falta el nombre del cliente.');get('cliente')?.focus();return}if(!date){alert('Selecciona la fecha del trabajo.');get('fecha')?.focus();return}
+    saving=true;const original=button?.textContent||'ASIGNAR TRABAJO';if(button){button.disabled=true;button.textContent=editId?'GUARDANDO CAMBIOS…':'GUARDANDO SERVICIO…'}status('saving','Guardando el servicio en Firebase…');
+    try{
+      let ref,existing={};if(editId){ref=db.collection('servicios').doc(editId);const old=await ref.get();if(!old.exists)throw new Error('No se encontró el servicio que intentas editar.');existing=old.data()||{}}else ref=db.collection('servicios').doc();
+      const data=collect(existing,!!editId);await ref.set(data,{merge:!!editId});const check=await ref.get();if(!check.exists)throw new Error('Firebase no devolvió el servicio después de guardarlo.');const row={...(check.data()||data),id:ref.id,firestore_id:ref.id};localUpsert(row);
+      if(typeof vistaActual!=='undefined')vistaActual='pendiente';get('btn-pendientes')?.classList.add('active');get('btn-completados')?.classList.remove('active');const search=get('buscarTrabajo');if(search)search.value=client;if(typeof renderHistorial==='function')renderHistorial();get('historial')?.scrollIntoView({behavior:'smooth',block:'start'});status('success',`Servicio guardado correctamente ✅ ID: ${ref.id}`);
+      secondary(data,ref.id);setTimeout(()=>{if(typeof renderHistorial==='function')renderHistorial()},250);
+    }catch(error){console.error('Error definitivo al guardar servicio:',error);const code=String(error?.code||'').replace('firestore/','');const detail=String(error?.message||error||'Error desconocido');status('error',`NO SE GUARDÓ EL SERVICIO. ${code?`Código: ${code}. `:''}${detail}`);alert(`No se pudo registrar el servicio.\n\n${code?`Código: ${code}\n`:''}${detail}\n\nLa información permanece en el formulario para que no tengas que escribirla nuevamente.`)}finally{saving=false;if(button){button.disabled=false;button.textContent=editId?'GUARDAR CAMBIOS':original}}
+  };
+  function install(){if(!get('elite-service-save-status')&&get('main-button')){const box=document.createElement('div');box.id='elite-service-save-status';get('main-button').insertAdjacentElement('afterend',box)}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })();
 </script>
 </body>
