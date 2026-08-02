@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin Core v8.5.3 — Device-Aware Document Sending - Elite Cleaners Company</title>
+    <title>Elite Admin v8.6.0 — Centro Requiere Atención</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -11485,6 +11485,45 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(refreshOpenSummary,4
   else repairEstimatesMenu();
   new MutationObserver(repairEstimatesMenu).observe(document.documentElement,{childList:true,subtree:true});
   window.addEventListener('pageshow',repairEstimatesMenu);
+})();
+</script>
+<style id="elite-v860-attention-style">
+.elite-att-badge{margin-left:auto;min-width:22px;height:22px;padding:0 7px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:#dc2626;color:#fff;font-size:11px;font-weight:900}.elite-att-badge[hidden]{display:none}.elite-att-overlay{display:none;position:fixed;inset:0;z-index:1000005;background:#f1f5f9;color:#0f172a;overflow:auto}.elite-att-overlay.open{display:block}.elite-att-shell{max-width:1180px;margin:auto;padding:20px 18px 90px}.elite-att-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.elite-att-head h2{margin:0;font-size:25px}.elite-att-close{width:44px;height:44px;border:0;border-radius:50%;background:#0f172a;color:#fff;font-size:24px;cursor:pointer}.elite-att-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}.elite-att-stat{background:#fff;border:1px solid #dbe2ea;border-radius:15px;padding:15px}.elite-att-stat b{display:block;color:#64748b;font-size:10px;text-transform:uppercase}.elite-att-stat strong{display:block;margin-top:5px;font-size:28px}.elite-att-toolbar{display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:14px}.elite-att-search{background:#fff!important;color:#0f172a!important;border:1px solid #cbd5e1!important;border-radius:12px!important;padding:13px!important}.elite-att-refresh{border:0;border-radius:12px;background:#2563eb;color:#fff;font-weight:900;padding:0 17px}.elite-att-list{display:grid;gap:10px}.elite-att-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;background:#fff;border:1px solid #dbe2ea;border-left:5px solid #f59e0b;border-radius:14px;padding:14px}.elite-att-row.critical{border-left-color:#dc2626}.elite-att-row.info{border-left-color:#2563eb}.elite-att-icon{font-size:22px}.elite-att-row h3{margin:0 0 4px;font-size:15px}.elite-att-row p{margin:0;color:#64748b;font-size:12px;line-height:1.45}.elite-att-action{border:0;border-radius:10px;background:#0f172a;color:#fff;padding:10px 12px;font-weight:800;cursor:pointer}.elite-att-empty{padding:45px;text-align:center;background:#fff;border:1px dashed #94a3b8;border-radius:14px;color:#64748b}@media(max-width:720px){.elite-att-summary{grid-template-columns:1fr 1fr}.elite-att-row{grid-template-columns:auto 1fr}.elite-att-action{grid-column:1/-1;width:100%}}
+</style>
+<div id="elite-attention-center" class="elite-att-overlay" aria-hidden="true">
+ <div class="elite-att-shell">
+  <div class="elite-att-head"><div><h2>Requiere atención</h2><div style="color:#64748b;font-size:13px">Problemas y pendientes que necesitan una decisión administrativa.</div></div><button class="elite-att-close" onclick="eliteAttentionClose()" aria-label="Cerrar">×</button></div>
+  <div id="elite-attention-summary" class="elite-att-summary"></div>
+  <div class="elite-att-toolbar"><input id="elite-attention-search" class="elite-att-search" placeholder="Buscar cliente, problema o fecha…" oninput="eliteAttentionRender()"><button class="elite-att-refresh" onclick="eliteAttentionLoad()">Actualizar</button></div>
+  <div id="elite-attention-list" class="elite-att-list"><div class="elite-att-empty">Cargando pendientes…</div></div>
+ </div>
+</div>
+<script id="elite-v860-attention-center">
+(function(){
+ let rows=[],unsubNotifications=null,unsubRequests=null,notifications=[],requests=[];
+ const esc=v=>String(v??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]));
+ const norm=v=>String(v||'').trim().toLowerCase().replace(/\s+/g,' ');
+ const today=()=>new Date().toISOString().slice(0,10);
+ const finished=s=>s.balance_pagado===true||['terminado','completado','finalizado','done'].includes(norm(s.estado_flujo||s.estado_calendario||s.estado));
+ const realTime=v=>{v=norm(v);return !!v&&!['--:--','null','undefined'].includes(v)};
+ function serviceRows(){
+  const data=Array.isArray(window.todosLosServicios)?window.todosLosServicios:[];const out=[];const now=today();
+  data.forEach(s=>{const id=String(s.id||s.firestore_id||''),date=String(s.fecha||''),client=s.cliente||'Cliente sin nombre',employee=s.empleado_nombre||s.empleado_email||s.empleado_nombre_2||s.empleado_email_2;
+   if(date>=now&&!finished(s)&&!employee)out.push({kind:'service',id,critical:true,icon:'👤',title:'Servicio sin empleado',text:`${client} · ${date||'Sin fecha'}`,search:`${client} ${date} sin empleado`});
+   if(date&&date<=now&&!finished(s)&&realTime(s.hora_inicio||s.hora_llegada)&&!realTime(s.hora_fin||s.hora_salida))out.push({kind:'service',id,critical:true,icon:'⏱️',title:'Falta registrar la salida',text:`${client} · ${date}`,search:`${client} ${date} salida`});
+   if(finished(s)&&s.balance_pagado!==true&&Number(s.balance_restante||0)>0)out.push({kind:'service',id,icon:'💵',title:'Balance pendiente',text:`${client} · $${Number(s.balance_restante||0).toFixed(2)}`,search:`${client} balance pendiente`});
+  });return out;
+ }
+ function rebuild(){rows=[...serviceRows(),...notifications.filter(n=>n.leida!==true).map(n=>({kind:'notification',id:n.id,icon:'🔔',title:n.titulo||n.tipo||'Aviso operativo',text:n.mensaje||n.texto||n.descripcion||'Revisar aviso',search:`${n.titulo||''} ${n.mensaje||''}`,info:true})),...requests.filter(r=>r.resuelta!==true&&!['comprado','eliminado','resuelto'].includes(norm(r.estado))).map(r=>({kind:'request',id:r.id,icon:'📦',title:'Solicitud de producto',text:`${r.producto_nombre||r.producto||'Producto'} · ${r.empleado_nombre||'Staff'} · Cantidad ${Number(r.cantidad_solicitada||r.cantidad||1)}`,search:`${r.producto_nombre||r.producto||''} ${r.empleado_nombre||''}`}))];render();badge()}
+ function badge(){const b=document.getElementById('elite-attention-count');if(!b)return;b.textContent=rows.length>99?'99+':String(rows.length);b.hidden=!rows.length}
+ function render(){const list=document.getElementById('elite-attention-list'),summary=document.getElementById('elite-attention-summary');if(!list||!summary)return;const q=norm(document.getElementById('elite-attention-search')?.value);const shown=rows.filter(r=>!q||norm(`${r.title} ${r.text} ${r.search}`).includes(q));const critical=rows.filter(r=>r.critical).length,services=rows.filter(r=>r.kind==='service').length,products=rows.filter(r=>r.kind==='request').length,alerts=rows.filter(r=>r.kind==='notification').length;summary.innerHTML=`<div class="elite-att-stat"><b>Total</b><strong>${rows.length}</strong></div><div class="elite-att-stat"><b>Servicios</b><strong>${services}</strong></div><div class="elite-att-stat"><b>Productos</b><strong>${products}</strong></div><div class="elite-att-stat"><b>Urgentes</b><strong style="color:#dc2626">${critical}</strong></div>`;list.innerHTML=shown.length?shown.map((r,i)=>`<div class="elite-att-row ${r.critical?'critical':r.info?'info':''}"><div class="elite-att-icon">${r.icon}</div><div><h3>${esc(r.title)}</h3><p>${esc(r.text)}</p></div><button class="elite-att-action" onclick="eliteAttentionAct(${rows.indexOf(r)})">Revisar</button></div>`).join(''):`<div class="elite-att-empty">${q?'No hay resultados para esta búsqueda.':'Todo está al día. No hay elementos que requieran atención.'}</div>`}
+ window.eliteAttentionRender=render;
+ window.eliteAttentionOpen=function(){const x=document.getElementById('elite-attention-center');x.classList.add('open');x.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';rebuild()};
+ window.eliteAttentionClose=function(){const x=document.getElementById('elite-attention-center');x.classList.remove('open');x.setAttribute('aria-hidden','true');document.body.style.overflow=''};
+ window.eliteAttentionAct=function(i){const r=rows[i];if(!r)return;eliteAttentionClose();if(r.kind==='request'){document.querySelector('[data-module="inventario"]')?.click();return}if(r.kind==='notification'){document.querySelector('[data-module="mensajes"]')?.click();return}if(typeof eliteV51SetLayout==='function')eliteV51SetLayout('servicios');if(typeof eliteV5SetActive==='function')eliteV5SetActive('servicios');const s=(window.todosLosServicios||[]).find(x=>String(x.id||x.firestore_id)===r.id);const q=document.getElementById('buscarTrabajo');if(q){q.value=s?.cliente||s?.fecha||'';if(typeof renderHistorial==='function')renderHistorial();q.scrollIntoView({behavior:'smooth',block:'center'})}};
+ window.eliteAttentionLoad=function(){try{if(!unsubNotifications)unsubNotifications=db.collection('notificaciones_admin').onSnapshot(s=>{notifications=s.docs.map(d=>({id:d.id,...d.data()}));rebuild()},()=>{});if(!unsubRequests)unsubRequests=db.collection('solicitudes_inventario').onSnapshot(s=>{requests=s.docs.map(d=>({id:d.id,...d.data()}));rebuild()},()=>{});rebuild()}catch(_){rebuild()}};
+ function install(){const nav=document.getElementById('elite-v5-sidebar');if(nav&&!document.getElementById('elite-attention-nav')){const first=nav.querySelector('.elite-v5-nav-btn');const b=document.createElement('button');b.id='elite-attention-nav';b.className='elite-v5-nav-btn';b.setAttribute('data-module','attention');b.innerHTML='<span class="elite-v5-nav-icon">!</span>Requiere atención <span id="elite-attention-count" class="elite-att-badge" hidden></span>';b.onclick=e=>{e.preventDefault();if(typeof cerrarEliteV5Menu==='function')cerrarEliteV5Menu();eliteAttentionOpen()};first?.insertAdjacentElement('afterend',b)}eliteAttentionLoad();setInterval(rebuild,60000)}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(install,900));else setTimeout(install,900);
 })();
 </script>
 </body>
