@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#000000">
-  <title>Elite Staff Core v8.0 - Operación estabilizada</title>
+  <title>Elite Staff v8.8.0 — Operación con recuperación de conexión</title>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -111,6 +111,11 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    db.enablePersistence({ synchronizeTabs: true }).catch(function(error) {
+      if (error && error.code !== "failed-precondition" && error.code !== "unimplemented") {
+        console.warn("No se pudo activar la persistencia local de Staff.", error);
+      }
+    });
     const auth = firebase.auth();
     const storage = firebase.storage();
 
@@ -3261,7 +3266,7 @@ if (currentUser) {
 <script id="elite-core-staff-js">
 (function(){
 'use strict';
-const CORE_VERSION='8.0.0';
+const CORE_VERSION='8.8.0';
 const locks=new Map();
 const STATE_MAP={asignado:'programado',en_camino:'en_ruta',llego:'llego',limpiando:'en_servicio',pausado:'en_pausa',completado:'finalizado'};
 const TRANSITIONS={programado:['en_ruta'],en_ruta:['llego'],llego:['en_servicio'],en_servicio:['en_pausa','finalizado'],en_pausa:['en_servicio','finalizado'],finalizado:[]};
