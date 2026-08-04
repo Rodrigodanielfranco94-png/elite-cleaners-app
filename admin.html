@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v8.6.3 — Document Workflow & Spanish Preview</title>
+    <title>Elite Admin v8.6.4 — Tablet Login Fix</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -11658,6 +11658,87 @@ const data={cliente:String(value('cliente')).trim(),direccion:String(value('dire
   window.eliteDocHistoryOpen=async function(){const services=Array.isArray(window.todosLosServicios)?window.todosLosServicios:[];await Promise.all(services.map(s=>syncDocuments(String(s.id||s.firestore_id),s)));return previousHistoryOpen?.apply(this,arguments)};
   function install(){const services=Array.isArray(window.todosLosServicios)?window.todosLosServicios:[];services.forEach(s=>syncDocuments(String(s.id||s.firestore_id),s));setInterval(()=>{const rows=Array.isArray(window.todosLosServicios)?window.todosLosServicios:[];rows.forEach(s=>syncDocuments(String(s.id||s.firestore_id),s))},30*60*1000)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(install,1800));else setTimeout(install,1800);
+})();
+</script>
+<style id="elite-v864-tablet-login-fix">
+  #loginBox.elite-login-overlay{
+    position:fixed!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    min-height:100vh!important;
+    z-index:2147483647!important;
+    display:flex;
+    align-items:center!important;
+    justify-content:center!important;
+    overflow:auto!important;
+    padding:24px!important;
+    box-sizing:border-box!important;
+    background:#050505!important;
+  }
+  #loginBox .elite-login-card{
+    position:relative!important;
+    width:min(430px,100%)!important;
+    max-width:430px!important;
+    margin:auto!important;
+    box-sizing:border-box!important;
+  }
+  @media (max-width:600px){
+    #loginBox.elite-login-overlay{padding:14px!important;align-items:flex-start!important}
+    #loginBox .elite-login-card{margin:18px auto!important}
+  }
+</style>
+<script id="elite-v864-login-fallback">
+(function(){
+  'use strict';
+  var URL_BASE='https://wfwojwnbtcpeaumudyjl.supabase.co';
+  var ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmd29qd25idGNwZWF1bXVkeWpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODIwMzIsImV4cCI6MjA5NTA1ODAzMn0.ln6meZvxfSZwtTSnF8PhI7B9tB0hCb6xPfg1_q6jgFE';
+  var SESSION_KEY='elite_admin_auth_v864';
+
+  function byId(id){return document.getElementById(id)}
+  function message(text,color){var box=byId('loginError');if(box){box.textContent=text||'';box.style.color=color||'#ef4444'}}
+  function setLoading(value){var button=byId('eliteLoginButton');if(!button)return;button.disabled=Boolean(value);if(value)button.classList.add('is-loading');else button.classList.remove('is-loading')}
+  function identify(user){
+    if(!user)return;
+    window.currentUser=user;
+    window.usuarioActual={id:user.id,email:user.email,nombre:user.email==='rodrigodanielfranco94@gmail.com'?'Rodrigo':user.email==='oddayanapimientoprada@gmail.com'?'Dayana':'Usuario'};
+  }
+  function saveSession(data){try{localStorage.setItem(SESSION_KEY,JSON.stringify({access_token:data.access_token,refresh_token:data.refresh_token,user:data.user,expires_at:Date.now()+Number(data.expires_in||3600)*1000}))}catch(ignore){}}
+  function readSession(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(ignore){return null}}
+  function clearSession(){try{localStorage.removeItem(SESSION_KEY)}catch(ignore){}}
+  function showApp(user){identify(user);var box=byId('loginBox');if(box)box.style.display='none'}
+  function showLogin(){var box=byId('loginBox');if(box)box.style.display='flex'}
+  function request(path,body){
+    return fetch(URL_BASE+path,{method:'POST',headers:{'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY,'Content-Type':'application/json'},body:JSON.stringify(body||{})}).then(function(response){return response.json().catch(function(){return{}}).then(function(data){if(!response.ok){var error=new Error(data.error_description||data.msg||data.message||'No se pudo completar la solicitud.');error.status=response.status;throw error}return data})});
+  }
+
+  window.togglePasswordVisibility=function(){var input=byId('loginPassword'),button=byId('toggleLoginPassword');if(!input||!button)return;var visible=input.type==='password';input.type=visible?'text':'password';button.classList.toggle('is-visible',visible);button.setAttribute('aria-label',visible?'Ocultar contraseña':'Mostrar contraseña');button.setAttribute('title',visible?'Ocultar contraseña':'Mostrar contraseña');input.focus()};
+
+  window.loginAdmin=function(){
+    var emailInput=byId('loginEmail'),passwordInput=byId('loginPassword');
+    var email=(emailInput&&emailInput.value||'').trim().toLowerCase(),password=passwordInput&&passwordInput.value||'';
+    if(!email){message('Escribe tu correo electrónico.','#f59e0b');if(emailInput)emailInput.focus();return}
+    if(!password){message('Escribe tu contraseña.','#f59e0b');if(passwordInput)passwordInput.focus();return}
+    setLoading(true);message('Verificando acceso...','#93c5fd');
+    request('/auth/v1/token?grant_type=password',{email:email,password:password}).then(function(data){saveSession(data);showApp(data.user);message('')}).catch(function(error){console.error('Error de acceso:',error);message(error.status===400?'Correo o contraseña incorrectos.':'No se pudo conectar con el sistema de acceso. Inténtalo nuevamente.','#ef4444')}).then(function(){setLoading(false)})
+  };
+
+  window.recuperarPasswordAdmin=function(){
+    var emailInput=byId('loginEmail'),email=(emailInput&&emailInput.value||'').trim().toLowerCase();
+    if(!email){message('Escribe primero tu correo electrónico.','#f59e0b');if(emailInput)emailInput.focus();return}
+    message('Enviando enlace de recuperación...','#93c5fd');
+    request('/auth/v1/recover',{email:email}).then(function(){message('Enlace enviado. Revisa tu correo y la carpeta de spam.','#22c55e')}).catch(function(error){console.error('Error de recuperación:',error);message('No se pudo enviar el enlace. Revisa el correo e inténtalo nuevamente.','#ef4444')})
+  };
+
+  window.eliteV5Logout=function(){clearSession();window.currentUser=null;window.usuarioActual=null;showLogin();message('Sesión cerrada correctamente.','#93c5fd')};
+
+  function start(){
+    var session=readSession();
+    if(session&&session.user&&session.expires_at>Date.now()){showApp(session.user)}else{clearSession();showLogin()}
+    var password=byId('loginPassword');if(password)password.addEventListener('keydown',function(event){if(event.key==='Enter')window.loginAdmin()});
+    var email=byId('loginEmail');if(email)email.addEventListener('keydown',function(event){if(event.key==='Enter')window.loginAdmin()})
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
 </script>
 </body>
