@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin Core v8.6.7 â€” Move-In/Move-Out Pricing and Detached Spaces -->
+<!-- Elite Admin Core v8.6.8 â€” Tablet/iPad Compatibility -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v8.6.7 â€” Move Pricing Fix</title>
+    <title>Elite Admin v8.6.8 â€” Tablet Compatibility</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -12715,6 +12715,161 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
   else start();
+})();
+</script>
+<style id="elite-v868-tablet-compatibility">
+  /* Tablet mode: iPad/Android tablets in portrait and landscape. */
+  html{
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+    touch-action:manipulation;
+  }
+  button,
+  [role="button"],
+  .stat-card,
+  .accordion-title,
+  .suggestion-item,
+  a{
+    -webkit-tap-highlight-color:rgba(59,130,246,.22);
+    touch-action:manipulation;
+  }
+  button,
+  input,
+  select,
+  textarea{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  }
+  img,
+  canvas,
+  video{
+    max-width:100%;
+  }
+  #elite-v5-sidebar-overlay:not(.open){
+    display:none!important;
+    pointer-events:none!important;
+  }
+
+  @media (min-width:601px) and (max-width:1180px){
+    body.elite-v5-body{
+      padding-left:18px!important;
+      padding-right:18px!important;
+      padding-top:68px!important;
+      overflow-x:hidden!important;
+    }
+    #elite-v5-mobile-toggle{
+      display:block!important;
+      width:48px!important;
+      height:48px!important;
+      top:10px!important;
+      left:14px!important;
+      z-index:90002!important;
+      touch-action:manipulation!important;
+    }
+    #elite-v5-sidebar{
+      width:270px!important;
+      max-width:78vw!important;
+      transform:translateX(-105%)!important;
+      transition:transform .25s ease!important;
+      z-index:90001!important;
+      padding-top:max(15px,env(safe-area-inset-top))!important;
+    }
+    #elite-v5-sidebar.open{
+      transform:translateX(0)!important;
+    }
+    #elite-v5-sidebar-overlay.open{
+      display:block!important;
+      pointer-events:auto!important;
+    }
+    .elite-v5-nav-btn{
+      min-height:48px!important;
+      font-size:14px!important;
+    }
+    .elite-v5-module-box,
+    .modal-content,
+    .editor-evento-box{
+      width:min(720px,calc(100vw - 36px))!important;
+      max-width:calc(100vw - 36px)!important;
+      box-sizing:border-box!important;
+    }
+    .stats-grid,
+    .type-grid,
+    .action-buttons,
+    .elite-v5-module-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    }
+    .btn-action,
+    .save-btn,
+    .reg-btn,
+    .btn-mini,
+    .type-btn{
+      min-height:46px;
+    }
+    input,
+    select,
+    textarea{
+      font-size:16px!important;
+    }
+    #loginBox.elite-login-overlay{
+      padding:max(24px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom))!important;
+    }
+  }
+
+  @media (orientation:landscape) and (min-width:801px) and (max-width:1180px){
+    .elite-v5-module-box{
+      margin:16px auto!important;
+    }
+    #loginBox .elite-login-card{
+      margin:18px auto!important;
+    }
+  }
+</style>
+<script id="elite-v868-tablet-interaction-fix">
+(function(){
+  "use strict";
+
+  function isTablet(){
+    var width=Math.min(window.innerWidth||0,window.innerHeight||0);
+    var longSide=Math.max(window.innerWidth||0,window.innerHeight||0);
+    var touch=(navigator.maxTouchPoints||0)>0 || "ontouchstart" in window;
+    return touch && width>=600 && longSide<=1400;
+  }
+
+  function closeInactiveLayers(){
+    var overlay=document.getElementById("elite-v5-sidebar-overlay");
+    var sidebar=document.getElementById("elite-v5-sidebar");
+    if(overlay && !overlay.classList.contains("open")){
+      overlay.style.pointerEvents="none";
+    }
+    if(sidebar && !sidebar.classList.contains("open") && isTablet()){
+      sidebar.setAttribute("aria-hidden","true");
+    }
+  }
+
+  function repairTablet(){
+    if(!isTablet()) return;
+    document.documentElement.classList.add("elite-tablet-device");
+    closeInactiveLayers();
+
+    var toggle=document.getElementById("elite-v5-mobile-toggle");
+    if(toggle){
+      toggle.setAttribute("aria-label","Abrir menú");
+      toggle.setAttribute("aria-expanded",document.getElementById("elite-v5-sidebar") && document.getElementById("elite-v5-sidebar").classList.contains("open") ? "true" : "false");
+    }
+  }
+
+  document.addEventListener("click",function(event){
+    var button=event.target && event.target.closest ? event.target.closest("button,[role='button'],.stat-card,.accordion-title") : null;
+    if(!button) return;
+    var overlay=document.getElementById("elite-v5-sidebar-overlay");
+    if(overlay && !overlay.classList.contains("open")) overlay.style.pointerEvents="none";
+  },true);
+
+  document.addEventListener("touchstart",function(){}, {passive:true});
+  window.addEventListener("orientationchange",function(){setTimeout(repairTablet,180);});
+  window.addEventListener("resize",function(){setTimeout(repairTablet,80);});
+  window.addEventListener("pageshow",repairTablet);
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",repairTablet);
+  else repairTablet();
 })();
 </script>
 </body>
