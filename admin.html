@@ -1,10 +1,12 @@
+
+
 <!DOCTYPE html>
-<!-- Elite Admin Core v8.6.6 â€” Reliable Mobile PDF Loading | Device-Aware Sending -->
+<!-- Elite Admin Core v8.6.7 â€” Move-In/Move-Out Pricing and Detached Spaces -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v8.6.6 â€” Mobile PDF Fix</title>
+    <title>Elite Admin v8.6.7 â€” Move Pricing Fix</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -1433,6 +1435,7 @@ body.elite-v5-body{
 </div>
 
 <span class="label-text">Extras</span>
+<small style="display:block;color:#94a3b8;margin:-2px 0 10px;line-height:1.45;">En Move-In y Move-Out, el exterior del horno, nevera y gabinetes ya estÃ¡ incluido. Solo se cobra adicional por la limpieza interior. Los espacios independientes siempre se cobran por separado.</small>
 
 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
 
@@ -2281,21 +2284,21 @@ function calcularPrecioAutomatico() {
   const ft2 = valorNumero("pies_cuadrados");
   const tarifaFt2 = obtenerTarifaPieCuadrado(tipoParaCalculo, ft2);
   total += ft2 * tarifaFt2;
+  const esMudanza = tipo === "MOVE-IN" || tipo === "MOVE-OUT";
   const horno = valorSelect("horno");
-  if (horno === "Outside") total += 20;
+  if (!esMudanza && horno === "Outside") total += 20;
   if (horno === "Inside") total += 65;
-  if (horno === "Inside + Outside") total += 85;
+  if (horno === "Inside + Outside") total += esMudanza ? 65 : 85;
   const nevera = valorSelect("nevera");
-  if (nevera === "Outside") total += precioExtraPorTipo("nevera_outside", tipoParaCalculo);
+  if (!esMudanza && nevera === "Outside") total += precioExtraPorTipo("nevera_outside", tipoParaCalculo);
   if (nevera === "1 Puerta Inside") total += precioExtraPorTipo("nevera_1_puerta_inside", tipoParaCalculo);
   if (nevera === "2 Puertas Inside") total += precioExtraPorTipo("nevera_2_puertas_inside", tipoParaCalculo);
-  if (nevera === "1 Puerta Inside + Outside") total += precioExtraPorTipo("nevera_1_puerta_inside_outside", tipoParaCalculo);
-  if (nevera === "2 Puertas Inside + Outside") total += precioExtraPorTipo("nevera_2_puertas_inside_outside", tipoParaCalculo);
-  const esMudanza = tipo === "MOVE-IN" || tipo === "MOVE-OUT";
+  if (nevera === "1 Puerta Inside + Outside") total += precioExtraPorTipo(esMudanza ? "nevera_1_puerta_inside" : "nevera_1_puerta_inside_outside", tipoParaCalculo);
+  if (nevera === "2 Puertas Inside + Outside") total += precioExtraPorTipo(esMudanza ? "nevera_2_puertas_inside" : "nevera_2_puertas_inside_outside", tipoParaCalculo);
   const gabinetes = valorSelect("gabinetes");
   if (!esMudanza && gabinetes === "Outside") total += precioExtraPorTipo("gabinetes_outside", tipoParaCalculo);
-  if (!esMudanza && gabinetes === "Inside") total += precioExtraPorTipo("gabinetes_inside", tipoParaCalculo);
-  if (!esMudanza && gabinetes === "Inside & Outside") total += precioExtraPorTipo("gabinetes_inside_outside", tipoParaCalculo);
+  if (gabinetes === "Inside") total += precioExtraPorTipo("gabinetes_inside", tipoParaCalculo);
+  if (gabinetes === "Inside & Outside") total += precioExtraPorTipo(esMudanza ? "gabinetes_inside" : "gabinetes_inside_outside", tipoParaCalculo);
   const ventanas = valorSelect("ventanas");
   if (ventanas === "Outside") total += precioExtraPorTipo("ventanas_outside", tipoParaCalculo);
   if (ventanas === "Inside") total += precioExtraPorTipo("ventanas_inside", tipoParaCalculo);
@@ -2478,7 +2481,7 @@ async function asignarTrabajo() {
       alfombra_notas: valor("alfombra_notas"),
       notas_internas: valor("notas_internas"),
       tipo: tipoSeleccionado || servicioActual.tipo || "ESTÃNDAR",
-      pricing_version: "8.6.1-estimates-pricing-fix",
+      pricing_version: "8.6.7-move-pricing-detached-spaces",
       actualizado_en: firebase.firestore.FieldValue.serverTimestamp()
     };
     if (editId) {
@@ -7749,7 +7752,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     const standard = "KITCHEN\nâ€¢ Sweep and mop floors\nâ€¢ Clean countertops, backsplash and sink\nâ€¢ Clean appliance exteriors\nâ€¢ Wipe cabinet exteriors\nâ€¢ Clean and disinfect high-touch surfaces\nâ€¢ Empty trash bins\n\nBATHROOMS\nâ€¢ Clean and disinfect toilets, sinks, tubs and showers\nâ€¢ Clean mirrors, fixtures and cabinet exteriors\nâ€¢ Sweep and mop floors\nâ€¢ Empty trash bins\n\nLIVING, DINING AND BEDROOMS\nâ€¢ Dust reachable surfaces, furniture and fixtures\nâ€¢ Vacuum carpets and mop hard floors\nâ€¢ Clean doors, handles and light switches\nâ€¢ Empty trash bins";
     const deep = "".concat(standard, "\n\nDEEP-CLEANING DETAIL\nâ€¢ Detailed baseboard and edge cleaning\nâ€¢ Extra attention to buildup and reachable corners\nâ€¢ Detailed cleaning of doors, frames and fixtures");
     if (type.includes("post-construction")) return "POST-CONSTRUCTION CLEANING\nâ€¢ Remove fine construction dust from reachable surfaces\nâ€¢ Vacuum and mop floors in detail\nâ€¢ Clean cabinets, counters, fixtures and baseboards\nâ€¢ Clean interior glass and remove light labels or residue when safe\nâ€¢ Final detail cleaning of kitchens, bathrooms and living areas";
-    if (type.includes("move")) return "MOVE-IN / MOVE-OUT CLEANING\n".concat(deep, "\nâ€¢ Clean inside empty cabinets and drawers\nâ€¢ Detail empty closets and storage areas\nâ€¢ Prepare the property for turnover");
+    if (type.includes("move")) return "MOVE-IN / MOVE-OUT CLEANING\n".concat(deep, "\nâ€¢ Clean refrigerator and oven exteriors, including accessible areas around, behind and underneath\nâ€¢ Detail empty closets and storage areas\nâ€¢ Prepare the property for turnover\n\nInterior refrigerator, oven and cabinet cleaning, window cleaning, and detached spaces are separate additional services when selected.");
     if (type.includes("deep") || type.includes("first-time") || type.includes("profunda") || type.includes("primera")) return deep;
     return standard;
   }
@@ -7783,13 +7786,11 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     };
     const names = String(s.nombres_espacios_independientes || "").split(",").map(translateSpaceName).filter(Boolean);
     const independentCount = qty(s.espacios_independientes);
-    const independentText = independentCount ? "".concat(independentCount, " detached space(s)").concat(names.length ? " (" + names.join(", ") + ")" : "") : "";
     const areas = [
       qty(s.habitaciones) && "".concat(qty(s.habitaciones), " bedroom(s)"),
       qty(s.banos) && "".concat(qty(s.banos), " bathroom(s)"),
       qty(s.medios_banos) && "".concat(qty(s.medios_banos), " half bathroom(s)"),
       qty(s.oficinas) && "".concat(qty(s.oficinas), " office(s)"),
-      independentText,
       qty(s.cocinas) && "".concat(qty(s.cocinas), " kitchen(s)"),
       qty(s.salas) && "".concat(qty(s.salas), " living room(s)"),
       qty(s.comedor) && "".concat(qty(s.comedor), " dining room(s)"),
@@ -7798,13 +7799,23 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
       qty(s.sala_juegos) && "".concat(qty(s.sala_juegos), " game room(s)")
     ].filter(Boolean).join(", ");
     const optionLabel = (opt) => String(opt || "").replace("1 Puerta", "1 Door").replace("2 Puertas", "2 Doors").replace("SÃ­", "Included");
+    const independentUnitPrice = num((pricing.ambientes || {}).habitacion) || 25;
+    for (let i = 0; i < independentCount; i++) {
+      const detachedName = names[i] || "Additional Detached Space ".concat(i + 1);
+      add("".concat(detachedName, " â€“ ").concat(cleanType(s.tipo), " Cleaning"), 1, independentUnitPrice);
+    }
+    const ovenPrice = s.horno === "Outside" ? move ? 0 : 20 : s.horno === "Inside" ? 65 : s.horno === "Inside + Outside" ? move ? 65 : 85 : 0;
+    const ovenName = move && ovenPrice > 0 ? "Oven Interior Cleaning" : "Oven";
+    const refrigeratorPrice = s.nevera === "Outside" ? move ? 0 : priceForExtra(s, "nevera_outside") : s.nevera === "1 Puerta Inside" ? priceForExtra(s, "nevera_1_puerta_inside") : s.nevera === "2 Puertas Inside" ? priceForExtra(s, "nevera_2_puertas_inside") : s.nevera === "1 Puerta Inside + Outside" ? priceForExtra(s, move ? "nevera_1_puerta_inside" : "nevera_1_puerta_inside_outside") : s.nevera === "2 Puertas Inside + Outside" ? priceForExtra(s, move ? "nevera_2_puertas_inside" : "nevera_2_puertas_inside_outside") : 0;
+    const refrigeratorName = move && refrigeratorPrice > 0 ? "Refrigerator Interior Cleaning" : "Refrigerator";
     const extraMap = [
-      ["Oven", s.horno, s.horno === "Outside" ? 20 : s.horno === "Inside" ? 65 : s.horno === "Inside + Outside" ? 85 : 0],
-      ["Refrigerator", s.nevera, s.nevera === "Outside" ? priceForExtra(s, "nevera_outside") : s.nevera === "1 Puerta Inside" ? priceForExtra(s, "nevera_1_puerta_inside") : s.nevera === "2 Puertas Inside" ? priceForExtra(s, "nevera_2_puertas_inside") : s.nevera === "1 Puerta Inside + Outside" ? priceForExtra(s, "nevera_1_puerta_inside_outside") : s.nevera === "2 Puertas Inside + Outside" ? priceForExtra(s, "nevera_2_puertas_inside_outside") : 0],
+      [ovenName, move && ovenPrice > 0 ? "Inside" : s.horno, ovenPrice],
+      [refrigeratorName, move && refrigeratorPrice > 0 ? String(s.nevera || "").replace(" Inside + Outside", " Inside") : s.nevera, refrigeratorPrice],
       ["Windows", s.ventanas, s.ventanas === "Outside" ? priceForExtra(s, "ventanas_outside") : s.ventanas === "Inside" ? priceForExtra(s, "ventanas_inside") : s.ventanas === "Inside & Outside" ? priceForExtra(s, "ventanas_inside_outside") : 0]
     ];
+    const cabinetPrice = s.gabinetes === "Outside" ? move ? 0 : priceForExtra(s, "gabinetes_outside") : s.gabinetes === "Inside" ? priceForExtra(s, "gabinetes_inside") : s.gabinetes === "Inside & Outside" ? priceForExtra(s, move ? "gabinetes_inside" : "gabinetes_inside_outside") : 0;
+    extraMap.push([move && cabinetPrice > 0 ? "Kitchen Cabinet Interior Cleaning" : "Cabinets", move && cabinetPrice > 0 ? "Inside" : s.gabinetes, cabinetPrice]);
     if (!move) {
-      extraMap.push(["Cabinets", s.gabinetes, s.gabinetes === "Outside" ? priceForExtra(s, "gabinetes_outside") : s.gabinetes === "Inside" ? priceForExtra(s, "gabinetes_inside") : s.gabinetes === "Inside & Outside" ? priceForExtra(s, "gabinetes_inside_outside") : 0]);
       extraMap.push(["Baseboard cleaning", s.baseboards, s.baseboards === "SÃ­" ? priceForExtra(s, "baseboards") : 0]);
     }
     extraMap.forEach(([n, opt, p]) => {
@@ -11873,6 +11884,8 @@ var __spreadValues = (a, b) => {
       [/detached space\(s\)/g, "espacio(s) independiente(s)"],
       [/Detached wellness studio/g, "Estudio de bienestar independiente"],
       [/Detached multipurpose room/g, "Espacio multiuso independiente"],
+      [/Detached office/g, "Oficina independiente"],
+      [/Additional Detached Space/g, "Espacio independiente adicional"],
       [/sq ft/g, "pies cuadrados"],
       [/Service date:/g, "Fecha del servicio:"],
       [/All listed rooms and property areas are included in this main service price\./g, "Todas las habitaciones y Ã¡reas indicadas estÃ¡n incluidas en el precio principal del servicio."],
@@ -11890,9 +11903,14 @@ var __spreadValues = (a, b) => {
       [/Detailed baseboard and edge cleaning/g, "Limpieza detallada de zÃ³calos y bordes"],
       [/Extra attention to buildup and reachable corners/g, "AtenciÃ³n adicional a acumulaciones y esquinas accesibles"],
       [/Detailed cleaning of doors, frames and fixtures/g, "Limpieza detallada de puertas, marcos y accesorios"],
-      [/Clean inside empty cabinets and drawers/g, "Limpiar el interior de gabinetes y cajones vacÃ­os"],
+      [/Clean refrigerator and oven exteriors, including accessible areas around, behind and underneath/g, "Limpiar el exterior del refrigerador y del horno, incluyendo las Ã¡reas accesibles alrededor, detrÃ¡s y debajo"],
       [/Detail empty closets and storage areas/g, "Limpiar detalladamente clÃ³sets y espacios de almacenamiento vacÃ­os"],
       [/Prepare the property for turnover/g, "Preparar la propiedad para su entrega"],
+      [/Interior refrigerator, oven and cabinet cleaning, window cleaning, and detached spaces are separate additional services when selected\./g, "La limpieza interior del refrigerador, horno y gabinetes, la limpieza de ventanas y los espacios independientes son servicios adicionales separados cuando se seleccionan."],
+      [/Oven Interior Cleaning \(Inside\)/g, "Limpieza interior del horno"],
+      [/Refrigerator Interior Cleaning \(1 Door Inside\)/g, "Limpieza interior del refrigerador de una puerta"],
+      [/Refrigerator Interior Cleaning \(2 Doors Inside\)/g, "Limpieza interior del refrigerador de dos puertas"],
+      [/Kitchen Cabinet Interior Cleaning \(Inside\)/g, "Limpieza interior de gabinetes de cocina"],
       [/Oven \(Inside \+ Outside\)/g, "Horno (interior y exterior)"],
       [/Refrigerator \(2 Doors Inside \+ Outside\)/g, "Refrigerador de dos puertas (interior y exterior)"],
       [/Windows \(Inside & Outside\)/g, "Ventanas (interior y exterior)"],
@@ -12100,7 +12118,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   function collect(existing = {}, editing = false) {
     var _a, _b;
     const price = number("precio_total", 0), phone = String(value("whatsapp")).replace(/\D/g, "");
-    const data = { cliente: String(value("cliente")).trim(), direccion: String(value("direccion")).trim(), whatsapp: phone, telefono: phone, email_cliente: String(value("email_cliente")).trim(), precio_total: price, precio_inicial: number("precio_inicial", price), precio_recurrente: number("precio_recurrente", 0), millas_servicio: number("millas_servicio", 0), empleado_nombre: String(value("search-empleado")).trim(), empleado_email: String(value("email-empleado")).trim(), empleado_nombre_2: String(value("search-empleado-2")).trim(), empleado_email_2: String(value("email-empleado-2")).trim(), fecha: value("fecha"), hora: value("hora"), hora_final_estimada: value("hora_final_estimada"), repetir: value("repetir", "ninguno") || "ninguno", estado_calendario: value("estado_calendario", "pendiente") || "pendiente", estado: editing ? value("estado_trabajo", existing.estado || "no_iniciado") || "no_iniciado" : "no_iniciado", pies_cuadrados: value("pies_cuadrados"), habitaciones: value("habitaciones"), banos: value("banos"), medios_banos: value("medios_banos"), salas: value("salas"), cocinas: value("cocinas"), oficinas: value("oficinas"), espacios_independientes: value("espacios_independientes"), nombres_espacios_independientes: value("nombres_espacios_independientes"), horno: value("horno", "No") || "No", nevera: value("nevera", "No") || "No", gabinetes: value("gabinetes", "No") || "No", ventanas: value("ventanas", "No") || "No", baseboards: value("baseboards", "No") || "No", perros: value("perros", "No") || "No", lavanderia: value("lavanderia"), garaje: value("garaje"), comedor: value("comedor"), sala_juegos: value("sala_juegos"), alfombra_habitaciones: value("alfombra_habitaciones"), alfombra_pies_cuadrados: value("alfombra_pies_cuadrados"), alfombra_notas: value("alfombra_notas"), notas_internas: value("notas_internas"), tipo: (typeof tipoSeleccionado !== "undefined" ? tipoSeleccionado : "ESTÃNDAR") || existing.tipo || "ESTÃNDAR", pricing_version: "8.6.1-estimates-pricing-fix", actualizado_en: firebase.firestore.FieldValue.serverTimestamp() };
+    const data = { cliente: String(value("cliente")).trim(), direccion: String(value("direccion")).trim(), whatsapp: phone, telefono: phone, email_cliente: String(value("email_cliente")).trim(), precio_total: price, precio_inicial: number("precio_inicial", price), precio_recurrente: number("precio_recurrente", 0), millas_servicio: number("millas_servicio", 0), empleado_nombre: String(value("search-empleado")).trim(), empleado_email: String(value("email-empleado")).trim(), empleado_nombre_2: String(value("search-empleado-2")).trim(), empleado_email_2: String(value("email-empleado-2")).trim(), fecha: value("fecha"), hora: value("hora"), hora_final_estimada: value("hora_final_estimada"), repetir: value("repetir", "ninguno") || "ninguno", estado_calendario: value("estado_calendario", "pendiente") || "pendiente", estado: editing ? value("estado_trabajo", existing.estado || "no_iniciado") || "no_iniciado" : "no_iniciado", pies_cuadrados: value("pies_cuadrados"), habitaciones: value("habitaciones"), banos: value("banos"), medios_banos: value("medios_banos"), salas: value("salas"), cocinas: value("cocinas"), oficinas: value("oficinas"), espacios_independientes: value("espacios_independientes"), nombres_espacios_independientes: value("nombres_espacios_independientes"), horno: value("horno", "No") || "No", nevera: value("nevera", "No") || "No", gabinetes: value("gabinetes", "No") || "No", ventanas: value("ventanas", "No") || "No", baseboards: value("baseboards", "No") || "No", perros: value("perros", "No") || "No", lavanderia: value("lavanderia"), garaje: value("garaje"), comedor: value("comedor"), sala_juegos: value("sala_juegos"), alfombra_habitaciones: value("alfombra_habitaciones"), alfombra_pies_cuadrados: value("alfombra_pies_cuadrados"), alfombra_notas: value("alfombra_notas"), notas_internas: value("notas_internas"), tipo: (typeof tipoSeleccionado !== "undefined" ? tipoSeleccionado : "ESTÃNDAR") || existing.tipo || "ESTÃNDAR", pricing_version: "8.6.7-move-pricing-detached-spaces", actualizado_en: firebase.firestore.FieldValue.serverTimestamp() };
     if (editing) {
       data.hora_inicio = value("hora_inicio_real", existing.hora_inicio || "--:--") || existing.hora_inicio || "--:--";
       data.hora_fin = value("hora_fin_real", existing.hora_fin || "--:--") || existing.hora_fin || "--:--";
