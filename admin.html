@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <!-- Elite Admin Core v8.5.3 — Device-Aware Document Sending | Primary-First Service Save -->
 <html lang="es">
 <head>
@@ -4003,6 +4003,7 @@ function prepararModalGasto(modo, gasto = null) {
   document.getElementById("gasto-nota").value = editando ? String(gasto.nota || "") : "";
 }
 function abrirAgregarGasto() {
+  if (typeof eliteV55SubscribeCatalog === "function") eliteV55SubscribeCatalog();
   prepararModalGasto("agregar");
   document.getElementById("modal-gasto-contabilidad").style.display = "block";
   setTimeout(() => {
@@ -4011,6 +4012,7 @@ function abrirAgregarGasto() {
   }, 50);
 }
 function abrirEditarGasto(id) {
+  if (typeof eliteV55SubscribeCatalog === "function") eliteV55SubscribeCatalog();
   const gasto = gastosContabilidad.find((g) => g.id === id);
   if (!gasto) return alert("No se encontró este gasto. Actualiza la página e inténtalo nuevamente.");
   prepararModalGasto("editar", gasto);
@@ -9022,6 +9024,7 @@ var __spreadValues = (a, b) => {
   }
   window.eliteExpenseToggleProducts = function() {
     var _a;
+    if (typeof eliteV55SubscribeCatalog === "function") eliteV55SubscribeCatalog();
     (_a = document.getElementById("gasto-productos-panel")) == null ? void 0 : _a.classList.toggle("open");
     eliteExpenseRenderProducts();
   };
