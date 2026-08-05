@@ -12151,11 +12151,14 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 <style id="elite-v860-attention-style">
 .elite-att-badge{margin-left:auto;min-width:22px;height:22px;padding:0 7px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:#dc2626;color:#fff;font-size:11px;font-weight:900}.elite-att-badge[hidden]{display:none}.elite-att-overlay{display:none;position:fixed;inset:0;z-index:1000005;background:#f1f5f9;color:#0f172a;overflow:auto}.elite-att-overlay.open{display:block}.elite-att-shell{max-width:1180px;margin:auto;padding:20px 18px 90px}.elite-att-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.elite-att-head h2{margin:0;font-size:25px}.elite-att-close{width:44px;height:44px;border:0;border-radius:50%;background:#0f172a;color:#fff;font-size:24px;cursor:pointer}.elite-att-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}.elite-att-stat{background:#fff;border:1px solid #dbe2ea;border-radius:15px;padding:15px}.elite-att-stat b{display:block;color:#64748b;font-size:10px;text-transform:uppercase}.elite-att-stat strong{display:block;margin-top:5px;font-size:28px}.elite-att-toolbar{display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:14px}.elite-att-search{background:#fff!important;color:#0f172a!important;border:1px solid #cbd5e1!important;border-radius:12px!important;padding:13px!important}.elite-att-refresh{border:0;border-radius:12px;background:#2563eb;color:#fff;font-weight:900;padding:0 17px}.elite-att-list{display:grid;gap:10px}.elite-att-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;background:#fff;border:1px solid #dbe2ea;border-left:5px solid #f59e0b;border-radius:14px;padding:14px}.elite-att-row.critical{border-left-color:#dc2626}.elite-att-row.info{border-left-color:#2563eb}.elite-att-icon{font-size:22px}.elite-att-row h3{margin:0 0 4px;font-size:15px}.elite-att-row p{margin:0;color:#64748b;font-size:12px;line-height:1.45}.elite-att-action{border:0;border-radius:10px;background:#0f172a;color:#fff;padding:10px 12px;font-weight:800;cursor:pointer}.elite-att-empty{padding:45px;text-align:center;background:#fff;border:1px dashed #94a3b8;border-radius:14px;color:#64748b}@media(max-width:720px){.elite-att-summary{grid-template-columns:1fr 1fr}.elite-att-row{grid-template-columns:auto 1fr}.elite-att-action{grid-column:1/-1;width:100%}}
 </style>
+<style id="elite-v866-attention-selection-style">
+.elite-att-stat{cursor:pointer;transition:.18s}.elite-att-stat:hover{border-color:#2563eb;transform:translateY(-1px)}.elite-att-stat.active{background:#eff6ff;border:2px solid #2563eb}.elite-att-toolbar{display:flex!important;flex-wrap:wrap}.elite-att-search{flex:1;min-width:220px}.elite-att-refresh{padding:12px 17px!important;cursor:pointer}.elite-att-row.selected{background:#eff6ff;border-color:#2563eb}.elite-att-check{display:none;width:22px;height:22px;accent-color:#2563eb;cursor:pointer}.elite-att-list.selecting .elite-att-check{display:block}.elite-att-list.selecting .elite-att-action{display:none}#elite-att-selection-actions.open{display:flex!important}@media(max-width:720px){.elite-att-toolbar>*{width:100%}#elite-att-selection-actions{width:100%}#elite-att-selection-actions button{flex:1}.elite-att-list.selecting .elite-att-row{grid-template-columns:auto auto minmax(0,1fr)}}
+</style>
 <div id="elite-attention-center" class="elite-att-overlay" aria-hidden="true">
  <div class="elite-att-shell">
   <div class="elite-att-head"><div><h2>Requiere atención</h2><div style="color:#64748b;font-size:13px">Problemas y pendientes que necesitan una decisión administrativa.</div></div><button class="elite-att-close" onclick="eliteAttentionClose()" aria-label="Cerrar">×</button></div>
   <div id="elite-attention-summary" class="elite-att-summary"></div>
-  <div class="elite-att-toolbar"><input id="elite-attention-search" class="elite-att-search" placeholder="Buscar cliente, problema o fecha…" oninput="eliteAttentionRender()"><button class="elite-att-refresh" onclick="eliteAttentionLoad()">Actualizar</button></div>
+  <div class="elite-att-toolbar"><input id="elite-attention-search" class="elite-att-search" placeholder="Buscar cliente, problema o fecha…" oninput="eliteAttentionRender()"><button id="elite-att-select-button" class="elite-att-refresh" style="background:#0f172a" onclick="eliteAttentionStartSelection()">Seleccionar</button><div id="elite-att-selection-actions" style="display:none;gap:8px;flex-wrap:wrap"><button class="elite-att-refresh" style="background:#7c3aed" onclick="eliteAttentionSelectAll()">Seleccionar todo</button><button class="elite-att-refresh" style="background:#dc2626" onclick="eliteAttentionDeleteSelected()">Eliminar <span id="elite-att-selected-count"></span></button><button class="elite-att-refresh" style="background:#64748b" onclick="eliteAttentionCancelSelection()">Cancelar</button></div><button class="elite-att-refresh" onclick="eliteAttentionLoad()">Actualizar</button></div>
   <div id="elite-attention-list" class="elite-att-list"><div class="elite-att-empty">Cargando pendientes…</div></div>
  </div>
 </div>
@@ -12176,7 +12179,7 @@ var __spreadValues = (a, b) => {
   return a;
 };
 (function() {
-  let rows = [], unsubNotifications = null, unsubRequests = null, notifications = [], requests = [];
+  let rows = [], unsubNotifications = null, unsubRequests = null, notifications = [], requests = [], dismissed = /* @__PURE__ */ new Set(), selected = /* @__PURE__ */ new Set(), selecting = false, activeFilter = "all";
   const esc = (v) => String(v != null ? v : "").replace(/[&<>\"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[m]);
   const norm = (v) => String(v || "").trim().toLowerCase().replace(/\s+/g, " ");
   const today = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
@@ -12191,14 +12194,15 @@ var __spreadValues = (a, b) => {
     const now = today();
     data.forEach((s) => {
       const id = String(s.id || s.firestore_id || ""), date = String(s.fecha || ""), client = s.cliente || "Cliente sin nombre", employee = s.empleado_nombre || s.empleado_email || s.empleado_nombre_2 || s.empleado_email_2;
-      if (date >= now && !finished(s) && !employee) out.push({ kind: "service", id, critical: true, icon: "👤", title: "Servicio sin empleado", text: "".concat(client, " · ").concat(date || "Sin fecha"), search: "".concat(client, " ").concat(date, " sin empleado") });
-      if (date && date <= now && !finished(s) && realTime(s.hora_inicio || s.hora_llegada) && !realTime(s.hora_fin || s.hora_salida)) out.push({ kind: "service", id, critical: true, icon: "⏱️", title: "Falta registrar la salida", text: "".concat(client, " · ").concat(date), search: "".concat(client, " ").concat(date, " salida") });
-      if (finished(s) && s.balance_pagado !== true && Number(s.balance_restante || 0) > 0) out.push({ kind: "service", id, icon: "💵", title: "Balance pendiente", text: "".concat(client, " · $").concat(Number(s.balance_restante || 0).toFixed(2)), search: "".concat(client, " balance pendiente") });
+      const hidden = new Set(Array.isArray(s.atencion_oculta_claves) ? s.atencion_oculta_claves : []), staffKey = "service:".concat(id, ":staff"), checkoutKey = "service:".concat(id, ":checkout"), balanceKey = "service:".concat(id, ":balance");
+      if (!hidden.has(staffKey) && date >= now && !finished(s) && !employee) out.push({ key: staffKey, kind: "service", id, critical: true, icon: "👤", title: "Servicio sin empleado", text: "".concat(client, " · ").concat(date || "Sin fecha"), search: "".concat(client, " ").concat(date, " sin empleado") });
+      if (!hidden.has(checkoutKey) && date && date <= now && !finished(s) && realTime(s.hora_inicio || s.hora_llegada) && !realTime(s.hora_fin || s.hora_salida)) out.push({ key: checkoutKey, kind: "service", id, critical: true, icon: "⏱️", title: "Falta registrar la salida", text: "".concat(client, " · ").concat(date), search: "".concat(client, " ").concat(date, " salida") });
+      if (!hidden.has(balanceKey) && finished(s) && s.balance_pagado !== true && Number(s.balance_restante || 0) > 0) out.push({ key: balanceKey, kind: "service", id, icon: "💵", title: "Balance pendiente", text: "".concat(client, " · $").concat(Number(s.balance_restante || 0).toFixed(2)), search: "".concat(client, " balance pendiente") });
     });
     return out;
   }
   function rebuild() {
-    rows = [...serviceRows(), ...notifications.filter((n) => n.leida !== true).map((n) => ({ kind: "notification", id: n.id, icon: "🔔", title: n.titulo || n.tipo || "Aviso operativo", text: n.mensaje || n.texto || n.descripcion || "Revisar aviso", search: "".concat(n.titulo || "", " ").concat(n.mensaje || ""), info: true })), ...requests.filter((r) => r.resuelta !== true && !["comprado", "eliminado", "resuelto"].includes(norm(r.estado))).map((r) => ({ kind: "request", id: r.id, icon: "📦", title: "Solicitud de producto", text: "".concat(r.producto_nombre || r.producto || "Producto", " · ").concat(r.empleado_nombre || "Staff", " · Cantidad ").concat(Number(r.cantidad_solicitada || r.cantidad || 1)), search: "".concat(r.producto_nombre || r.producto || "", " ").concat(r.empleado_nombre || "") }))];
+    rows = [...serviceRows(), ...notifications.filter((n) => n.leida !== true && n.oculto_centro_atencion !== true).map((n) => ({ key: "notification:".concat(n.id), kind: "notification", id: n.id, icon: "🔔", title: n.titulo || n.tipo || "Aviso operativo", text: n.mensaje || n.texto || n.descripcion || "Revisar aviso", search: "".concat(n.titulo || "", " ").concat(n.mensaje || ""), info: true })), ...requests.filter((r) => r.oculto_centro_atencion !== true && r.resuelta !== true && !["comprado", "eliminado", "resuelto"].includes(norm(r.estado))).map((r) => ({ key: "request:".concat(r.id), kind: "request", id: r.id, icon: "📦", title: "Solicitud de producto", text: "".concat(r.producto_nombre || r.producto || "Producto", " · ").concat(r.empleado_nombre || "Staff", " · Cantidad ").concat(Number(r.cantidad_solicitada || r.cantidad || 1)), search: "".concat(r.producto_nombre || r.producto || "", " ").concat(r.empleado_nombre || "") }))].filter((r) => !dismissed.has(r.key));
     render();
     badge();
   }
@@ -12213,12 +12217,89 @@ var __spreadValues = (a, b) => {
     const list = document.getElementById("elite-attention-list"), summary = document.getElementById("elite-attention-summary");
     if (!list || !summary) return;
     const q = norm((_a = document.getElementById("elite-attention-search")) == null ? void 0 : _a.value);
-    const shown = rows.filter((r) => !q || norm("".concat(r.title, " ").concat(r.text, " ").concat(r.search)).includes(q));
+    const shown = rows.filter((r) => {
+      const filterOk = activeFilter === "all" || activeFilter === "urgent" && r.critical || activeFilter === "service" && r.kind === "service" || activeFilter === "request" && r.kind === "request";
+      return filterOk && (!q || norm("".concat(r.title, " ").concat(r.text, " ").concat(r.search)).includes(q));
+    });
     const critical = rows.filter((r) => r.critical).length, services = rows.filter((r) => r.kind === "service").length, products = rows.filter((r) => r.kind === "request").length, alerts = rows.filter((r) => r.kind === "notification").length;
-    summary.innerHTML = '<div class="elite-att-stat"><b>Total</b><strong>'.concat(rows.length, '</strong></div><div class="elite-att-stat"><b>Servicios</b><strong>').concat(services, '</strong></div><div class="elite-att-stat"><b>Productos</b><strong>').concat(products, '</strong></div><div class="elite-att-stat"><b>Urgentes</b><strong style="color:#dc2626">').concat(critical, "</strong></div>");
-    list.innerHTML = shown.length ? shown.map((r, i) => '<div class="elite-att-row '.concat(r.critical ? "critical" : r.info ? "info" : "", '"><div class="elite-att-icon">').concat(r.icon, "</div><div><h3>").concat(esc(r.title), "</h3><p>").concat(esc(r.text), '</p></div><button class="elite-att-action" onclick="eliteAttentionAct(').concat(rows.indexOf(r), ')">Revisar</button></div>')).join("") : '<div class="elite-att-empty">'.concat(q ? "No hay resultados para esta búsqueda." : "Todo está al día. No hay elementos que requieran atención.", "</div>");
+    summary.innerHTML = '<div class="elite-att-stat '.concat(activeFilter === "all" ? "active" : "", '" onclick="eliteAttentionSetFilter(\'all\')"><b>Total</b><strong>').concat(rows.length, '</strong></div><div class="elite-att-stat ').concat(activeFilter === "service" ? "active" : "", '" onclick="eliteAttentionSetFilter(\'service\')"><b>Servicios</b><strong>').concat(services, '</strong></div><div class="elite-att-stat ').concat(activeFilter === "request" ? "active" : "", '" onclick="eliteAttentionSetFilter(\'request\')"><b>Productos</b><strong>').concat(products, '</strong></div><div class="elite-att-stat ').concat(activeFilter === "urgent" ? "active" : "", '" onclick="eliteAttentionSetFilter(\'urgent\')"><b>Urgentes</b><strong style="color:#dc2626">').concat(critical, "</strong></div>");
+    list.classList.toggle("selecting", selecting);
+    list.innerHTML = shown.length ? shown.map((r) => '<div class="elite-att-row '.concat(r.critical ? "critical" : r.info ? "info" : "", " ").concat(selected.has(r.key) ? "selected" : "", '"><input class="elite-att-check" type="checkbox" ').concat(selected.has(r.key) ? "checked" : "", ' onchange="eliteAttentionToggle(\'').concat(esc(r.key), '\',this.checked)"><div class="elite-att-icon">').concat(r.icon, "</div><div><h3>").concat(esc(r.title), "</h3><p>").concat(esc(r.text), '</p></div><button class="elite-att-action" onclick="eliteAttentionAct(').concat(rows.indexOf(r), ')">Revisar</button></div>')).join("") : '<div class="elite-att-empty">'.concat(q || activeFilter !== "all" ? "No hay resultados para este filtro." : "Todo está al día. No hay elementos que requieran atención.", "</div>");
+    const selectedCount = document.getElementById("elite-att-selected-count");
+    if (selectedCount) selectedCount.textContent = selected.size ? "(".concat(selected.size, ")") : "";
   }
   window.eliteAttentionRender = render;
+  window.eliteAttentionSetFilter = function(filter) {
+    activeFilter = filter || "all";
+    selected.clear();
+    render();
+  };
+  window.eliteAttentionStartSelection = function() {
+    selecting = true;
+    selected.clear();
+    document.getElementById("elite-att-select-button").style.display = "none";
+    document.getElementById("elite-att-selection-actions").classList.add("open");
+    render();
+  };
+  window.eliteAttentionCancelSelection = function() {
+    selecting = false;
+    selected.clear();
+    document.getElementById("elite-att-select-button").style.display = "";
+    document.getElementById("elite-att-selection-actions").classList.remove("open");
+    render();
+  };
+  window.eliteAttentionToggle = function(key, checked) {
+    if (checked) selected.add(key);
+    else selected.delete(key);
+    render();
+  };
+  function visibleRows() {
+    const q = norm((document.getElementById("elite-attention-search") || {}).value);
+    return rows.filter((r) => {
+      const filterOk = activeFilter === "all" || activeFilter === "urgent" && r.critical || activeFilter === "service" && r.kind === "service" || activeFilter === "request" && r.kind === "request";
+      return filterOk && (!q || norm("".concat(r.title, " ").concat(r.text, " ").concat(r.search)).includes(q));
+    });
+  }
+  window.eliteAttentionSelectAll = function() {
+    visibleRows().forEach((r) => selected.add(r.key));
+    render();
+  };
+  function dismissedId(key) {
+    let hash = 2166136261;
+    for (let i = 0; i < key.length; i++) {
+      hash ^= key.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return "att_".concat((hash >>> 0).toString(36));
+  }
+  window.eliteAttentionDeleteSelected = async function() {
+    if (!selected.size) return alert("Selecciona por lo menos una tarjeta.");
+    const total = selected.size;
+    if (!confirm("¿Eliminar ".concat(total, " tarjeta").concat(total === 1 ? "" : "s", " de Requiere atención?\n\nEsto no eliminará trabajos, clientes, pagos ni productos reales."))) return;
+    try {
+      const keys = [...selected], selectedRows = rows.filter((r) => selected.has(r.key));
+      for (let i = 0; i < selectedRows.length; i += 450) {
+        const batch = db.batch();
+        selectedRows.slice(i, i + 450).forEach((row) => {
+          if (row.kind === "service") {
+            batch.set(db.collection("servicios").doc(row.id), { atencion_oculta_claves: firebase.firestore.FieldValue.arrayUnion(row.key), actualizado_en: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+          } else if (row.kind === "notification") {
+            batch.set(db.collection("notificaciones_admin").doc(row.id), { oculto_centro_atencion: true, actualizado_en: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+          } else if (row.kind === "request") {
+            batch.set(db.collection("solicitudes_inventario").doc(row.id), { oculto_centro_atencion: true, actualizado_en: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+          }
+        });
+        await batch.commit();
+      }
+      keys.forEach((key) => dismissed.add(key));
+      window.eliteAttentionCancelSelection();
+      rebuild();
+      alert(total === 1 ? "Tarjeta eliminada de Requiere atención ✅" : "".concat(total, " tarjetas eliminadas de Requiere atención ✅"));
+    } catch (error) {
+      console.error("No se pudieron eliminar las tarjetas:", error);
+      alert("No se pudieron eliminar las tarjetas. Revisa la conexión e inténtalo nuevamente.");
+    }
+  };
   window.eliteAttentionOpen = function() {
     const x = document.getElementById("elite-attention-center");
     x.classList.add("open");
