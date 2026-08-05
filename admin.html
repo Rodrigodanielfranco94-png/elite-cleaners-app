@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <!-- Elite Admin Core v8.5.3 — Device-Aware Document Sending | Primary-First Service Save -->
 <html lang="es">
 <head>
@@ -1337,6 +1337,7 @@ body.elite-v5-body{
    <option value="ninguno">Única vez</option>
 <option value="semanal">Semanal</option>
 <option value="quincenal">Quincenal</option>
+<option value="cada_3_semanas">Cada 3 semanas</option>
 <option value="mensual">Mensual</option>
 <option value="trimestral">Trimestral (cada 3 meses)</option>
 </select>
@@ -2313,6 +2314,9 @@ function calcularPrecioAutomatico() {
   if (repetir === "quincenal") {
     precioRecurrente = precioInicial * 0.6;
   }
+  if (repetir === "cada_3_semanas") {
+    precioRecurrente = precioInicial;
+  }
   if (repetir === "mensual") {
     precioRecurrente = precioInicial * 0.75;
   }
@@ -2602,6 +2606,9 @@ function eliteV82NormalizarRepeticion(valor) {
   const mapa = {
     weekly: "semanal",
     biweekly: "quincenal",
+    triweekly: "cada_3_semanas",
+    "every 3 weeks": "cada_3_semanas",
+    "cada 3 semanas": "cada_3_semanas",
     monthly: "mensual",
     quarterly: "trimestral",
     none: "ninguno",
@@ -2625,6 +2632,7 @@ function eliteV82FechaRepetida(fechaBase, repeticion, indice) {
   const nueva = new Date(fechaBase.getTime());
   if (repeticion === "semanal") nueva.setDate(nueva.getDate() + 7 * indice);
   else if (repeticion === "quincenal") nueva.setDate(nueva.getDate() + 14 * indice);
+  else if (repeticion === "cada_3_semanas") nueva.setDate(nueva.getDate() + 21 * indice);
   else if (repeticion === "mensual") nueva.setMonth(nueva.getMonth() + indice);
   else if (repeticion === "trimestral") nueva.setMonth(nueva.getMonth() + 3 * indice);
   return nueva;
@@ -7421,7 +7429,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     const h = (/* @__PURE__ */ new Date()).getHours();
     return h < 12 ? "Buenos días" : h < 19 ? "Buenas tardes" : "Buenas noches";
   };
-  const oneTime = (s) => !["semanal", "quincenal", "mensual", "trimestral", "weekly", "biweekly", "monthly", "quarterly"].includes(norm(s.repetir || s.frecuencia || s.repeticion || "ninguno"));
+  const oneTime = (s) => !["semanal", "quincenal", "cada_3_semanas", "cada 3 semanas", "triweekly", "every 3 weeks", "mensual", "trimestral", "weekly", "biweekly", "monthly", "quarterly"].includes(norm(s.repetir || s.frecuencia || s.repeticion || "ninguno"));
   const completed = (s) => ["completado", "terminado"].includes(norm(s.estado)) || norm(s.estado_calendario) === "completado";
   const jobDate = (s) => {
     const raw = s.fecha_fin || s.fecha_completado || s.fecha || "";
