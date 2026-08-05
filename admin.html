@@ -12628,5 +12628,142 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   else start();
 })();
 </script>
+<!-- ===== ELITE ADMIN v8.6.5 — BORRADO DEFINITIVO CALENDARIO ↔ SERVICIOS ===== -->
+<script id="elite-v865-calendar-service-delete-fix">
+(function () {
+  "use strict";
+
+  const normalizar = (valor) => String(valor || "").trim().toLowerCase().replace(/\s+/g, " ");
+  const idServicio = (servicio) => String(servicio && (servicio.id || servicio.firestore_id) || "").trim();
+  const serieServicio = (servicio) => String(servicio && (servicio.serie_id || servicio.serie_origen_id) || "").trim();
+  const esRecurrente = (servicio) => {
+    const frecuencia = normalizar(servicio && (servicio.repetir || servicio.frecuencia));
+    return Boolean(frecuencia && !["ninguno", "none", "unica", "única", "una vez"].includes(frecuencia));
+  };
+  const mismaSerie = (origen, candidato) => {
+    if (!origen || !candidato) return false;
+    const serieOrigen = serieServicio(origen);
+    const serieCandidato = serieServicio(candidato);
+    if (serieOrigen && serieCandidato) return serieOrigen === serieCandidato;
+    return normalizar(origen.cliente) === normalizar(candidato.cliente) &&
+      normalizar(origen.direccion) === normalizar(candidato.direccion) &&
+      normalizar(origen.repetir || origen.frecuencia) === normalizar(candidato.repetir || candidato.frecuencia) &&
+      normalizar(origen.hora) === normalizar(candidato.hora);
+  };
+
+  function trabajoActual() {
+    const input = document.getElementById("edit-cal-id");
+    const id = String(input && input.value || window.opsSelectedJobId || "").trim();
+    return (window.todosLosServicios || []).find((servicio) => idServicio(servicio) === id) || null;
+  }
+
+  function refrescarPantallas(fecha) {
+    if (typeof window.renderCalendarioElite === "function") window.renderCalendarioElite();
+    if (fecha && typeof window.mostrarEventosDia === "function") window.mostrarEventosDia(fecha);
+    if (typeof window.renderHistorial === "function") window.renderHistorial();
+    if (typeof window.generarNomina === "function") window.generarNomina();
+    if (typeof window.renderCentroOperacionesV601 === "function") window.renderCentroOperacionesV601();
+  }
+
+  async function cargarSerieDesdeServidor(origen) {
+    const snapshot = await db.collection("servicios").get();
+    const filas = [];
+    snapshot.forEach((documento) => {
+      const servicio = Object.assign({}, documento.data() || {}, { id: documento.id, firestore_id: documento.id });
+      if (mismaSerie(origen, servicio)) filas.push(servicio);
+    });
+    return filas;
+  }
+
+  async function eliminarEnBloques(filas, origen, soloFecha) {
+    const fechaEliminada = String(origen.fecha || "");
+    const idsEliminados = new Set(filas.map(idServicio).filter(Boolean));
+    const todaLaSerie = await cargarSerieDesdeServidor(origen);
+    const restantes = todaLaSerie.filter((servicio) => !idsEliminados.has(idServicio(servicio)));
+    const operaciones = [];
+
+    filas.forEach((servicio) => operaciones.push({ tipo: "delete", servicio }));
+    if (soloFecha && esRecurrente(origen) && fechaEliminada) {
+      restantes.forEach((servicio) => operaciones.push({ tipo: "exclude", servicio }));
+    }
+
+    for (let inicio = 0; inicio < operaciones.length; inicio += 450) {
+      const lote = db.batch();
+      operaciones.slice(inicio, inicio + 450).forEach((operacion) => {
+        const ref = db.collection("servicios").doc(idServicio(operacion.servicio));
+        if (operacion.tipo === "delete") {
+          lote.delete(ref);
+        } else {
+          lote.set(ref, {
+            fechas_excluidas: firebase.firestore.FieldValue.arrayUnion(fechaEliminada),
+            actualizado_en: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        }
+      });
+      await lote.commit();
+    }
+  }
+
+  window.eliminarEventoCalendario = async function () {
+    const trabajo = trabajoActual();
+    if (!trabajo) return alert("No se encontró el trabajo. Actualiza la aplicación e inténtalo nuevamente.");
+
+    const selector = document.getElementById("edit-cal-scope");
+    const eliminarSerie = selector && selector.value === "series" && esRecurrente(trabajo);
+    let filasServidor;
+
+    try {
+      filasServidor = esRecurrente(trabajo) ? await cargarSerieDesdeServidor(trabajo) : [trabajo];
+    } catch (error) {
+      console.error("No se pudo verificar el trabajo antes de eliminarlo:", error);
+      return alert("No se pudo verificar el trabajo. Revisa la conexión e inténtalo nuevamente.");
+    }
+
+    let filasEliminar;
+    if (eliminarSerie) {
+      filasEliminar = filasServidor;
+    } else {
+      const fecha = String(trabajo.fecha || "");
+      filasEliminar = filasServidor.filter((servicio) => String(servicio.fecha || "") === fecha);
+      if (!filasEliminar.length) filasEliminar = [trabajo];
+    }
+
+    const mensaje = eliminarSerie
+      ? `⚠️ ELIMINAR SERIE COMPLETA\n\nCliente: ${trabajo.cliente || "Cliente"}\n\nSe eliminarán ${filasEliminar.length} trabajos de:\n• Calendario\n• Servicios\n• Historial y cálculos relacionados\n\nLa ficha del cliente se conservará.\n\n¿Deseas continuar?`
+      : `⚠️ ELIMINAR TRABAJO DEFINITIVAMENTE\n\nCliente: ${trabajo.cliente || "Cliente"}\nFecha: ${trabajo.fecha || "Sin fecha"}\n\nSe eliminará de:\n• Calendario\n• Servicios\n• Historial y cálculos relacionados\n\nNo volverá a generarse al actualizar la aplicación.\nLa ficha del cliente y las demás repeticiones se conservarán.\n\n¿Deseas continuar?`;
+    if (!confirm(mensaje)) return;
+
+    const boton = document.querySelector('#modal-editar-evento button[onclick="eliminarEventoCalendario()"]');
+    if (boton) {
+      boton.disabled = true;
+      boton.dataset.textoOriginal = boton.textContent;
+      boton.textContent = "ELIMINANDO...";
+      boton.style.opacity = ".7";
+    }
+
+    try {
+      await eliminarEnBloques(filasEliminar, trabajo, !eliminarSerie);
+      const ids = new Set(filasEliminar.map(idServicio));
+      todosLosServicios = (todosLosServicios || []).filter((servicio) => !ids.has(idServicio(servicio)));
+      window.todosLosServicios = todosLosServicios;
+      if (typeof window.cerrarEditorEvento === "function") window.cerrarEditorEvento();
+      window.opsSelectedJobId = null;
+      refrescarPantallas(trabajo.fecha);
+      alert(eliminarSerie
+        ? `${filasEliminar.length} trabajos fueron eliminados del Calendario y de Servicios ✅`
+        : "Trabajo eliminado definitivamente del Calendario y de Servicios ✅");
+    } catch (error) {
+      console.error("Error al eliminar definitivamente el trabajo:", error);
+      alert("No se pudo eliminar el trabajo. No se aplicaron cambios locales; revisa la conexión o los permisos e inténtalo nuevamente.");
+    } finally {
+      if (boton && document.body.contains(boton)) {
+        boton.disabled = false;
+        boton.textContent = boton.dataset.textoOriginal || "🗑️ ELIMINAR SEGÚN LA OPCIÓN ELEGIDA";
+        boton.style.opacity = "1";
+      }
+    }
+  };
+})();
+</script>
 </body>
 </html>
