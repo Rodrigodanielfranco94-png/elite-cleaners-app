@@ -1,10 +1,11 @@
+
 <!DOCTYPE html>
-<!-- Elite Admin Core v8.6.9 — Tablet/iPad and UTF-8 Encoding Fix -->
+<!-- Elite Admin Core v8.5.3 — Device-Aware Document Sending | Primary-First Service Save -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v8.6.9 — Tablet and Encoding Fix</title>
+    <title>Elite Admin v8.6.5 — iPad Compatibility</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -13,8 +14,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
 
     <style>body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; padding-bottom: 100px; }
         h1 { font-style: italic; font-weight: 900; font-size: 22px; text-transform: uppercase; margin-bottom: 20px; }
@@ -1185,7 +1186,7 @@ body.elite-v5-body{
     <button class="elite-v5-nav-btn" data-module="configuracion" onclick="eliteV5Navigate('configuracion',this)"><span class="elite-v5-nav-icon">⚙</span>Configuración</button>
     <button id="elite-reset-sidebar-btn" class="elite-v5-nav-btn" onclick="eliteOpenResetPanel()"
             style="color:#fca5a5;border:1px solid rgba(239,68,68,.35);">
-      <span class="elite-v5-nav-icon">⚠️</span>Reiniciar operaciones
+      <span class="elite-v5-nav-icon">⚠</span>Reiniciar operaciones
     </button>
     <button class="elite-v5-nav-btn" data-module="logout" onclick="eliteV5Navigate('logout',this)"><span class="elite-v5-nav-icon">↪</span>Cerrar sesión</button>
   </nav>
@@ -1433,7 +1434,6 @@ body.elite-v5-body{
 </div>
 
 <span class="label-text">Extras</span>
-<small style="display:block;color:#94a3b8;margin:-2px 0 10px;line-height:1.45;">En Move-In y Move-Out, el exterior del horno, nevera y gabinetes ya está incluido. Solo se cobra adicional por la limpieza interior. Los espacios independientes siempre se cobran por separado.</small>
 
 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
 
@@ -1679,12 +1679,10 @@ style="width:100%;"></textarea>
                 <b>• CLAUSE 6: EQUIPMENT AND SUPPLIES</b>
                 Elite Cleaners provides professional chemicals and machinery. Use of the client's products is at their own risk of surface damage.
                 <b>• CLAUSE 7: LIMIT OF LIABILITY</b>
-                Damage reports must be made with photos within 24 hours. This clause is subject to the exemptions in Clauses 9 and 10.
-                <b>• CLAUSE 8: TALENT PROTECTION (NON-SOLICITATION)</b>
-                A $2,500 USD fine applies if the client directly hires any team member up to 12 months after the service.
-                <b>• CLAUSE 9: MOVING HEAVY OBJECTS</b>
+                Damage reports must be made with photos within 24 hours. This clause is subject to the exemptions in Clauses 8 and 9.
+                <b>• CLAUSE 8: MOVING HEAVY OBJECTS</b>
                 The client must be present to move refrigerators, stoves, or heavy furniture. Elite Cleaners is not responsible for scratches or floor damage resulting from these maneuvers.
-                <b>• CLAUSE 10: EXEMPTION FOR STRUCTURAL FAILURES</b>
+                <b>• CLAUSE 9: EXEMPTION FOR STRUCTURAL FAILURES</b>
                 Elite Cleaners is fully exempt from liability for damage or breakage to glass, doors, faucets, or installations due to poor condition, age, or improper prior installation.
             </div>
 
@@ -2282,21 +2280,21 @@ function calcularPrecioAutomatico() {
   const ft2 = valorNumero("pies_cuadrados");
   const tarifaFt2 = obtenerTarifaPieCuadrado(tipoParaCalculo, ft2);
   total += ft2 * tarifaFt2;
-  const esMudanza = tipo === "MOVE-IN" || tipo === "MOVE-OUT";
   const horno = valorSelect("horno");
-  if (!esMudanza && horno === "Outside") total += 20;
+  if (horno === "Outside") total += 20;
   if (horno === "Inside") total += 65;
-  if (horno === "Inside + Outside") total += esMudanza ? 65 : 85;
+  if (horno === "Inside + Outside") total += 85;
   const nevera = valorSelect("nevera");
-  if (!esMudanza && nevera === "Outside") total += precioExtraPorTipo("nevera_outside", tipoParaCalculo);
+  if (nevera === "Outside") total += precioExtraPorTipo("nevera_outside", tipoParaCalculo);
   if (nevera === "1 Puerta Inside") total += precioExtraPorTipo("nevera_1_puerta_inside", tipoParaCalculo);
   if (nevera === "2 Puertas Inside") total += precioExtraPorTipo("nevera_2_puertas_inside", tipoParaCalculo);
-  if (nevera === "1 Puerta Inside + Outside") total += precioExtraPorTipo(esMudanza ? "nevera_1_puerta_inside" : "nevera_1_puerta_inside_outside", tipoParaCalculo);
-  if (nevera === "2 Puertas Inside + Outside") total += precioExtraPorTipo(esMudanza ? "nevera_2_puertas_inside" : "nevera_2_puertas_inside_outside", tipoParaCalculo);
+  if (nevera === "1 Puerta Inside + Outside") total += precioExtraPorTipo("nevera_1_puerta_inside_outside", tipoParaCalculo);
+  if (nevera === "2 Puertas Inside + Outside") total += precioExtraPorTipo("nevera_2_puertas_inside_outside", tipoParaCalculo);
+  const esMudanza = tipo === "MOVE-IN" || tipo === "MOVE-OUT";
   const gabinetes = valorSelect("gabinetes");
   if (!esMudanza && gabinetes === "Outside") total += precioExtraPorTipo("gabinetes_outside", tipoParaCalculo);
-  if (gabinetes === "Inside") total += precioExtraPorTipo("gabinetes_inside", tipoParaCalculo);
-  if (gabinetes === "Inside & Outside") total += precioExtraPorTipo(esMudanza ? "gabinetes_inside" : "gabinetes_inside_outside", tipoParaCalculo);
+  if (!esMudanza && gabinetes === "Inside") total += precioExtraPorTipo("gabinetes_inside", tipoParaCalculo);
+  if (!esMudanza && gabinetes === "Inside & Outside") total += precioExtraPorTipo("gabinetes_inside_outside", tipoParaCalculo);
   const ventanas = valorSelect("ventanas");
   if (ventanas === "Outside") total += precioExtraPorTipo("ventanas_outside", tipoParaCalculo);
   if (ventanas === "Inside") total += precioExtraPorTipo("ventanas_inside", tipoParaCalculo);
@@ -2479,7 +2477,7 @@ async function asignarTrabajo() {
       alfombra_notas: valor("alfombra_notas"),
       notas_internas: valor("notas_internas"),
       tipo: tipoSeleccionado || servicioActual.tipo || "ESTÁNDAR",
-      pricing_version: "8.6.7-move-pricing-detached-spaces",
+      pricing_version: "8.6.1-estimates-pricing-fix",
       actualizado_en: firebase.firestore.FieldValue.serverTimestamp()
     };
     if (editId) {
@@ -2938,7 +2936,7 @@ async function borrar(id) {
   const s = todosLosServicios.find((serv) => serv.id === id);
   const cliente = (s == null ? void 0 : s.cliente) || "este trabajo";
   const confirmar = confirm(
-    "⚠️ï¸ BORRAR TRABAJO\n\nVas a borrar SOLO este trabajo de:\n\n".concat(cliente, "\n\nLa información del cliente NO se borrará.\n\n¿Deseas continuar?")
+    "⚠️ BORRAR TRABAJO\n\nVas a borrar SOLO este trabajo de:\n\n".concat(cliente, "\n\nLa información del cliente NO se borrará.\n\n¿Deseas continuar?")
   );
   if (!confirmar) return;
   try {
@@ -3089,7 +3087,7 @@ function borrar(id) {
   const s = todosLosServicios.find((serv) => serv.id === id);
   const cliente = (s == null ? void 0 : s.cliente) || "este trabajo";
   const confirmar = confirm(
-    "⚠️ï¸ BORRAR TRABAJO\n\nVas a borrar SOLO este trabajo de:\n\n".concat(cliente, "\n\nLa información del cliente NO se borrará.\n\n¿Deseas continuar?")
+    "⚠️ BORRAR TRABAJO\n\nVas a borrar SOLO este trabajo de:\n\n".concat(cliente, "\n\nLa información del cliente NO se borrará.\n\n¿Deseas continuar?")
   );
   if (!confirmar) return;
   db.collection("servicios").doc(id).delete();
@@ -3097,7 +3095,7 @@ function borrar(id) {
 async function cancelarCliente(nombreCliente) {
   if (!nombreCliente) return alert("Cliente no válido.");
   const confirmar = confirm(
-    "⚠️ï¸ CANCELAR CLIENTE\n\nCliente: ".concat(nombreCliente, "\n\nSe eliminarán SOLO los trabajos futuros de este cliente.\n\nNO se borrará:\n• Información del cliente\n• Datos para autorrelleno\n• Teléfono, email, dirección y detalles de propiedad\n\n¿Deseas continuar?")
+    "⚠️ CANCELAR CLIENTE\n\nCliente: ".concat(nombreCliente, "\n\nSe eliminarán SOLO los trabajos futuros de este cliente.\n\nNO se borrará:\n• Información del cliente\n• Datos para autorrelleno\n• Teléfono, email, dirección y detalles de propiedad\n\n¿Deseas continuar?")
   );
   if (!confirmar) return;
   try {
@@ -3345,7 +3343,7 @@ async function eliminarEventoCalendario() {
     return;
   }
   const confirmar = confirm(
-    "⚠️ï¸ ELIMINAR ESTE TRABAJO\n\nCliente: ".concat(cliente, "\n\nEste trabajo se eliminará de:\n• Calendario\n• Lista de Servicios\n• Historial operativo\n• Cálculos relacionados\n\nLa ficha del cliente se conservará.\nLas futuras repeticiones NO se tocarán.\n\n¿Deseas continuar?")
+    "⚠️ ELIMINAR ESTE TRABAJO\n\nCliente: ".concat(cliente, "\n\nEste trabajo se eliminará de:\n• Calendario\n• Lista de Servicios\n• Historial operativo\n• Cálculos relacionados\n\nLa ficha del cliente se conservará.\nLas futuras repeticiones NO se tocarán.\n\n¿Deseas continuar?")
   );
   if (!confirmar) return;
   const botonEliminar = document.querySelector(
@@ -4784,7 +4782,7 @@ function eliteV51ActualizarTotalPorcentajes() {
   const total = r + d + e;
   const box = document.getElementById("cfg-percent-total");
   if (!box) return;
-  box.textContent = "Total de distribución: ".concat(total, "% ").concat(total === 100 ? "✅" : "⚠️ï¸ Debe sumar 100%");
+  box.textContent = "Total de distribución: ".concat(total, "% ").concat(total === 100 ? "✅" : "⚠️ Debe sumar 100%");
   box.style.borderColor = total === 100 ? "#22c55e" : "#f59e0b";
   box.style.color = total === 100 ? "#86efac" : "#fcd34d";
 }
@@ -4846,7 +4844,7 @@ window.eliteResetOperationsOnce = async function() {
     return;
   }
   const first = confirm(
-    "⚠️ï¸ REINICIO ÚNICO DE OPERACIONES\n\nSe descargará primero un respaldo JSON.\n\nDespués se eliminarán:\n• Todos los servicios y trabajos agendados\n• Agenda y trabajos pendientes\n• Depósitos, balances y pagos incluidos en los trabajos\n• Gastos contables\n• Cierres contables\n\nNO se eliminarán:\n• Clientes\n• Direcciones y teléfonos\n• Correos\n• Pies cuadrados y dimensiones\n• Habitaciones, baños y datos permanentes\n• Empleados e inventario\n\n¿Deseas continuar?"
+    "⚠️ REINICIO ÚNICO DE OPERACIONES\n\nSe descargará primero un respaldo JSON.\n\nDespués se eliminarán:\n• Todos los servicios y trabajos agendados\n• Agenda y trabajos pendientes\n• Depósitos, balances y pagos incluidos en los trabajos\n• Gastos contables\n• Cierres contables\n\nNO se eliminarán:\n• Clientes\n• Direcciones y teléfonos\n• Correos\n• Pies cuadrados y dimensiones\n• Habitaciones, baños y datos permanentes\n• Empleados e inventario\n\n¿Deseas continuar?"
   );
   if (!first) return;
   const phrase = prompt(
@@ -5193,7 +5191,7 @@ function eliteV54RenderRequests() {
   box.innerHTML = eliteV54Requests.map((r) => {
     const diff = Number(r.cantidad_comprada || 0) - Number(r.cantidad_entregada || 0);
     const photos = [r.foto_producto_url, r.foto_recibo_url, r.foto_compra_url, r.foto_entrega_url].filter(Boolean);
-    return '<div class="elite-v54-card"><h4>'.concat(eliteV54Esc(r.producto_nombre || "Producto"), '</h4><span class="elite-v54-badge ').concat(eliteV54StatusClass(r.estado), '">').concat(eliteV54Esc(r.estado || "pendiente"), '</span><div class="elite-v54-meta"><b>Empleado:</b> ').concat(eliteV54Esc(r.empleado_nombre || "Sin nombre"), "<br><b>Tipo:</b> ").concat(eliteV54Esc(r.tipo || "Sin tipo"), "<br><b>Solicitado:</b> ").concat(Number(r.cantidad_solicitada || r.cantidad || 0), "<br><b>Ubicación:</b> ").concat(eliteV54Esc(r.ubicacion || "Sin ubicación"), "<br><b>Solicitud:</b> ").concat(eliteV54Date(r.creado || r.fecha)).concat(r.nota ? "<br><b>Nota:</b> ".concat(eliteV54Esc(r.nota)) : "").concat(r.precio_unitario ? "<br><b>Precio unitario:</b> $".concat(Number(r.precio_unitario).toFixed(2)) : "").concat(r.total_pagado ? "<br><b>Total pagado:</b> $".concat(Number(r.total_pagado).toFixed(2)) : "", "</div>").concat(photos.length ? '<div class="elite-v54-photo-grid">'.concat(photos.map((u) => '<a class="elite-v54-photo" href="'.concat(u, '" target="_blank"><img src="').concat(u, '"></a>')).join(""), "</div>") : "").concat(r.estado === "comprada" || r.estado === "lista_entrega" || r.estado === "entregada" || r.estado === "confirmada" ? "".concat(diff !== 0 ? '<div class="elite-v54-warning">⚠️ Diferencia entre comprado y entregado: '.concat(diff, "</div>") : '<div class="elite-v54-ok">✅ Cantidades conciliadas</div>') : "", '<div class="elite-v54-actions">').concat(r.estado === "pendiente" ? '<button style="background:#2563eb" onclick="eliteV54Approve(\''.concat(r.id, '\')">Aprobar</button><button style="background:#dc2626" onclick="eliteV54Reject(\'').concat(r.id, "')\">Rechazar</button>") : "").concat(r.estado === "aprobada" ? '<button style="background:#7c3aed" onclick="eliteV54Purchase(\''.concat(r.id, "')\">Registrar compra</button>") : "").concat(r.estado === "comprada" || r.estado === "lista_entrega" ? '<button style="background:#16a34a" onclick="eliteV54Deliver(\''.concat(r.id, "')\">Registrar entrega</button>") : "", '<button style="background:#475569" onclick="eliteV54History(\'').concat(r.id, "')\">Historial</button></div></div>");
+    return '<div class="elite-v54-card"><h4>'.concat(eliteV54Esc(r.producto_nombre || "Producto"), '</h4><span class="elite-v54-badge ').concat(eliteV54StatusClass(r.estado), '">').concat(eliteV54Esc(r.estado || "pendiente"), '</span><div class="elite-v54-meta"><b>Empleado:</b> ').concat(eliteV54Esc(r.empleado_nombre || "Sin nombre"), "<br><b>Tipo:</b> ").concat(eliteV54Esc(r.tipo || "Sin tipo"), "<br><b>Solicitado:</b> ").concat(Number(r.cantidad_solicitada || r.cantidad || 0), "<br><b>Ubicación:</b> ").concat(eliteV54Esc(r.ubicacion || "Sin ubicación"), "<br><b>Solicitud:</b> ").concat(eliteV54Date(r.creado || r.fecha)).concat(r.nota ? "<br><b>Nota:</b> ".concat(eliteV54Esc(r.nota)) : "").concat(r.precio_unitario ? "<br><b>Precio unitario:</b> $".concat(Number(r.precio_unitario).toFixed(2)) : "").concat(r.total_pagado ? "<br><b>Total pagado:</b> $".concat(Number(r.total_pagado).toFixed(2)) : "", "</div>").concat(photos.length ? '<div class="elite-v54-photo-grid">'.concat(photos.map((u) => '<a class="elite-v54-photo" href="'.concat(u, '" target="_blank"><img src="').concat(u, '"></a>')).join(""), "</div>") : "").concat(r.estado === "comprada" || r.estado === "lista_entrega" || r.estado === "entregada" || r.estado === "confirmada" ? "".concat(diff !== 0 ? '<div class="elite-v54-warning">⚠ Diferencia entre comprado y entregado: '.concat(diff, "</div>") : '<div class="elite-v54-ok">✅ Cantidades conciliadas</div>') : "", '<div class="elite-v54-actions">').concat(r.estado === "pendiente" ? '<button style="background:#2563eb" onclick="eliteV54Approve(\''.concat(r.id, '\')">Aprobar</button><button style="background:#dc2626" onclick="eliteV54Reject(\'').concat(r.id, "')\">Rechazar</button>") : "").concat(r.estado === "aprobada" ? '<button style="background:#7c3aed" onclick="eliteV54Purchase(\''.concat(r.id, "')\">Registrar compra</button>") : "").concat(r.estado === "comprada" || r.estado === "lista_entrega" ? '<button style="background:#16a34a" onclick="eliteV54Deliver(\''.concat(r.id, "')\">Registrar entrega</button>") : "", '<button style="background:#475569" onclick="eliteV54History(\'').concat(r.id, "')\">Historial</button></div></div>");
   }).join("");
 }
 async function eliteV54Audit(id, accion, detalle = {}) {
@@ -5888,7 +5886,7 @@ function renderOpsAlerts(jobs) {
     if (!s.contrato_firmado) alerts.push(["warning", "Contrato pendiente", s.cliente]);
     if (!s.empleado_nombre) alerts.push(["info", "Trabajo sin empleado", s.cliente]);
   });
-  document.getElementById("ops-alerts").innerHTML = alerts.length ? alerts.slice(0, 8).map((a) => '<div class="ops-alert '.concat(a[0], '"><span>⚠️ï¸</span><b>').concat(a[1], "</b><span>").concat(a[2], "</span></div>")).join("") : '<div class="ops-alert info"><span>✅</span><b>Sin alertas críticas</b><span>Todo en orden</span></div>';
+  document.getElementById("ops-alerts").innerHTML = alerts.length ? alerts.slice(0, 8).map((a) => '<div class="ops-alert '.concat(a[0], '"><span>⚠️</span><b>').concat(a[1], "</b><span>").concat(a[2], "</span></div>")).join("") : '<div class="ops-alert info"><span>✅</span><b>Sin alertas críticas</b><span>Todo en orden</span></div>';
 }
 function renderOpsInventory() {
   const box = document.getElementById("ops-inventory-today");
@@ -7750,7 +7748,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     const standard = "KITCHEN\n• Sweep and mop floors\n• Clean countertops, backsplash and sink\n• Clean appliance exteriors\n• Wipe cabinet exteriors\n• Clean and disinfect high-touch surfaces\n• Empty trash bins\n\nBATHROOMS\n• Clean and disinfect toilets, sinks, tubs and showers\n• Clean mirrors, fixtures and cabinet exteriors\n• Sweep and mop floors\n• Empty trash bins\n\nLIVING, DINING AND BEDROOMS\n• Dust reachable surfaces, furniture and fixtures\n• Vacuum carpets and mop hard floors\n• Clean doors, handles and light switches\n• Empty trash bins";
     const deep = "".concat(standard, "\n\nDEEP-CLEANING DETAIL\n• Detailed baseboard and edge cleaning\n• Extra attention to buildup and reachable corners\n• Detailed cleaning of doors, frames and fixtures");
     if (type.includes("post-construction")) return "POST-CONSTRUCTION CLEANING\n• Remove fine construction dust from reachable surfaces\n• Vacuum and mop floors in detail\n• Clean cabinets, counters, fixtures and baseboards\n• Clean interior glass and remove light labels or residue when safe\n• Final detail cleaning of kitchens, bathrooms and living areas";
-    if (type.includes("move")) return "MOVE-IN / MOVE-OUT CLEANING\n".concat(deep, "\n• Clean refrigerator and oven exteriors, including accessible areas around, behind and underneath\n• Detail empty closets and storage areas\n• Prepare the property for turnover\n\nInterior refrigerator, oven and cabinet cleaning, window cleaning, and detached spaces are separate additional services when selected.");
+    if (type.includes("move")) return "MOVE-IN / MOVE-OUT CLEANING\n".concat(deep, "\n• Clean inside empty cabinets and drawers\n• Detail empty closets and storage areas\n• Prepare the property for turnover");
     if (type.includes("deep") || type.includes("first-time") || type.includes("profunda") || type.includes("primera")) return deep;
     return standard;
   }
@@ -7784,11 +7782,13 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     };
     const names = String(s.nombres_espacios_independientes || "").split(",").map(translateSpaceName).filter(Boolean);
     const independentCount = qty(s.espacios_independientes);
+    const independentText = independentCount ? "".concat(independentCount, " detached space(s)").concat(names.length ? " (" + names.join(", ") + ")" : "") : "";
     const areas = [
       qty(s.habitaciones) && "".concat(qty(s.habitaciones), " bedroom(s)"),
       qty(s.banos) && "".concat(qty(s.banos), " bathroom(s)"),
       qty(s.medios_banos) && "".concat(qty(s.medios_banos), " half bathroom(s)"),
       qty(s.oficinas) && "".concat(qty(s.oficinas), " office(s)"),
+      independentText,
       qty(s.cocinas) && "".concat(qty(s.cocinas), " kitchen(s)"),
       qty(s.salas) && "".concat(qty(s.salas), " living room(s)"),
       qty(s.comedor) && "".concat(qty(s.comedor), " dining room(s)"),
@@ -7797,23 +7797,13 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
       qty(s.sala_juegos) && "".concat(qty(s.sala_juegos), " game room(s)")
     ].filter(Boolean).join(", ");
     const optionLabel = (opt) => String(opt || "").replace("1 Puerta", "1 Door").replace("2 Puertas", "2 Doors").replace("Sí", "Included");
-    const independentUnitPrice = num((pricing.ambientes || {}).habitacion) || 25;
-    for (let i = 0; i < independentCount; i++) {
-      const detachedName = names[i] || "Additional Detached Space ".concat(i + 1);
-      add("".concat(detachedName, " – ").concat(cleanType(s.tipo), " Cleaning"), 1, independentUnitPrice);
-    }
-    const ovenPrice = s.horno === "Outside" ? move ? 0 : 20 : s.horno === "Inside" ? 65 : s.horno === "Inside + Outside" ? move ? 65 : 85 : 0;
-    const ovenName = move && ovenPrice > 0 ? "Oven Interior Cleaning" : "Oven";
-    const refrigeratorPrice = s.nevera === "Outside" ? move ? 0 : priceForExtra(s, "nevera_outside") : s.nevera === "1 Puerta Inside" ? priceForExtra(s, "nevera_1_puerta_inside") : s.nevera === "2 Puertas Inside" ? priceForExtra(s, "nevera_2_puertas_inside") : s.nevera === "1 Puerta Inside + Outside" ? priceForExtra(s, move ? "nevera_1_puerta_inside" : "nevera_1_puerta_inside_outside") : s.nevera === "2 Puertas Inside + Outside" ? priceForExtra(s, move ? "nevera_2_puertas_inside" : "nevera_2_puertas_inside_outside") : 0;
-    const refrigeratorName = move && refrigeratorPrice > 0 ? "Refrigerator Interior Cleaning" : "Refrigerator";
     const extraMap = [
-      [ovenName, move && ovenPrice > 0 ? "Inside" : s.horno, ovenPrice],
-      [refrigeratorName, move && refrigeratorPrice > 0 ? String(s.nevera || "").replace(" Inside + Outside", " Inside") : s.nevera, refrigeratorPrice],
+      ["Oven", s.horno, s.horno === "Outside" ? 20 : s.horno === "Inside" ? 65 : s.horno === "Inside + Outside" ? 85 : 0],
+      ["Refrigerator", s.nevera, s.nevera === "Outside" ? priceForExtra(s, "nevera_outside") : s.nevera === "1 Puerta Inside" ? priceForExtra(s, "nevera_1_puerta_inside") : s.nevera === "2 Puertas Inside" ? priceForExtra(s, "nevera_2_puertas_inside") : s.nevera === "1 Puerta Inside + Outside" ? priceForExtra(s, "nevera_1_puerta_inside_outside") : s.nevera === "2 Puertas Inside + Outside" ? priceForExtra(s, "nevera_2_puertas_inside_outside") : 0],
       ["Windows", s.ventanas, s.ventanas === "Outside" ? priceForExtra(s, "ventanas_outside") : s.ventanas === "Inside" ? priceForExtra(s, "ventanas_inside") : s.ventanas === "Inside & Outside" ? priceForExtra(s, "ventanas_inside_outside") : 0]
     ];
-    const cabinetPrice = s.gabinetes === "Outside" ? move ? 0 : priceForExtra(s, "gabinetes_outside") : s.gabinetes === "Inside" ? priceForExtra(s, "gabinetes_inside") : s.gabinetes === "Inside & Outside" ? priceForExtra(s, move ? "gabinetes_inside" : "gabinetes_inside_outside") : 0;
-    extraMap.push([move && cabinetPrice > 0 ? "Kitchen Cabinet Interior Cleaning" : "Cabinets", move && cabinetPrice > 0 ? "Inside" : s.gabinetes, cabinetPrice]);
     if (!move) {
+      extraMap.push(["Cabinets", s.gabinetes, s.gabinetes === "Outside" ? priceForExtra(s, "gabinetes_outside") : s.gabinetes === "Inside" ? priceForExtra(s, "gabinetes_inside") : s.gabinetes === "Inside & Outside" ? priceForExtra(s, "gabinetes_inside_outside") : 0]);
       extraMap.push(["Baseboard cleaning", s.baseboards, s.baseboards === "Sí" ? priceForExtra(s, "baseboards") : 0]);
     }
     extraMap.forEach(([n, opt, p]) => {
@@ -7964,76 +7954,9 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     const c = window.eliteV51Config || window.configuracionEmpresa || {};
     return { name: c.nombre_empresa || "Elite Cleaners Company", address: "Pleasanton, CA 94566", phone: c.telefono_empresa || "(925) 336-2884", email: c.email_empresa || "elitecleanerscompany@gmail.com", web: c.web_empresa || "elitecleanerscompany.com" };
   }
-  let elitePdfLibrariesPromise = null;
-  function eliteLoadScript(url) {
-    return new Promise((resolve, reject) => {
-      const prior = document.querySelector('script[data-elite-pdf-url="' + url + '"]');
-      if (prior) {
-        if (prior.dataset.loaded === "1") return resolve();
-        prior.addEventListener("load", resolve, { once: true });
-        prior.addEventListener("error", reject, { once: true });
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = url;
-      script.async = true;
-      script.dataset.elitePdfUrl = url;
-      script.onload = () => {
-        script.dataset.loaded = "1";
-        resolve();
-      };
-      script.onerror = () => reject(new Error("No se pudo cargar " + url));
-      document.head.appendChild(script);
-    });
-  }
-  async function eliteEnsurePdfLibraries() {
-    if (window.jspdf?.jsPDF?.API?.autoTable) return true;
-    if (elitePdfLibrariesPromise) return elitePdfLibrariesPromise;
-    elitePdfLibrariesPromise = (async () => {
-      if (!window.jspdf?.jsPDF) {
-        const jsPdfSources = [
-          "https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js",
-          "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
-        ];
-        let loaded = false;
-        for (const source of jsPdfSources) {
-          try {
-            await eliteLoadScript(source);
-            if (window.jspdf?.jsPDF) {
-              loaded = true;
-              break;
-            }
-          } catch (_) {}
-        }
-        if (!loaded) throw new Error("No se pudo cargar el generador PDF. Revisa la conexión y vuelve a intentarlo.");
-      }
-      if (!window.jspdf.jsPDF.API.autoTable) {
-        const tableSources = [
-          "https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js",
-          "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"
-        ];
-        let loaded = false;
-        for (const source of tableSources) {
-          try {
-            await eliteLoadScript(source);
-            if (window.jspdf.jsPDF.API.autoTable) {
-              loaded = true;
-              break;
-            }
-          } catch (_) {}
-        }
-        if (!loaded) throw new Error("No se pudo cargar el creador de tablas del PDF. Vuelve a intentarlo.");
-      }
-      return true;
-    })().catch((error) => {
-      elitePdfLibrariesPromise = null;
-      throw error;
-    });
-    return elitePdfLibrariesPromise;
-  }
   function pdfOutput(kind = "blob") {
     var _a, _b;
-    if (!((_a = window.jspdf) == null ? void 0 : _a.jsPDF) || !window.jspdf.jsPDF.API.autoTable) throw new Error("El generador PDF todavía no está disponible.");
+    if (!((_a = window.jspdf) == null ? void 0 : _a.jsPDF)) throw new Error("El generador PDF todavía no está disponible.");
     const d = data(), c = company(), doc = new window.jspdf.jsPDF({ unit: "pt", format: "letter" }), blue = [30, 64, 175], gray = [71, 85, 105];
     const logo = ((_b = document.getElementById("elite-shared-logo-master")) == null ? void 0 : _b.src) || "";
     if (/^data:image\//.test(logo)) {
@@ -8115,7 +8038,6 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   }
   window.eliteDocDownload = async () => {
     try {
-      await eliteEnsurePdfLibraries();
       await eliteDocSave(true);
       pdfOutput("save");
     } catch (e) {
@@ -8164,7 +8086,6 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     const subject = "".concat(label, " ").concat(d.number, " - Elite Cleaners Company");
     const message = "Hello ".concat(d.customer, ",\n\nPlease find your ").concat(label.toLowerCase(), " ").concat(d.number, " from Elite Cleaners Company. The total is ").concat(money(d.totals.total), ".\n\nThank you for choosing Elite Cleaners Company.");
     try {
-      await eliteEnsurePdfLibraries();
       const out = pdfOutput("blob"), file = new File([out.blob], out.filename, { type: "application/pdf" });
       const appleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent);
       const android = /Android/i.test(navigator.userAgent);
@@ -8207,8 +8128,6 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
       }
     } catch (e) {
       console.error(e);
-      $("edoc-status").value = previousStatus;
-      $("edoc-status").dispatchEvent(new Event("change", { bubbles: true }));
       alert("No se pudo preparar el envío.\n\n".concat(String((e == null ? void 0 : e.message) || e), "\n\nEl documento no fue enviado."));
     }
   };
@@ -8918,7 +8837,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
       if (!isRecurring(ev)) return alert("Este trabajo no pertenece a una serie repetida.");
       rows = seriesRows(ev);
     }
-    const message = scope === "series" ? "⚠️ï¸ Se eliminarán TODOS los ".concat(rows.length, " trabajos repetidos de ").concat(ev.cliente, ".\n\nLa ficha del cliente se conservará.\n\n¿Continuar?") : "⚠️ï¸ Se eliminará solamente este trabajo de ".concat(ev.cliente, ".\n\nLos demás trabajos repetidos se conservarán.\n\n¿Continuar?");
+    const message = scope === "series" ? "⚠️ Se eliminarán TODOS los ".concat(rows.length, " trabajos repetidos de ").concat(ev.cliente, ".\n\nLa ficha del cliente se conservará.\n\n¿Continuar?") : "⚠️ Se eliminará solamente este trabajo de ".concat(ev.cliente, ".\n\nLos demás trabajos repetidos se conservarán.\n\n¿Continuar?");
     if (!confirm(message)) return;
     try {
       if (scope === "this" && isRecurring(ev)) {
@@ -9450,7 +9369,7 @@ document.addEventListener("click", function(e) {
       const photos = [r.foto_recibo_url, r.foto_compra_url, r.foto_entrega_url].filter(Boolean);
       const source = r.origen === "catalogo_staff" ? '<span class="elite-v6101-source">Staff</span>' : "";
       const photo = r.foto_producto_url ? '<img class="elite-v6101-request-photo" src="'.concat(eliteV54Esc(r.foto_producto_url), '">') : "";
-      return '<div class="elite-v54-card">'.concat(photo, "<h4>").concat(eliteV54Esc(r.producto_nombre || r.producto || "Producto"), " ").concat(source, '</h4><span class="elite-v54-badge ').concat(eliteV54StatusClass(r.estado), '">').concat(eliteV54Esc(r.estado || "pendiente"), '</span><div class="elite-v54-meta"><b>Empleado:</b> ').concat(eliteV54Esc(r.empleado_nombre || "Sin nombre"), "<br><b>Cantidad solicitada:</b> ").concat(Number(r.cantidad_solicitada || r.cantidad || 0), "<br><b>Urgencia:</b> ").concat(eliteV54Esc((r.urgencia || "normal").replaceAll("_", " ")), "<br><b>Solicitud:</b> ").concat(eliteV54Date(r.creado || r.fecha)).concat(r.nota ? "<br><b>Nota:</b> ".concat(eliteV54Esc(r.nota)) : "", "</div>").concat(photos.length ? '<div class="elite-v54-photo-grid">'.concat(photos.map((u) => '<a class="elite-v54-photo" href="'.concat(u, '" target="_blank"><img src="').concat(u, '"></a>')).join(""), "</div>") : "").concat(["comprada", "lista_entrega", "entregada", "confirmada"].includes(r.estado) ? diff !== 0 ? '<div class="elite-v54-warning">⚠️ Diferencia entre comprado y entregado: '.concat(diff, "</div>") : '<div class="elite-v54-ok">✅ Cantidades conciliadas</div>' : "", '<div class="elite-v54-actions">').concat(r.estado === "pendiente" ? '<button style="background:#2563eb" onclick="eliteV54Approve(\''.concat(r.id, '\')">Aprobar</button><button style="background:#dc2626" onclick="eliteV54Reject(\'').concat(r.id, "')\">Rechazar</button>") : "").concat(r.estado === "aprobada" ? '<button style="background:#7c3aed" onclick="eliteV54Purchase(\''.concat(r.id, "')\">Registrar compra</button>") : "").concat(["comprada", "lista_entrega"].includes(r.estado) ? '<button style="background:#16a34a" onclick="eliteV54Deliver(\''.concat(r.id, "')\">Registrar entrega</button>") : "", '<button style="background:#475569" onclick="eliteV54History(\'').concat(r.id, "')\">Historial</button></div></div>");
+      return '<div class="elite-v54-card">'.concat(photo, "<h4>").concat(eliteV54Esc(r.producto_nombre || r.producto || "Producto"), " ").concat(source, '</h4><span class="elite-v54-badge ').concat(eliteV54StatusClass(r.estado), '">').concat(eliteV54Esc(r.estado || "pendiente"), '</span><div class="elite-v54-meta"><b>Empleado:</b> ').concat(eliteV54Esc(r.empleado_nombre || "Sin nombre"), "<br><b>Cantidad solicitada:</b> ").concat(Number(r.cantidad_solicitada || r.cantidad || 0), "<br><b>Urgencia:</b> ").concat(eliteV54Esc((r.urgencia || "normal").replaceAll("_", " ")), "<br><b>Solicitud:</b> ").concat(eliteV54Date(r.creado || r.fecha)).concat(r.nota ? "<br><b>Nota:</b> ".concat(eliteV54Esc(r.nota)) : "", "</div>").concat(photos.length ? '<div class="elite-v54-photo-grid">'.concat(photos.map((u) => '<a class="elite-v54-photo" href="'.concat(u, '" target="_blank"><img src="').concat(u, '"></a>')).join(""), "</div>") : "").concat(["comprada", "lista_entrega", "entregada", "confirmada"].includes(r.estado) ? diff !== 0 ? '<div class="elite-v54-warning">⚠ Diferencia entre comprado y entregado: '.concat(diff, "</div>") : '<div class="elite-v54-ok">✅ Cantidades conciliadas</div>' : "", '<div class="elite-v54-actions">').concat(r.estado === "pendiente" ? '<button style="background:#2563eb" onclick="eliteV54Approve(\''.concat(r.id, '\')">Aprobar</button><button style="background:#dc2626" onclick="eliteV54Reject(\'').concat(r.id, "')\">Rechazar</button>") : "").concat(r.estado === "aprobada" ? '<button style="background:#7c3aed" onclick="eliteV54Purchase(\''.concat(r.id, "')\">Registrar compra</button>") : "").concat(["comprada", "lista_entrega"].includes(r.estado) ? '<button style="background:#16a34a" onclick="eliteV54Deliver(\''.concat(r.id, "')\">Registrar entrega</button>") : "", '<button style="background:#475569" onclick="eliteV54History(\'').concat(r.id, "')\">Historial</button></div></div>");
     }).join("");
   };
 })();
@@ -9780,7 +9699,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     const paint = () => {
       const on = navigator.onLine;
       n.className = on ? "online" : "offline";
-      n.textContent = on ? "✓ Conexión recuperada" : "⚠️ Sin conexión · los cambios pueden quedar pendientes";
+      n.textContent = on ? "✓ Conexión recuperada" : "⚠ Sin conexión · los cambios pueden quedar pendientes";
       if (on) setTimeout(() => {
         if (navigator.onLine) n.className = "";
       }, 2500);
@@ -10398,7 +10317,7 @@ var __spreadValues = (a, b) => {
       const photo = r.foto_producto_url ? '<img class="elite-v6101-request-photo" src="'.concat(eliteV54Esc(r.foto_producto_url), '">') : "";
       const st = String(r.estado || "pendiente").toLowerCase();
       const count = purchaseCountFor(r);
-      return '<div class="elite-v54-card">'.concat(photo, "<h4>").concat(eliteV54Esc(r.producto_nombre || r.producto || "Producto"), " ").concat(source, '</h4><span class="elite-v54-badge ').concat(eliteV54StatusClass(st), '">').concat(eliteV54Esc(st), '</span><div class="elite-v54-meta"><b>Empleado:</b> ').concat(eliteV54Esc(r.empleado_nombre || "Sin nombre"), "<br><b>Cantidad solicitada:</b> ").concat(Number(r.cantidad_solicitada || r.cantidad || 0), "<br><b>Urgencia:</b> ").concat(eliteV54Esc((r.urgencia || "normal").replaceAll("_", " ")), "<br><b>Solicitud:</b> ").concat(eliteV54Date(r.creado || r.fecha)).concat(r.nota ? "<br><b>Nota:</b> ".concat(eliteV54Esc(r.nota)) : "", '</div><div class="elite-v75-purchase-count">🛒 Comprado ').concat(count, " ").concat(count === 1 ? "vez" : "veces", "</div>").concat(photos.length ? '<div class="elite-v54-photo-grid">'.concat(photos.map((u) => '<a class="elite-v54-photo" href="'.concat(u, '" target="_blank"><img src="').concat(u, '"></a>')).join(""), "</div>") : "").concat(["comprada", "lista_entrega", "entregada", "confirmada"].includes(st) ? diff !== 0 ? '<div class="elite-v54-warning">⚠️ Diferencia entre comprado y entregado: '.concat(diff, "</div>") : '<div class="elite-v54-ok">✅ Cantidades conciliadas</div>' : "", '<div class="elite-v54-actions">').concat(st === "pendiente" ? '<button style="background:#16a34a" onclick="eliteV75BuyRequest(\''.concat(r.id, '\')">Comprado</button><button style="background:#dc2626" onclick="eliteV75DeleteRequest(\'').concat(r.id, "')\">Eliminar</button>") : "").concat(st === "aprobada" ? '<button style="background:#16a34a" onclick="eliteV54Purchase(\''.concat(r.id, '\')">Comprado</button><button style="background:#dc2626" onclick="eliteV75DeleteRequest(\'').concat(r.id, "')\">Eliminar</button>") : "").concat(["comprada", "lista_entrega"].includes(st) ? '<button style="background:#16a34a" onclick="eliteV54Deliver(\''.concat(r.id, "')\">Registrar entrega</button>") : "", '<button style="background:#475569" onclick="eliteV54History(\'').concat(r.id, "')\">Historial</button></div></div>");
+      return '<div class="elite-v54-card">'.concat(photo, "<h4>").concat(eliteV54Esc(r.producto_nombre || r.producto || "Producto"), " ").concat(source, '</h4><span class="elite-v54-badge ').concat(eliteV54StatusClass(st), '">').concat(eliteV54Esc(st), '</span><div class="elite-v54-meta"><b>Empleado:</b> ').concat(eliteV54Esc(r.empleado_nombre || "Sin nombre"), "<br><b>Cantidad solicitada:</b> ").concat(Number(r.cantidad_solicitada || r.cantidad || 0), "<br><b>Urgencia:</b> ").concat(eliteV54Esc((r.urgencia || "normal").replaceAll("_", " ")), "<br><b>Solicitud:</b> ").concat(eliteV54Date(r.creado || r.fecha)).concat(r.nota ? "<br><b>Nota:</b> ".concat(eliteV54Esc(r.nota)) : "", '</div><div class="elite-v75-purchase-count">🛒 Comprado ').concat(count, " ").concat(count === 1 ? "vez" : "veces", "</div>").concat(photos.length ? '<div class="elite-v54-photo-grid">'.concat(photos.map((u) => '<a class="elite-v54-photo" href="'.concat(u, '" target="_blank"><img src="').concat(u, '"></a>')).join(""), "</div>") : "").concat(["comprada", "lista_entrega", "entregada", "confirmada"].includes(st) ? diff !== 0 ? '<div class="elite-v54-warning">⚠ Diferencia entre comprado y entregado: '.concat(diff, "</div>") : '<div class="elite-v54-ok">✅ Cantidades conciliadas</div>' : "", '<div class="elite-v54-actions">').concat(st === "pendiente" ? '<button style="background:#16a34a" onclick="eliteV75BuyRequest(\''.concat(r.id, '\')">Comprado</button><button style="background:#dc2626" onclick="eliteV75DeleteRequest(\'').concat(r.id, "')\">Eliminar</button>") : "").concat(st === "aprobada" ? '<button style="background:#16a34a" onclick="eliteV54Purchase(\''.concat(r.id, '\')">Comprado</button><button style="background:#dc2626" onclick="eliteV75DeleteRequest(\'').concat(r.id, "')\">Eliminar</button>") : "").concat(["comprada", "lista_entrega"].includes(st) ? '<button style="background:#16a34a" onclick="eliteV54Deliver(\''.concat(r.id, "')\">Registrar entrega</button>") : "", '<button style="background:#475569" onclick="eliteV54History(\'').concat(r.id, "')\">Historial</button></div></div>");
     }).join("");
   };
   const originalApply = window.eliteV55ApplyDetectedCode || eliteV55ApplyDetectedCode;
@@ -10550,7 +10469,7 @@ var __spreadValues = (a, b) => {
       const source = r.origen === "catalogo_staff" ? '<span class="elite-v6101-source">Staff</span>' : "";
       const buyDelete = !finishedStates.has(st) ? '<button style="background:#16a34a" onclick="eliteV75BuyRequest(\''.concat(r.id, '\')">Comprar</button><button style="background:#dc2626" onclick="eliteV75DeleteRequest(\'').concat(r.id, "')\">Eliminar</button>") : "";
       const delivery = ["comprada", "lista_entrega"].includes(st) ? '<button style="background:#16a34a" onclick="eliteV54Deliver(\''.concat(r.id, "')\">Registrar entrega</button>") : "";
-      return '<div class="elite-v54-card">'.concat(photo, "<h4>").concat(esc(r.producto_nombre || r.producto || "Producto"), " ").concat(source, '</h4><span class="elite-v54-badge ').concat(eliteV54StatusClass(st), '">').concat(esc(st), '</span><div class="elite-v54-meta"><b>Empleado:</b> ').concat(esc(r.empleado_nombre || "Administración"), "<br><b>Cantidad solicitada:</b> ").concat(Number(r.cantidad_solicitada || r.cantidad || 0), "<br><b>Urgencia:</b> ").concat(esc((r.urgencia || "normal").replaceAll("_", " ")), "<br><b>Solicitud:</b> ").concat(eliteV54Date(r.creado || r.fecha)).concat(r.nota ? "<br><b>Nota:</b> ".concat(esc(r.nota)) : "", '</div><div class="elite-v75-purchase-count">🛒 Comprado ').concat(c, " ").concat(c === 1 ? "vez" : "veces", "</div>").concat(photos.length ? '<div class="elite-v54-photo-grid">'.concat(photos.map((u) => '<a class="elite-v54-photo" href="'.concat(esc(u), '" target="_blank"><img src="').concat(esc(u), '"></a>')).join(""), "</div>") : "").concat(["comprada", "lista_entrega", "entregada", "confirmada"].includes(st) ? diff !== 0 ? '<div class="elite-v54-warning">⚠️ Diferencia entre comprado y entregado: '.concat(diff, "</div>") : '<div class="elite-v54-ok">✅ Cantidades conciliadas</div>' : "", '<div class="elite-v54-actions">').concat(buyDelete).concat(delivery, '<button style="background:#475569" onclick="eliteV54History(\'').concat(r.id, "')\">Historial</button></div></div>");
+      return '<div class="elite-v54-card">'.concat(photo, "<h4>").concat(esc(r.producto_nombre || r.producto || "Producto"), " ").concat(source, '</h4><span class="elite-v54-badge ').concat(eliteV54StatusClass(st), '">').concat(esc(st), '</span><div class="elite-v54-meta"><b>Empleado:</b> ').concat(esc(r.empleado_nombre || "Administración"), "<br><b>Cantidad solicitada:</b> ").concat(Number(r.cantidad_solicitada || r.cantidad || 0), "<br><b>Urgencia:</b> ").concat(esc((r.urgencia || "normal").replaceAll("_", " ")), "<br><b>Solicitud:</b> ").concat(eliteV54Date(r.creado || r.fecha)).concat(r.nota ? "<br><b>Nota:</b> ".concat(esc(r.nota)) : "", '</div><div class="elite-v75-purchase-count">🛒 Comprado ').concat(c, " ").concat(c === 1 ? "vez" : "veces", "</div>").concat(photos.length ? '<div class="elite-v54-photo-grid">'.concat(photos.map((u) => '<a class="elite-v54-photo" href="'.concat(esc(u), '" target="_blank"><img src="').concat(esc(u), '"></a>')).join(""), "</div>") : "").concat(["comprada", "lista_entrega", "entregada", "confirmada"].includes(st) ? diff !== 0 ? '<div class="elite-v54-warning">⚠ Diferencia entre comprado y entregado: '.concat(diff, "</div>") : '<div class="elite-v54-ok">✅ Cantidades conciliadas</div>' : "", '<div class="elite-v54-actions">').concat(buyDelete).concat(delivery, '<button style="background:#475569" onclick="eliteV54History(\'').concat(r.id, "')\">Historial</button></div></div>");
     }).join("");
   };
   window.eliteV55StopScanner = eliteV55StopScanner = async function(hideBox = true) {
@@ -11417,7 +11336,7 @@ var __spreadValues = (a, b) => {
       setTimeout(() => {
         markMessagesModal();
         const primary = document.querySelector("#elite-reminder-root .elite-rem-toolbar .elite-rem-btn.primary");
-        if (primary) primary.textContent = "ï¼‹ Anotar nuevo recordatorio";
+        if (primary) primary.textContent = "＋ Anotar nuevo recordatorio";
       }, 0);
     };
     window.eliteV51OpenMessages = window.eliteV79OpenMessages;
@@ -11882,8 +11801,6 @@ var __spreadValues = (a, b) => {
       [/detached space\(s\)/g, "espacio(s) independiente(s)"],
       [/Detached wellness studio/g, "Estudio de bienestar independiente"],
       [/Detached multipurpose room/g, "Espacio multiuso independiente"],
-      [/Detached office/g, "Oficina independiente"],
-      [/Additional Detached Space/g, "Espacio independiente adicional"],
       [/sq ft/g, "pies cuadrados"],
       [/Service date:/g, "Fecha del servicio:"],
       [/All listed rooms and property areas are included in this main service price\./g, "Todas las habitaciones y áreas indicadas están incluidas en el precio principal del servicio."],
@@ -11901,14 +11818,9 @@ var __spreadValues = (a, b) => {
       [/Detailed baseboard and edge cleaning/g, "Limpieza detallada de zócalos y bordes"],
       [/Extra attention to buildup and reachable corners/g, "Atención adicional a acumulaciones y esquinas accesibles"],
       [/Detailed cleaning of doors, frames and fixtures/g, "Limpieza detallada de puertas, marcos y accesorios"],
-      [/Clean refrigerator and oven exteriors, including accessible areas around, behind and underneath/g, "Limpiar el exterior del refrigerador y del horno, incluyendo las áreas accesibles alrededor, detrás y debajo"],
+      [/Clean inside empty cabinets and drawers/g, "Limpiar el interior de gabinetes y cajones vacíos"],
       [/Detail empty closets and storage areas/g, "Limpiar detalladamente clósets y espacios de almacenamiento vacíos"],
       [/Prepare the property for turnover/g, "Preparar la propiedad para su entrega"],
-      [/Interior refrigerator, oven and cabinet cleaning, window cleaning, and detached spaces are separate additional services when selected\./g, "La limpieza interior del refrigerador, horno y gabinetes, la limpieza de ventanas y los espacios independientes son servicios adicionales separados cuando se seleccionan."],
-      [/Oven Interior Cleaning \(Inside\)/g, "Limpieza interior del horno"],
-      [/Refrigerator Interior Cleaning \(1 Door Inside\)/g, "Limpieza interior del refrigerador de una puerta"],
-      [/Refrigerator Interior Cleaning \(2 Doors Inside\)/g, "Limpieza interior del refrigerador de dos puertas"],
-      [/Kitchen Cabinet Interior Cleaning \(Inside\)/g, "Limpieza interior de gabinetes de cocina"],
       [/Oven \(Inside \+ Outside\)/g, "Horno (interior y exterior)"],
       [/Refrigerator \(2 Doors Inside \+ Outside\)/g, "Refrigerador de dos puertas (interior y exterior)"],
       [/Windows \(Inside & Outside\)/g, "Ventanas (interior y exterior)"],
@@ -12116,7 +12028,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   function collect(existing = {}, editing = false) {
     var _a, _b;
     const price = number("precio_total", 0), phone = String(value("whatsapp")).replace(/\D/g, "");
-    const data = { cliente: String(value("cliente")).trim(), direccion: String(value("direccion")).trim(), whatsapp: phone, telefono: phone, email_cliente: String(value("email_cliente")).trim(), precio_total: price, precio_inicial: number("precio_inicial", price), precio_recurrente: number("precio_recurrente", 0), millas_servicio: number("millas_servicio", 0), empleado_nombre: String(value("search-empleado")).trim(), empleado_email: String(value("email-empleado")).trim(), empleado_nombre_2: String(value("search-empleado-2")).trim(), empleado_email_2: String(value("email-empleado-2")).trim(), fecha: value("fecha"), hora: value("hora"), hora_final_estimada: value("hora_final_estimada"), repetir: value("repetir", "ninguno") || "ninguno", estado_calendario: value("estado_calendario", "pendiente") || "pendiente", estado: editing ? value("estado_trabajo", existing.estado || "no_iniciado") || "no_iniciado" : "no_iniciado", pies_cuadrados: value("pies_cuadrados"), habitaciones: value("habitaciones"), banos: value("banos"), medios_banos: value("medios_banos"), salas: value("salas"), cocinas: value("cocinas"), oficinas: value("oficinas"), espacios_independientes: value("espacios_independientes"), nombres_espacios_independientes: value("nombres_espacios_independientes"), horno: value("horno", "No") || "No", nevera: value("nevera", "No") || "No", gabinetes: value("gabinetes", "No") || "No", ventanas: value("ventanas", "No") || "No", baseboards: value("baseboards", "No") || "No", perros: value("perros", "No") || "No", lavanderia: value("lavanderia"), garaje: value("garaje"), comedor: value("comedor"), sala_juegos: value("sala_juegos"), alfombra_habitaciones: value("alfombra_habitaciones"), alfombra_pies_cuadrados: value("alfombra_pies_cuadrados"), alfombra_notas: value("alfombra_notas"), notas_internas: value("notas_internas"), tipo: (typeof tipoSeleccionado !== "undefined" ? tipoSeleccionado : "ESTÁNDAR") || existing.tipo || "ESTÁNDAR", pricing_version: "8.6.7-move-pricing-detached-spaces", actualizado_en: firebase.firestore.FieldValue.serverTimestamp() };
+    const data = { cliente: String(value("cliente")).trim(), direccion: String(value("direccion")).trim(), whatsapp: phone, telefono: phone, email_cliente: String(value("email_cliente")).trim(), precio_total: price, precio_inicial: number("precio_inicial", price), precio_recurrente: number("precio_recurrente", 0), millas_servicio: number("millas_servicio", 0), empleado_nombre: String(value("search-empleado")).trim(), empleado_email: String(value("email-empleado")).trim(), empleado_nombre_2: String(value("search-empleado-2")).trim(), empleado_email_2: String(value("email-empleado-2")).trim(), fecha: value("fecha"), hora: value("hora"), hora_final_estimada: value("hora_final_estimada"), repetir: value("repetir", "ninguno") || "ninguno", estado_calendario: value("estado_calendario", "pendiente") || "pendiente", estado: editing ? value("estado_trabajo", existing.estado || "no_iniciado") || "no_iniciado" : "no_iniciado", pies_cuadrados: value("pies_cuadrados"), habitaciones: value("habitaciones"), banos: value("banos"), medios_banos: value("medios_banos"), salas: value("salas"), cocinas: value("cocinas"), oficinas: value("oficinas"), espacios_independientes: value("espacios_independientes"), nombres_espacios_independientes: value("nombres_espacios_independientes"), horno: value("horno", "No") || "No", nevera: value("nevera", "No") || "No", gabinetes: value("gabinetes", "No") || "No", ventanas: value("ventanas", "No") || "No", baseboards: value("baseboards", "No") || "No", perros: value("perros", "No") || "No", lavanderia: value("lavanderia"), garaje: value("garaje"), comedor: value("comedor"), sala_juegos: value("sala_juegos"), alfombra_habitaciones: value("alfombra_habitaciones"), alfombra_pies_cuadrados: value("alfombra_pies_cuadrados"), alfombra_notas: value("alfombra_notas"), notas_internas: value("notas_internas"), tipo: (typeof tipoSeleccionado !== "undefined" ? tipoSeleccionado : "ESTÁNDAR") || existing.tipo || "ESTÁNDAR", pricing_version: "8.6.1-estimates-pricing-fix", actualizado_en: firebase.firestore.FieldValue.serverTimestamp() };
     if (editing) {
       data.hora_inicio = value("hora_inicio_real", existing.hora_inicio || "--:--") || existing.hora_inicio || "--:--";
       data.hora_fin = value("hora_fin_real", existing.hora_fin || "--:--") || existing.hora_fin || "--:--";
@@ -12715,161 +12627,6 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
   else start();
-})();
-</script>
-<style id="elite-v868-tablet-compatibility">
-  /* Tablet mode: iPad/Android tablets in portrait and landscape. */
-  html{
-    -webkit-text-size-adjust:100%;
-    text-size-adjust:100%;
-    touch-action:manipulation;
-  }
-  button,
-  [role="button"],
-  .stat-card,
-  .accordion-title,
-  .suggestion-item,
-  a{
-    -webkit-tap-highlight-color:rgba(59,130,246,.22);
-    touch-action:manipulation;
-  }
-  button,
-  input,
-  select,
-  textarea{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  }
-  img,
-  canvas,
-  video{
-    max-width:100%;
-  }
-  #elite-v5-sidebar-overlay:not(.open){
-    display:none!important;
-    pointer-events:none!important;
-  }
-
-  @media (min-width:601px) and (max-width:1180px){
-    body.elite-v5-body{
-      padding-left:18px!important;
-      padding-right:18px!important;
-      padding-top:68px!important;
-      overflow-x:hidden!important;
-    }
-    #elite-v5-mobile-toggle{
-      display:block!important;
-      width:48px!important;
-      height:48px!important;
-      top:10px!important;
-      left:14px!important;
-      z-index:90002!important;
-      touch-action:manipulation!important;
-    }
-    #elite-v5-sidebar{
-      width:270px!important;
-      max-width:78vw!important;
-      transform:translateX(-105%)!important;
-      transition:transform .25s ease!important;
-      z-index:90001!important;
-      padding-top:max(15px,env(safe-area-inset-top))!important;
-    }
-    #elite-v5-sidebar.open{
-      transform:translateX(0)!important;
-    }
-    #elite-v5-sidebar-overlay.open{
-      display:block!important;
-      pointer-events:auto!important;
-    }
-    .elite-v5-nav-btn{
-      min-height:48px!important;
-      font-size:14px!important;
-    }
-    .elite-v5-module-box,
-    .modal-content,
-    .editor-evento-box{
-      width:min(720px,calc(100vw - 36px))!important;
-      max-width:calc(100vw - 36px)!important;
-      box-sizing:border-box!important;
-    }
-    .stats-grid,
-    .type-grid,
-    .action-buttons,
-    .elite-v5-module-grid{
-      grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    }
-    .btn-action,
-    .save-btn,
-    .reg-btn,
-    .btn-mini,
-    .type-btn{
-      min-height:46px;
-    }
-    input,
-    select,
-    textarea{
-      font-size:16px!important;
-    }
-    #loginBox.elite-login-overlay{
-      padding:max(24px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom))!important;
-    }
-  }
-
-  @media (orientation:landscape) and (min-width:801px) and (max-width:1180px){
-    .elite-v5-module-box{
-      margin:16px auto!important;
-    }
-    #loginBox .elite-login-card{
-      margin:18px auto!important;
-    }
-  }
-</style>
-<script id="elite-v868-tablet-interaction-fix">
-(function(){
-  "use strict";
-
-  function isTablet(){
-    var width=Math.min(window.innerWidth||0,window.innerHeight||0);
-    var longSide=Math.max(window.innerWidth||0,window.innerHeight||0);
-    var touch=(navigator.maxTouchPoints||0)>0 || "ontouchstart" in window;
-    return touch && width>=600 && longSide<=1400;
-  }
-
-  function closeInactiveLayers(){
-    var overlay=document.getElementById("elite-v5-sidebar-overlay");
-    var sidebar=document.getElementById("elite-v5-sidebar");
-    if(overlay && !overlay.classList.contains("open")){
-      overlay.style.pointerEvents="none";
-    }
-    if(sidebar && !sidebar.classList.contains("open") && isTablet()){
-      sidebar.setAttribute("aria-hidden","true");
-    }
-  }
-
-  function repairTablet(){
-    if(!isTablet()) return;
-    document.documentElement.classList.add("elite-tablet-device");
-    closeInactiveLayers();
-
-    var toggle=document.getElementById("elite-v5-mobile-toggle");
-    if(toggle){
-      toggle.setAttribute("aria-label","Abrir menú");
-      toggle.setAttribute("aria-expanded",document.getElementById("elite-v5-sidebar") && document.getElementById("elite-v5-sidebar").classList.contains("open") ? "true" : "false");
-    }
-  }
-
-  document.addEventListener("click",function(event){
-    var button=event.target && event.target.closest ? event.target.closest("button,[role='button'],.stat-card,.accordion-title") : null;
-    if(!button) return;
-    var overlay=document.getElementById("elite-v5-sidebar-overlay");
-    if(overlay && !overlay.classList.contains("open")) overlay.style.pointerEvents="none";
-  },true);
-
-  document.addEventListener("touchstart",function(){}, {passive:true});
-  window.addEventListener("orientationchange",function(){setTimeout(repairTablet,180);});
-  window.addEventListener("resize",function(){setTimeout(repairTablet,80);});
-  window.addEventListener("pageshow",repairTablet);
-  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",repairTablet);
-  else repairTablet();
 })();
 </script>
 </body>
