@@ -2917,6 +2917,15 @@ function renderHistorial() {
     const busquedaNormalizada = normalizarTexto(textoBusqueda);
     if (busquedaNormalizada && !contenidoNormalizado.includes(busquedaNormalizada)) return;
     const hayBusqueda = textoBusqueda.length > 0;
+    if (!hayBusqueda) {
+      const ahoraLocal = /* @__PURE__ */ new Date();
+      const hoyLocal = [
+        ahoraLocal.getFullYear(),
+        String(ahoraLocal.getMonth() + 1).padStart(2, "0"),
+        String(ahoraLocal.getDate()).padStart(2, "0")
+      ].join("-");
+      if (!s.fecha || String(s.fecha) < hoyLocal) return;
+    }
     if (hayBusqueda || vistaActual === "todos" || vistaActual === "pendiente" && s.estado !== "completado" || vistaActual === "completado" && s.estado === "completado") {
       const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
       const btnFirma = s.contrato_firmado ? '<button class="btn-action" style="background:#22c55e;" onclick="verFirma(\''.concat(s.id, "')\">✍️ Ver Firma</button>") : '<button class="btn-action btn-contract" onclick="enviarContrato(\''.concat(s.id, "', '").concat(s.whatsapp, "', '").concat(s.cliente, "')\">📄 Acuerdo</button>");
@@ -4653,7 +4662,7 @@ function eliteV51SetLayout(module) {
     if (typeof vistaActual !== "undefined") vistaActual = "todos";
     const serviceSearch = eliteV51Get("buscarTrabajo");
     if (serviceSearch) serviceSearch.value = "";
-    eliteV51PageHeader("Servicios", "Todos los trabajos, organizados cronológicamente igual que en Agenda.");
+    eliteV51PageHeader("Servicios", "Trabajos desde hoy en adelante, organizados cronológicamente igual que en Agenda.");
     if (typeof renderHistorial === "function") renderHistorial();
   }
 }
