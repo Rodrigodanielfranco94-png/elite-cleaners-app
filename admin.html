@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v8.6.9 — Real-Time Payment Alerts</title>
+    <title>Elite Admin v8.7.0 — Direct Payment Review</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -1102,6 +1102,36 @@ body.elite-v5-body{
   if(!Element.prototype.closest){Element.prototype.closest=function(selector){var node=this;while(node&&node.nodeType===1){if(node.matches(selector))return node;node=node.parentElement;}return null;};}
 })();
 </script>
+<style id="elite-v870-direct-payment-review-style">
+.card-servicio.elite-payment-review-focus{
+  border:3px solid #f59e0b!important;
+  box-shadow:0 0 0 5px rgba(245,158,11,.16),0 18px 45px rgba(15,23,42,.2)!important;
+}
+.elite-payment-review-banner{
+  display:grid;
+  gap:8px;
+  margin:0 0 14px;
+  padding:14px;
+  border:1px solid #f59e0b;
+  border-radius:14px;
+  background:#fffbeb;
+  color:#78350f;
+}
+.elite-payment-review-banner strong{font-size:14px;line-height:1.35}
+.elite-payment-review-banner span{font-size:12px;line-height:1.45}
+.elite-payment-review-banner button{
+  width:100%;
+  border:0;
+  border-radius:11px;
+  padding:12px 14px;
+  background:#16a34a;
+  color:#fff;
+  font-size:13px;
+  font-weight:900;
+  cursor:pointer;
+}
+.elite-payment-review-banner button:active{transform:scale(.99)}
+</style>
 </head>
 <body>
 <div id="loginBox" class="elite-login-overlay">
@@ -2984,6 +3014,8 @@ function renderHistorial() {
   todosLosServicios.sort(eliteCompararServiciosFechaHora);
   todosLosServicios.forEach((s) => {
     var _a;
+    const eliteServicioFocoId = String(window.eliteServicioFocoId || "");
+    if (eliteServicioFocoId && String(s.id || s.firestore_id || "") !== eliteServicioFocoId) return;
     const textoBusqueda = (((_a = document.getElementById("buscarTrabajo")) == null ? void 0 : _a.value) || "").toLowerCase().trim();
     const clienteGuardado = todosLosClientes.find(
       (c) => (c.nombre || "").toLowerCase() === (s.cliente || "").toLowerCase()
@@ -11831,6 +11863,9 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   }
   window.eliteRunServiceSearch = function() {
     const input = document.getElementById("buscarTrabajo");
+    // Una búsqueda manual termina el modo de revisión directa de una alerta.
+    window.eliteServicioFocoId = "";
+    window.eliteServicioFocoTipo = "";
     const clear = document.getElementById("elite-service-search-clear");
     if (clear) clear.style.display = input && input.value ? "inline-flex" : "none";
     cancelAnimationFrame(serviceSearchFrame);
@@ -11853,6 +11888,8 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   window.eliteClearServiceSearch = function() {
     const input = document.getElementById("buscarTrabajo");
     if (!input) return;
+    window.eliteServicioFocoId = "";
+    window.eliteServicioFocoTipo = "";
     input.value = "";
     input.focus();
     window.eliteRunServiceSearch();
@@ -12529,6 +12566,15 @@ var __spreadValues = (a, b) => {
       (_b = document.querySelector('[data-module="mensajes"]')) == null ? void 0 : _b.click();
       return;
     }
+    // Cada alerta de servicio ya contiene el ID único del trabajo. Conservarlo
+    // permite abrir exactamente ese servicio, incluso si el cliente tiene
+    // varios trabajos o existen nombres repetidos.
+    window.eliteServicioFocoId = String(r.id || "");
+    window.eliteServicioFocoTipo = String(r.key || "").endsWith(":deposit-review")
+      ? "deposit-review"
+      : String(r.key || "").endsWith(":balance-review")
+        ? "balance-review"
+        : "service";
     if (typeof eliteV51SetLayout === "function") eliteV51SetLayout("servicios");
     if (typeof eliteV5SetActive === "function") eliteV5SetActive("servicios");
     const s = (window.todosLosServicios || []).find((x) => String(x.id || x.firestore_id) === r.id);
@@ -12536,7 +12582,41 @@ var __spreadValues = (a, b) => {
     if (q) {
       q.value = (s == null ? void 0 : s.cliente) || (s == null ? void 0 : s.fecha) || "";
       if (typeof renderHistorial === "function") renderHistorial();
-      q.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(function() {
+        const edit = document.getElementById("edit-btn-" + String(r.id || ""));
+        const card = edit && edit.closest(".card-servicio");
+        if (!card) {
+          q.scrollIntoView({ behavior: "smooth", block: "center" });
+          return;
+        }
+        card.classList.add("elite-payment-review-focus");
+        const oldBanner = card.querySelector(".elite-payment-review-banner");
+        if (oldBanner) oldBanner.remove();
+        const banner = document.createElement("div");
+        banner.className = "elite-payment-review-banner";
+        const title = document.createElement("strong");
+        const help = document.createElement("span");
+        const action = document.createElement("button");
+        if (window.eliteServicioFocoTipo === "deposit-review") {
+          title.textContent = "💵 Depósito reportado por el cliente — pendiente de verificar";
+          help.textContent = "Revisa Zelle o Venmo. Confirma aquí solamente cuando veas que el dinero realmente llegó.";
+          action.textContent = "✅ Confirmar depósito recibido";
+          action.onclick = function() { confirmarDeposito(String(r.id || "")); };
+        } else if (window.eliteServicioFocoTipo === "balance-review") {
+          title.textContent = "💰 Balance reportado por el cliente — pendiente de verificar";
+          help.textContent = "Verifica primero que el pago haya llegado antes de confirmarlo.";
+          action.textContent = "✅ Confirmar balance recibido";
+          action.onclick = function() { confirmarBalance(String(r.id || "")); };
+        } else {
+          title.textContent = "🔎 Servicio que requiere tu atención";
+          help.textContent = "Este es el trabajo exacto asociado con la alerta seleccionada.";
+          action.textContent = "Ver servicio";
+          action.onclick = function() { card.scrollIntoView({ behavior: "smooth", block: "center" }); };
+        }
+        banner.append(title, help, action);
+        card.prepend(banner);
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 80);
     }
   };
   window.eliteAttentionLoad = function() {
