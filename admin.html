@@ -2898,14 +2898,29 @@ function renderNotificacionesPagos() {
     }
   });
 }
+function eliteMinutosServicioHora(valor) {
+  const limpio = String(valor || "").trim().toLowerCase().replace(/\./g, "").replace(/\s+/g, " ");
+  const match = limpio.match(/^(\d{1,2}):(\d{2})(?:\s*([ap])m)?/);
+  if (!match) return 1439;
+  let hora = Number(match[1]);
+  const minutos = Number(match[2]);
+  const periodo = match[3] || "";
+  if (periodo === "a" && hora === 12) hora = 0;
+  if (periodo === "p" && hora < 12) hora += 12;
+  if (hora < 0 || hora > 23 || minutos < 0 || minutos > 59) return 1439;
+  return hora * 60 + minutos;
+}
+function eliteCompararServiciosFechaHora(a, b) {
+  const fechaA = String((a == null ? void 0 : a.fecha) || "9999-12-31").slice(0, 10);
+  const fechaB = String((b == null ? void 0 : b.fecha) || "9999-12-31").slice(0, 10);
+  const porFecha = fechaA.localeCompare(fechaB);
+  if (porFecha !== 0) return porFecha;
+  return eliteMinutosServicioHora(a == null ? void 0 : a.hora) - eliteMinutosServicioHora(b == null ? void 0 : b.hora);
+}
 function renderHistorial() {
   const h = document.getElementById("historial");
   h.innerHTML = "";
-  todosLosServicios.sort((a, b) => {
-    const fA = new Date("".concat(a.fecha, "T").concat(a.hora || "00:00"));
-    const fB = new Date("".concat(b.fecha, "T").concat(b.hora || "00:00"));
-    return fA - fB;
-  });
+  todosLosServicios.sort(eliteCompararServiciosFechaHora);
   todosLosServicios.forEach((s) => {
     var _a;
     const textoBusqueda = (((_a = document.getElementById("buscarTrabajo")) == null ? void 0 : _a.value) || "").toLowerCase().trim();
@@ -3291,7 +3306,7 @@ function renderCalendarioElite() {
   }
   for (let dia = 1; dia <= totalDias; dia++) {
     const fechaTexto = "".concat(year, "-").concat(String(month + 1).padStart(2, "0"), "-").concat(String(dia).padStart(2, "0"));
-    const eventos = todosLosServicios.filter((s) => s.fecha === fechaTexto);
+    const eventos = todosLosServicios.filter((s) => s.fecha === fechaTexto).sort(eliteCompararServiciosFechaHora);
     const box = document.createElement("div");
     box.style.background = "#f3f4f6";
     box.style.borderRadius = "14px";
@@ -3391,7 +3406,7 @@ async function eliminarEventoCalendario() {
 }
 function mostrarEventosDia(fecha) {
   const cont = document.getElementById("calendar-day-events");
-  const eventos = todosLosServicios.filter((s) => s.fecha === fecha);
+  const eventos = todosLosServicios.filter((s) => s.fecha === fecha).sort(eliteCompararServiciosFechaHora);
   cont.innerHTML = '\n        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:15px;">\n          <h3 style="color:#f59e0b;margin:0;">'.concat(fecha, '</h3>\n          <button type="button"\n                  onclick="agregarTrabajoDesdeCalendario(\'').concat(fecha, '\')"\n                  style="border:0;border-radius:10px;background:#2563eb;color:white;padding:10px 13px;font-weight:800;cursor:pointer;">\n            + Agregar trabajo\n          </button>\n        </div>\n    ');
   if (eventos.length === 0) {
     cont.innerHTML += '\n          <div style="background:#f3f4f6;border:1px dashed #94a3b8;border-radius:14px;padding:18px;text-align:center;color:#475569;">\n            No hay trabajos este día.<br>\n            <button type="button"\n                    onclick="agregarTrabajoDesdeCalendario(\''.concat(fecha, '\')"\n                    style="margin-top:12px;border:0;border-radius:10px;background:#2563eb;color:white;padding:11px 14px;font-weight:800;cursor:pointer;">\n              Agendar aquí\n            </button>\n          </div>');
@@ -5713,7 +5728,7 @@ function opsPayment(s) {
   return { total, collected: Math.min(total, dep + bal), pending: Math.max(total - dep - bal, 0), dep, bal };
 }
 function opsJobsForDate(key) {
-  return todosLosServicios.filter((s) => s.fecha === key).sort((a, b) => (a.hora || "").localeCompare(b.hora || ""));
+  return todosLosServicios.filter((s) => s.fecha === key).sort(eliteCompararServiciosFechaHora);
 }
 function opsEsTerminadoAutomatico(s) {
   const fecha = String((s == null ? void 0 : s.fecha) || "");
@@ -5964,7 +5979,7 @@ function renderOpsWeek() {
 }
 function renderOpsAgenda() {
   const start = opsDateKey(opsCalendarDate);
-  const jobs = todosLosServicios.filter((s) => s.fecha >= start).sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora)).slice(0, 60);
+  const jobs = todosLosServicios.filter((s) => s.fecha >= start).sort(eliteCompararServiciosFechaHora).slice(0, 60);
   let last = "";
   let html = '<div class="ops-agenda-list">';
   jobs.forEach((s) => {
