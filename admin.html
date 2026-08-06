@@ -2487,18 +2487,23 @@ async function asignarTrabajo() {
       data.hora_inicio = valor("hora_inicio_real", servicioActual.hora_inicio || "--:--") || "--:--";
       data.hora_fin = valor("hora_fin_real", servicioActual.hora_fin || "--:--") || "--:--";
       data.deposito_requerido = servicioActual.deposito_requerido !== false;
-      data.deposito_monto = Number((_d = servicioActual.deposito_monto) != null ? _d : precio * 0.5);
+      // Si todavía no se cobró el depósito, el precio editado redefine
+      // automáticamente el 50% de depósito y el 50% de balance.
+      // Si ya se cobró, conservamos el dinero realmente recibido.
+      const depositoYaPagado = servicioActual.deposito_pagado === true;
+      const depositoPlanificado = Math.round(precio * 50) / 100;
+      data.deposito_monto = depositoYaPagado
+        ? Number((_d = servicioActual.deposito_monto) != null ? _d : depositoPlanificado)
+        : (data.deposito_requerido ? depositoPlanificado : 0);
       if (servicioActual.balance_pagado === true) {
         data.balance_restante = 0;
-      } else if (servicioActual.deposito_pagado === true) {
-        data.balance_restante = Math.max(
+      } else if (depositoYaPagado) {
+        data.balance_restante = Math.round(Math.max(
           0,
           precio - Number(servicioActual.deposito_monto || 0)
-        );
+        ) * 100) / 100;
       } else {
-        data.balance_restante = Number(
-          (_e = servicioActual.balance_restante) != null ? _e : precio * 0.5
-        );
+        data.balance_restante = Math.round(Math.max(0, precio - data.deposito_monto) * 100) / 100;
       }
     } else {
       Object.assign(data, {
@@ -12072,10 +12077,19 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
       data.hora_fin = value("hora_fin_real", existing.hora_fin || "--:--") || existing.hora_fin || "--:--";
       data.millas_reales = value("millas_reales", existing.millas_reales || "");
       data.deposito_requerido = existing.deposito_requerido !== false;
-      data.deposito_monto = Number((_a = existing.deposito_monto) != null ? _a : price * 0.5);
       data.deposito_pagado = existing.deposito_pagado === true;
       data.balance_pagado = existing.balance_pagado === true;
-      data.balance_restante = data.balance_pagado ? 0 : data.deposito_pagado ? Math.max(0, price - data.deposito_monto) : Number((_b = existing.balance_restante) != null ? _b : price * 0.5);
+      // Recalcular los importes pendientes al editar el precio. Nunca se
+      // modifica retroactivamente un depósito que ya fue cobrado.
+      const plannedDeposit = Math.round(price * 50) / 100;
+      data.deposito_monto = data.deposito_pagado
+        ? Number((_a = existing.deposito_monto) != null ? _a : plannedDeposit)
+        : (data.deposito_requerido ? plannedDeposit : 0);
+      data.balance_restante = data.balance_pagado
+        ? 0
+        : data.deposito_pagado
+          ? Math.round(Math.max(0, price - data.deposito_monto) * 100) / 100
+          : Math.round(Math.max(0, price - data.deposito_monto) * 100) / 100;
     } else Object.assign(data, { timestamp: firebase.firestore.FieldValue.serverTimestamp(), hora_inicio: "--:--", hora_fin: "--:--", firma_cliente: false, deposito_requerido: true, deposito_pagado: false, deposito_monto: price * 0.5, balance_pagado: false, balance_restante: price * 0.5, metodo_pago_deposito: "", comprobante_deposito: "", fecha_pago_deposito: "" });
     return data;
   }
