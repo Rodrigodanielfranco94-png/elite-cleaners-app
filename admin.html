@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin Core v8.6.7 — Professional Contract Subdomain Only | Device-Aware Document Sending | Primary-First Service Save -->
+<!-- Elite Admin Core v8.6.8 — Short Private Contract Link | Device-Aware Document Sending | Primary-First Service Save -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v8.6.7 — Professional Contract Link Only</title>
+    <title>Elite Admin v8.6.8 — Short Private Contract Link</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -1913,7 +1913,7 @@ async function enviarContrato(id, telefono, cliente) {
   if (!telefono) return alert("El cliente no tiene un teléfono registrado.");
   try {
     const codigo = await eliteAsegurarCodigoContrato(id);
-    const urlFirma = ELITE_CONTRACT_BRANDED_BASE + "?code=" + encodeURIComponent(codigo) + "&id=" + encodeURIComponent(id) + "&cliente=" + encodeURIComponent(cliente);
+    const urlFirma = ELITE_CONTRACT_BRANDED_BASE + "?code=" + encodeURIComponent(codigo);
     const mensaje = "Hello ".concat(cliente, ",\n\nTo confirm your cleaning appointment, please review and sign your service agreement using the secure link below:\n\n").concat(urlFirma, "\n\nThank you,\nElite Cleaners Company");
     abrirSMS(telefono, mensaje);
   } catch (error) {
