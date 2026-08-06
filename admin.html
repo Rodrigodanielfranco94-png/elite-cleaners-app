@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin Core v8.6.6 — Professional Contract Subdomain | Device-Aware Document Sending | Primary-First Service Save -->
+<!-- Elite Admin Core v8.6.7 — Professional Contract Subdomain Only | Device-Aware Document Sending | Primary-First Service Save -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v8.6.6 — Professional Contract Link</title>
+    <title>Elite Admin v8.6.7 — Professional Contract Link Only</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -1881,9 +1881,8 @@ function eliteGenerarCodigoContrato() {
   return Array.from(bytes, (b) => alfabeto[b % alfabeto.length]).join("");
 }
 // Subdominio profesional de firma publicado en SiteGround.
-// Se mantiene el código corto como identificador principal y también se
-// envían id/cliente para compatibilidad con las versiones anteriores del flujo.
-const ELITE_CONTRACT_BRANDED_ROUTE_READY = true;
+// La ruta antigua de GitHub fue retirada intencionalmente: todos los acuerdos
+// deben salir exclusivamente desde el dominio profesional de Elite.
 const ELITE_CONTRACT_BRANDED_BASE = "https://sign-contract.elitecleanerscompany.com/";
 async function eliteAsegurarCodigoContrato(id) {
   const ref = db.collection("servicios").doc(id);
@@ -1914,9 +1913,7 @@ async function enviarContrato(id, telefono, cliente) {
   if (!telefono) return alert("El cliente no tiene un teléfono registrado.");
   try {
     const codigo = await eliteAsegurarCodigoContrato(id);
-    const urlFirma = ELITE_CONTRACT_BRANDED_ROUTE_READY
-      ? ELITE_CONTRACT_BRANDED_BASE + "?code=" + encodeURIComponent(codigo) + "&id=" + encodeURIComponent(id) + "&cliente=" + encodeURIComponent(cliente)
-      : "https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/firmar.html?id=" + encodeURIComponent(id) + "&cliente=" + encodeURIComponent(cliente);
+    const urlFirma = ELITE_CONTRACT_BRANDED_BASE + "?code=" + encodeURIComponent(codigo) + "&id=" + encodeURIComponent(id) + "&cliente=" + encodeURIComponent(cliente);
     const mensaje = "Hello ".concat(cliente, ",\n\nTo confirm your cleaning appointment, please review and sign your service agreement using the secure link below:\n\n").concat(urlFirma, "\n\nThank you,\nElite Cleaners Company");
     abrirSMS(telefono, mensaje);
   } catch (error) {
