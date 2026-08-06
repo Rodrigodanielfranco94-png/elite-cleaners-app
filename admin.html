@@ -1833,7 +1833,7 @@ let tipoSeleccionado = "ESTÁNDAR";
 let todosLosEmpleados = [];
 let todosLosClientes = [];
 let todosLosServicios = [];
-let vistaActual = "pendiente";
+let vistaActual = "todos";
 function formatAMPM(hora24) {
   if (!hora24 || hora24 === "--:--") return "--:--";
   let [horas, minutos] = hora24.split(":");
@@ -2917,7 +2917,7 @@ function renderHistorial() {
     const busquedaNormalizada = normalizarTexto(textoBusqueda);
     if (busquedaNormalizada && !contenidoNormalizado.includes(busquedaNormalizada)) return;
     const hayBusqueda = textoBusqueda.length > 0;
-    if (hayBusqueda || vistaActual === "pendiente" && s.estado !== "completado" || vistaActual === "completado" && s.estado === "completado") {
+    if (hayBusqueda || vistaActual === "todos" || vistaActual === "pendiente" && s.estado !== "completado" || vistaActual === "completado" && s.estado === "completado") {
       const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
       const btnFirma = s.contrato_firmado ? '<button class="btn-action" style="background:#22c55e;" onclick="verFirma(\''.concat(s.id, "')\">✍️ Ver Firma</button>") : '<button class="btn-action btn-contract" onclick="enviarContrato(\''.concat(s.id, "', '").concat(s.whatsapp, "', '").concat(s.cliente, "')\">📄 Acuerdo</button>");
       const depositoMonto = Number(s.deposito_monto || 0).toFixed(2);
@@ -4650,7 +4650,11 @@ function eliteV51SetLayout(module) {
   }
   if (module === "servicios") {
     [form, search, history].forEach((x) => eliteV51Show(x, true));
-    eliteV51PageHeader("Servicios", "Crear, editar y administrar todos los trabajos.");
+    if (typeof vistaActual !== "undefined") vistaActual = "todos";
+    const serviceSearch = eliteV51Get("buscarTrabajo");
+    if (serviceSearch) serviceSearch.value = "";
+    eliteV51PageHeader("Servicios", "Todos los trabajos, organizados cronológicamente igual que en Agenda.");
+    if (typeof renderHistorial === "function") renderHistorial();
   }
 }
 function eliteV51RenderDashboardExtra() {
@@ -12099,11 +12103,11 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
       if (!check.exists) throw new Error("Firebase no devolvió el servicio después de guardarlo.");
       const row = __spreadProps(__spreadValues({}, check.data() || data), { id: ref.id, firestore_id: ref.id });
       localUpsert(row);
-      if (typeof vistaActual !== "undefined") vistaActual = "pendiente";
-      (_c = get("btn-pendientes")) == null ? void 0 : _c.classList.add("active");
+      if (typeof vistaActual !== "undefined") vistaActual = "todos";
+      (_c = get("btn-pendientes")) == null ? void 0 : _c.classList.remove("active");
       (_d = get("btn-completados")) == null ? void 0 : _d.classList.remove("active");
       const search = get("buscarTrabajo");
-      if (search) search.value = client;
+      if (search) search.value = "";
       if (typeof renderHistorial === "function") renderHistorial();
       (_e = get("historial")) == null ? void 0 : _e.scrollIntoView({ behavior: "smooth", block: "start" });
       status("success", "Servicio guardado correctamente ✅ ID: ".concat(ref.id));
