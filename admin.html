@@ -1310,6 +1310,13 @@ body.elite-v5-body{
         </div>
         <input type="hidden" id="email-empleado-2">
 
+        <span class="label-text">Personal 3 (Opcional)</span>
+        <div class="search-container">
+            <input type="text" id="search-empleado-3" placeholder="Buscar personal 3..." oninput="filtrarEmpleados(3)" autocomplete="off">
+            <div id="suggestions-3" class="suggestions-list"></div>
+        </div>
+        <input type="hidden" id="email-empleado-3">
+
     </div>
 </div>
 
@@ -2111,18 +2118,18 @@ db.collection("usuarios").where("rol", "==", "empleado").onSnapshot((snap) => {
   generarNomina();
 });
 function filtrarEmpleados(num) {
-  const inputId = num === 1 ? "search-empleado" : "search-empleado-2";
-  const suggestionsId = num === 1 ? "suggestions-1" : "suggestions-2";
-  const otherSuggestionsId = num === 1 ? "suggestions-2" : "suggestions-1";
-  const emailId = num === 1 ? "email-empleado" : "email-empleado-2";
+  const inputId = num === 1 ? "search-empleado" : num === 2 ? "search-empleado-2" : "search-empleado-3";
+  const suggestionsId = "suggestions-" + num;
+  const emailId = num === 1 ? "email-empleado" : num === 2 ? "email-empleado-2" : "email-empleado-3";
   const input = document.getElementById(inputId);
   const lista = document.getElementById(suggestionsId);
-  const otraLista = document.getElementById(otherSuggestionsId);
   if (!input || !lista) return;
-  if (otraLista) {
+  [1, 2, 3].filter((n) => n !== num).forEach((n) => {
+    const otraLista = document.getElementById("suggestions-" + n);
+    if (!otraLista) return;
     otraLista.style.display = "none";
     otraLista.innerHTML = "";
-  }
+  });
   const q = String(input.value || "").trim().toLowerCase();
   lista.innerHTML = "";
   if (!q) {
@@ -2155,7 +2162,7 @@ function filtrarEmpleados(num) {
   lista.style.display = resultados.length ? "block" : "none";
 }
 document.addEventListener("mousedown", (event) => {
-  ["suggestions-1", "suggestions-2"].forEach((id) => {
+  ["suggestions-1", "suggestions-2", "suggestions-3"].forEach((id) => {
     const lista = document.getElementById(id);
     if (!lista) return;
     const contenedor = lista.closest(".search-container");
@@ -2450,6 +2457,8 @@ async function asignarTrabajo() {
       empleado_email: valor("email-empleado"),
       empleado_nombre_2: valor("search-empleado-2"),
       empleado_email_2: valor("email-empleado-2"),
+      empleado_nombre_3: valor("search-empleado-3"),
+      empleado_email_3: valor("email-empleado-3"),
       fecha: valor("fecha"),
       hora: valor("hora"),
       hora_final_estimada: valor("hora_final_estimada"),
@@ -2933,7 +2942,7 @@ function renderHistorial() {
       (c) => (c.nombre || "").toLowerCase() === (s.cliente || "").toLowerCase()
     );
     const contenidoTrabajo = "\n    ".concat(s.cliente || "", "\n    ").concat(s.direccion || "", "\n    ").concat(s.fecha || "", "\n    ").concat(s.hora || "", "\n    ").concat(s.tipo || "", "\n    ").concat(s.empleado_nombre || "", "\n    ").concat(s.empleado_nombre_2 || "", "\n    ").concat(s.precio_total || "", "\n    ").concat(s.whatsapp || "", "\n    ").concat(s.email_cliente || "", "\n    ").concat(s.repetir || "", "\n    ").concat((clienteGuardado == null ? void 0 : clienteGuardado.nombre) || "", "\n    ").concat((clienteGuardado == null ? void 0 : clienteGuardado.direccion) || "", "\n    ").concat((clienteGuardado == null ? void 0 : clienteGuardado.telefono) || "", "\n    ").concat((clienteGuardado == null ? void 0 : clienteGuardado.whatsapp) || "", "\n    ").concat((clienteGuardado == null ? void 0 : clienteGuardado.email) || "", "\n").toLowerCase();
-    const contenidoNormalizado = normalizarTexto(contenidoTrabajo);
+    const contenidoNormalizado = normalizarTexto(contenidoTrabajo + "\n" + (s.empleado_nombre_3 || "") + "\n" + (s.empleado_email_3 || ""));
     const busquedaNormalizada = normalizarTexto(textoBusqueda);
     if (busquedaNormalizada && !contenidoNormalizado.includes(busquedaNormalizada)) return;
     const hayBusqueda = textoBusqueda.length > 0;
@@ -2958,6 +2967,8 @@ function renderHistorial() {
       card.className = "card-servicio";
       const horaFormateada = formatAMPM(s.hora);
       card.innerHTML = '\n                        <button class="chat-btn" onclick="abrirChat(\''.concat(s.whatsapp, '\')">💬</button>\n                        <div style="font-size:10px; color:#3b82f6; font-weight:bold;">').concat(s.tipo, "</div>\n                        <h3 onclick=\"toggleDetalles('").concat(s.id, '\')" style="cursor:pointer;">\n    ').concat(s.cliente, ' <span style="font-size:14px;">⌄</span>\n</h3>\n\n<div id="detalles-').concat(s.id, '" style="display:none; background:#000; border:1px solid #3b82f6; border-radius:14px; padding:12px; margin:10px 0;">\n    <p>🏠 ').concat(s.pies_cuadrados || 0, " ft²</p>\n    <p>🛏️ ").concat(s.habitaciones || 0, " Hab | 🚿 ").concat(s.banos || 0, " Baños | 🚽 ").concat(s.medios_banos || 0, " Medios baños | 🛋️ ").concat(s.salas || 0, " Salas</p>\n    <p>🍳 Hornos: ").concat(s.horno || 0, " | 🧊 Nevera: ").concat(s.nevera || "No", "</p>\n    <p>🪟 Ventanas: ").concat(s.ventanas || "No", " | 🚪 Gabinetes: ").concat(s.gabinetes || "No", " | 🧹 Baseboards: ").concat(s.baseboards || "No", "</p>\n    <p>🐶 Perros en la casa: ").concat(s.perros || "No", "</p>\n    <p>🧺 Lavandería: ").concat(s.lavanderia || 0, " | 🚗 Garaje: ").concat(s.garage || s.garaje || 0, "</p>\n    <p>🍽️ Comedor: ").concat(s.comedor || 0, " | 🎮 Sala de juegos: ").concat(s.sala_juegos || 0, "</p>\n    <p>\n🧼 Alfombras:\n").concat(s.alfombra_habitaciones || 0, " habitaciones |\n").concat(s.alfombra_pies_cuadrados || 0, " ft²\n</p>\n\n").concat(s.alfombra_notas ? "\n<p>📝 Alfombra: ".concat(s.alfombra_notas, "</p>\n") : "", "\n    ").concat(s.notas_internas ? "<p>📝 ".concat(s.notas_internas, "</p>") : "", '\n</div>\n                        <span class="price-tag">$').concat(s.precio_total || 0, "</span>\n").concat(estadoDeposito, "\n").concat(pagoNormalizado.balance ? '<p style="color:#22c55e;font-weight:bold;">✅ Balance pagado</p>' : '<p style="color:#f59e0b;font-weight:bold;">💰 Balance pendiente: $'.concat(Number(s.balance_restante || 0).toFixed(2), "</p>"), "\n<p>📅 ").concat(s.fecha, " | ⏰ ").concat(horaFormateada, "</p>\n<p>📍 ").concat(s.direccion, "</p>\n\n<p>\n🧽 ").concat(s.estado === "completado" ? "Terminado" : s.estado === "en_progreso" ? "En progreso" : "No iniciado", "\n</p>\n\n<p>🚗 ").concat(obtenerMillasServicio(s), " millas ida/vuelta</p>\n<p>🔁 ").concat(s.repetir === "ninguno" ? "Única vez" : s.repetir, "</p>\n<p>👤 ").concat(s.empleado_nombre_2 ? s.empleado_nombre + " & " + s.empleado_nombre_2 : s.empleado_nombre, '</p>\n<div class="time-box">\n    <div class="time-row"><b>Inicio:</b> ').concat(s.hora_inicio, '</div>\n                            <div class="time-row"><b>Fin:</b> ').concat(s.hora_fin, '</div>\n                            <div class="time-row total-time-row"><b>Tiempo:</b> ').concat(infoTiempo.texto, '</div>\n                           <div class="time-row"><b>Millas:</b> ').concat(obtenerMillasServicio(s), ' mi</div>\n                        </div>\n                        <div class="action-buttons">\n    <select\n        style="\n            width:100%;\n            padding:10px;\n            border-radius:10px;\n            background:#000;\n            color:white;\n            border:1px solid #3b82f6;\n        "\n        onchange="cambiarEstadoTrabajo(\'').concat(s.id, '\', this.value)"\n    >\n        <option value="no_iniciado" ').concat(s.estado === "no_iniciado" ? "selected" : "", '>\n            🟣 No iniciado\n        </option>\n\n        <option value="en_progreso" ').concat(s.estado === "en_progreso" ? "selected" : "", '>\n            🟠 En progreso\n        </option>\n\n        <option value="completado" ').concat(s.estado === "completado" ? "selected" : "", ">\n            🟢 Terminado\n        </option>\n    </select>\n\n    ").concat(btnFirma, "\n\n    ").concat(btnDeposito, "\n\n    ").concat(btnBalance, '\n\n    <button class="btn-action btn-whatsapp" onclick="enviarRecordatorio(\'').concat(s.id, '\')">\n        Recordatorio 📱\n    </button>\n\n    <button class="btn-action btn-review" onclick="solicitarResenaGoogle(\'').concat(s.cliente, "', '").concat(s.whatsapp, '\')">\n        Reseña ⭐️\n    </button>\n\n    <button class="btn-action elite-evidence-btn" onclick="abrirEvidenciaServicio(\'').concat(s.id, "')\">\n        📸 Ver evidencia (").concat(Number(s.fotos_iniciales_count || 0) + Number(s.fotos_evidencia_count || 0) + Number(s.fotos_finales_count || 0), ')\n    </button>\n\n    <button class="btn-action" style="background:#2563eb" onclick="eliteDocOpen(\'').concat(s.id, '\',\'estimate\')">\n        📄 Estimate\n    </button>\n\n    <button class="btn-action" style="background:#0f766e" onclick="eliteDocOpen(\'').concat(s.id, '\',\'invoice\')">\n        🧾c Invoice\n    </button>\n\n    <button class="btn-action btn-edit" id="edit-btn-').concat(s.id, '">\n        Editar\n    </button>\n\n    <button class="btn-action btn-review" style="background:#ef4444" onclick="borrar(\'').concat(s.id, '\')">\n        Borrar Trabajo\n    </button>\n\n    <button class="btn-action" style="background:#f59e0b;" onclick="cancelarCliente(\'').concat(s.cliente, '\')">\n        Cancelar Cliente\n    </button>\n\n    <button class="btn-action" style="background:#7f1d1d;" onclick="borrarClienteCompleto(\'').concat(s.cliente, "')\">\n        Borrar Cliente Completo\n    </button>\n</div>");
+      const lineaStaff = Array.from(card.querySelectorAll("p")).find((p) => String(p.textContent || "").trim().startsWith("👤"));
+      if (lineaStaff) lineaStaff.textContent = "👤 " + ([s.empleado_nombre, s.empleado_nombre_2, s.empleado_nombre_3].filter(Boolean).join(" & ") || "Sin asignar");
       h.appendChild(card);
       document.getElementById("edit-btn-".concat(s.id)).onclick = () => editar(s.id, s);
     }
@@ -3002,7 +3013,7 @@ function generarNomina() {
     let min = 0;
     let millas = 0;
     let pago = 0;
-    todosLosServicios.filter((s) => s.estado === "completado" && (s.empleado_email === emp.email || s.empleado_email_2 === emp.email)).forEach((s) => {
+    todosLosServicios.filter((s) => s.estado === "completado" && (s.empleado_email === emp.email || s.empleado_email_2 === emp.email || s.empleado_email_3 === emp.email)).forEach((s) => {
       min += calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).minutos;
       millas += Number(obtenerMillasServicio(s));
       pago += calcularPagoEmpleadoEnServicio(emp, s);
@@ -3017,10 +3028,10 @@ async function reiniciarHorasMes() {
   const completados = todosLosServicios.filter((s) => s.estado === "completado");
   if (completados.length === 0) return alert("No hay trabajos completados para exportar.");
   if (!confirm("¿Descargar el reporte de nómina? Los trabajos NO serán eliminados.")) return;
-  const data = completados.map((s) => ({ Customer: s.cliente, Date: s.fecha, Price: s.precio_total || 0, Staff_1: s.empleado_nombre || "", Staff_2: s.empleado_nombre_2 || "", Time: calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).texto, Service_Miles: s.millas_servicio || 0, Real_Miles: s.millas_reales || 0, Total_Miles: obtenerMillasServicio(s) }));
+  const data = completados.map((s) => ({ Customer: s.cliente, Date: s.fecha, Price: s.precio_total || 0, Staff_1: s.empleado_nombre || "", Staff_2: s.empleado_nombre_2 || "", Staff_3: s.empleado_nombre_3 || "", Time: calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).texto, Service_Miles: s.millas_servicio || 0, Real_Miles: s.millas_reales || 0, Total_Miles: obtenerMillasServicio(s) }));
   const payrollData = todosLosEmpleados.map((emp) => {
     let min = 0, millas = 0, pago = 0;
-    completados.filter((s) => s.empleado_email === emp.email || s.empleado_email_2 === emp.email).forEach((s) => {
+    completados.filter((s) => s.empleado_email === emp.email || s.empleado_email_2 === emp.email || s.empleado_email_3 === emp.email).forEach((s) => {
       min += calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).minutos;
       millas += Number(obtenerMillasServicio(s));
       pago += calcularPagoEmpleadoEnServicio(emp, s);
@@ -3212,6 +3223,8 @@ function editar(id, s) {
   document.getElementById("email-empleado").value = s.empleado_email || "";
   document.getElementById("search-empleado-2").value = s.empleado_nombre_2 || "";
   document.getElementById("email-empleado-2").value = s.empleado_email_2 || "";
+  document.getElementById("search-empleado-3").value = s.empleado_nombre_3 || "";
+  document.getElementById("email-empleado-3").value = s.empleado_email_3 || "";
   document.getElementById("fecha").value = s.fecha;
   document.getElementById("hora").value = s.hora;
   document.getElementById("hora_final_estimada").value = s.hora_final_estimada || "";
@@ -3444,6 +3457,9 @@ function enviarRecordatorio(id) {
   let staffNombres = s.empleado_nombre || "";
   if (s.empleado_nombre_2) {
     staffNombres += " and ".concat(s.empleado_nombre_2);
+  }
+  if (s.empleado_nombre_3) {
+    staffNombres += " and ".concat(s.empleado_nombre_3);
   }
   const horaAmPm = formatAMPM(s.hora);
   const mensaje = "Hello ".concat(s.cliente, "! 🌟\n\nThis is a friendly reminder from Elite Cleaners Company about your upcoming cleaning service:\n\n📅 Date: ").concat(s.fecha, "\n⏰ Time: ").concat(horaAmPm, "\n👤 Staff: ").concat(staffNombres, "\n\nWe look forward to seeing you.\n\nPlease let us know if you have any questions.");
@@ -3860,7 +3876,8 @@ function datosPagoServicio(s) {
 function obtenerEmpleadosAsignadosServicio(s) {
   const empleados = [
     { nombre: s.empleado_nombre, email: s.empleado_email },
-    { nombre: s.empleado_nombre_2, email: s.empleado_email_2 }
+    { nombre: s.empleado_nombre_2, email: s.empleado_email_2 },
+    { nombre: s.empleado_nombre_3, email: s.empleado_email_3 }
   ].filter((e) => String(e.nombre || e.email || "").trim());
   const unicos = [];
   const vistos = /* @__PURE__ */ new Set();
@@ -3873,7 +3890,7 @@ function obtenerEmpleadosAsignadosServicio(s) {
       email: String(e.email || "").trim()
     });
   });
-  return unicos.slice(0, 2);
+  return unicos.slice(0, 3);
 }
 function calcularPagoEmpleadosServicio(s, montoCobrado) {
   if (s.estado !== "completado") {
@@ -4780,7 +4797,7 @@ function eliteV51OpenReports() {
   abrirEliteV5ModuleModal("Informes", "Centro de reportes operativos y financieros.", '<div class="elite-v51-dashboard-grid"><div class="elite-v51-dash-card"><b>Trabajos completados</b><strong>'.concat(completed.length, '</strong></div><div class="elite-v51-dash-card"><b>Ventas completadas</b><strong>').concat(dinero(sales), '</strong></div><div class="elite-v51-dash-card"><b>Clientes guardados</b><strong>').concat((todosLosClientes || []).length, '</strong></div></div><div class="elite-v51-module-grid"><button class="elite-v51-action" style="background:#2563eb;padding:15px" onclick="cerrarEliteV5ModuleModal();abrirContabilidadElite()">Informe contable</button><button class="elite-v51-action" style="background:#16a34a;padding:15px" onclick="cerrarEliteV5ModuleModal();eliteV51SetLayout(\'empleados\');eliteV5SetActive(\'empleados\')">Informe de nómina</button><button class="elite-v51-action" style="background:#7c3aed;padding:15px" onclick="exportarServiciosEliteV51()">Exportar servicios</button><button class="elite-v51-action" style="background:#f59e0b;padding:15px" onclick="window.print()">Imprimir reporte</button></div>'));
 }
 function exportarServiciosEliteV51() {
-  const data = (todosLosServicios || []).map((s) => ({ Fecha: s.fecha, Cliente: s.cliente, Tipo: s.tipo, Estado: s.estado, Precio: Number(s.precio_total || 0), Staff: [s.empleado_nombre, s.empleado_nombre_2].filter(Boolean).join(" & "), Dirección: s.direccion || "" }));
+  const data = (todosLosServicios || []).map((s) => ({ Fecha: s.fecha, Cliente: s.cliente, Tipo: s.tipo, Estado: s.estado, Precio: Number(s.precio_total || 0), Staff: [s.empleado_nombre, s.empleado_nombre_2, s.empleado_nombre_3].filter(Boolean).join(" & "), Dirección: s.direccion || "" }));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "Servicios");
   XLSX.writeFile(wb, "Elite_Servicios.xlsx");
@@ -5835,7 +5852,7 @@ function updateOpsMetrics(jobs) {
     const p = opsPayment(s);
     collected += p.collected;
     pending += p.pending;
-    [s.empleado_nombre, s.empleado_nombre_2].filter(Boolean).forEach((x) => staff.add(x));
+    [s.empleado_nombre, s.empleado_nombre_2, s.empleado_nombre_3].filter(Boolean).forEach((x) => staff.add(x));
   });
   const completed = jobs.filter((s) => s.estado === "completado").length;
   const pct = jobs.length ? Math.round(completed / jobs.length * 100) : 0;
@@ -5866,7 +5883,7 @@ function renderOpsDay() {
   document.getElementById("ops-list-title").textContent = opsCalendarDate.toLocaleDateString("es-US", { weekday: "long", day: "numeric", month: "long" });
   document.getElementById("ops-list-badge").textContent = jobs.length;
   const timeline = document.getElementById("ops-timeline");
-  timeline.innerHTML = jobs.length ? jobs.map((s) => '<div class="ops-event" onclick="selectOpsJob(\''.concat(s.id, '\')"><div class="ops-event-time">').concat(formatAMPM(s.hora || "00:00"), '</div><div class="ops-event-box ').concat(opsStateClass(s), '"><h4>').concat(s.cliente || "Cliente", '</h4><span class="ops-tag">').concat(s.tipo || "Servicio", "</span><p>").concat(formatAMPM(s.hora || "00:00"), " – ").concat(formatAMPM(opsEndTime(s)), "</p><p>👥 ").concat([s.empleado_nombre, s.empleado_nombre_2].filter(Boolean).join(" • ") || "Sin asignar", "</p><p>📍 ").concat(s.direccion || "Sin dirección", "</p></div></div>")).join("") : '<div class="ops-empty" style="padding:45px 20px">\n   <div style="font-size:32px;margin-bottom:10px">📅</div>\n   <div>No hay trabajos programados para este día.</div>\n   <button type="button"\n           onclick="agregarTrabajoDesdeCentroOperaciones(\''.concat(key, '\')"\n           style="margin-top:16px;border:0;border-radius:10px;background:#2563eb;color:white;padding:12px 16px;font-weight:900;cursor:pointer;">\n     + Agregar trabajo en este día\n   </button>\n </div>');
+  timeline.innerHTML = jobs.length ? jobs.map((s) => '<div class="ops-event" onclick="selectOpsJob(\''.concat(s.id, '\')"><div class="ops-event-time">').concat(formatAMPM(s.hora || "00:00"), '</div><div class="ops-event-box ').concat(opsStateClass(s), '"><h4>').concat(s.cliente || "Cliente", '</h4><span class="ops-tag">').concat(s.tipo || "Servicio", "</span><p>").concat(formatAMPM(s.hora || "00:00"), " – ").concat(formatAMPM(opsEndTime(s)), "</p><p>👥 ").concat([s.empleado_nombre, s.empleado_nombre_2, s.empleado_nombre_3].filter(Boolean).join(" • ") || "Sin asignar", "</p><p>📍 ").concat(s.direccion || "Sin dirección", "</p></div></div>")).join("") : '<div class="ops-empty" style="padding:45px 20px">\n   <div style="font-size:32px;margin-bottom:10px">📅</div>\n   <div>No hay trabajos programados para este día.</div>\n   <button type="button"\n           onclick="agregarTrabajoDesdeCentroOperaciones(\''.concat(key, '\')"\n           style="margin-top:16px;border:0;border-radius:10px;background:#2563eb;color:white;padding:12px 16px;font-weight:900;cursor:pointer;">\n     + Agregar trabajo en este día\n   </button>\n </div>');
   renderOpsRoute(jobs);
   renderOpsTeam(jobs);
   renderOpsAlerts(jobs);
@@ -5904,7 +5921,7 @@ function renderOpsJobDetail() {
     return;
   }
   const p = opsPayment(s);
-  const staff = [s.empleado_nombre, s.empleado_nombre_2].filter(Boolean).join(" • ") || "Sin asignar";
+  const staff = [s.empleado_nombre, s.empleado_nombre_2, s.empleado_nombre_3].filter(Boolean).join(" • ") || "Sin asignar";
   box.innerHTML = '<div class="ops-detail-head"><div><small style="color:#8b5cf6">● Servicio</small><h3>'.concat(s.cliente || "Cliente", '</h3></div><select class="ops-status-select" onchange="cambiarEstadoTrabajo(\'').concat(s.id, '\',this.value).then(()=>setTimeout(renderCentroOperacionesV601,300))"><option value="no_iniciado" ').concat(s.estado === "no_iniciado" ? "selected" : "", '>No iniciado</option><option value="en_progreso" ').concat(s.estado === "en_progreso" ? "selected" : "", '>En progreso</option><option value="completado" ').concat(s.estado === "completado" ? "selected" : "", '>Terminado / Realizado</option></select></div>\n <div class="ops-detail-tabs"><button class="active">Resumen</button><button onclick="abrirEditorEvento(\'').concat(s.id, '\')">Detalles</button><button>Checklist</button><button>Fotos</button><button>Inventario</button><button>Notas</button><button>Historial</button></div>\n <div class="ops-detail-body"><div class="ops-detail-grid"><div><div class="ops-info-list">\n <div class="ops-info-row"><b>📍 Dirección</b><span>').concat(s.direccion || "Sin dirección", '</span></div><div class="ops-info-row"><b>📅 Fecha y hora</b><span>').concat(s.fecha || "", "<br>").concat(formatAMPM(s.hora || "00:00"), " – ").concat(formatAMPM(opsEndTime(s)), '</span></div><div class="ops-info-row"><b>🧽 Tipo</b><span>').concat(s.tipo || "Servicio", '</span></div><div class="ops-info-row"><b>⏱ Tiempo</b><span>Estimado: ').concat(s.hora_final_estimada ? calcularTiempoTrabajado(s.hora, s.hora_final_estimada).texto : "2h aprox.", " · Real trabajado: ").concat(opsWorkedTime(s), '</span></div><div class="ops-info-row"><b>👥 Empleados</b><span>').concat(staff, '</span></div><div class="ops-info-row"><b>📝 Notas</b><span>').concat(s.notas_internas || "Sin notas especiales", '</span></div></div>\n <div class="ops-payment-grid" style="margin-top:12px"><div class="ops-payment"><small>Precio</small><strong>').concat(opsMoney(p.total), '</strong></div><div class="ops-payment"><small>Cobrado</small><strong style="color:#16a34a">').concat(opsMoney(p.collected), '</strong></div><div class="ops-payment"><small>Balance</small><strong style="color:#f97316">').concat(opsMoney(p.pending), "</strong></div></div>").concat(opsStaffTimeline(s), '</div>\n <div><div class="ops-mini-map"><div><div style="font-size:35px">🗺️</div><a target="_blank" href="https://www.google.com/maps/search/?api=1&query=').concat(encodeURIComponent(s.direccion || ""), '">Abrir ubicación en Google Maps</a><p style="font-size:11px;color:#64748b">').concat(s.direccion || "Sin dirección", '</p></div></div><div class="ops-info-list" style="margin-top:12px"><div class="ops-info-row"><b>📞 Teléfono</b><span>').concat(s.whatsapp || "Sin teléfono", '</span></div><div class="ops-info-row"><b>✉️ Correo</b><span>').concat(s.email_cliente || "Sin email", '</span></div><div class="ops-info-row"><b>📄 Contrato</b><span>').concat(s.contrato_firmado ? "Firmado" : "Pendiente", '</span></div></div></div></div>\n <div class="ops-actions"><button class="start" onclick="cambiarEstadoTrabajo(\'').concat(s.id, "','en_progreso').then(()=>setTimeout(renderCentroOperacionesV601,300))\">▶ Iniciar</button><button class=\"edit\" onclick=\"abrirEditorEvento('").concat(s.id, '\')">✎ Editar</button><button class="reschedule" onclick="abrirEditorEvento(\'').concat(s.id, '\')">↻ Reprogramar</button><button class="cancel" onclick="cancelarCliente(\'').concat(String(s.cliente || "").replace(/'/g, "\\'"), "')\">✕ Cancelar</button></div></div>");
 }
 function renderOpsRoute(jobs) {
@@ -5913,7 +5930,7 @@ function renderOpsRoute(jobs) {
 }
 function renderOpsTeam(jobs) {
   const map = {};
-  jobs.forEach((s) => [s.empleado_nombre, s.empleado_nombre_2].filter(Boolean).forEach((n) => {
+  jobs.forEach((s) => [s.empleado_nombre, s.empleado_nombre_2, s.empleado_nombre_3].filter(Boolean).forEach((n) => {
     map[n] = map[n] || { state: "No iniciado", time: s.hora };
     if (s.estado === "en_progreso") map[n] = { state: "En progreso", time: s.hora_inicio };
     if (s.estado === "completado" && map[n].state !== "En progreso") map[n] = { state: "Completado", time: s.hora_fin };
@@ -5969,7 +5986,7 @@ function renderOpsWeek() {
     x.setDate(d.getDate() + i);
     const jobs = opsJobsForDate(opsDateKey(x));
     all.push(...jobs);
-    html += '<div class="ops-agenda-date">'.concat(x.toLocaleDateString("es-US", { weekday: "long", day: "numeric", month: "short" }), "</div>").concat(jobs.length ? jobs.map((s) => '<div class="ops-event" onclick="opsCalendarDate=new Date(\''.concat(s.fecha, "T12:00:00');opsSelectedJobId='").concat(s.id, "';setOpsView('day')\"><div class=\"ops-event-time\">").concat(formatAMPM(s.hora || ""), '</div><div class="ops-event-box ').concat(opsStateClass(s), '"><h4>').concat(s.cliente, "</h4><p>").concat(s.tipo || "", " · ").concat([s.empleado_nombre, s.empleado_nombre_2].filter(Boolean).join(" • "), "</p></div></div>")).join("") : '<p style="color:#94a3b8;font-size:11px">Sin trabajos</p>', " ");
+    html += '<div class="ops-agenda-date">'.concat(x.toLocaleDateString("es-US", { weekday: "long", day: "numeric", month: "short" }), "</div>").concat(jobs.length ? jobs.map((s) => '<div class="ops-event" onclick="opsCalendarDate=new Date(\''.concat(s.fecha, "T12:00:00');opsSelectedJobId='").concat(s.id, "';setOpsView('day')\"><div class=\"ops-event-time\">").concat(formatAMPM(s.hora || ""), '</div><div class="ops-event-box ').concat(opsStateClass(s), '"><h4>').concat(s.cliente, "</h4><p>").concat(s.tipo || "", " · ").concat([s.empleado_nombre, s.empleado_nombre_2, s.empleado_nombre_3].filter(Boolean).join(" • "), "</p></div></div>")).join("") : '<p style="color:#94a3b8;font-size:11px">Sin trabajos</p>', " ");
   }
   document.getElementById("ops-timeline").innerHTML = html;
   document.getElementById("ops-list-title").textContent = "Semana operativa";
@@ -12071,7 +12088,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   function collect(existing = {}, editing = false) {
     var _a, _b;
     const price = number("precio_total", 0), phone = String(value("whatsapp")).replace(/\D/g, "");
-    const data = { cliente: String(value("cliente")).trim(), direccion: String(value("direccion")).trim(), whatsapp: phone, telefono: phone, email_cliente: String(value("email_cliente")).trim(), precio_total: price, precio_inicial: number("precio_inicial", price), precio_recurrente: number("precio_recurrente", 0), millas_servicio: number("millas_servicio", 0), empleado_nombre: String(value("search-empleado")).trim(), empleado_email: String(value("email-empleado")).trim(), empleado_nombre_2: String(value("search-empleado-2")).trim(), empleado_email_2: String(value("email-empleado-2")).trim(), fecha: value("fecha"), hora: value("hora"), hora_final_estimada: value("hora_final_estimada"), repetir: value("repetir", "ninguno") || "ninguno", estado_calendario: value("estado_calendario", "pendiente") || "pendiente", estado: editing ? value("estado_trabajo", existing.estado || "no_iniciado") || "no_iniciado" : "no_iniciado", pies_cuadrados: value("pies_cuadrados"), habitaciones: value("habitaciones"), banos: value("banos"), medios_banos: value("medios_banos"), salas: value("salas"), cocinas: value("cocinas"), oficinas: value("oficinas"), espacios_independientes: value("espacios_independientes"), nombres_espacios_independientes: value("nombres_espacios_independientes"), horno: value("horno", "No") || "No", nevera: value("nevera", "No") || "No", gabinetes: value("gabinetes", "No") || "No", ventanas: value("ventanas", "No") || "No", baseboards: value("baseboards", "No") || "No", perros: value("perros", "No") || "No", lavanderia: value("lavanderia"), garaje: value("garaje"), comedor: value("comedor"), sala_juegos: value("sala_juegos"), alfombra_habitaciones: value("alfombra_habitaciones"), alfombra_pies_cuadrados: value("alfombra_pies_cuadrados"), alfombra_notas: value("alfombra_notas"), notas_internas: value("notas_internas"), tipo: (typeof tipoSeleccionado !== "undefined" ? tipoSeleccionado : "ESTÁNDAR") || existing.tipo || "ESTÁNDAR", pricing_version: "8.6.1-estimates-pricing-fix", actualizado_en: firebase.firestore.FieldValue.serverTimestamp() };
+    const data = { cliente: String(value("cliente")).trim(), direccion: String(value("direccion")).trim(), whatsapp: phone, telefono: phone, email_cliente: String(value("email_cliente")).trim(), precio_total: price, precio_inicial: number("precio_inicial", price), precio_recurrente: number("precio_recurrente", 0), millas_servicio: number("millas_servicio", 0), empleado_nombre: String(value("search-empleado")).trim(), empleado_email: String(value("email-empleado")).trim(), empleado_nombre_2: String(value("search-empleado-2")).trim(), empleado_email_2: String(value("email-empleado-2")).trim(), empleado_nombre_3: String(value("search-empleado-3")).trim(), empleado_email_3: String(value("email-empleado-3")).trim(), fecha: value("fecha"), hora: value("hora"), hora_final_estimada: value("hora_final_estimada"), repetir: value("repetir", "ninguno") || "ninguno", estado_calendario: value("estado_calendario", "pendiente") || "pendiente", estado: editing ? value("estado_trabajo", existing.estado || "no_iniciado") || "no_iniciado" : "no_iniciado", pies_cuadrados: value("pies_cuadrados"), habitaciones: value("habitaciones"), banos: value("banos"), medios_banos: value("medios_banos"), salas: value("salas"), cocinas: value("cocinas"), oficinas: value("oficinas"), espacios_independientes: value("espacios_independientes"), nombres_espacios_independientes: value("nombres_espacios_independientes"), horno: value("horno", "No") || "No", nevera: value("nevera", "No") || "No", gabinetes: value("gabinetes", "No") || "No", ventanas: value("ventanas", "No") || "No", baseboards: value("baseboards", "No") || "No", perros: value("perros", "No") || "No", lavanderia: value("lavanderia"), garaje: value("garaje"), comedor: value("comedor"), sala_juegos: value("sala_juegos"), alfombra_habitaciones: value("alfombra_habitaciones"), alfombra_pies_cuadrados: value("alfombra_pies_cuadrados"), alfombra_notas: value("alfombra_notas"), notas_internas: value("notas_internas"), tipo: (typeof tipoSeleccionado !== "undefined" ? tipoSeleccionado : "ESTÁNDAR") || existing.tipo || "ESTÁNDAR", pricing_version: "8.6.1-estimates-pricing-fix", actualizado_en: firebase.firestore.FieldValue.serverTimestamp() };
     if (editing) {
       data.hora_inicio = value("hora_inicio_real", existing.hora_inicio || "--:--") || existing.hora_inicio || "--:--";
       data.hora_fin = value("hora_fin_real", existing.hora_fin || "--:--") || existing.hora_fin || "--:--";
@@ -12246,7 +12263,7 @@ var __spreadValues = (a, b) => {
     const out = [];
     const now = today();
     data.forEach((s) => {
-      const id = String(s.id || s.firestore_id || ""), date = String(s.fecha || ""), client = s.cliente || "Cliente sin nombre", employee = s.empleado_nombre || s.empleado_email || s.empleado_nombre_2 || s.empleado_email_2;
+      const id = String(s.id || s.firestore_id || ""), date = String(s.fecha || ""), client = s.cliente || "Cliente sin nombre", employee = s.empleado_nombre || s.empleado_email || s.empleado_nombre_2 || s.empleado_email_2 || s.empleado_nombre_3 || s.empleado_email_3;
       const hidden = new Set(Array.isArray(s.atencion_oculta_claves) ? s.atencion_oculta_claves : []), staffKey = "service:".concat(id, ":staff"), checkoutKey = "service:".concat(id, ":checkout"), balanceKey = "service:".concat(id, ":balance");
       if (!hidden.has(staffKey) && date >= now && !finished(s) && !employee) out.push({ key: staffKey, kind: "service", id, critical: true, icon: "👤", title: "Servicio sin empleado", text: "".concat(client, " · ").concat(date || "Sin fecha"), search: "".concat(client, " ").concat(date, " sin empleado") });
       if (!hidden.has(checkoutKey) && date && date <= now && !finished(s) && realTime(s.hora_inicio || s.hora_llegada) && !realTime(s.hora_fin || s.hora_salida)) out.push({ key: checkoutKey, kind: "service", id, critical: true, icon: "⏱️", title: "Falta registrar la salida", text: "".concat(client, " · ").concat(date), search: "".concat(client, " ").concat(date, " salida") });
