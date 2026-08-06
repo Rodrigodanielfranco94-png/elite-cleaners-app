@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin Core v8.6.8 — Short Private Contract Link | Device-Aware Document Sending | Primary-First Service Save -->
+<!-- Elite Admin Core v8.6.9 — Real-Time Client Payment Alerts | Short Private Contract Link | Primary-First Service Save -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v8.6.8 — Short Private Contract Link</title>
+    <title>Elite Admin v8.6.9 — Real-Time Payment Alerts</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -12380,7 +12380,7 @@ var __spreadValues = (a, b) => {
   return a;
 };
 (function() {
-  let rows = [], unsubNotifications = null, unsubRequests = null, notifications = [], requests = [], dismissed = /* @__PURE__ */ new Set(), selected = /* @__PURE__ */ new Set(), selecting = false, activeFilter = "all";
+  let rows = [], unsubNotifications = null, unsubRequests = null, unsubServices = null, notifications = [], requests = [], dismissed = /* @__PURE__ */ new Set(), selected = /* @__PURE__ */ new Set(), selecting = false, activeFilter = "all";
   const esc = (v) => String(v != null ? v : "").replace(/[&<>\"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[m]);
   const norm = (v) => String(v || "").trim().toLowerCase().replace(/\s+/g, " ");
   const today = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
@@ -12395,10 +12395,12 @@ var __spreadValues = (a, b) => {
     const now = today();
     data.forEach((s) => {
       const id = String(s.id || s.firestore_id || ""), date = String(s.fecha || ""), client = s.cliente || "Cliente sin nombre", employee = s.empleado_nombre || s.empleado_email || s.empleado_nombre_2 || s.empleado_email_2 || s.empleado_nombre_3 || s.empleado_email_3;
-      const hidden = new Set(Array.isArray(s.atencion_oculta_claves) ? s.atencion_oculta_claves : []), staffKey = "service:".concat(id, ":staff"), checkoutKey = "service:".concat(id, ":checkout"), balanceKey = "service:".concat(id, ":balance");
+      const hidden = new Set(Array.isArray(s.atencion_oculta_claves) ? s.atencion_oculta_claves : []), staffKey = "service:".concat(id, ":staff"), checkoutKey = "service:".concat(id, ":checkout"), balanceKey = "service:".concat(id, ":balance"), depositReviewKey = "service:".concat(id, ":deposit-review"), balanceReviewKey = "service:".concat(id, ":balance-review");
+      if (!hidden.has(depositReviewKey) && s.notificacion_deposito === true && s.deposito_pagado !== true) out.push({ key: depositReviewKey, kind: "service", id, critical: true, icon: "💵", title: "Depósito enviado — verificar", text: "".concat(client, " · $").concat(Number(s.deposito_monto || 0).toFixed(2)), search: "".concat(client, " depósito enviado verificar") });
+      if (!hidden.has(balanceReviewKey) && s.notificacion_balance === true && s.balance_pagado !== true) out.push({ key: balanceReviewKey, kind: "service", id, critical: true, icon: "💰", title: "Balance enviado — verificar", text: "".concat(client, " · $").concat(Number(s.balance_restante || 0).toFixed(2)), search: "".concat(client, " balance enviado verificar") });
       if (!hidden.has(staffKey) && date >= now && !finished(s) && !employee) out.push({ key: staffKey, kind: "service", id, critical: true, icon: "👤", title: "Servicio sin empleado", text: "".concat(client, " · ").concat(date || "Sin fecha"), search: "".concat(client, " ").concat(date, " sin empleado") });
       if (!hidden.has(checkoutKey) && date && date <= now && !finished(s) && realTime(s.hora_inicio || s.hora_llegada) && !realTime(s.hora_fin || s.hora_salida)) out.push({ key: checkoutKey, kind: "service", id, critical: true, icon: "⏱️", title: "Falta registrar la salida", text: "".concat(client, " · ").concat(date), search: "".concat(client, " ").concat(date, " salida") });
-      if (!hidden.has(balanceKey) && finished(s) && s.balance_pagado !== true && Number(s.balance_restante || 0) > 0) out.push({ key: balanceKey, kind: "service", id, icon: "💵", title: "Balance pendiente", text: "".concat(client, " · $").concat(Number(s.balance_restante || 0).toFixed(2)), search: "".concat(client, " balance pendiente") });
+      if (!hidden.has(balanceKey) && finished(s) && s.notificacion_balance !== true && s.balance_pagado !== true && Number(s.balance_restante || 0) > 0) out.push({ key: balanceKey, kind: "service", id, icon: "💵", title: "Balance pendiente", text: "".concat(client, " · $").concat(Number(s.balance_restante || 0).toFixed(2)), search: "".concat(client, " balance pendiente") });
     });
     return out;
   }
@@ -12539,6 +12541,11 @@ var __spreadValues = (a, b) => {
   };
   window.eliteAttentionLoad = function() {
     try {
+      if (!unsubServices) unsubServices = db.collection("servicios").onSnapshot((s) => {
+        window.todosLosServicios = s.docs.map((d) => __spreadValues({ id: d.id, firestore_id: d.id }, d.data()));
+        rebuild();
+      }, () => {
+      });
       if (!unsubNotifications) unsubNotifications = db.collection("notificaciones_admin").onSnapshot((s) => {
         notifications = s.docs.map((d) => __spreadValues({ id: d.id }, d.data()));
         rebuild();
