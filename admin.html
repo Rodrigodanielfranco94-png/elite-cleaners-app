@@ -1873,12 +1873,49 @@ function cambiarVista(v) {
   else document.getElementById("btn-completados").classList.add("active");
   renderHistorial();
 }
-function enviarContrato(id, telefono, cliente) {
+function eliteGenerarCodigoContrato() {
+  const alfabeto = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = new Uint8Array(8);
+  if (window.crypto && window.crypto.getRandomValues) window.crypto.getRandomValues(bytes);
+  else for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+  return Array.from(bytes, (b) => alfabeto[b % alfabeto.length]).join("");
+}
+async function eliteAsegurarCodigoContrato(id) {
+  const ref = db.collection("servicios").doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) throw new Error("No se encontró el trabajo para crear el enlace del contrato.");
+  const existente = String((snap.data() || {}).contract_code || "").trim().toUpperCase();
+  if (/^[A-Z2-9]{6,12}$/.test(existente)) return existente;
+  let codigo = "";
+  for (let intento = 0; intento < 6; intento++) {
+    const candidato = eliteGenerarCodigoContrato();
+    const coincidencia = await db.collection("servicios").where("contract_code", "==", candidato).limit(1).get();
+    if (coincidencia.empty) {
+      codigo = candidato;
+      break;
+    }
+  }
+  if (!codigo) throw new Error("No se pudo generar un código único para el contrato. Inténtalo nuevamente.");
+  await ref.set({
+    contract_code: codigo,
+    contract_link_version: "short-v1",
+    contract_link_updated_at: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+  const local = (window.todosLosServicios || []).find((s) => String(s.id || s.firestore_id) === String(id));
+  if (local) local.contract_code = codigo;
+  return codigo;
+}
+async function enviarContrato(id, telefono, cliente) {
   if (!telefono) return alert("El cliente no tiene un teléfono registrado.");
-  const urlBase = "https://rodrigodanielfranco94-png.github.io/elite-cleaners-app";
-  const urlFirma = "".concat(urlBase, "/firmar.html?id=").concat(id, "&cliente=").concat(encodeURIComponent(cliente));
-  const mensaje = "Hello ".concat(cliente, ",\n\nTo confirm your cleaning appointment, please review and sign your service agreement using the secure link below:\n\n").concat(urlFirma, "\n\nThank you,\nElite Cleaners Company");
-  abrirSMS(telefono, mensaje);
+  try {
+    const codigo = await eliteAsegurarCodigoContrato(id);
+    const urlFirma = "https://elitecleanerscompany.com/sign-contract/" + codigo;
+    const mensaje = "Hello ".concat(cliente, ",\n\nTo confirm your cleaning appointment, please review and sign your service agreement using the secure link below:\n\n").concat(urlFirma, "\n\nThank you,\nElite Cleaners Company");
+    abrirSMS(telefono, mensaje);
+  } catch (error) {
+    console.error("No se pudo preparar el enlace corto del contrato:", error);
+    alert("No se pudo preparar el enlace profesional del contrato. Inténtalo nuevamente.");
+  }
 }
 function verFirma(id) {
   const servicio = todosLosServicios.find((s) => s.id === id);
