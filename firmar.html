@@ -200,8 +200,43 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 const urlParams = new URLSearchParams(window.location.search);
-const idServicio = urlParams.get("id");
-const nombreCliente = urlParams.get("cliente") || "Customer";
+let idServicio = urlParams.get("id") || "";
+let nombreCliente = urlParams.get("cliente") || "Customer";
+
+function obtenerCodigoContratoDesdeUrl() {
+  const porQuery = String(urlParams.get("code") || urlParams.get("c") || "").trim().toUpperCase();
+  if (porQuery) return porQuery;
+  const partes = window.location.pathname.split("/").filter(Boolean);
+  const indice = partes.findIndex((p) => String(p).toLowerCase() === "sign-contract");
+  if (indice >= 0 && partes[indice + 1]) return decodeURIComponent(partes[indice + 1]).trim().toUpperCase();
+  return "";
+}
+
+async function resolverServicioDesdeEnlace() {
+  if (idServicio) return true;
+  const codigo = obtenerCodigoContratoDesdeUrl();
+  if (!codigo) {
+    alert("Agreement link is incomplete. Please contact Elite Cleaners Company.");
+    return false;
+  }
+  try {
+    const resultado = await db.collection("servicios").where("contract_code", "==", codigo).limit(1).get();
+    if (resultado.empty) {
+      alert("Agreement not found. Please contact Elite Cleaners Company.");
+      return false;
+    }
+    const doc = resultado.docs[0];
+    idServicio = doc.id;
+    servicioActual = doc.data() || {};
+    nombreCliente = servicioActual.cliente || nombreCliente;
+    document.getElementById("cliente-nombre").innerText = "Agreement for: " + nombreCliente;
+    return true;
+  } catch (error) {
+    console.error("Could not resolve short agreement link:", error);
+    alert("We could not open this agreement. Please contact Elite Cleaners Company.");
+    return false;
+  }
+}
 
 document.getElementById("cliente-nombre").innerText = "Agreement for: " + nombreCliente;
 
@@ -465,6 +500,7 @@ function mostrarVenmo() {
   window.location.href = venmoWeb;
 }
   
+function iniciarEscuchaServicio() {
 db.collection("servicios").doc(idServicio).onSnapshot((doc) => {
   if (!doc.exists) {
     alert("Agreement not found.");
@@ -533,8 +569,16 @@ document.querySelectorAll(".payment-row")[1].querySelector("span").innerText = "
 }
   
   });
+}
   
-cargarServicio();
+async function iniciarPaginaFirma() {
+  const listo = await resolverServicioDesdeEnlace();
+  if (!listo) return;
+  iniciarEscuchaServicio();
+  await cargarServicio();
+}
+
+iniciarPaginaFirma();
 </script>
 </body>
 </html>
