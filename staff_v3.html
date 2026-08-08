@@ -3606,14 +3606,27 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       const coords={lat:Number(pos.lat),lon:Number(pos.lng),accuracy:Number(pos.accuracy||0)};
       const uploaded=await uploadArrivalWithFallback(id,blob,{servicioId:id,area:'Fachada / número de casa',staffEmail:currentUser.email,staffNombre:currentUser.nombre});
       const serviceRef=db.collection('servicios').doc(id),photoRef=serviceRef.collection('fotos').doc(),eventRef=serviceRef.collection('eventos_staff').doc(),notificationRef=db.collection('notificaciones_admin').doc(),batch=db.batch();
+      // Si Storage no está disponible, la imagen inline vive UNA sola vez en
+      // la subcolección fotos. Los demás documentos guardan solo referencias.
+      const publicPhotoUrl=uploaded.inline?'':uploaded.url;
+      const evidenceRef='servicios/'+id+'/fotos/'+photoRef.id;
       const common={url:uploaded.url,path:uploaded.path,tipo:'arrival',area:'Fachada / número de casa',detalle:'Evidencia obligatoria de llegada',staff_email:currentUser.email,staff_nombre:currentUser.nombre,auth_uid:user.uid,gps:coords,almacenamiento_inline:uploaded.inline||false,timestamp:firebase.firestore.FieldValue.serverTimestamp()};
       batch.set(photoRef,common);
-      batch.update(serviceRef,{etapa_staff:'llego',estado:'no_iniciado',estado_calendario:'pendiente',hora_llegada:timeText,llegada_timestamp:firebase.firestore.FieldValue.serverTimestamp(),llegada_ms:nowMs,gps_llegada:coords,foto_llegada_url:uploaded.url,foto_llegada_path:uploaded.path,foto_llegada_id:photoRef.id,llegada_verificada_con_foto:true,llegada_foto_inline:uploaded.inline||false,llegada_notificacion_id:notificationRef.id,ultima_actualizacion:firebase.firestore.FieldValue.serverTimestamp(),actualizado_por_staff_email:currentUser.email,actualizado_por_staff_nombre:currentUser.nombre});
-      batch.set(eventRef,{tipo:'llegada_con_foto',etiqueta:'Llegada verificada con foto',hora:timeText,fecha:firebase.firestore.FieldValue.serverTimestamp(),fecha_ms:nowMs,gps:coords,foto_url:uploaded.url,empleado_nombre:currentUser.nombre,empleado_email:currentUser.email});
-      batch.set(notificationRef,{tipo:'llegada_staff',titulo:'📍 Empleado llegó al servicio',mensaje:currentUser.nombre+' llegó al servicio de '+safeText(job.cliente,'cliente')+'.',servicio_id:id,cliente:safeText(job.cliente,'Servicio'),direccion:safeText(job.direccion,'Dirección no disponible'),empleado_nombre:currentUser.nombre,empleado_email:currentUser.email,hora_llegada:timeText,foto_url:uploaded.url,foto_llegada_url:uploaded.url,latitud:coords.lat,longitud:coords.lon,precision_gps:coords.accuracy,ubicacion:{lat:coords.lat,lng:coords.lon,latitud:coords.lat,longitud:coords.lon},gps:coords,almacenamiento_inline:uploaded.inline||false,leida:false,revisada_por_admin:false,fecha:firebase.firestore.FieldValue.serverTimestamp(),fecha_ms:nowMs});
+      batch.update(serviceRef,{etapa_staff:'llego',estado:'no_iniciado',estado_calendario:'pendiente',hora_llegada:timeText,llegada_timestamp:firebase.firestore.FieldValue.serverTimestamp(),llegada_ms:nowMs,gps_llegada:coords,foto_llegada_url:publicPhotoUrl,foto_llegada_path:uploaded.path,foto_llegada_id:photoRef.id,foto_llegada_ref:evidenceRef,llegada_verificada_con_foto:true,llegada_foto_inline:uploaded.inline||false,llegada_notificacion_id:notificationRef.id,ultima_actualizacion:firebase.firestore.FieldValue.serverTimestamp(),actualizado_por_staff_email:currentUser.email,actualizado_por_staff_nombre:currentUser.nombre});
+      batch.set(eventRef,{tipo:'llegada_con_foto',etiqueta:'Llegada verificada con foto',hora:timeText,fecha:firebase.firestore.FieldValue.serverTimestamp(),fecha_ms:nowMs,gps:coords,foto_url:publicPhotoUrl,foto_id:photoRef.id,foto_ref:evidenceRef,empleado_nombre:currentUser.nombre,empleado_email:currentUser.email});
+      batch.set(notificationRef,{tipo:'llegada_staff',titulo:'📍 Empleado llegó al servicio',mensaje:currentUser.nombre+' llegó al servicio de '+safeText(job.cliente,'cliente')+'.',servicio_id:id,cliente:safeText(job.cliente,'Servicio'),direccion:safeText(job.direccion,'Dirección no disponible'),empleado_nombre:currentUser.nombre,empleado_email:currentUser.email,hora_llegada:timeText,foto_url:publicPhotoUrl,foto_llegada_url:publicPhotoUrl,foto_llegada_id:photoRef.id,foto_llegada_path:uploaded.path,foto_llegada_ref:evidenceRef,latitud:coords.lat,longitud:coords.lon,precision_gps:coords.accuracy,ubicacion:{lat:coords.lat,lng:coords.lon,latitud:coords.lat,longitud:coords.lon},gps:coords,almacenamiento_inline:uploaded.inline||false,leida:false,revisada_por_admin:false,fecha:firebase.firestore.FieldValue.serverTimestamp(),fecha_ms:nowMs});
       await timeout(batch.commit(),15000,'La llegada tardó demasiado en guardarse.');
       setMessage(uploaded.inline?'Llegada confirmada. La foto se guardó en modo seguro.':'Llegada confirmada. Foto y ubicación enviadas a Admin.','success');
       return true;
+    }catch(error){
+      console.error('No se pudo completar la llegada con evidencia:',error);
+      const raw=String(error?.code||error?.message||'').toLowerCase();
+      let friendly='No se pudo guardar la foto y la llegada. Revisa tu conexión e inténtalo nuevamente.';
+      if(raw.includes('permission')||raw.includes('unauthorized'))friendly='La app no pudo guardar la foto. Avísale a Administración e inténtalo nuevamente.';
+      else if(raw.includes('network')||raw.includes('offline')||raw.includes('conexión'))friendly='No hay una conexión estable. Tu llegada todavía no se guardó; inténtalo nuevamente.';
+      else if(raw.includes('cancelada')||raw.includes('debes tomar'))friendly=error.message;
+      setMessage(friendly,'error');
+      throw new Error(friendly);
     }finally{busy=false;}
   }
   window.eliteRegisterArrivalWithProof=arrival;
