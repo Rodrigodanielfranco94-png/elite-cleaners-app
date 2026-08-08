@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0 Stable — Consolidated Search | Stable Save | Runtime Guardrails -->
+<!-- Elite Admin v9.0.1 Stable — Fixed $20/hr Payroll | Consolidated Search | Stable Save | Runtime Guardrails -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0 Stable</title>
+    <title>Elite Admin v9.0.1 Stable — $20/hr Payroll</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -1286,11 +1286,10 @@ body.elite-v5-body{
         <input type="hidden" id="edit-staff-id">
         <input type="text" id="reg-nombre" placeholder="Nombre Completo">
         <input type="email" id="reg-email" placeholder="Correo Electrónico">
-        <select id="reg-tipo-pago" onchange="actualizarCampoPagoStaff()" style="width:100%;padding:14px;margin-bottom:10px;border-radius:12px;border:1px solid #2c2c2e;background:#2c2c2e;color:white;box-sizing:border-box;font-size:15px;">
-            <option value="porcentaje_hora">25% por hora trabajada</option>
-            <option value="fijo_hora">Pago fijo por hora ($)</option>
+        <select id="reg-tipo-pago" style="width:100%;padding:14px;margin-bottom:10px;border-radius:12px;border:1px solid #2c2c2e;background:#2c2c2e;color:white;box-sizing:border-box;font-size:15px;" disabled>
+            <option value="fijo_hora" selected>Pago fijo por hora ($)</option>
         </select>
-        <input type="number" id="reg-pago" placeholder="Monto fijo por hora ($)" min="0" step="0.01" style="display:none;">
+        <input type="number" id="reg-pago" value="20" placeholder="Pago por hora ($)" min="0" step="0.01">
         <button class="reg-btn" id="btn-staff-main" onclick="registrarStaff()">GUARDAR PERSONAL</button>
         <div class="staff-list" id="lista-visual-staff"></div>
     </div>
@@ -1671,7 +1670,7 @@ style="width:100%;"></textarea>
 <div id="historial"></div>
     <div class="payroll-container">
         <div class="accordion-title" onclick="togglePayroll()">
-            Resumen de Nómina — 25% por hora a cada empleado
+            Resumen de Nómina — $20 por hora a cada empleado
             <span>⌄</span>
         </div>
 
@@ -1774,14 +1773,14 @@ style="width:100%;"></textarea>
         <div class="acc-card acc-metric"><h3>Dinero Cobrado</h3><p>Depósitos + balances</p><div class="acc-icon acc-green">👛</div><strong id="acc-cobrado" class="acc-green">$0.00</strong></div>
         <div class="acc-card acc-metric"><h3>Pendiente por Cobrar</h3><p>Cuentas por cobrar</p><div class="acc-icon acc-orange">◷</div><strong id="acc-pendiente" class="acc-orange">$0.00</strong></div>
         <div class="acc-card acc-metric"><h3>Gastos Operativos</h3><p>Combustible, productos, etc.</p><div class="acc-icon acc-red">🛒</div><strong id="acc-gastos" class="acc-red">$0.00</strong></div>
-        <div class="acc-card acc-metric"><h3>Pago de Empleados</h3><p>25% del cobrado para cada empleado</p><div class="acc-icon acc-purple">♙</div><strong id="acc-empleados" class="acc-purple">$0.00</strong></div>
+        <div class="acc-card acc-metric"><h3>Pago de Empleados</h3><p>Horas trabajadas × $20/h por empleado</p><div class="acc-icon acc-purple">♙</div><strong id="acc-empleados" class="acc-purple">$0.00</strong></div>
       </section>
       <section class="acc-card acc-panel acc-employee-panel">
-        <div class="acc-employee-heading"><div><h3>Pago semanal detallado por empleado</h3><p>Semana 1: días 1–7 · Semana 2: 8–14 · Semana 3: 15–21 · Semana 4: 22–28 · Semana 5: 29–fin de mes.</p></div><b class="acc-purple">25% por empleado</b></div>
+        <div class="acc-employee-heading"><div><h3>Pago semanal detallado por empleado</h3><p>Semana 1: días 1–7 · Semana 2: 8–14 · Semana 3: 15–21 · Semana 4: 22–28 · Semana 5: 29–fin de mes.</p></div><b class="acc-purple">$20/h por empleado</b></div>
         <div id="acc-empleados-detalle" class="acc-employee-breakdown"></div>
       </section>
       <section class="acc-row3">
-        <div class="acc-card acc-panel"><h3>Resumen Financiero del Mes</h3><div class="acc-summary-line"><span>Dinero Cobrado</span><b class="acc-green" id="acc-res-cobrado">$0.00</b></div><div class="acc-summary-line"><span>(−) Empleados primero: 25% cada uno</span><b class="acc-red" id="acc-res-nomina">-$0.00</b></div><div class="acc-summary-line"><span>(−) Gastos Operativos</span><b class="acc-red" id="acc-res-gastos">-$0.00</b></div><div class="acc-summary-line total"><span>= Fondo repartible después de empleados y gastos</span><b class="acc-green" id="acc-neta">$0.00</b></div></div>
+        <div class="acc-card acc-panel"><h3>Resumen Financiero del Mes</h3><div class="acc-summary-line"><span>Dinero Cobrado</span><b class="acc-green" id="acc-res-cobrado">$0.00</b></div><div class="acc-summary-line"><span>(−) Empleados primero: horas × $20/h</span><b class="acc-red" id="acc-res-nomina">-$0.00</b></div><div class="acc-summary-line"><span>(−) Gastos Operativos</span><b class="acc-red" id="acc-res-gastos">-$0.00</b></div><div class="acc-summary-line total"><span>= Fondo repartible después de empleados y gastos</span><b class="acc-green" id="acc-neta">$0.00</b></div></div>
         <div class="acc-card acc-panel"><h3>Distribución del restante (35% / 35% / 30%)</h3><div class="acc-distribution"><div class="acc-split"><b class="acc-blue">Rodrigo 35%</b><strong class="acc-blue" id="acc-rodrigo">$0.00</strong></div><div class="acc-split"><b class="acc-purple">Dayana 35%</b><strong class="acc-purple" id="acc-dayana">$0.00</strong></div><div class="acc-split"><b class="acc-green">Empresa 30%</b><strong class="acc-green" id="acc-empresa">$0.00</strong></div></div><div class="acc-company-money"><span>Dinero Disponible para Empresa</span><span id="acc-empresa-neto">$0.00</span></div></div>
         <div class="acc-card acc-panel"><h3>Cuentas por Cobrar</h3><div class="acc-receivable-line"><span>Total Vendido</span><b class="acc-blue" id="acc-cxc-vendido">$0.00</b></div><div class="acc-receivable-line"><span>Total Cobrado</span><b class="acc-green" id="acc-cxc-cobrado">$0.00</b></div><div class="acc-receivable-line acc-subline"><span>• Depósitos Recibidos</span><b class="acc-blue" id="acc-depositos">$0.00</b></div><div class="acc-receivable-line acc-subline"><span>• Balances Recibidos</span><b class="acc-blue" id="acc-balances">$0.00</b></div><div class="acc-receivable-line"><b>Pendiente por Cobrar</b><b class="acc-orange" id="acc-cxc-pendiente">$0.00</b></div><div class="acc-progress"><div id="acc-progress-bar" style="width:0%"></div></div><div class="acc-progress-label" id="acc-progress-label">0% cobrado</div></div>
       </section>
@@ -2147,37 +2146,28 @@ document.addEventListener("mousedown", (event) => {
   }
 });
 function actualizarCampoPagoStaff() {
-  var _a;
-  const tipo = ((_a = document.getElementById("reg-tipo-pago")) == null ? void 0 : _a.value) || "porcentaje_hora";
+  const tipo = document.getElementById("reg-tipo-pago");
   const campo = document.getElementById("reg-pago");
-  if (!campo) return;
-  campo.style.display = tipo === "fijo_hora" ? "block" : "none";
-  if (tipo === "porcentaje_hora") campo.value = "";
+  if (tipo) tipo.value = "fijo_hora";
+  if (campo) { campo.style.display = "block"; if (!Number(campo.value || 0)) campo.value = "20"; }
 }
 function registrarStaff() {
   const id = document.getElementById("edit-staff-id").value;
   const n = document.getElementById("reg-nombre").value.trim();
   const e = document.getElementById("reg-email").value.toLowerCase().trim();
-  const tipoPago = document.getElementById("reg-tipo-pago").value || "porcentaje_hora";
-  const pagoHora = tipoPago === "fijo_hora" ? Number(document.getElementById("reg-pago").value || 0) : 0;
+  const pagoHora = Number(document.getElementById("reg-pago").value || 20);
   if (!n || !e) return alert("Faltan datos por completar");
-  if (tipoPago === "fijo_hora" && pagoHora <= 0) return alert("Escribe el pago fijo por hora.");
-  const datos = {
-    nombre: n,
-    email: e,
-    tipo_pago: tipoPago,
-    pago_hora: pagoHora,
-    porcentaje_hora: tipoPago === "porcentaje_hora" ? 25 : 0
-  };
+  if (!Number.isFinite(pagoHora) || pagoHora <= 0) return alert("Escribe un pago válido por hora.");
+  const datos = { nombre:n, email:e, tipo_pago:"fijo_hora", pago_hora:pagoHora, porcentaje_hora:0 };
   if (id) db.collection("usuarios").doc(id).update(datos).then(resetStaffForm);
-  else db.collection("usuarios").add(__spreadProps(__spreadValues({}, datos), { rol: "empleado" })).then(resetStaffForm);
+  else db.collection("usuarios").add(__spreadProps(__spreadValues({}, datos), { rol:"empleado" })).then(resetStaffForm);
 }
 function resetStaffForm() {
   document.getElementById("edit-staff-id").value = "";
   document.getElementById("reg-nombre").value = "";
   document.getElementById("reg-email").value = "";
-  document.getElementById("reg-tipo-pago").value = "porcentaje_hora";
-  document.getElementById("reg-pago").value = "";
+  document.getElementById("reg-tipo-pago").value = "fijo_hora";
+  document.getElementById("reg-pago").value = "20";
   actualizarCampoPagoStaff();
   document.getElementById("btn-staff-main").innerText = "GUARDAR PERSONAL";
 }
@@ -2190,7 +2180,7 @@ db.collection("usuarios").where("rol", "==", "empleado").onSnapshot((snap) => {
     const e = doc.data();
     const id = doc.id;
     todosLosEmpleados.push(__spreadValues({ id }, e));
-    lv.innerHTML += '<div class="staff-item">\n    <div class="staff-info">\n        <b>'.concat(e.nombre, "</b>\n        <span>").concat(e.tipo_pago === "porcentaje_hora" ? "25% por hora trabajada" : "$" + (e.pago_hora || 0) + "/hr", '</span>\n    </div>\n\n    <div class="staff-actions">\n        <button class="btn-mini" style="background:#6366f1" onclick="editarStaff(\'').concat(id, "','").concat(e.nombre, "','").concat(e.email, "','").concat(e.pago_hora || 0, "','").concat(e.tipo_pago || "fijo_hora", "','").concat(e.porcentaje_hora || 0, '\')">\n            Editar\n        </button>\n\n        <button class="btn-mini" style="background:#ef4444" onclick="borrarStaff(\'').concat(id, "','").concat(e.nombre, "')\">\n            Borrar\n        </button>\n    </div>\n</div>");
+    lv.innerHTML += '<div class="staff-item">\n    <div class="staff-info">\n        <b>'.concat(e.nombre, "</b>\n        <span>").concat("$" + Number(e.pago_hora || 20).toFixed(2) + "/hr", '</span>\n    </div>\n\n    <div class="staff-actions">\n        <button class="btn-mini" style="background:#6366f1" onclick="editarStaff(\'').concat(id, "','").concat(e.nombre, "','").concat(e.email, "','").concat(e.pago_hora || 0, "','").concat(e.tipo_pago || "fijo_hora", "','").concat(e.porcentaje_hora || 0, '\')">\n            Editar\n        </button>\n\n        <button class="btn-mini" style="background:#ef4444" onclick="borrarStaff(\'').concat(id, "','").concat(e.nombre, "')\">\n            Borrar\n        </button>\n    </div>\n</div>");
   });
   generarNomina();
 });
@@ -3097,12 +3087,8 @@ async function borrar(id) {
 }
 function calcularPagoEmpleadoEnServicio(emp, servicio) {
   const horas = calcularTiempoTrabajado(servicio.hora_inicio, servicio.hora_fin).minutos / 60;
-  if (emp.tipo_pago === "porcentaje_hora") {
-    const porcentaje = Number(emp.porcentaje_hora || 25) / 100;
-    const precioServicio = Number(servicio.precio_total || servicio.precio || 0);
-    return precioServicio * porcentaje;
-  }
-  return horas * Number(emp.pago_hora || 0);
+  const tarifa = Math.max(0, Number(emp && emp.pago_hora || 20)) || 20;
+  return horas * tarifa;
 }
 function generarNomina() {
   const tabla = document.getElementById("lista-nomina");
@@ -3117,7 +3103,7 @@ function generarNomina() {
       pago += calcularPagoEmpleadoEnServicio(emp, s);
     });
     if (min > 0 || millas > 0) {
-      const modalidad = emp.tipo_pago === "porcentaje_hora" ? "25%" : "$" + Number(emp.pago_hora || 0).toFixed(2) + "/h";
+      const modalidad = "$" + Number(emp.pago_hora || 20).toFixed(2) + "/h";
       tabla.innerHTML += "\n                <tr>\n                    <td><b>".concat(emp.nombre, "</b><br><small>").concat(modalidad, "</small></td>\n                    <td>").concat(Math.floor(min / 60), "h ").concat(min % 60, "m</td>\n                    <td>").concat(millas.toFixed(1), ' mi</td>\n                    <td class="pay-amount">$').concat(pago.toFixed(2), "</td>\n                </tr>");
     }
   });
@@ -3134,7 +3120,7 @@ async function reiniciarHorasMes() {
       millas += Number(obtenerMillasServicio(s));
       pago += calcularPagoEmpleadoEnServicio(emp, s);
     });
-    return { Staff: emp.nombre, Payment_Type: emp.tipo_pago === "porcentaje_hora" ? "25% por hora trabajada" : "$".concat(Number(emp.pago_hora || 0).toFixed(2), "/hr"), Hours: "".concat(Math.floor(min / 60), "h ").concat(min % 60, "m"), Miles: millas.toFixed(1), Pay: pago.toFixed(2) };
+    return { Staff: emp.nombre, Payment_Type: "$".concat(Number(emp.pago_hora || 20).toFixed(2), "/hr"), Hours: "".concat(Math.floor(min / 60), "h ").concat(min % 60, "m"), Miles: millas.toFixed(1), Pay: pago.toFixed(2) };
   }).filter((r) => r.Hours !== "0h 0m" || Number(r.Miles) > 0);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "Jobs");
@@ -3302,8 +3288,8 @@ function editarStaff(id, n, e, p, tipoPago = "fijo_hora", porcentaje = 0) {
   document.getElementById("edit-staff-id").value = id;
   document.getElementById("reg-nombre").value = n;
   document.getElementById("reg-email").value = e;
-  document.getElementById("reg-tipo-pago").value = tipoPago === "porcentaje_hora" ? "porcentaje_hora" : "fijo_hora";
-  document.getElementById("reg-pago").value = tipoPago === "porcentaje_hora" ? "" : p;
+  document.getElementById("reg-tipo-pago").value = "fijo_hora";
+  document.getElementById("reg-pago").value = Number(p || 20) > 0 ? Number(p || 20) : 20;
   actualizarCampoPagoStaff();
   document.getElementById("btn-staff-main").innerText = "ACTUALIZAR PERSONAL";
 }
@@ -3992,20 +3978,25 @@ function obtenerEmpleadosAsignadosServicio(s) {
 }
 function calcularPagoEmpleadosServicio(s, montoCobrado) {
   if (s.estado !== "completado") {
-    return { total: 0, porcentajeTotal: 0, detalle: [], cantidad: 0 };
+    return { total:0, porcentajeTotal:0, detalle:[], cantidad:0, horas:0 };
   }
   const empleados = obtenerEmpleadosAsignadosServicio(s);
-  const base = Math.max(0, Number(montoCobrado || 0));
-  const pagoPorEmpleado = base * 0.25;
-  const detalle = empleados.map((e) => __spreadProps(__spreadValues({}, e), {
-    porcentaje: 25,
-    monto: pagoPorEmpleado
-  }));
+  const minutos = Math.max(0, Number(calcularTiempoTrabajado(s.hora_inicio, s.hora_fin).minutos || 0));
+  const horas = minutos / 60;
+  const detalle = empleados.map((e) => {
+    const ficha = (todosLosEmpleados || []).find((emp) =>
+      String(emp.email || "").trim().toLowerCase() === String(e.email || "").trim().toLowerCase() ||
+      String(emp.nombre || "").trim().toLowerCase() === String(e.nombre || "").trim().toLowerCase()
+    ) || {};
+    const tarifaHora = Math.max(0, Number(ficha.pago_hora || 20)) || 20;
+    return __spreadProps(__spreadValues({}, e), { tarifaHora, horas, monto:horas * tarifaHora });
+  });
   return {
-    total: detalle.reduce((sum, e) => sum + e.monto, 0),
-    porcentajeTotal: empleados.length * 25,
+    total: detalle.reduce((sum,e)=>sum+Number(e.monto||0),0),
+    porcentajeTotal:0,
     detalle,
-    cantidad: empleados.length
+    cantidad:empleados.length,
+    horas
   };
 }
 function obtenerDatosContabilidad(mesForzado) {
@@ -4143,7 +4134,7 @@ function renderDetalleEmpleadosContabilidad(d) {
     const nombre = document.createElement("b");
     nombre.textContent = e.nombre || "Empleado";
     const info = document.createElement("small");
-    info.textContent = "25% · " + Number(e.servicios || 0) + (Number(e.servicios || 0) === 1 ? " trabajo cobrado" : " trabajos cobrados");
+    info.textContent = "$20/h · " + Number(e.servicios || 0) + (Number(e.servicios || 0) === 1 ? " trabajo completado" : " trabajos completados");
     const monto = document.createElement("strong");
     monto.textContent = dinero(e.monto || 0);
     const semanas = document.createElement("div");
@@ -4167,7 +4158,7 @@ function renderTablaContabilidad(d) {
   body.innerHTML = d.filas.length ? d.filas.sort((a, b) => a.fecha.localeCompare(b.fecha)).map((f) => {
     var _a;
     const cls = f.estadoPago === "Pagado" ? "paid" : f.estadoPago === "Depósito" ? "deposit" : f.estadoPago === "Parcial" ? "partial" : "unpaid";
-    const empleadosTexto = ((_a = f.empleadosDetalle) == null ? void 0 : _a.length) ? f.empleadosDetalle.map((e) => "".concat(e.nombre, ": ").concat(dinero(e.monto), " (25%)")).join("<br>") : "—";
+    const empleadosTexto = ((_a = f.empleadosDetalle) == null ? void 0 : _a.length) ? f.empleadosDetalle.map((e) => "".concat(e.nombre, ": ").concat(Number(e.horas || 0).toFixed(2), " h × $").concat(Number(e.tarifaHora || 20).toFixed(2), " = ").concat(dinero(e.monto))).join("<br>") : "—";
     return "<tr>\n          <td>".concat(f.fecha, "</td>\n          <td>").concat(f.cliente, "</td>\n          <td>").concat(f.servicio, "</td>\n          <td>").concat(dinero(f.vendido), "</td>\n          <td>").concat(dinero(f.cobrado), "</td>\n          <td>").concat(dinero(f.pendiente), "</td>\n          <td>").concat(empleadosTexto, "</td>\n          <td>").concat(dinero(f.pagoEmpleados), " (").concat(f.porcentajeEmpleados, "%)</td>\n          <td>").concat(dinero(f.restanteEmpresaBruto), "</td>\n          <td>").concat(dinero(f.rodrigo), "</td>\n          <td>").concat(dinero(f.dayana), "</td>\n          <td>").concat(dinero(f.empresa), '</td>\n          <td><span class="acc-status ').concat(cls, '">').concat(f.estadoPago, "</span></td>\n        </tr>");
   }).join("") : '<tr><td colspan="13" class="acc-empty">No hay servicios registrados en este mes.</td></tr>';
   foot.innerHTML = '<tr>\n    <td colspan="3">TOTALES</td>\n    <td>'.concat(dinero(d.vendido), "</td>\n    <td>").concat(dinero(d.cobrado), "</td>\n    <td>").concat(dinero(d.pendiente), "</td>\n    <td></td>\n    <td>").concat(dinero(d.pagoEmpleados), "</td>\n    <td>").concat(dinero(d.fondoEmpresaAntesGastos), "</td>\n    <td>").concat(dinero(d.rodrigo), "</td>\n    <td>").concat(dinero(d.dayana), "</td>\n    <td>").concat(dinero(d.empresa), "</td>\n    <td></td>\n  </tr>");
@@ -4294,7 +4285,7 @@ async function cerrarMesContable() {
   const d = obtenerDatosContabilidad();
   if (cierresContables.some((c) => c.mes === d.mes && c.cerrado === true)) return alert("Este mes ya está cerrado.");
   if (!confirm("¿Cerrar contablemente ".concat(d.mes, "? Los trabajos NO serán eliminados."))) return;
-  await db.collection("cierres_contables").doc(d.mes).set({ mes: d.mes, cerrado: true, fecha_cierre: (/* @__PURE__ */ new Date()).toISOString(), resumen: { vendido: d.vendido, cobrado: d.cobrado, pendiente: d.pendiente, nomina_25_por_cada_empleado: d.pagoEmpleados, fondo_empresa_antes_gastos: d.fondoEmpresaAntesGastos, gastos: d.gastos, ganancia_real: d.gananciaReal, rodrigo: d.rodrigo, dayana: d.dayana, empresa: d.empresa }, timestamp: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+  await db.collection("cierres_contables").doc(d.mes).set({ mes: d.mes, cerrado: true, fecha_cierre: (/* @__PURE__ */ new Date()).toISOString(), resumen: { vendido: d.vendido, cobrado: d.cobrado, pendiente: d.pendiente, nomina_horas_a_20_por_hora: d.pagoEmpleados, fondo_empresa_antes_gastos: d.fondoEmpresaAntesGastos, gastos: d.gastos, ganancia_real: d.gananciaReal, rodrigo: d.rodrigo, dayana: d.dayana, empresa: d.empresa }, timestamp: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
   const batch = db.batch();
   d.trabajos.forEach((s) => batch.update(db.collection("servicios").doc(s.id), { mes_contable: d.mes, mes_cerrado: true }));
   await batch.commit();
@@ -4309,7 +4300,7 @@ function exportarContabilidadExcel() {
     Pendiente: d.pendiente,
     Depósitos: d.depositos,
     Balances: d.balances,
-    "Empleados primero (25% cada uno)": d.pagoEmpleados,
+    "Empleados primero (horas × $20/h)": d.pagoEmpleados,
     "Fondo empresa antes de gastos": d.fondoEmpresaAntesGastos,
     Gastos: d.gastos,
     "Fondo repartible": d.gananciaReal,
@@ -4325,9 +4316,9 @@ function exportarContabilidadExcel() {
     Cobrado: f.cobrado,
     Pendiente: f.pendiente,
     Empleados: f.empleados,
-    "Detalle pago empleados": f.empleadosDetalle.map((e) => "".concat(e.nombre, ": ").concat(dinero(e.monto), " (25%)")).join(" | "),
+    "Detalle pago empleados": f.empleadosDetalle.map((e) => "".concat(e.nombre, ": ").concat(Number(e.horas || 0).toFixed(2), " h × $").concat(Number(e.tarifaHora || 20).toFixed(2), " = ").concat(dinero(e.monto))).join(" | "),
     "Pago total empleados": f.pagoEmpleados,
-    "Porcentaje total empleados": f.porcentajeEmpleados + "%",
+    "Horas por empleado": (f.empleadosDetalle[0] ? Number(f.empleadosDetalle[0].horas || 0).toFixed(2) : "0.00"),
     "Restante después de empleados": f.restanteEmpresaBruto,
     "Rodrigo 35%": f.rodrigo,
     "Dayana 35%": f.dayana,
@@ -4873,7 +4864,7 @@ function eliteV51SetLayout(module) {
   }
   if (module === "empleados") {
     [staff, payroll].forEach((x) => eliteV51Show(x, true));
-    eliteV51PageHeader("Empleados", "Gestión de personal y nómina: 25% por hora a cada empleado.");
+    eliteV51PageHeader("Empleados", "Gestión de personal y nómina: $20 por hora trabajada para cada empleado.");
     staff == null ? void 0 : staff.classList.add("open");
   }
   if (module === "servicios") {
@@ -13199,7 +13190,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 })();
 </script>
 
-<!-- ===== ELITE ADMIN v9.0 STABLE — CONSOLIDATED RUNTIME ===== -->
+<!-- ===== ELITE ADMIN v9.0.1 STABLE — $20/HR PAYROLL + CONSOLIDATED RUNTIME ===== -->
 <style id="elite-admin-v900-stable-css">
   #elite-service-search-box input{min-width:0;flex:1}
   #elite-v900-health{display:none;position:fixed;right:12px;bottom:12px;z-index:9999999;padding:9px 11px;border-radius:10px;background:#052e16;color:#bbf7d0;border:1px solid #22c55e;font:700 10px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35)}
@@ -13288,10 +13279,10 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 
   function health(){
     let box=byId('elite-v900-health');if(!box){box=document.createElement('div');box.id='elite-v900-health';document.body.appendChild(box)}
-    box.textContent='Admin v9.0 Stable · Firebase '+(typeof db!=='undefined'?'OK':'pendiente')+' · Buscar '+(byId('buscarTrabajo')?'OK':'pendiente');
+    box.textContent='Admin v9.0.1 Stable · Nómina $20/h · Firebase '+(typeof db!=='undefined'?'OK':'pendiente')+' · Buscar '+(byId('buscarTrabajo')?'OK':'pendiente');
   }
 
-  function boot(){installSearch();guardServiceSave();health();console.info('[Elite Admin] v9.0 Stable activo')}
+  function boot(){installSearch();guardServiceSave();health();console.info('[Elite Admin] v9.0.1 Stable activo · nómina por hora')}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,0));else setTimeout(boot,0);
   // Reinstala solo si un módulo reconstruye físicamente el buscador.
   new MutationObserver(()=>{const i=byId('buscarTrabajo');if(i&&i.dataset.eliteV900!=='1')installSearch();guardServiceSave()}).observe(document.documentElement,{childList:true,subtree:true});
@@ -13299,5 +13290,29 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 })();
 </script>
 
+
+<script id="elite-v901-hourly-payroll-migration">
+(function(){
+  'use strict';
+  const DEFAULT_RATE=20;
+  async function migrateLegacyStaff(){
+    try{
+      if(typeof db==='undefined'||!db?.collection)return;
+      const snap=await db.collection('usuarios').where('rol','==','empleado').get();
+      const batch=db.batch(); let changed=0;
+      snap.forEach(doc=>{
+        const e=doc.data()||{};
+        if(e.tipo_pago==='porcentaje_hora' || !Number(e.pago_hora||0)){
+          batch.set(doc.ref,{tipo_pago:'fijo_hora',pago_hora:DEFAULT_RATE,porcentaje_hora:0,nomina_actualizada_v901:true},{merge:true});
+          changed++;
+        }
+      });
+      if(changed){ await batch.commit(); console.info('[Elite Admin] '+changed+' empleado(s) migrados a $20/h'); }
+    }catch(err){ console.warn('[Elite Admin] No se pudo migrar la nómina heredada; la app seguirá calculando $20/h localmente.',err); }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(migrateLegacyStaff,800));
+  else setTimeout(migrateLegacyStaff,800);
+})();
+</script>
 </body>
 </html>
