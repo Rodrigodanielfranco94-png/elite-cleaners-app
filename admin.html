@@ -12291,6 +12291,52 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
       status("success", "Servicio guardado con ID ".concat(id, ". Algunas repeticiones no pudieron crearse; el trabajo principal está seguro."));
     }
   }
+  function resetServiceFormAfterSave() {
+    const form = get("main-form");
+    if (!form) return;
+
+    form.querySelectorAll("input, textarea, select").forEach((field) => {
+      if (field.tagName === "SELECT") {
+        const defaultIndex = Array.from(field.options).findIndex((option) => option.defaultSelected);
+        field.selectedIndex = defaultIndex >= 0 ? defaultIndex : 0;
+      } else if (field.type === "checkbox" || field.type === "radio") {
+        field.checked = field.defaultChecked;
+      } else {
+        field.value = field.defaultValue || "";
+      }
+      field.classList.remove("is-valid", "is-invalid");
+    });
+
+    ["suggestions-clientes", "suggestions-1", "suggestions-2", "suggestions-3"].forEach((id) => {
+      const list = get(id);
+      if (list) {
+        list.innerHTML = "";
+        list.style.display = "none";
+      }
+    });
+
+    const correction = get("admin-correction");
+    if (correction) correction.style.display = "none";
+    const cancel = get("cancel-edit");
+    if (cancel) cancel.style.display = "none";
+    const button = get("main-button");
+    if (button) button.textContent = "ASIGNAR TRABAJO";
+
+    if (typeof selectType === "function") selectType("ESTÁNDAR");
+    ["precio_total", "precio_inicial", "precio_recurrente"].forEach((id) => {
+      const priceField = get(id);
+      if (priceField) priceField.value = "";
+    });
+
+    form.querySelectorAll(".accordion-section").forEach((section) => {
+      section.classList.toggle("open", section.id === "sec-cliente");
+    });
+
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      document.activeElement.blur();
+    }
+    form.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
   window.asignarTrabajo = async function() {
     var _a, _b, _c, _d, _e;
     if (saving) return;
@@ -12332,9 +12378,9 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
       const search = get("buscarTrabajo");
       if (search) search.value = "";
       if (typeof renderHistorial === "function") renderHistorial();
-      (_e = get("historial")) == null ? void 0 : _e.scrollIntoView({ behavior: "smooth", block: "start" });
       status("success", "Servicio guardado correctamente ✅ ID: ".concat(ref.id));
       secondary(data, ref.id);
+      resetServiceFormAfterSave();
       setTimeout(() => {
         if (typeof renderHistorial === "function") renderHistorial();
       }, 250);
@@ -12348,7 +12394,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
       saving = false;
       if (button) {
         button.disabled = false;
-        button.textContent = editId ? "GUARDAR CAMBIOS" : original;
+        button.textContent = String(value("edit-id")).trim() ? "GUARDAR CAMBIOS" : "ASIGNAR TRABAJO";
       }
     }
   };
