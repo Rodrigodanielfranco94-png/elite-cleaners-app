@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin Core v8.6.9 — Real-Time Client Payment Alerts | Short Private Contract Link | Primary-First Service Save -->
+<!-- Elite Admin v9.0 Stable — Consolidated Search | Stable Save | Runtime Guardrails -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v8.7.0 — Direct Payment Review</title>
+    <title>Elite Admin v9.0 Stable</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -13198,5 +13198,106 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   };
 })();
 </script>
+
+<!-- ===== ELITE ADMIN v9.0 STABLE — CONSOLIDATED RUNTIME ===== -->
+<style id="elite-admin-v900-stable-css">
+  #elite-service-search-box input{min-width:0;flex:1}
+  #elite-v900-health{display:none;position:fixed;right:12px;bottom:12px;z-index:9999999;padding:9px 11px;border-radius:10px;background:#052e16;color:#bbf7d0;border:1px solid #22c55e;font:700 10px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  body.elite-v900-debug #elite-v900-health{display:block}
+</style>
+<script id="elite-admin-v900-stable-js">
+(function(){
+  'use strict';
+  const VERSION='9.0.0';
+  const state={searchRefreshTimer:0,searchRefreshBusy:false,searchSeq:0};
+  const byId=id=>document.getElementById(id);
+  const text=v=>String(v==null?'':v);
+
+  async function refreshServices(query,seq){
+    if(!query||state.searchRefreshBusy||typeof db==='undefined'||!db?.collection)return;
+    const history=byId('historial');
+    if(history?.querySelector('.card-servicio'))return;
+    state.searchRefreshBusy=true;
+    try{
+      const snap=await db.collection('servicios').get();
+      if(seq!==state.searchSeq)return;
+      const fresh=[];snap.forEach(doc=>fresh.push({...doc.data(),id:doc.id,firestore_id:doc.id}));
+      if(typeof todosLosServicios!=='undefined'&&Array.isArray(todosLosServicios)){
+        todosLosServicios.length=0;fresh.forEach(x=>todosLosServicios.push(x));window.todosLosServicios=todosLosServicios;
+      }else window.todosLosServicios=fresh;
+      if(typeof window.renderHistorial==='function')window.renderHistorial();
+    }catch(e){console.error('[Admin v9] No se pudo refrescar Servicios',e)}
+    finally{state.searchRefreshBusy=false}
+  }
+
+  function runSearch(){
+    const input=byId('buscarTrabajo');
+    if(!input)return;
+    window.eliteServicioFocoId='';window.eliteServicioFocoTipo='';
+    const clear=byId('elite-service-search-clear');
+    if(clear)clear.style.display=input.value?'inline-flex':'none';
+    try{if(typeof window.renderHistorial==='function')window.renderHistorial()}catch(e){console.error('[Admin v9] Error de búsqueda',e)}
+    const seq=++state.searchSeq;
+    clearTimeout(state.searchRefreshTimer);
+    state.searchRefreshTimer=setTimeout(()=>refreshServices(input.value.trim(),seq),420);
+  }
+
+  function clearSearch(){
+    const input=byId('buscarTrabajo');if(!input)return;
+    input.value='';runSearch();input.focus();
+  }
+
+  function replaceWithCleanClone(el){
+    if(!el)return null;
+    const clone=el.cloneNode(true);
+    clone.removeAttribute('oninput');clone.removeAttribute('onkeyup');clone.removeAttribute('onsearch');clone.removeAttribute('onchange');clone.removeAttribute('onclick');
+    clone.dataset.eliteSearchBound='1';clone.dataset.eliteV900='1';
+    el.replaceWith(clone);return clone;
+  }
+
+  function installSearch(){
+    let input=byId('buscarTrabajo');
+    if(!input)return;
+    if(input.dataset.eliteV900!=='1')input=replaceWithCleanClone(input);
+    let button=byId('elite-service-search-button');
+    if(button?.dataset.eliteV900!=='1')button=replaceWithCleanClone(button);
+    let clear=byId('elite-service-search-clear');
+    if(clear?.dataset.eliteV900!=='1')clear=replaceWithCleanClone(clear);
+    if(input&&!input.dataset.eliteV900Bound){
+      input.dataset.eliteV900Bound='1';
+      input.addEventListener('input',runSearch,{passive:true});
+      input.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();clearSearch()}else if(e.key==='Enter'){e.preventDefault();runSearch()}});
+    }
+    if(button&&!button.dataset.eliteV900Bound){button.dataset.eliteV900Bound='1';button.addEventListener('click',runSearch)}
+    if(clear&&!clear.dataset.eliteV900Bound){clear.dataset.eliteV900Bound='1';clear.addEventListener('click',clearSearch)}
+  }
+
+  // Public API kept for legacy buttons and modules.
+  window.eliteRunServiceSearch=runSearch;
+  window.eliteClearServiceSearch=clearSearch;
+
+  // Prevent accidental double submission even if old modules invoke asignarTrabajo twice.
+  function guardServiceSave(){
+    const fn=window.asignarTrabajo;
+    if(typeof fn!=='function'||fn.__eliteV900Guarded)return;
+    let locked=false;
+    const guarded=async function(){if(locked)return;locked=true;try{return await fn.apply(this,arguments)}finally{locked=false}};
+    guarded.__eliteV900Guarded=true;guarded.__eliteV900Original=fn;window.asignarTrabajo=guarded;
+    try{asignarTrabajo=guarded}catch(_){}
+  }
+
+  function health(){
+    let box=byId('elite-v900-health');if(!box){box=document.createElement('div');box.id='elite-v900-health';document.body.appendChild(box)}
+    box.textContent='Admin v9.0 Stable · Firebase '+(typeof db!=='undefined'?'OK':'pendiente')+' · Buscar '+(byId('buscarTrabajo')?'OK':'pendiente');
+  }
+
+  function boot(){installSearch();guardServiceSave();health();console.info('[Elite Admin] v9.0 Stable activo')}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,0));else setTimeout(boot,0);
+  // Reinstala solo si un módulo reconstruye físicamente el buscador.
+  new MutationObserver(()=>{const i=byId('buscarTrabajo');if(i&&i.dataset.eliteV900!=='1')installSearch();guardServiceSave()}).observe(document.documentElement,{childList:true,subtree:true});
+  window.EliteAdminV9=Object.freeze({version:VERSION,runSearch,clearSearch,health});
+})();
+</script>
+
 </body>
 </html>
