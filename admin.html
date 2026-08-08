@@ -1961,7 +1961,7 @@ function verFirma(id) {
     fechaTexto = "Firmado digitalmente el: " + f.toLocaleDateString() + " " + f.toLocaleTimeString();
   }
   document.getElementById("modal-fecha").innerText = fechaTexto;
-  document.getElementById("modal-info-firma").innerHTML = "\n<p><b>📅 Fecha del trabajo:</b> ".concat(servicio.fecha_trabajo_firma || servicio.fecha || "No registrada", "</p>\n\n<p><b>⏰ Hora del trabajo:</b> ").concat(servicio.hora_trabajo_firma || servicio.hora || "No registrada", "</p>\n\n<p><b>✍️ Fecha de firma:</b> ").concat(fechaTexto, "</p>\n\n<p><b>👤 Cliente:</b> ").concat(servicio.cliente_firma || servicio.cliente || "No registrado", "</p>\n\n<p><b>📍 Dirección:</b> ").concat(servicio.direccion || "No registrada", "</p>\n\n<p><b>💵 Total del servicio:</b> $").concat(Number(servicio.precio_total || 0).toFixed(2), "</p>\n\n<p><b>✅ Depósito pagado:</b> $").concat(Number(servicio.deposito_monto || 0).toFixed(2), "</p>\n\n<p><b>💰 Balance restante:</b> $").concat(Number(servicio.balance_restante || 0).toFixed(2), "</p>\n\n<p><b>🧾 Método depósito:</b> ").concat(servicio.metodo_pago_deposito || "No registrado", "</p>\n\n<p><b>📅 Fecha pago depósito:</b> ").concat(servicio.fecha_pago_deposito || "No registrada", "</p>\n\n<p><b>🏢 Empresa:</b> Elite Cleaners Company</p>\n\n<p><b>👥 Representantes:</b> Rodrigo Franco / Dayana Pimiento</p>\n");
+  document.getElementById("modal-info-firma").innerHTML = "\n<p><b>📅 Fecha del trabajo:</b> ".concat(servicio.fecha_trabajo_firma || servicio.fecha || "No registrada", "</p>\n\n<p><b>⏰ Hora del trabajo:</b> ").concat(servicio.hora_trabajo_firma || servicio.hora || "No registrada", "</p>\n\n<p><b>✍️ Fecha de firma:</b> ").concat(fechaTexto, "</p>\n\n<p><b>👤 Cliente:</b> ").concat(servicio.cliente_firma || servicio.cliente || "No registrado", "</p>\n\n<p><b>📍 Dirección:</b> ").concat(servicio.direccion || "No registrada", "</p>\n\n<p><b>💵 Total del servicio:</b> $").concat(Number(servicio.precio_total || 0).toFixed(2), "</p>\n\n<p><b>✅ Depósito pagado:</b> $").concat(Number(servicio.deposito_monto || 0).toFixed(2), "</p>\n\n<p><b>💰 Balance restante:</b> $").concat(Number(servicio.balance_restante || 0).toFixed(2), "</p>\n\n<p><b>🧾 Método de depósito:</b> ").concat(servicio.metodo_pago_deposito || "No registrado", "</p>\n\n<p><b>📅 Fecha pago depósito:</b> ").concat(servicio.fecha_pago_deposito || "No registrada", "</p>\n\n<p><b>🏢 Empresa:</b> Elite Cleaners Company</p>\n\n<p><b>👥 Representantes:</b> Rodrigo Franco / Dayana Pimiento</p>\n");
   document.getElementById("modal-img-firma").src = servicio.firma_imagen || "";
   document.getElementById("modal-firma").style.display = "block";
 }
@@ -3167,7 +3167,7 @@ function confirmarDeposito(id) {
     deposito_pagado: true,
     notificacion_deposito: false,
     fecha_pago_deposito: (/* @__PURE__ */ new Date()).toISOString(),
-    metodo_pago_deposito: "Confirmado manualmente por Admin",
+    metodo_pago_deposito: "Confirmado manualmente por Administración",
     estado_pago: "deposito_pagado"
   });
 }
@@ -12768,7 +12768,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   window.confirmarDeposito = async function(id) {
     if (!confirm("¿Confirmas que el cliente ya pagó el depósito?\n\nEl Invoice cambiará automáticamente a PARTIALLY PAID.")) return;
     try {
-      await updatePayment(id, { deposito_pagado: true, notificacion_deposito: false, fecha_pago_deposito: (/* @__PURE__ */ new Date()).toISOString(), metodo_pago_deposito: "Confirmado manualmente por Admin", estado_pago: "deposito_pagado" }, "Depósito confirmado. El Invoice fue actualizado a PARTIALLY PAID.");
+      await updatePayment(id, { deposito_pagado: true, notificacion_deposito: false, fecha_pago_deposito: (/* @__PURE__ */ new Date()).toISOString(), metodo_pago_deposito: "Confirmado manualmente por Administración", estado_pago: "deposito_pagado" }, "Depósito confirmado. El Invoice fue actualizado a PARTIALLY PAID.");
     } catch (error) {
       console.error(error);
       alert("No se pudo confirmar el depósito. Inténtalo nuevamente.");
