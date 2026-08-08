@@ -3012,6 +3012,16 @@ function renderHistorial() {
   const h = document.getElementById("historial");
   h.innerHTML = "";
   todosLosServicios.sort(eliteCompararServiciosFechaHora);
+  const searchInput = document.getElementById("buscarTrabajo");
+  const textoBusquedaActual = ((searchInput == null ? void 0 : searchInput.value) || "").trim();
+  const busquedaActualNormalizada = normalizarTexto(textoBusquedaActual);
+  const hayBusquedaActual = busquedaActualNormalizada.length > 0;
+  const hayCoincidenciaPorCliente = hayBusquedaActual && todosLosServicios.some((servicio) => {
+    const nombreServicio = normalizarTexto(servicio.cliente || "");
+    const ficha = todosLosClientes.find((cliente) => normalizarTexto(cliente.nombre || "") === nombreServicio);
+    const nombres = normalizarTexto((servicio.cliente || "") + " " + ((ficha == null ? void 0 : ficha.nombre) || ""));
+    return nombres.includes(busquedaActualNormalizada);
+  });
   todosLosServicios.forEach((s) => {
     var _a;
     const eliteServicioFocoId = String(window.eliteServicioFocoId || "");
@@ -3020,10 +3030,16 @@ function renderHistorial() {
     const clienteGuardado = todosLosClientes.find(
       (c) => (c.nombre || "").toLowerCase() === (s.cliente || "").toLowerCase()
     );
+    const contenidoCliente = normalizarTexto(
+      (s.cliente || "") + " " + ((clienteGuardado == null ? void 0 : clienteGuardado.nombre) || "")
+    );
     const contenidoTrabajo = "\n    ".concat(s.cliente || "", "\n    ").concat(s.direccion || "", "\n    ").concat(s.fecha || "", "\n    ").concat(s.hora || "", "\n    ").concat(s.tipo || "", "\n    ").concat(s.empleado_nombre || "", "\n    ").concat(s.empleado_nombre_2 || "", "\n    ").concat(s.precio_total || "", "\n    ").concat(s.whatsapp || "", "\n    ").concat(s.email_cliente || "", "\n    ").concat(s.repetir || "", "\n    ").concat((clienteGuardado == null ? void 0 : clienteGuardado.nombre) || "", "\n    ").concat((clienteGuardado == null ? void 0 : clienteGuardado.direccion) || "", "\n    ").concat((clienteGuardado == null ? void 0 : clienteGuardado.telefono) || "", "\n    ").concat((clienteGuardado == null ? void 0 : clienteGuardado.whatsapp) || "", "\n    ").concat((clienteGuardado == null ? void 0 : clienteGuardado.email) || "", "\n").toLowerCase();
     const contenidoNormalizado = normalizarTexto(contenidoTrabajo + "\n" + (s.empleado_nombre_3 || "") + "\n" + (s.empleado_email_3 || ""));
     const busquedaNormalizada = normalizarTexto(textoBusqueda);
-    if (busquedaNormalizada && !contenidoNormalizado.includes(busquedaNormalizada)) return;
+    if (busquedaNormalizada) {
+      if (hayCoincidenciaPorCliente && !contenidoCliente.includes(busquedaNormalizada)) return;
+      if (!hayCoincidenciaPorCliente && !contenidoNormalizado.includes(busquedaNormalizada)) return;
+    }
     const hayBusqueda = textoBusqueda.length > 0;
     if (!hayBusqueda) {
       const ahoraLocal = /* @__PURE__ */ new Date();
@@ -3052,6 +3068,9 @@ function renderHistorial() {
       document.getElementById("edit-btn-".concat(s.id)).onclick = () => editar(s.id, s);
     }
   });
+  if (hayBusquedaActual && h.children.length === 0) {
+    h.innerHTML = '<div style="padding:24px;text-align:center;border:1px dashed #3b82f6;border-radius:14px;color:#94a3b8;margin:12px 0;">No se encontraron trabajos que coincidan con “' + textoBusquedaActual.replace(/[&<>"']/g, "") + '”.</div>';
+  }
 }
 function toggleDetalles(id) {
   const box = document.getElementById("detalles-" + id);
@@ -11868,18 +11887,17 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     window.eliteServicioFocoTipo = "";
     const clear = document.getElementById("elite-service-search-clear");
     if (clear) clear.style.display = input && input.value ? "inline-flex" : "none";
-    cancelAnimationFrame(serviceSearchFrame);
-    serviceSearchFrame = requestAnimationFrame(function() {
-      try {
-        if (typeof window.renderHistorial === "function") {
-          window.renderHistorial();
-        } else {
-          console.warn("El buscador no pudo encontrar la función renderHistorial.");
-        }
-      } catch (error) {
-        console.error("Error al buscar servicios:", error);
+    // Filtrar inmediatamente en cada pulsación. No esperamos al siguiente frame,
+    // porque iOS puede agrupar o cancelar esos frames mientras el teclado está abierto.
+    try {
+      if (typeof window.renderHistorial === "function") {
+        window.renderHistorial();
+      } else {
+        console.warn("El buscador no pudo encontrar la función renderHistorial.");
       }
-    });
+    } catch (error) {
+      console.error("Error al buscar servicios:", error);
+    }
     clearTimeout(serviceSearchRefreshTimer);
     serviceSearchRefreshTimer = setTimeout(function() {
       refreshServicesFromFirebaseIfNeeded(String((input == null ? void 0 : input.value) || "").trim());
