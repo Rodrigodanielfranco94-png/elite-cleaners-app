@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Elite Staff v9.0 Stable | Consolidated Arrival, Workflow and Catalog Guards -->
+<!-- Elite Staff v9.1 Stable | Real Job View + Consolidated Arrival, Workflow and Catalog Guards -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#000000">
-  <title>Elite Staff v9.0 Stable</title>
+  <title>Elite Staff v9.1 Stable</title>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -3980,6 +3980,136 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',health);else health();
   window.EliteStaffV9=Object.freeze({version:VERSION,stableWorkflow,stableArrival});
   console.info('[Elite Staff] v9.0 Stable activo');
+})();
+</script>
+
+<!-- ===== ELITE STAFF v9.1 STABLE — REAL JOB VIEW + IOS SAFE ACCESS ===== -->
+<style id="elite-staff-v910-job-view-css">
+  body.elite-work-view-open{overflow:hidden!important;touch-action:auto}
+  .card.elite-work-view{
+    position:fixed!important;inset:0!important;z-index:900000!important;
+    width:100%!important;max-width:none!important;height:100dvh!important;
+    margin:0!important;padding:calc(14px + env(safe-area-inset-top)) max(18px,calc((100vw - 760px)/2)) calc(28px + env(safe-area-inset-bottom))!important;
+    overflow-y:auto!important;overscroll-behavior:contain;background:#05070b!important;
+    border:0!important;border-radius:0!important;-webkit-overflow-scrolling:touch;
+  }
+  .card.elite-work-view .elite-access-job-btn{display:none!important}
+  .elite-work-view-toolbar{position:sticky;top:calc(-14px - env(safe-area-inset-top));z-index:30;margin:calc(-14px - env(safe-area-inset-top)) 0 18px;padding:calc(12px + env(safe-area-inset-top)) 0 12px;background:rgba(5,7,11,.97);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid #1f2937}
+  .elite-work-view-back{min-height:46px;padding:10px 16px;border:1px solid #3b82f6;border-radius:13px;background:#0f172a;color:#dbeafe;font-weight:950;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .elite-work-view-label{margin-top:8px;color:#64748b;font-size:9px;font-weight:900;letter-spacing:.8px;text-transform:uppercase}
+  .elite-work-view .header-card{cursor:default!important}
+  @media(max-width:560px){.card.elite-work-view{padding-left:16px!important;padding-right:16px!important}}
+</style>
+<script id="elite-staff-v910-job-view-js">
+(function(){
+  'use strict';
+  const VERSION='9.1.0';
+  let activeServiceId='';
+  let savedScrollY=0;
+  let restoring=false;
+
+  function findCard(serviceId){
+    if(!serviceId)return null;
+    const cards=document.querySelectorAll('.card[data-service-id]');
+    for(const card of cards){
+      if(String(card.dataset.serviceId||'')===String(serviceId))return card;
+    }
+    return null;
+  }
+
+  function addToolbar(card){
+    let toolbar=card.querySelector(':scope > .elite-work-view-toolbar');
+    if(toolbar)return toolbar;
+    toolbar=document.createElement('div');
+    toolbar.className='elite-work-view-toolbar';
+    const back=document.createElement('button');
+    back.type='button';
+    back.className='elite-work-view-back';
+    back.textContent='← VOLVER A MIS TRABAJOS';
+    back.addEventListener('click',closeJobView);
+    const label=document.createElement('div');
+    label.className='elite-work-view-label';
+    label.textContent='Trabajo abierto · Staff v9.1';
+    toolbar.append(back,label);
+    card.insertBefore(toolbar,card.firstChild);
+    return toolbar;
+  }
+
+  function showJobView(serviceId,options={}){
+    const id=String(serviceId||'');
+    const card=findCard(id);
+    if(!card){
+      if(!options.silent && typeof setMessage==='function')setMessage('El trabajo todavía se está cargando. Intenta nuevamente en un momento.','info');
+      return false;
+    }
+    if(!activeServiceId)savedScrollY=window.scrollY||0;
+    activeServiceId=id;
+    document.querySelectorAll('.card.elite-work-view').forEach(other=>{if(other!==card)other.classList.remove('elite-work-view')});
+    document.body.classList.add('elite-work-view-open');
+    card.classList.add('elite-work-view');
+    addToolbar(card);
+    card.scrollTop=0;
+    return true;
+  }
+
+  function closeJobView(){
+    const previous=activeServiceId;
+    activeServiceId='';
+    document.querySelectorAll('.card.elite-work-view').forEach(card=>card.classList.remove('elite-work-view'));
+    document.body.classList.remove('elite-work-view-open');
+    if(previous){
+      requestAnimationFrame(()=>{
+        const card=findCard(previous);
+        if(card)card.scrollIntoView({behavior:'auto',block:'start'});
+        else window.scrollTo(0,savedScrollY);
+      });
+    }
+  }
+
+  // Firestore vuelve a construir las tarjetas en cada cambio de etapa. Reabrimos
+  // el mismo servicio para que el empleado no sea expulsado al confirmar GPS,
+  // llegada, inicio, pausa, fotos, checklist o finalización.
+  const previousRender=typeof renderMergedJobs==='function'?renderMergedJobs:null;
+  if(previousRender){
+    renderMergedJobs=function(){
+      const id=activeServiceId;
+      const result=previousRender.apply(this,arguments);
+      if(id&&!restoring){
+        restoring=true;
+        requestAnimationFrame(()=>{try{showJobView(id,{silent:true})}finally{restoring=false}});
+      }
+      return result;
+    };
+  }
+
+  // v7.3 conectaba este botón a una función que solamente hacía scroll sobre
+  // la misma tarjeta. Interceptamos esa acción antes del handler antiguo.
+  document.addEventListener('click',event=>{
+    const target=event.target&&event.target.closest?event.target.closest('.elite-access-job-btn'):null;
+    if(!target)return;
+    const card=target.closest('.card[data-service-id]');
+    if(!card)return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    showJobView(card.dataset.serviceId);
+  },true);
+
+  // El encabezado también permite abrir el trabajo, útil si el empleado toca
+  // directamente el nombre del cliente en iPhone/iPad.
+  document.addEventListener('click',event=>{
+    const header=event.target&&event.target.closest?event.target.closest('.card[data-service-id] > .header-card'):null;
+    if(!header||header.closest('.elite-work-view'))return;
+    const card=header.closest('.card[data-service-id]');
+    if(!card)return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    showJobView(card.dataset.serviceId);
+  },true);
+
+  window.eliteOpenStaffJob=showJobView;
+  window.eliteCloseStaffJob=closeJobView;
+  window.EliteStaffV91=Object.freeze({version:VERSION,openJob:showJobView,closeJob:closeJobView});
+  console.info('[Elite Staff] v9.1 Stable · vista real de trabajo activa');
 })();
 </script>
 
