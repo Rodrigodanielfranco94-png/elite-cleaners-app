@@ -10254,8 +10254,21 @@ var __spreadValues = (a, b) => {
       return;
     }
     if (tab === "history") {
-      const events = [["🚗 En camino", s.hora_en_camino], ["📍 Llegada", s.hora_llegada], ["🧹 Inicio", s.hora_inicio], ["☕ Pausa", s.hora_pausa], ["▶ Reanudación", s.hora_reanudacion], ["✅ Finalización", s.hora_fin]].filter((x) => x[1]);
-      body.innerHTML = '<div class="ops-v71-panel"><div class="ops-v71-help">Recorrido cronológico completo del trabajo.</div><div class="ops-v71-list">'.concat(events.map((e) => '<div class="ops-v71-item done"><span class="mark">✓</span><div><b>'.concat(e[0], "</b><small>").concat(esc(typeof opsStaffTime === "function" ? opsStaffTime(e[1]) : e[1]), "</small></div></div>")).join("") || '<div class="ops-v71-empty">No hay eventos registrados.</div>', "</div></div>");
+      body.innerHTML = '<div class="ops-v71-panel"><div class="ops-v71-empty">Cargando el historial completo de Staff…</div></div>';
+      let events = [], pauses = [];
+      try {
+        const eventSnap = await db.collection("servicios").doc(id).collection("eventos_staff").orderBy("fecha_ms", "asc").get();
+        eventSnap.forEach((d) => events.push(d.data() || {}));
+      } catch (e) {
+        events = [["En camino", s.hora_en_camino], ["Llegada", s.hora_llegada], ["Inicio", s.hora_inicio], ["Pausa", s.hora_pausa], ["Reanudación", s.hora_reanudacion], ["Finalización", s.hora_fin]].filter((x) => x[1]).map((x) => ({ etiqueta:x[0], hora:x[1], empleado_nombre:s.actualizado_por_staff_nombre || "Staff" }));
+      }
+      try {
+        const pauseSnap = await db.collection("servicios").doc(id).collection("pausas_staff").orderBy("inicio_ms", "asc").get();
+        pauseSnap.forEach((d) => pauses.push(d.data() || {}));
+      } catch (e) {}
+      const eventHtml = events.map((e) => '<div class="ops-v71-item done"><span class="mark">✓</span><div><b>'.concat(esc(e.etiqueta || e.tipo || "Evento"), "</b><small>").concat(esc(e.empleado_nombre || "Staff"), " · ").concat(esc(typeof opsStaffTime === "function" ? opsStaffTime(e.hora) : e.hora || "Hora no registrada"), "</small></div></div>")).join("");
+      const pauseHtml = pauses.map((p, i) => '<div class="ops-v71-item"><span class="mark">☕</span><div><b>Descanso '.concat(i + 1, " · ").concat(esc(p.empleado_nombre || "Staff"), "</b><small>").concat(esc(p.inicio_texto || "Sin inicio"), " – ").concat(esc(p.fin_texto || (p.estado === "abierta" ? "En curso" : "Sin final")), " · ").concat(Number(p.duracion_minutos || 0), " min</small></div></div>")).join("");
+      body.innerHTML = '<div class="ops-v71-panel"><div class="ops-v71-help"><b>Historial completo del trabajo</b><br>Muestra quién realizó cada acción, las horas registradas y todos los descansos.</div><div class="ops-v71-list">'.concat(eventHtml || '<div class="ops-v71-empty">No hay entradas, salidas ni cambios registrados.</div>', pauseHtml ? '<div class="ops-v902-history-title">Descansos registrados</div>'.concat(pauseHtml) : '<div class="ops-v71-empty">No hay descansos registrados.</div>', '<div class="ops-v71-item"><span class="mark">⏱</span><div><b>Resumen</b><small>Tiempo trabajado: ').concat(esc(typeof opsWorkedTime === "function" ? opsWorkedTime(s) : s.tiempo_trabajado_texto || "No disponible"), " · Pausa total: ").concat(Number(s.pausa_total_minutos || 0), " min</small></div></div></div></div>");
       return;
     }
   }
@@ -13312,6 +13325,80 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(migrateLegacyStaff,800));
   else setTimeout(migrateLegacyStaff,800);
+})();
+</script>
+<style id="elite-ops-calendar-v902-css">
+/* v9.0.2: calendario operativo sin la columna lateral */
+#ops-center-modal-v601 .ops-side{display:none!important}
+#ops-center-modal-v601 .ops-layout{grid-template-columns:minmax(280px,.78fr) minmax(0,1.72fr)!important}
+#ops-center-modal-v601 .ops-timeline-card[style*="grid-column"]{grid-column:1/-1!important}
+#ops-center-modal-v601 .ops-month-grid{width:100%;min-width:0;overflow:visible;grid-template-columns:repeat(7,minmax(0,1fr))}
+#ops-center-modal-v601 .ops-month-job{display:block;width:100%;border:0;text-align:left;cursor:pointer;font-family:inherit}
+.ops-v902-history-title{margin:14px 0 7px;color:#1d4ed8;font-weight:900;font-size:12px;text-transform:uppercase}
+@media(max-width:1100px){#ops-center-modal-v601 .ops-layout{grid-template-columns:1fr!important}}
+@media(max-width:700px){
+ #ops-center-modal-v601 .ops-shell{overflow-x:hidden}
+ #ops-center-modal-v601 .ops-month-grid{gap:2px;padding:4px}
+ #ops-center-modal-v601 .ops-month-weekday{font-size:7px;padding:5px 0;overflow:hidden}
+ #ops-center-modal-v601 .ops-month-day{min-width:0;min-height:76px;padding:3px;border-radius:7px}
+ #ops-center-modal-v601 .ops-month-num{font-size:13px;margin-bottom:3px}
+ #ops-center-modal-v601 .ops-month-job{font-size:6.5px;padding:3px 2px;margin:2px 0}
+}
+</style>
+<script id="elite-ops-calendar-v902-js">
+(function(){
+  "use strict";
+  function resetOperationalLayout(view){
+    const timeline=document.querySelector("#ops-center-modal-v601 .ops-timeline-card");
+    const detail=document.querySelector("#ops-center-modal-v601 .ops-detail-card");
+    if(!timeline||!detail)return;
+    if(view==="day"){
+      timeline.style.gridColumn="";
+      detail.style.display="";
+    }else{
+      timeline.style.gridColumn="1 / -1";
+      detail.style.display="none";
+    }
+  }
+  window.opsOpenCalendarDay=function(dateKey){
+    opsCalendarDate=new Date(dateKey+"T12:00:00");
+    opsCalendarView="day";
+    resetOperationalLayout("day");
+    renderCentroOperacionesV601();
+  };
+  window.opsOpenCalendarJob=function(jobId,dateKey){
+    opsSelectedJobId=jobId;
+    opsCalendarDate=new Date(dateKey+"T12:00:00");
+    opsCalendarView="day";
+    resetOperationalLayout("day");
+    renderCentroOperacionesV601();
+    requestAnimationFrame(function(){
+      const detail=document.getElementById("ops-job-detail");
+      if(detail)detail.scrollIntoView({behavior:"smooth",block:"start"});
+    });
+  };
+  window.renderOpsMonth=function(){
+    const y=opsCalendarDate.getFullYear(),m=opsCalendarDate.getMonth();
+    const first=new Date(y,m,1),start=new Date(y,m,1-first.getDay());
+    let html='<div class="ops-month-grid">'+["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"].map(d=>'<div class="ops-month-weekday">'+d+'</div>').join("");
+    const all=[];
+    for(let i=0;i<42;i++){
+      const d=new Date(start); d.setDate(start.getDate()+i);
+      const key=opsDateKey(d),jobs=opsJobsForDate(key); all.push(...jobs);
+      html+='<div class="ops-month-day '+(d.getMonth()!==m?'muted ':'')+(key===opsDateKey(new Date())?'today':'')+'" onclick="opsOpenCalendarDay(\''+key+'\')"><div class="ops-month-num">'+d.getDate()+'</div>'+
+        jobs.slice(0,3).map(s=>'<button type="button" class="ops-month-job '+opsStateClass(s)+'" onclick="event.stopPropagation();opsOpenCalendarJob(\''+s.id+'\',\''+key+'\')" title="Abrir ficha completa · '+opsStateLabel(s)+'">'+(s.hora||'')+' '+(s.cliente||'')+'</button>').join('')+
+        (jobs.length>3?'<small>+'+(jobs.length-3)+' más</small>':'')+'</div>';
+    }
+    html+='</div>';
+    document.getElementById("ops-timeline").innerHTML=html;
+    document.getElementById("ops-list-title").textContent="Vista mensual";
+    document.getElementById("ops-list-badge").textContent=all.length;
+    resetOperationalLayout("month");
+    updateOpsMetrics(all);
+    renderOpsInventory();
+  };
+  const originalSetOpsView=window.setOpsView;
+  window.setOpsView=function(view){resetOperationalLayout(view);return originalSetOpsView(view)};
 })();
 </script>
 </body>
