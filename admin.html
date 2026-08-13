@@ -1466,7 +1466,7 @@ body.elite-v5-body{
 <div style="grid-column:1 / -1;">
 <span class="label-text">Nombre de los espacios independientes</span>
 <input type="text" id="nombres_espacios_independientes" placeholder="Ej: Estudio de bienestar, Espacio multiuso">
-<small style="display:block;color:#94a3b8;margin:-4px 0 10px;">Separa los nombres con una coma. Cada espacio se calcula al precio de una habitación.</small>
+<small style="display:block;color:#94a3b8;margin:-4px 0 10px;">Separa los nombres con una coma. Cada espacio independiente se agrega como extra por $50.</small>
 </div>
 
 </div>
@@ -2125,6 +2125,8 @@ function filtrarClientes() {
       asignar("millas_servicio", c.millas_servicio || c.millas_total || "");
       asignar("pies_cuadrados", c.pies_cuadrados || c.pies2 || c.square_feet || "");
       asignar("habitaciones", c.habitaciones || "");
+      asignar("espacios_independientes", c.espacios_independientes || "");
+      asignar("nombres_espacios_independientes", c.nombres_espacios_independientes || "");
       asignar("banos", c.banos || "");
       asignar("medios_banos", c.medios_banos || "");
       lista.innerHTML = "";
@@ -2303,6 +2305,7 @@ const ELITE_PRICING = {
     },
     otros_tipos: 45,
     perros: 50,
+    espacio_independiente: 50,
     alfombra_habitacion: 35,
     alfombra_ft2: 0.15,
     milla: 0.22
@@ -2346,7 +2349,7 @@ function calcularPrecioAutomatico() {
   total += valorNumero("salas") * ELITE_PRICING.ambientes.sala;
   total += valorNumero("cocinas") * ELITE_PRICING.ambientes.cocina;
   total += valorNumero("oficinas") * ELITE_PRICING.ambientes.oficina;
-  total += valorNumero("espacios_independientes") * ELITE_PRICING.ambientes.habitacion;
+  total += valorNumero("espacios_independientes") * ELITE_PRICING.extras.espacio_independiente;
   total += valorNumero("lavanderia") * ELITE_PRICING.ambientes.lavanderia;
   total += valorNumero("garaje") * ELITE_PRICING.ambientes.garaje;
   total += valorNumero("comedor") * ELITE_PRICING.ambientes.comedor;
@@ -2640,6 +2643,8 @@ async function asignarTrabajo() {
         salas: data.salas || "",
         cocinas: data.cocinas || "",
         oficinas: data.oficinas || "",
+        espacios_independientes: data.espacios_independientes || "",
+        nombres_espacios_independientes: data.nombres_espacios_independientes || "",
         horno: data.horno || "No",
         nevera: data.nevera || "No",
         gabinetes: data.gabinetes || "No",
@@ -8014,13 +8019,11 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     };
     const names = String(s.nombres_espacios_independientes || "").split(",").map(translateSpaceName).filter(Boolean);
     const independentCount = qty(s.espacios_independientes);
-    const independentText = independentCount ? "".concat(independentCount, " detached space(s)").concat(names.length ? " (" + names.join(", ") + ")" : "") : "";
     const areas = [
       qty(s.habitaciones) && "".concat(qty(s.habitaciones), " bedroom(s)"),
       qty(s.banos) && "".concat(qty(s.banos), " bathroom(s)"),
       qty(s.medios_banos) && "".concat(qty(s.medios_banos), " half bathroom(s)"),
       qty(s.oficinas) && "".concat(qty(s.oficinas), " office(s)"),
-      independentText,
       qty(s.cocinas) && "".concat(qty(s.cocinas), " kitchen(s)"),
       qty(s.salas) && "".concat(qty(s.salas), " living room(s)"),
       qty(s.comedor) && "".concat(qty(s.comedor), " dining room(s)"),
@@ -8028,6 +8031,10 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
       qty(s.garaje || s.garage) && "".concat(qty(s.garaje || s.garage), " garage(s)"),
       qty(s.sala_juegos) && "".concat(qty(s.sala_juegos), " game room(s)")
     ].filter(Boolean).join(", ");
+    for (let i = 0; i < independentCount; i++) {
+      const spaceName = names[i] || "Detached space " + (i + 1);
+      add(spaceName + " (detached-space extra)", 1, (pricing.extras || {}).espacio_independiente || 50);
+    }
     const optionLabel = (opt) => String(opt || "").replace("1 Puerta", "1 Door").replace("2 Puertas", "2 Doors").replace("Sí", "Included");
     const extraMap = [
       ["Oven", s.horno, s.horno === "Outside" ? 20 : s.horno === "Inside" ? 65 : s.horno === "Inside + Outside" ? 85 : 0],
@@ -12303,6 +12310,10 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   async function secondary(data, id) {
     try {
       await db.collection("clientes").doc(data.cliente).set({ nombre: data.cliente, direccion: data.direccion, whatsapp: data.whatsapp, telefono: data.whatsapp, email: data.email_cliente, millas_servicio: data.millas_servicio || 0, repetir: data.repetir || "ninguno", pies_cuadrados: data.pies_cuadrados || "", habitaciones: data.habitaciones || "", banos: data.banos || "", medios_banos: data.medios_banos || "", salas: data.salas || "", cocinas: data.cocinas || "", oficinas: data.oficinas || "", horno: data.horno || "No", nevera: data.nevera || "No", gabinetes: data.gabinetes || "No", ventanas: data.ventanas || "No", baseboards: data.baseboards || "No", perros: data.perros || "No", lavanderia: data.lavanderia || "", garaje: data.garaje || "", comedor: data.comedor || "", sala_juegos: data.sala_juegos || "", alfombra_habitaciones: data.alfombra_habitaciones || "", alfombra_pies_cuadrados: data.alfombra_pies_cuadrados || "", alfombra_notas: data.alfombra_notas || "", notas_internas: data.notas_internas || "" }, { merge: true });
+      await db.collection("clientes").doc(data.cliente).set({
+        espacios_independientes: data.espacios_independientes || "",
+        nombres_espacios_independientes: data.nombres_espacios_independientes || ""
+      }, { merge: true });
     } catch (e) {
       console.warn("Servicio guardado; no se actualizó la ficha del cliente.", e);
     }
