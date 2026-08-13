@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#000000">
-  <title>Elite Staff v9.1 Stable</title>
+  <title>Elite Staff v9.2 Stable</title>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -4029,7 +4029,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     back.addEventListener('click',closeJobView);
     const label=document.createElement('div');
     label.className='elite-work-view-label';
-    label.textContent='Trabajo abierto · Staff v9.1';
+    label.textContent='Trabajo abierto · Staff v9.2';
     toolbar.append(back,label);
     card.insertBefore(toolbar,card.firstChild);
     return toolbar;
@@ -4110,6 +4110,226 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   window.eliteCloseStaffJob=closeJobView;
   window.EliteStaffV91=Object.freeze({version:VERSION,openJob:showJobView,closeJob:closeJobView});
   console.info('[Elite Staff] v9.1 Stable · vista real de trabajo activa');
+})();
+</script>
+
+<!-- ===== ELITE STAFF v9.2 — CONSOLIDATED ARRIVAL RECOVERY ===== -->
+<script id="elite-staff-v920-arrival-recovery">
+(function(){
+  'use strict';
+  const VERSION='9.2.0';
+  const nonArrivalWorkflow=typeof window.updateWorkflow==='function'?window.updateWorkflow:null;
+  let activeArrival=null;
+
+  const delayReject=(ms,message)=>new Promise((_,reject)=>setTimeout(()=>reject(new Error(message)),ms));
+  const timed=(promise,ms,message)=>Promise.race([promise,delayReject(ms,message)]);
+
+  function captureArrivalPhoto(){
+    return new Promise((resolve,reject)=>{
+      const input=document.createElement('input');
+      input.type='file';
+      input.accept='image/*';
+      input.capture='environment';
+      input.className='elite-arrival-camera-input';
+      input.style.cssText='position:fixed;left:-10000px;top:0;width:1px;height:1px;opacity:0;pointer-events:none';
+      document.body.appendChild(input);
+      let settled=false;
+      const finish=()=>setTimeout(()=>input.remove(),250);
+      input.addEventListener('change',()=>{
+        if(settled)return;
+        settled=true;
+        const file=input.files&&input.files[0];
+        finish();
+        file?resolve(file):reject(new Error('La fotografía fue cancelada.'));
+      },{once:true});
+      input.addEventListener('cancel',()=>{
+        if(settled)return;
+        settled=true;
+        finish();
+        reject(new Error('La fotografía fue cancelada.'));
+      },{once:true});
+      input.click();
+    });
+  }
+
+  function decodeImage(file){
+    if(typeof createImageBitmap==='function'){
+      return createImageBitmap(file).catch(()=>decodeWithImageElement(file));
+    }
+    return decodeWithImageElement(file);
+  }
+
+  function decodeWithImageElement(file){
+    return new Promise((resolve,reject)=>{
+      const url=URL.createObjectURL(file);
+      const img=new Image();
+      img.onload=()=>{URL.revokeObjectURL(url);resolve(img)};
+      img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('El iPhone no pudo preparar esta fotografía. Toma otra foto e inténtalo nuevamente.'))};
+      img.src=url;
+    });
+  }
+
+  function canvasBlob(canvas,quality){
+    return new Promise((resolve,reject)=>canvas.toBlob(
+      blob=>blob?resolve(blob):reject(new Error('No se pudo convertir la fotografía.')),
+      'image/jpeg',quality
+    ));
+  }
+
+  async function prepareArrivalPhoto(file){
+    if(!file||!String(file.type||'').startsWith('image/'))throw new Error('Selecciona una fotografía válida.');
+    if(Number(file.size||0)>25*1024*1024)throw new Error('La fotografía es demasiado grande.');
+    const source=await decodeImage(file);
+    const sourceWidth=Number(source.width||source.naturalWidth||0);
+    const sourceHeight=Number(source.height||source.naturalHeight||0);
+    if(!sourceWidth||!sourceHeight)throw new Error('No se pudo leer la fotografía.');
+    let scale=Math.min(1,1280/Math.max(sourceWidth,sourceHeight));
+    let quality=.72;
+    let blob=null;
+    for(let attempt=0;attempt<6;attempt++){
+      const canvas=document.createElement('canvas');
+      canvas.width=Math.max(1,Math.round(sourceWidth*scale));
+      canvas.height=Math.max(1,Math.round(sourceHeight*scale));
+      const context=canvas.getContext('2d',{alpha:false});
+      context.fillStyle='#fff';
+      context.fillRect(0,0,canvas.width,canvas.height);
+      context.drawImage(source,0,0,canvas.width,canvas.height);
+      blob=await canvasBlob(canvas,quality);
+      if(blob.size<=520000)break;
+      scale*=.82;
+      quality=Math.max(.48,quality-.07);
+    }
+    if(source&&typeof source.close==='function')source.close();
+    if(!blob||blob.size>700000)throw new Error('No se pudo reducir la fotografía a un tamaño seguro.');
+    return blob;
+  }
+
+  function blobDataUrl(blob){
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(String(reader.result||''));
+      reader.onerror=()=>reject(new Error('No se pudo preparar la fotografía.'));
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  function arrivalLocation(){
+    return new Promise((resolve,reject)=>{
+      if(!navigator.geolocation)return reject(new Error('GPS no disponible.'));
+      navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:12000,maximumAge:60000});
+    });
+  }
+
+  async function savePhoto(blob,serviceId,meta){
+    const filename=Date.now()+'_'+Math.random().toString(36).slice(2,9)+'.jpg';
+    const paths=[
+      'servicios/'+serviceId+'/arrival/'+filename,
+      'servicios/'+serviceId+'/antes/arrival_'+filename,
+      'servicios/'+serviceId+'/evidence/arrival_'+filename
+    ];
+    let storageError=null;
+    try{await timed(ensureStorageAuthentication(),10000,'No se pudo autenticar el almacenamiento.')}catch(error){storageError=error}
+    if(!storageError){
+      for(const path of paths){
+        try{
+          const ref=storage.ref().child(path);
+          const upload=await timed(ref.put(blob,{contentType:'image/jpeg',customMetadata:meta}),35000,'La foto tardó demasiado en subir.');
+          const url=await timed(upload.ref.getDownloadURL(),10000,'No se pudo confirmar la foto subida.');
+          return {url,path,inline:false};
+        }catch(error){storageError=error}
+      }
+    }
+    const dataUrl=await blobDataUrl(blob);
+    if(dataUrl.length>760000)throw storageError||new Error('La fotografía no pudo guardarse.');
+    return {url:dataUrl,path:'inline-firestore',inline:true,storageError:String(storageError&&(storageError.code||storageError.message)||'')};
+  }
+
+  async function registerArrival(serviceId){
+    if(activeArrival)return activeArrival;
+    if(!currentUser)throw new Error('No existe una sesión activa de Staff.');
+
+    // Debe comenzar durante el toque del usuario para que Safari permita abrir la cámara.
+    const photoPromise=captureArrivalPhoto();
+    const locationPromise=arrivalLocation().catch(()=>null);
+
+    activeArrival=(async()=>{
+      try{
+        const file=await photoPromise;
+        setMessage('Foto tomada. Guardando tu llegada…','info');
+        const serviceRef=db.collection('servicios').doc(String(serviceId));
+        const [snapshot,position,blob]=await Promise.all([
+          timed(serviceRef.get(),12000,'No se pudo abrir el trabajo.'),
+          locationPromise,
+          prepareArrivalPhoto(file)
+        ]);
+        if(!snapshot.exists)throw new Error('El trabajo ya no existe.');
+        const job={id:String(serviceId),...snapshot.data()};
+        if(hasRealTime(job.hora_llegada)||job.llegada_verificada_con_foto===true){
+          setMessage('La llegada ya estaba registrada correctamente.','success');
+          return true;
+        }
+        if(!position)throw new Error('Activa la ubicación para confirmar que llegaste a la propiedad.');
+
+        const now=new Date();
+        const nowMs=now.getTime();
+        const timeText=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true}).toLowerCase();
+        const coords={lat:Number(position.coords.latitude),lon:Number(position.coords.longitude),accuracy:Number(position.coords.accuracy||0)};
+        const meta={servicioId:String(serviceId),tipo:'arrival',area:'Fachada / número de casa',staffEmail:String(currentUser.email||''),staffNombre:String(currentUser.nombre||'')};
+        const saved=await savePhoto(blob,String(serviceId),meta);
+        const photoRef=serviceRef.collection('fotos').doc();
+        const photoReference='servicios/'+serviceId+'/fotos/'+photoRef.id;
+        const authUid=(auth.currentUser&&auth.currentUser.uid)||'';
+        const photoData={url:saved.url,path:saved.path,tipo:'arrival',area:'Fachada / número de casa',detalle:'Evidencia obligatoria de llegada',staff_email:currentUser.email,staff_nombre:currentUser.nombre,auth_uid:authUid,gps:coords,almacenamiento_inline:saved.inline,timestamp:firebase.firestore.FieldValue.serverTimestamp()};
+
+        // Cuando Storage no está disponible, la evidencia inline debe guardarse antes
+        // de marcar la llegada. Así nunca queda una llegada sin fotografía.
+        if(saved.inline)await timed(photoRef.set(photoData),15000,'No se pudo guardar la fotografía de llegada.');
+
+        const serviceUpdate={etapa_staff:'llego',estado:'no_iniciado',estado_calendario:'pendiente',hora_llegada:timeText,llegada_timestamp:firebase.firestore.FieldValue.serverTimestamp(),llegada_ms:nowMs,gps_llegada:coords,foto_llegada_url:saved.inline?'':saved.url,foto_llegada_path:saved.path,foto_llegada_id:photoRef.id,foto_llegada_ref:photoReference,llegada_verificada_con_foto:true,llegada_foto_inline:saved.inline,ultima_actualizacion:firebase.firestore.FieldValue.serverTimestamp(),actualizado_por_staff_email:currentUser.email,actualizado_por_staff_nombre:currentUser.nombre};
+        await timed(serviceRef.update(serviceUpdate),15000,'No se pudo registrar la llegada en el servicio.');
+
+        if(!saved.inline){
+          try{await timed(photoRef.set(photoData),12000,'No se pudo crear la galería.')}catch(error){console.warn('[Staff v9.2] La llegada quedó guardada; galería pendiente.',error)}
+        }
+
+        // Eventos y avisos son secundarios: nunca deben cancelar una llegada válida.
+        const eventRef=serviceRef.collection('eventos_staff').doc();
+        const notificationRef=db.collection('notificaciones_admin').doc();
+        Promise.allSettled([
+          eventRef.set({tipo:'llegada_con_foto',etiqueta:'Llegada verificada con foto',hora:timeText,fecha:firebase.firestore.FieldValue.serverTimestamp(),fecha_ms:nowMs,gps:coords,foto_url:saved.inline?'':saved.url,foto_id:photoRef.id,foto_ref:photoReference,empleado_nombre:currentUser.nombre,empleado_email:currentUser.email}),
+          notificationRef.set({tipo:'llegada_staff',titulo:'📍 Empleado llegó al servicio',mensaje:currentUser.nombre+' llegó al servicio de '+safeText(job.cliente,'cliente')+'.',servicio_id:String(serviceId),cliente:safeText(job.cliente,'Servicio'),direccion:safeText(job.direccion,'Dirección no disponible'),empleado_nombre:currentUser.nombre,empleado_email:currentUser.email,hora_llegada:timeText,foto_url:saved.inline?'':saved.url,foto_llegada_url:saved.inline?'':saved.url,foto_llegada_id:photoRef.id,foto_llegada_path:saved.path,foto_llegada_ref:photoReference,latitud:coords.lat,longitud:coords.lon,precision_gps:coords.accuracy,ubicacion:{lat:coords.lat,lng:coords.lon,latitud:coords.lat,longitud:coords.lon},gps:coords,almacenamiento_inline:saved.inline,leida:false,revisada_por_admin:false,fecha:firebase.firestore.FieldValue.serverTimestamp(),fecha_ms:nowMs})
+        ]).then(results=>results.forEach((result,index)=>{if(result.status==='rejected')console.warn('[Staff v9.2] Aviso secundario '+index+' pendiente.',result.reason)}));
+
+        setMessage('Llegada confirmada. La foto y la ubicación quedaron guardadas.','success');
+        return true;
+      }catch(error){
+        console.error('[Staff v9.2] Error de llegada:',error);
+        const raw=String(error&&error.message||error||'');
+        if(/cancelada/i.test(raw)){setMessage('La llegada no se registró porque se canceló la fotografía.','info');throw new Error('Actualización cancelada')}
+        let message=raw||'No se pudo registrar la llegada.';
+        if(/permission|unauthorized/i.test(String(error&&error.code||'')+' '+raw))message='La configuración de permisos impidió guardar la llegada. Comunícate con Administración.';
+        else if(/network|offline|conexión|tardó demasiado/i.test(raw))message='La conexión no fue estable y la llegada no se guardó. Inténtalo nuevamente.';
+        setMessage(message,'error');
+        // El manejador visual ya mostró el detalle; evita una segunda alerta duplicada.
+        throw new Error('Actualización cancelada');
+      }finally{
+        activeArrival=null;
+      }
+    })();
+    return activeArrival;
+  }
+
+  async function workflow(serviceId,nextStage,inspectionConfirmed=false){
+    if(nextStage==='llego')return registerArrival(serviceId);
+    if(typeof nonArrivalWorkflow!=='function')throw new Error('El flujo del servicio no está disponible.');
+    return nonArrivalWorkflow.call(this,serviceId,nextStage,inspectionConfirmed);
+  }
+
+  window.eliteRegisterArrivalWithProof=registerArrival;
+  window.updateWorkflow=workflow;
+  try{updateWorkflow=workflow}catch(_){}
+  window.EliteStaffV92=Object.freeze({version:VERSION,registerArrival,workflow});
+  console.info('[Elite Staff] v9.2 Stable · llegada consolidada activa');
 })();
 </script>
 
