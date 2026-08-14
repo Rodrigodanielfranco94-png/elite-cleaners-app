@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0.1 Stable — Fixed $20/hr Payroll | Consolidated Search | Stable Save | Runtime Guardrails -->
+<!-- Elite Admin v9.0.3 Stable — Safe Calendar Consolidation | Fixed $20/hr Payroll | Stable Save -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.1 Stable — $20/hr Payroll</title>
+    <title>Elite Admin v9.0.3 Stable — Calendario consolidado</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -3361,78 +3361,6 @@ function solicitarResenaGoogle(nombre, telefono) {
   const mensaje = "Hello ".concat(nombre, ",\n\nThank you for choosing ").concat(empresa, ". 🌟\n\nIt was a pleasure serving you.\n\nWe would truly appreciate your feedback.\n\nPlease tap the secure link below to leave us a Google review:\n\n").concat(linkGoogle, "\n\nThank you again for trusting Elite Cleaners Company.");
   abrirSMS(telefono, mensaje);
 }
-let fechaCalendario = /* @__PURE__ */ new Date();
-function abrirCalendarioElite() {
-  document.getElementById("elite-calendar-modal").style.display = "block";
-  renderCalendarioElite();
-}
-function cerrarCalendarioElite() {
-  document.getElementById("elite-calendar-modal").style.display = "none";
-}
-function cambiarMes(dir) {
-  fechaCalendario.setMonth(fechaCalendario.getMonth() + dir);
-  renderCalendarioElite();
-}
-function obtenerColorEvento(estado, estadoPrincipal) {
-  if (estadoPrincipal === "completado") return "#22c55e";
-  if (estadoPrincipal === "en_progreso") return "#f97316";
-  if (estadoPrincipal === "no_iniciado") return "#a855f7";
-  if (estado === "no_seguro") return "#ef4444";
-  if (estado === "cita") return "#22c55e";
-  if (estado === "completado") return "#22c55e";
-  return "#a855f7";
-}
-function renderCalendarioElite() {
-  const grid = document.getElementById("calendar-grid");
-  const title = document.getElementById("calendar-title");
-  grid.innerHTML = "";
-  const meses = [
-    "ENERO",
-    "FEBRERO",
-    "MARZO",
-    "ABRIL",
-    "MAYO",
-    "JUNIO",
-    "JULIO",
-    "AGOSTO",
-    "SEPTIEMBRE",
-    "OCTUBRE",
-    "NOVIEMBRE",
-    "DICIEMBRE"
-  ];
-  const year = fechaCalendario.getFullYear();
-  const month = fechaCalendario.getMonth();
-  title.innerText = "".concat(meses[month], " ").concat(year);
-  const primerDia = new Date(year, month, 1);
-  const ultimoDia = new Date(year, month + 1, 0);
-  const inicioSemana = primerDia.getDay();
-  const totalDias = ultimoDia.getDate();
-  for (let i = 0; i < inicioSemana; i++) {
-    const vacio = document.createElement("div");
-    grid.appendChild(vacio);
-  }
-  for (let dia = 1; dia <= totalDias; dia++) {
-    const fechaTexto = "".concat(year, "-").concat(String(month + 1).padStart(2, "0"), "-").concat(String(dia).padStart(2, "0"));
-    const eventos = todosLosServicios.filter((s) => s.fecha === fechaTexto).sort(eliteCompararServiciosFechaHora);
-    const box = document.createElement("div");
-    box.style.background = "#f3f4f6";
-    box.style.borderRadius = "14px";
-    box.style.padding = "8px";
-    box.style.minHeight = "85px";
-    box.style.border = "1px solid #d1d5db";
-    box.style.cursor = "pointer";
-    let html = '\n            <div style="\n            font-weight:bold;\n            color:#111827;\n            margin-bottom:5px;\n            ">\n            '.concat(dia, "\n            </div>\n        ");
-    eventos.slice(0, 3).forEach((ev) => {
-      html += "\n            <div onclick=\"event.stopPropagation(); abrirEditorEvento('".concat(ev.id, '\')" style="\n            background:').concat(obtenerColorEvento(ev.estado_calendario, ev.estado), ';\n            padding:3px 5px;\n            border-radius:6px;\n            font-size:9px;\n            margin-bottom:3px;\n            color:#111827;\n            font-weight:bold;\n            overflow:hidden;\n            white-space:nowrap;\n            text-overflow:ellipsis;\n            cursor:pointer;\n            ">\n            ').concat(ev.repetir && ev.repetir !== "ninguno" ? "🔁 " : "").concat(ev.cliente, "\n            </div>\n            ");
-    });
-    if (eventos.length > 3) {
-      html += '\n            <div style="\n            font-size:9px;\n            color:#8e8e93;\n            ">\n            +'.concat(eventos.length - 3, " más\n            </div>\n            ");
-    }
-    box.innerHTML = html;
-    box.onclick = () => mostrarEventosDia(fechaTexto);
-    grid.appendChild(box);
-  }
-}
 function abrirEditorEvento(id) {
   const ev = todosLosServicios.find((s) => s.id === id);
   if (!ev) return alert("Trabajo no encontrado");
@@ -3467,9 +3395,7 @@ async function guardarEditorEvento() {
   }
   await db.collection("servicios").doc(id).update(datosActualizar);
   cerrarEditorEvento();
-  renderCalendarioElite();
-  const nuevaFecha = document.getElementById("edit-cal-fecha").value;
-  mostrarEventosDia(nuevaFecha);
+  if (typeof renderCentroOperacionesV601 === "function") renderCentroOperacionesV601();
   alert("Evento actualizado ✅");
 }
 async function eliminarEventoCalendario() {
@@ -3511,34 +3437,6 @@ async function eliminarEventoCalendario() {
     }
   }
 }
-function mostrarEventosDia(fecha) {
-  const cont = document.getElementById("calendar-day-events");
-  const eventos = todosLosServicios.filter((s) => s.fecha === fecha).sort(eliteCompararServiciosFechaHora);
-  cont.innerHTML = '\n        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:15px;">\n          <h3 style="color:#f59e0b;margin:0;">'.concat(fecha, '</h3>\n          <button type="button"\n                  onclick="agregarTrabajoDesdeCalendario(\'').concat(fecha, '\')"\n                  style="border:0;border-radius:10px;background:#2563eb;color:white;padding:10px 13px;font-weight:800;cursor:pointer;">\n            + Agregar trabajo\n          </button>\n        </div>\n    ');
-  if (eventos.length === 0) {
-    cont.innerHTML += '\n          <div style="background:#f3f4f6;border:1px dashed #94a3b8;border-radius:14px;padding:18px;text-align:center;color:#475569;">\n            No hay trabajos este día.<br>\n            <button type="button"\n                    onclick="agregarTrabajoDesdeCalendario(\''.concat(fecha, '\')"\n                    style="margin-top:12px;border:0;border-radius:10px;background:#2563eb;color:white;padding:11px 14px;font-weight:800;cursor:pointer;">\n              Agendar aquí\n            </button>\n          </div>');
-    return;
-  }
-  eventos.forEach((ev) => {
-    cont.innerHTML += '\n            <div style="background:#f3f4f6; border-radius:18px; padding:15px; margin-bottom:12px; border-left:6px solid '.concat(obtenerColorEvento(ev.estado_calendario, ev.estado), ';">\n                <div onclick="abrirEditorEvento(\'').concat(ev.id, '\')" style="font-weight:bold; font-size:17px; color:#111827; cursor:pointer;">\n                    ').concat(ev.repetir && ev.repetir !== "ninguno" ? "🔁 " : "").concat(ev.cliente, '\n                </div>\n\n                <div style="color:#374151; margin-top:6px; font-size:13px;">\n    ⏰ ').concat(formatAMPM(ev.hora), "\n</div>\n\n").concat(ev.hora_fin && ev.hora_fin !== "--:--" ? '\n    <div style="color:#22c55e; margin-top:4px; font-size:13px; font-weight:bold;">\n        ✅ Terminado: '.concat(formatAMPM(ev.hora_fin), "\n    </div>\n") : "", '\n\n<div style="color:#374151; margin-top:4px; font-size:13px;">\n    📍 ').concat(ev.direccion || "", '\n</div>\n\n                <div style="color:#7c3aed; margin-top:4px; font-size:13px; font-weight:bold;">\n                    🔁 ').concat(ev.repetir === "ninguno" ? "Única vez" : ev.repetir || "Única vez", "\n                </div>\n            </div>\n        ");
-  });
-}
-window.agregarTrabajoDesdeCalendario = function(fecha) {
-  cerrarEliteV5ModuleModal == null ? void 0 : cerrarEliteV5ModuleModal();
-  if (typeof eliteV51SetLayout === "function") eliteV51SetLayout("servicios");
-  if (typeof eliteV5SetActive === "function") eliteV5SetActive("servicios");
-  setTimeout(() => {
-    const fechaInput = document.getElementById("fecha");
-    if (fechaInput) {
-      fechaInput.value = fecha;
-      fechaInput.dispatchEvent(new Event("change", { bubbles: true }));
-    }
-    const clienteInput = document.getElementById("cliente");
-    clienteInput == null ? void 0 : clienteInput.focus();
-    const form = document.getElementById("formulario-servicio") || document.querySelector(".form-container");
-    form == null ? void 0 : form.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, 120);
-};
 function enviarRecordatorio(id) {
   const s = todosLosServicios.find((serv) => serv.id === id);
   if (!s) return;
@@ -4726,7 +4624,7 @@ function eliteV5Navigate(module, button) {
     return;
   }
   if (module === "agenda") {
-    if (typeof abrirCalendarioElite === "function") abrirCalendarioElite();
+    if (typeof abrirCentroOperacionesV601 === "function") abrirCentroOperacionesV601();
     return;
   }
   if (module === "clientes") {
@@ -4800,13 +4698,6 @@ const _eliteOriginalCloseAccounting = window.cerrarContabilidadElite;
 if (typeof _eliteOriginalCloseAccounting === "function") {
   window.cerrarContabilidadElite = function() {
     _eliteOriginalCloseAccounting();
-    eliteV5SetActive("dashboard");
-  };
-}
-const _eliteOriginalCloseCalendar = window.cerrarCalendarioElite;
-if (typeof _eliteOriginalCloseCalendar === "function") {
-  window.cerrarCalendarioElite = function() {
-    _eliteOriginalCloseCalendar();
     eliteV5SetActive("dashboard");
   };
 }
@@ -5138,7 +5029,7 @@ window.eliteResetOperationsOnce = async function() {
     if (Array.isArray(window.gastosContabilidad)) window.gastosContabilidad.length = 0;
     if (Array.isArray(window.cierresContables)) window.cierresContables.length = 0;
     await eliteLoadResetStatus();
-    if (typeof renderCalendarioElite === "function") renderCalendarioElite();
+    if (typeof renderCentroOperacionesV601 === "function") renderCentroOperacionesV601();
     if (typeof renderServicios === "function") renderServicios();
     if (typeof renderContabilidadElite === "function") renderContabilidadElite();
     alert(
@@ -5927,8 +5818,20 @@ function opsPayment(s) {
   if (state.completo && dep + bal < total) bal = Math.max(total - dep, 0);
   return { total, collected: Math.min(total, dep + bal), pending: Math.max(total - dep - bal, 0), dep, bal };
 }
+let opsJobsByDate = /* @__PURE__ */ new Map();
+function opsRebuildJobsIndex() {
+  const next = /* @__PURE__ */ new Map();
+  todosLosServicios.forEach((service) => {
+    const key = String((service == null ? void 0 : service.fecha) || "");
+    if (!key) return;
+    if (!next.has(key)) next.set(key, []);
+    next.get(key).push(service);
+  });
+  next.forEach((jobs) => jobs.sort(eliteCompararServiciosFechaHora));
+  opsJobsByDate = next;
+}
 function opsJobsForDate(key) {
-  return todosLosServicios.filter((s) => s.fecha === key).sort(eliteCompararServiciosFechaHora);
+  return opsJobsByDate.get(String(key || "")) || [];
 }
 function opsEsTerminadoAutomatico(s) {
   const fecha = String((s == null ? void 0 : s.fecha) || "");
@@ -6014,6 +5917,7 @@ function cambiarMes(dir) {
   renderCentroOperacionesV601();
 }
 function renderCentroOperacionesV601() {
+  opsRebuildJobsIndex();
   document.querySelectorAll(".ops-view-tabs button").forEach((b) => b.classList.toggle("active", b.dataset.view === opsCalendarView));
   const title = document.getElementById("ops-date-title");
   title.textContent = opsCalendarView === "month" ? opsCalendarDate.toLocaleDateString("es-US", { month: "long", year: "numeric" }) : opsCalendarDate.toLocaleDateString("es-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -6476,7 +6380,9 @@ body.elite-v606-operations-home #ops-center-modal-v601.elite-v606-home{display:b
     eliteV605ShowOperations(q('.elite-v5-nav-btn[data-module="agenda"]'));
   };
   window.cerrarCentroOperacionesV601 = function() {
-    eliteV605ShowOperations(q('.elite-v5-nav-btn[data-module="agenda"]'));
+    eliteV605LeaveOperations();
+    if (typeof eliteV5SetActive === "function") eliteV5SetActive("dashboard");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
   function wrapNavigation() {
     const current = window.eliteV5Navigate;
@@ -10310,7 +10216,6 @@ var __spreadValues = (a, b) => {
     if (box) observer.observe(box, { childList: true, subtree: true });
     wire();
   });
-  setInterval(wire, 700);
 })();
 </script>
 
@@ -13106,8 +13011,6 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   }
 
   function refrescarPantallas(fecha) {
-    if (typeof window.renderCalendarioElite === "function") window.renderCalendarioElite();
-    if (fecha && typeof window.mostrarEventosDia === "function") window.mostrarEventosDia(fecha);
     if (typeof window.renderHistorial === "function") window.renderHistorial();
     if (typeof window.generarNomina === "function") window.generarNomina();
     if (typeof window.renderCentroOperacionesV601 === "function") window.renderCentroOperacionesV601();
@@ -13223,7 +13126,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 <script id="elite-admin-v900-stable-js">
 (function(){
   'use strict';
-  const VERSION='9.0.0';
+  const VERSION='9.0.3';
   const state={searchRefreshTimer:0,searchRefreshBusy:false,searchSeq:0};
   const byId=id=>document.getElementById(id);
   const text=v=>String(v==null?'':v);
@@ -13303,7 +13206,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 
   function health(){
     let box=byId('elite-v900-health');if(!box){box=document.createElement('div');box.id='elite-v900-health';document.body.appendChild(box)}
-    box.textContent='Admin v9.0.1 Stable · Nómina $20/h · Firebase '+(typeof db!=='undefined'?'OK':'pendiente')+' · Buscar '+(byId('buscarTrabajo')?'OK':'pendiente');
+    box.textContent='Admin v9.0.3 Stable · Calendario consolidado · Nómina $20/h · Firebase '+(typeof db!=='undefined'?'OK':'pendiente')+' · Buscar '+(byId('buscarTrabajo')?'OK':'pendiente');
   }
 
   function boot(){installSearch();guardServiceSave();health();console.info('[Elite Admin] v9.0.1 Stable activo · nómina por hora')}
