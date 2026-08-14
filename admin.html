@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0.4 Stable — Runtime Loop Fix | Safe Calendar Consolidation | Stable Save -->
+<!-- Elite Admin v9.0.5 Stable — Servicios + Calendario sincronizados | Runtime Loop Fix | Stable Save -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.4 Stable — Inicio y calendario estables</title>
+    <title>Elite Admin v9.0.5 Stable — Servicios y calendario sincronizados</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -2935,6 +2935,16 @@ function programarEstadosAutomaticosEneroJulio2026() {
   clearTimeout(eliteCalendarMaintenanceTimer);
   eliteCalendarMaintenanceTimer = setTimeout(aplicarEstadosAutomaticosEneroJulio2026, 700);
 }
+let eliteServicesCalendarRenderTimer = null;
+function eliteSyncServicesToCalendar() {
+  clearTimeout(eliteServicesCalendarRenderTimer);
+  eliteServicesCalendarRenderTimer = setTimeout(() => {
+    const operations = document.getElementById("ops-center-modal-v601");
+    if (operations && operations.style.display === "block" && typeof renderCentroOperacionesV601 === "function") {
+      renderCentroOperacionesV601();
+    }
+  }, 40);
+}
 db.collection("servicios").onSnapshot((snap) => {
   todosLosServicios = [];
   snap.forEach((doc) => {
@@ -2956,6 +2966,8 @@ db.collection("servicios").onSnapshot((snap) => {
   renderNotificacionesPagos();
   renderHistorial();
   generarNomina();
+  eliteSyncServicesToCalendar();
+  if (typeof window.eliteAttentionRebuild === "function") window.eliteAttentionRebuild();
 });
 function renderNotificacionesPagos() {
   const box = document.getElementById("centro-notificaciones-pagos");
@@ -12188,6 +12200,8 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
       if (i >= 0) window.todosLosServicios[i] = row;
       else window.todosLosServicios.push(row);
     }
+    if (typeof eliteSyncServicesToCalendar === "function") eliteSyncServicesToCalendar();
+    if (typeof window.eliteAttentionRebuild === "function") window.eliteAttentionRebuild();
   }
   function collect(existing = {}, editing = false) {
     var _a, _b;
@@ -12403,7 +12417,7 @@ var __spreadValues = (a, b) => {
   return a;
 };
 (function() {
-  let rows = [], unsubNotifications = null, unsubRequests = null, unsubServices = null, notifications = [], requests = [], dismissed = /* @__PURE__ */ new Set(), selected = /* @__PURE__ */ new Set(), selecting = false, activeFilter = "all";
+  let rows = [], unsubNotifications = null, unsubRequests = null, notifications = [], requests = [], dismissed = /* @__PURE__ */ new Set(), selected = /* @__PURE__ */ new Set(), selecting = false, activeFilter = "all";
   const esc = (v) => String(v != null ? v : "").replace(/[&<>\"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[m]);
   const norm = (v) => String(v || "").trim().toLowerCase().replace(/\s+/g, " ");
   const today = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
@@ -12432,6 +12446,7 @@ var __spreadValues = (a, b) => {
     render();
     badge();
   }
+  window.eliteAttentionRebuild = rebuild;
   function badge() {
     const b = document.getElementById("elite-attention-count");
     if (!b) return;
@@ -12607,11 +12622,6 @@ var __spreadValues = (a, b) => {
   };
   window.eliteAttentionLoad = function() {
     try {
-      if (!unsubServices) unsubServices = db.collection("servicios").onSnapshot((s) => {
-        window.todosLosServicios = s.docs.map((d) => __spreadValues({ id: d.id, firestore_id: d.id }, d.data()));
-        rebuild();
-      }, () => {
-      });
       if (!unsubNotifications) unsubNotifications = db.collection("notificaciones_admin").onSnapshot((s) => {
         notifications = s.docs.map((d) => __spreadValues({ id: d.id }, d.data()));
         rebuild();
@@ -13128,7 +13138,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 <script id="elite-admin-v900-stable-js">
 (function(){
   'use strict';
-  const VERSION='9.0.4';
+  const VERSION='9.0.5';
   const state={searchRefreshTimer:0,searchRefreshBusy:false,searchSeq:0};
   const byId=id=>document.getElementById(id);
   const text=v=>String(v==null?'':v);
@@ -13208,10 +13218,10 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 
   function health(){
     let box=byId('elite-v900-health');if(!box){box=document.createElement('div');box.id='elite-v900-health';document.body.appendChild(box)}
-    box.textContent='Admin v9.0.4 Stable · Inicio protegido · Calendario consolidado · Nómina $20/h · Firebase '+(typeof db!=='undefined'?'OK':'pendiente')+' · Buscar '+(byId('buscarTrabajo')?'OK':'pendiente');
+    box.textContent='Admin v9.0.5 Stable · Servicios ↔ Calendario · Inicio protegido · Nómina $20/h · Firebase '+(typeof db!=='undefined'?'OK':'pendiente')+' · Buscar '+(byId('buscarTrabajo')?'OK':'pendiente');
   }
 
-  function boot(){installSearch();guardServiceSave();health();console.info('[Elite Admin] v9.0.4 Stable activo · inicio protegido · nómina por hora')}
+  function boot(){installSearch();guardServiceSave();health();console.info('[Elite Admin] v9.0.5 Stable activo · Servicios y Calendario sincronizados')}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,0));else setTimeout(boot,0);
   // Reinstala solo si un módulo reconstruye físicamente el buscador.
   new MutationObserver(()=>{const i=byId('buscarTrabajo');if(i&&i.dataset.eliteV900!=='1')installSearch();guardServiceSave()}).observe(document.documentElement,{childList:true,subtree:true});
