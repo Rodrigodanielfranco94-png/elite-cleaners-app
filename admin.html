@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0.3 Stable — Safe Calendar Consolidation | Fixed $20/hr Payroll | Stable Save -->
+<!-- Elite Admin v9.0.4 Stable — Runtime Loop Fix | Safe Calendar Consolidation | Stable Save -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.3 Stable — Calendario consolidado</title>
+    <title>Elite Admin v9.0.4 Stable — Inicio y calendario estables</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -10303,22 +10303,24 @@ var __spreadValues = (a, b) => {
     const badge = document.getElementById(id);
     if (!badge) return;
     const count = Math.max(0, Number(value) || 0);
-    if (count > 0) {
-      badge.textContent = count > 99 ? "99+" : String(count);
-      badge.hidden = false;
-      badge.style.display = "inline-flex";
-      badge.setAttribute("aria-label", count + " pendiente" + (count === 1 ? "" : "s"));
-    } else {
-      badge.textContent = "";
-      badge.hidden = true;
-      badge.style.display = "none";
+    const text = count > 0 ? count > 99 ? "99+" : String(count) : "";
+    const hidden = count === 0;
+    const display = count > 0 ? "inline-flex" : "none";
+    const aria = count > 0 ? count + " pendiente" + (count === 1 ? "" : "s") : "";
+    if (badge.textContent !== text) badge.textContent = text;
+    if (badge.hidden !== hidden) badge.hidden = hidden;
+    if (badge.style.display !== display) badge.style.display = display;
+    if (aria) {
+      if (badge.getAttribute("aria-label") !== aria) badge.setAttribute("aria-label", aria);
+    } else if (badge.hasAttribute("aria-label")) {
       badge.removeAttribute("aria-label");
     }
   }
   function normalizeRecoveryBadge() {
     const badge = document.getElementById("elite-recovery-menu-count");
     if (!badge) return;
-    setBadge("elite-recovery-menu-count", badge.textContent);
+    const count = parseInt(String(badge.textContent || "0"), 10) || 0;
+    setBadge("elite-recovery-menu-count", count);
   }
   function watchRecoveryBadge() {
     const badge = document.getElementById("elite-recovery-menu-count");
@@ -10827,7 +10829,7 @@ var __spreadValues = (a, b) => {
   const observer = new MutationObserver(markInventoryModal);
   document.addEventListener("DOMContentLoaded", () => {
     const modal = document.getElementById("elite-v5-module-modal");
-    if (modal) observer.observe(modal, { childList: true, subtree: true, attributes: true, attributeFilter: ["style", "class"] });
+    if (modal) observer.observe(modal, { childList: true, subtree: true, attributes: true, attributeFilter: ["style"] });
   });
 })();
 </script>
@@ -13126,7 +13128,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 <script id="elite-admin-v900-stable-js">
 (function(){
   'use strict';
-  const VERSION='9.0.3';
+  const VERSION='9.0.4';
   const state={searchRefreshTimer:0,searchRefreshBusy:false,searchSeq:0};
   const byId=id=>document.getElementById(id);
   const text=v=>String(v==null?'':v);
@@ -13206,10 +13208,10 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 
   function health(){
     let box=byId('elite-v900-health');if(!box){box=document.createElement('div');box.id='elite-v900-health';document.body.appendChild(box)}
-    box.textContent='Admin v9.0.3 Stable · Calendario consolidado · Nómina $20/h · Firebase '+(typeof db!=='undefined'?'OK':'pendiente')+' · Buscar '+(byId('buscarTrabajo')?'OK':'pendiente');
+    box.textContent='Admin v9.0.4 Stable · Inicio protegido · Calendario consolidado · Nómina $20/h · Firebase '+(typeof db!=='undefined'?'OK':'pendiente')+' · Buscar '+(byId('buscarTrabajo')?'OK':'pendiente');
   }
 
-  function boot(){installSearch();guardServiceSave();health();console.info('[Elite Admin] v9.0.1 Stable activo · nómina por hora')}
+  function boot(){installSearch();guardServiceSave();health();console.info('[Elite Admin] v9.0.4 Stable activo · inicio protegido · nómina por hora')}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,0));else setTimeout(boot,0);
   // Reinstala solo si un módulo reconstruye físicamente el buscador.
   new MutationObserver(()=>{const i=byId('buscarTrabajo');if(i&&i.dataset.eliteV900!=='1')installSearch();guardServiceSave()}).observe(document.documentElement,{childList:true,subtree:true});
