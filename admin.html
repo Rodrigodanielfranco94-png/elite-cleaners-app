@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <!-- Elite Admin v9.0.5 Stable — Servicios + Calendario sincronizados | Runtime Loop Fix | Stable Save -->
 <html lang="es">
@@ -8039,7 +8040,8 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     document.body.style.overflow = "hidden";
     try {
       const snap = await db.collection("servicios").doc(s.id).collection("documentos_cliente").get();
-      const matches = snap.docs.filter((x) => x.data().tipo === state.type).sort((a, b) => {
+      const allDocuments = snap.docs.slice();
+      const matches = allDocuments.filter((x) => x.data().tipo === state.type).sort((a, b) => {
         var _a, _b, _c, _d;
         const av = ((_b = (_a = a.data().actualizado_en) == null ? void 0 : _a.toMillis) == null ? void 0 : _b.call(_a)) || 0, bv = ((_d = (_c = b.data().actualizado_en) == null ? void 0 : _c.toMillis) == null ? void 0 : _d.call(_c)) || 0;
         return bv - av;
@@ -8055,6 +8057,13 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
           state.savedId = prior.id;
           alert("El documento fue recalculado con los precios actuales. Revisa la vista previa y guárdalo para actualizar la versión anterior.");
         }
+      } else if (state.type === "invoice") {
+        const latestEstimate = allDocuments.filter((x) => x.data().tipo === "estimate").sort((a, b) => {
+          var _a, _b, _c, _d;
+          const av = ((_b = (_a = a.data().actualizado_en) == null ? void 0 : _a.toMillis) == null ? void 0 : _b.call(_a)) || 0, bv = ((_d = (_c = b.data().actualizado_en) == null ? void 0 : _c.toMillis) == null ? void 0 : _d.call(_c)) || 0;
+          return bv - av;
+        })[0];
+        if (latestEstimate) loadEstimateIntoInvoice(latestEstimate.data() || {});
       }
     } catch (e) {
       console.warn("No se pudo consultar un documento anterior.", e);
@@ -8078,6 +8087,54 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     state.items = Array.isArray(d.items) && d.items.length ? d.items : state.items;
     renderItems();
   }
+  function loadEstimateIntoInvoice(estimate) {
+    if (!estimate || state.type !== "invoice") return;
+    $("edoc-customer").value = estimate.customer || $("edoc-customer").value;
+    $("edoc-phone").value = estimate.phone || $("edoc-phone").value;
+    $("edoc-email").value = estimate.email || $("edoc-email").value;
+    $("edoc-address").value = estimate.address || $("edoc-address").value;
+    $("edoc-discount").value = num(estimate.discount);
+    $("edoc-tax").value = num(estimate.taxRate);
+    $("edoc-notes").value = estimate.notes || "";
+    $("edoc-terms").value = estimate.terms || "";
+    state.items = Array.isArray(estimate.items) && estimate.items.length ? estimate.items.map((x) => ({ description: String(x.description || ""), quantity: num(x.quantity), unitPrice: num(x.unitPrice) })) : state.items;
+    renderItems();
+  }
+  async function syncInvoicesFromEstimate(serviceId, estimate, estimateId) {
+    const col = db.collection("servicios").doc(String(serviceId)).collection("documentos_cliente");
+    const snap = await col.get();
+    const invoices = snap.docs.filter((x) => (x.data() || {}).tipo === "invoice");
+    if (!invoices.length) return 0;
+    const batch = db.batch();
+    invoices.forEach((invoiceSnap) => {
+      const invoice = invoiceSnap.data() || {};
+      const subtotal = (estimate.items || []).reduce((sum, x) => sum + num(x.quantity) * num(x.unitPrice), 0);
+      const discount = Math.min(num(estimate.discount), subtotal);
+      const taxable = Math.max(0, subtotal - discount);
+      const tax = taxable * num(estimate.taxRate) / 100;
+      const total = taxable + tax;
+      const paid = Math.min(num(invoice.paid), total);
+      const update = {
+        customer: estimate.customer || invoice.customer || "",
+        phone: estimate.phone || invoice.phone || "",
+        email: estimate.email || invoice.email || "",
+        address: estimate.address || invoice.address || "",
+        items: (estimate.items || []).map((x) => ({ description: String(x.description || ""), quantity: num(x.quantity), unitPrice: num(x.unitPrice) })),
+        discount,
+        taxRate: num(estimate.taxRate),
+        notes: estimate.notes || "",
+        terms: estimate.terms || "",
+        paid,
+        totals: { subtotal, discount, tax, total, paid, balance: Math.max(0, total - paid) },
+        estimate_origen_id: estimateId || "",
+        sincronizado_desde_estimate_en: firebase.firestore.FieldValue.serverTimestamp(),
+        actualizado_en: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      batch.set(invoiceSnap.ref, update, { merge: true });
+    });
+    await batch.commit();
+    return invoices.length;
+  }
   window.eliteDocClose = () => {
     $("elite-doc-modal").style.display = "none";
     $("elite-doc-modal").setAttribute("aria-hidden", "true");
@@ -8099,6 +8156,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
         const ref = await col.add(__spreadProps(__spreadValues({}, d), { creado_en: firebase.firestore.FieldValue.serverTimestamp(), actualizado_en: firebase.firestore.FieldValue.serverTimestamp() }));
         state.savedId = ref.id;
       }
+      if (state.type === "estimate") await syncInvoicesFromEstimate(state.service.id, d, state.savedId);
       if (!silent) alert("".concat(state.type === "invoice" ? "Invoice" : "Estimate", " guardado correctamente."));
       return true;
     } catch (e) {
