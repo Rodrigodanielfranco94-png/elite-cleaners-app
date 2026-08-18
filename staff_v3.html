@@ -4333,5 +4333,130 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
+<!-- ===== ELITE STAFF v9.3 — SELECTOR APPLE MAPS / GOOGLE MAPS ===== -->
+<style id="elite-staff-v930-maps-css">
+  #elite-maps-picker{display:none;position:fixed;inset:0;z-index:9000000;align-items:flex-end;justify-content:center;padding:18px;background:rgba(0,0,0,.78);backdrop-filter:blur(6px)}
+  #elite-maps-picker.open{display:flex}
+  .elite-maps-sheet{width:min(520px,100%);padding:20px;border:1px solid #3b82f6;border-radius:24px;background:#111827;box-shadow:0 24px 70px rgba(0,0,0,.65)}
+  .elite-maps-title{margin:0;color:#fff;font-size:20px;font-weight:950;text-align:center;text-transform:uppercase}
+  .elite-maps-help{margin:7px 0 17px;color:#94a3b8;font-size:12px;line-height:1.45;text-align:center}
+  .elite-maps-options{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .elite-map-option,.elite-maps-cancel{min-height:60px;border-radius:15px;font-weight:950;cursor:pointer}
+  .elite-map-option{border:1px solid #3b82f6;background:#172554;color:#fff}
+  .elite-map-option.google{background:#1d4ed8}
+  .elite-map-option:disabled{opacity:.6;cursor:wait}
+  .elite-maps-cancel{width:100%;min-height:50px;margin-top:11px;border:1px solid #3f3f46;background:#27272a;color:#d1d5db}
+  @media(min-width:700px){#elite-maps-picker{align-items:center}.elite-maps-sheet{padding:24px}}
+</style>
+<div id="elite-maps-picker" role="dialog" aria-modal="true" aria-labelledby="elite-maps-title">
+  <div class="elite-maps-sheet">
+    <h2 id="elite-maps-title" class="elite-maps-title">¿Qué mapa deseas usar?</h2>
+    <p class="elite-maps-help">La dirección del cliente se abrirá lista para iniciar la navegación.</p>
+    <div class="elite-maps-options">
+      <button type="button" class="elite-map-option apple" data-map-app="apple">🗺️ APPLE MAPS</button>
+      <button type="button" class="elite-map-option google" data-map-app="google">📍 GOOGLE MAPS</button>
+    </div>
+    <button type="button" class="elite-maps-cancel">CANCELAR</button>
+  </div>
+</div>
+<script id="elite-staff-v930-maps-js">
+(function(){
+  'use strict';
+  const VERSION='9.3.0';
+  const picker=document.getElementById('elite-maps-picker');
+  const optionButtons=[...picker.querySelectorAll('[data-map-app]')];
+  const cancelButton=picker.querySelector('.elite-maps-cancel');
+  let selection=null;
+
+  function localDate(){
+    const now=new Date();
+    return now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  }
+
+  function addressFromLink(link){
+    try{
+      const url=new URL(link.href,location.href);
+      return decodeURIComponent(url.searchParams.get('destination')||url.searchParams.get('query')||'').trim();
+    }catch(_){return ''}
+  }
+
+  function closePicker(){
+    picker.classList.remove('open');
+    picker.setAttribute('aria-hidden','true');
+    selection=null;
+    optionButtons.forEach(button=>button.disabled=false);
+  }
+
+  function showPicker(link){
+    const card=link.closest('.card[data-service-id]');
+    const address=addressFromLink(link);
+    if(!address){
+      if(typeof setMessage==='function')setMessage('Este trabajo no tiene una dirección válida para navegar.','error');
+      return;
+    }
+    selection={
+      address,
+      serviceId:String(card?.dataset.serviceId||''),
+      isToday:String(card?.dataset.jobDate||'')===localDate()
+    };
+    picker.classList.add('open');
+    picker.setAttribute('aria-hidden','false');
+  }
+
+  async function registerOnTheWay(serviceId,isToday){
+    if(!serviceId||!isToday||typeof db==='undefined')return;
+    const ref=db.collection('servicios').doc(serviceId);
+    try{
+      const snapshot=await ref.get();
+      if(!snapshot.exists)return;
+      const job=snapshot.data()||{};
+      const stage=typeof getWorkflowStage==='function'?getWorkflowStage(job):String(job.etapa_staff||'asignado');
+      if(stage!=='asignado')return;
+      const update={
+        etapa_staff:'en_camino',
+        estado:'no_iniciado',
+        hora_en_camino:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true}).toLowerCase(),
+        en_camino_timestamp:firebase.firestore.FieldValue.serverTimestamp(),
+        actualizado_por_staff_email:typeof currentUser!=='undefined'&&currentUser?.email||'',
+        actualizado_por_staff_nombre:typeof currentUser!=='undefined'&&currentUser?.nombre||''
+      };
+      await ref.update(update);
+    }catch(error){
+      console.warn('[Elite Staff v9.3] No se pudo registrar En camino:',error);
+    }
+  }
+
+  async function chooseMap(app){
+    if(!selection)return;
+    const chosen={...selection};
+    optionButtons.forEach(button=>button.disabled=true);
+    const destination=encodeURIComponent(chosen.address);
+    const url=app==='apple'
+      ?'https://maps.apple.com/?daddr='+destination+'&dirflg=d'
+      :'https://www.google.com/maps/dir/?api=1&destination='+destination+'&travelmode=driving';
+    await registerOnTheWay(chosen.serviceId,chosen.isToday);
+    closePicker();
+    window.location.href=url;
+  }
+
+  // Captura el toque antes de los manejadores GPS antiguos para impedir dobles registros.
+  document.addEventListener('click',event=>{
+    const link=event.target?.closest?.('a.btn-gps');
+    if(!link)return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    showPicker(link);
+  },true);
+
+  optionButtons.forEach(button=>button.addEventListener('click',()=>chooseMap(button.dataset.mapApp)));
+  cancelButton.addEventListener('click',closePicker);
+  picker.addEventListener('click',event=>{if(event.target===picker)closePicker()});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&picker.classList.contains('open'))closePicker()});
+
+  window.EliteStaffV93=Object.freeze({version:VERSION});
+  console.info('[Elite Staff] v9.3 Stable · selector Apple Maps / Google Maps activo');
+})();
+</script>
+
 </body>
 </html>
