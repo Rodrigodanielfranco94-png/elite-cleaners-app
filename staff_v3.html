@@ -4458,5 +4458,100 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
+<!-- ===== ELITE STAFF v9.4 — CIERRE AISLADO + FLUJO OBLIGATORIO ===== -->
+<script id="elite-staff-v940-workflow-isolation">
+(function(){
+  'use strict';
+  const VERSION='9.4.0';
+  const previousWorkflow=typeof window.updateWorkflow==='function'?window.updateWorkflow:null;
+  let transitionLock=null;
+
+  function clean(value){
+    return String(value==null?'':value).trim().toLowerCase();
+  }
+
+  function stageOf(job){
+    if(!job)return 'asignado';
+    if(clean(job.estado)==='completado'||job.servicio_finalizado===true||job.trabajo_realizado===true)return 'completado';
+    const stage=clean(job.etapa_staff);
+    if(['asignado','en_camino','llego','limpiando','pausado','completado'].includes(stage))return stage;
+    if(clean(job.estado)==='en_progreso')return 'limpiando';
+    return 'asignado';
+  }
+
+  function hasArrivalProof(job){
+    const hasPhoto=Boolean(job&&(
+      job.foto_llegada_id||job.foto_llegada_ref||job.foto_llegada_path||job.foto_llegada_url||job.llegada_foto_inline
+    ));
+    const gps=job&&job.gps_llegada;
+    const hasGps=Boolean(gps&&(
+      Number.isFinite(Number(gps.lat))&&Number.isFinite(Number(gps.lon??gps.lng))
+    ));
+    return job&&job.llegada_verificada_con_foto===true&&hasPhoto&&hasGps&&Boolean(job.hora_llegada||job.llegada_ms||job.llegada_timestamp);
+  }
+
+  async function freshJob(serviceId){
+    if(!serviceId||typeof db==='undefined')throw new Error('No se pudo identificar el servicio.');
+    const snapshot=await db.collection('servicios').doc(String(serviceId)).get();
+    if(!snapshot.exists)throw new Error('El trabajo ya no existe.');
+    return {id:String(serviceId),...snapshot.data()};
+  }
+
+  function requireTransition(job,nextStage){
+    const from=stageOf(job);
+    const allowed={
+      asignado:['en_camino'],
+      en_camino:['llego'],
+      llego:['limpiando'],
+      limpiando:['pausado','completado'],
+      pausado:['limpiando','completado'],
+      completado:[]
+    };
+    if(!(allowed[from]||[]).includes(nextStage)){
+      const labels={asignado:'abrir el GPS',en_camino:'confirmar la llegada y tomar la foto',llego:'iniciar el trabajo',limpiando:'trabajar o finalizar',pausado:'reanudar o finalizar',completado:'volver a Mis trabajos'};
+      throw new Error('Debes '+(labels[from]||'seguir el orden del servicio')+' antes de continuar.');
+    }
+    if(nextStage==='limpiando'&&from==='llego'&&!hasArrivalProof(job)){
+      throw new Error('No puedes iniciar el trabajo sin GPS, llegada y foto de verificación guardados.');
+    }
+  }
+
+  function closeCompletedView(){
+    try{
+      if(typeof window.eliteCloseStaffJob==='function')window.eliteCloseStaffJob();
+    }catch(error){console.warn('[Staff v9.4] No se pudo cerrar la vista:',error)}
+    document.body.classList.remove('elite-work-view-open');
+    document.querySelectorAll('.card.elite-work-view').forEach(card=>card.classList.remove('elite-work-view'));
+    requestAnimationFrame(()=>{
+      document.getElementById('job-list')?.scrollIntoView({behavior:'smooth',block:'start'});
+      if(typeof setMessage==='function')setMessage('Trabajo completado. El próximo servicio debe iniciarse desde GPS.','success');
+    });
+  }
+
+  async function guardedWorkflow(serviceId,nextStage,inspectionConfirmed=false){
+    const id=String(serviceId||'');
+    const next=clean(nextStage);
+    const lockKey=id+'::'+next;
+    if(transitionLock===lockKey)throw new Error('Esta actualización ya está en proceso.');
+    if(typeof previousWorkflow!=='function')throw new Error('El flujo del servicio no está disponible.');
+    transitionLock=lockKey;
+    try{
+      const job=await freshJob(id);
+      requireTransition(job,next);
+      const result=await previousWorkflow.call(this,id,next,inspectionConfirmed);
+      if(next==='completado')closeCompletedView();
+      return result;
+    }finally{
+      transitionLock=null;
+    }
+  }
+
+  window.updateWorkflow=guardedWorkflow;
+  try{updateWorkflow=guardedWorkflow}catch(_){}
+  window.EliteStaffV94=Object.freeze({version:VERSION,stageOf,hasArrivalProof});
+  console.info('[Elite Staff] v9.4 Stable · servicios aislados y flujo obligatorio activo');
+})();
+</script>
+
 </body>
 </html>
