@@ -1801,6 +1801,7 @@ style="width:100%;"></textarea>
     <span class="label-text">Categoría</span>
     <select id="gasto-categoria" style="width:100%;padding:14px;margin-bottom:10px;border-radius:12px;background:#2c2c2e;color:#fff;border:1px solid #374151">
       <option>Combustible</option>
+      <option>Materiales / Inventario</option>
       <option>Productos / Insumos</option>
       <option>Lavandería</option>
       <option>Máquinas / Equipos</option>
@@ -9263,6 +9264,10 @@ var __spreadValues = (a, b) => {
         costo_unitario: Number(p.precio_actual || 0)
       });
     } else selected.delete(id);
+    if (selected.size) {
+      const category = document.getElementById("gasto-categoria");
+      if (category) category.value = "Materiales / Inventario";
+    }
     eliteExpenseRenderProducts();
     syncAmount();
   };
@@ -9353,6 +9358,9 @@ var __spreadValues = (a, b) => {
     if (!fecha || !categoria || !Number.isFinite(monto) || monto <= 0) {
       return alert("Completa la fecha, la categoría y un monto válido.");
     }
+    if (categoria === "Materiales / Inventario" && !productos.length) {
+      return alert("Selecciona por lo menos un producto del catálogo para actualizar el inventario.");
+    }
     boton.disabled = true;
     boton.textContent = id ? "Guardando cambios..." : "Guardando...";
     try {
@@ -9364,8 +9372,77 @@ var __spreadValues = (a, b) => {
         productos,
         actualizado_en: firebase.firestore.FieldValue.serverTimestamp()
       };
-      if (id) await db.collection("gastos_contabilidad").doc(id).update(datos);
-      else {
+      if (id) {
+        // Editar un gasto nunca vuelve a sumar stock. La sincronización ocurre una sola vez al crearlo.
+        await db.collection("gastos_contabilidad").doc(id).update(datos);
+      } else if (categoria === "Materiales / Inventario" && productos.length) {
+        const expenseRef = db.collection("gastos_contabilidad").doc();
+        const batch = db.batch();
+        const inventory = typeof eliteV51Inventario !== "undefined" && Array.isArray(eliteV51Inventario) ? eliteV51Inventario : [];
+        const requests = typeof eliteV54Requests !== "undefined" && Array.isArray(eliteV54Requests) ? eliteV54Requests : [];
+        const normalized = (value) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        const closedRequestIds = [];
+
+        productos.forEach((product) => {
+          const qty = Math.max(1, Number(product.cantidad || 1));
+          const unitCost = Math.max(0, Number(product.costo_unitario || 0));
+          const catalogProduct = catalog().find((x) => x.id === product.catalogo_id) || product;
+          let existing = inventory.find((x) => product.catalogo_id && x.catalogo_id === product.catalogo_id);
+          if (!existing) existing = inventory.find((x) => normalized(x.nombre) === normalized(product.nombre));
+          const inventoryRef = existing ? db.collection("inventario").doc(existing.id) : db.collection("inventario").doc();
+          const inventoryData = {
+            nombre: product.nombre || "Producto",
+            marca: product.marca || catalogProduct.marca || "",
+            tipo: product.tipo || catalogProduct.tipo || "Materiales",
+            cantidad: Number((existing == null ? void 0 : existing.cantidad) || 0) + qty,
+            minimo: Math.max(0, Number((existing == null ? void 0 : existing.minimo) || catalogProduct.minimo || 0)),
+            costo: unitCost || Number((existing == null ? void 0 : existing.costo) || 0),
+            ubicacion: (existing == null ? void 0 : existing.ubicacion) || catalogProduct.ubicacion || "Almacén",
+            tienda: product.tienda || catalogProduct.tienda || (existing == null ? void 0 : existing.tienda) || "",
+            catalogo_id: product.catalogo_id || catalogProduct.id || "",
+            codigo_barras: catalogProduct.codigo_barras || (existing == null ? void 0 : existing.codigo_barras) || "",
+            foto_url: product.foto_url || catalogProduct.foto_url || (existing == null ? void 0 : existing.foto_url) || "",
+            actualizado: firebase.firestore.FieldValue.serverTimestamp()
+          };
+          if (!existing) inventoryData.creado = firebase.firestore.FieldValue.serverTimestamp();
+          batch.set(inventoryRef, inventoryData, { merge: true });
+
+          const matchingRequests = requests.filter((request) =>
+            ["pendiente_compra", "pendiente", "aprobada"].includes(request.estado) &&
+            (product.catalogo_id && request.catalogo_id === product.catalogo_id || normalized(request.producto_nombre || request.producto) === normalized(product.nombre))
+          );
+          matchingRequests.forEach((request) => {
+            if (!closedRequestIds.includes(request.id)) {
+              closedRequestIds.push(request.id);
+              batch.delete(db.collection("solicitudes_inventario").doc(request.id));
+            }
+          });
+
+          const purchaseRef = db.collection("compras_inventario").doc(expenseRef.id + "_" + (product.catalogo_id || inventoryRef.id));
+          batch.set(purchaseRef, {
+            gasto_id: expenseRef.id,
+            solicitud_ids: matchingRequests.map((request) => request.id),
+            catalogo_id: product.catalogo_id || "",
+            inventario_id: inventoryRef.id,
+            producto_nombre: product.nombre || "Producto",
+            cantidad: qty,
+            costo_unitario: unitCost,
+            total: Math.round(qty * unitCost * 100) / 100,
+            tienda: product.tienda || catalogProduct.tienda || "",
+            comprado_por: (window.usuarioActual == null ? void 0 : window.usuarioActual.nombre) || (currentUser == null ? void 0 : currentUser.email) || "Admin",
+            origen: "gasto_materiales_inventario",
+            fecha: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        });
+
+        datos.timestamp = firebase.firestore.FieldValue.serverTimestamp();
+        datos.inventario_actualizado = true;
+        datos.solicitudes_cerradas = closedRequestIds;
+        datos.origen = "gasto_materiales_inventario";
+        batch.set(expenseRef, datos);
+        await batch.commit();
+        alert("Gasto registrado ✅\n\nEl inventario fue actualizado y las solicitudes correspondientes fueron eliminadas.");
+      } else {
         datos.timestamp = firebase.firestore.FieldValue.serverTimestamp();
         await db.collection("gastos_contabilidad").add(datos);
       }
