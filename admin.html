@@ -6803,7 +6803,7 @@ body.elite-v606-operations-home #ops-center-modal-v601.elite-v606-home{display:b
 .elite-evidence-head{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;gap:14px;align-items:center;padding:17px 18px;background:rgba(7,18,36,.97);border-bottom:1px solid #334155;backdrop-filter:blur(10px)}
 .elite-evidence-head h2{margin:0;color:#93c5fd;font-size:21px}.elite-evidence-head p{margin:4px 0 0;color:#94a3b8;font-size:12px}
 .elite-evidence-head-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.elite-evidence-head-actions button{border:0;border-radius:10px;padding:10px 12px;color:#fff;font-weight:900;cursor:pointer}.elite-evidence-download{background:#16a34a}.elite-evidence-close{background:#ef4444}
-.elite-evidence-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px 18px 2px}.elite-evidence-stat{background:#111827;border:1px solid #334155;border-radius:14px;padding:13px;text-align:center;cursor:pointer;transition:.18s;user-select:none}.elite-evidence-stat:hover{border-color:#60a5fa;transform:translateY(-1px)}.elite-evidence-stat.active{background:#172554;border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.18)}.elite-evidence-stat strong{display:block;color:#fff;font-size:23px}.elite-evidence-stat span{color:#94a3b8;font-size:10px;text-transform:uppercase;font-weight:900}.elite-evidence-stat.active span{color:#bfdbfe}
+.elite-evidence-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:16px 18px 2px}.elite-evidence-stat{background:#111827;border:1px solid #334155;border-radius:14px;padding:13px;text-align:center;cursor:pointer;transition:.18s;user-select:none}.elite-evidence-stat:hover{border-color:#60a5fa;transform:translateY(-1px)}.elite-evidence-stat.active{background:#172554;border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.18)}.elite-evidence-stat strong{display:block;color:#fff;font-size:23px}.elite-evidence-stat span{color:#94a3b8;font-size:10px;text-transform:uppercase;font-weight:900}.elite-evidence-stat.active span{color:#bfdbfe}
 .elite-evidence-body{padding:16px 18px 25px}.elite-evidence-group{margin-top:18px}.elite-evidence-group-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #334155}.elite-evidence-group-title h3{margin:0;font-size:16px;color:#bfdbfe}.elite-evidence-count{background:#1d4ed8;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:900}
 .elite-evidence-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px}.elite-evidence-card{position:relative;background:#05070b;border:1px solid #334155;border-radius:15px;overflow:hidden}.elite-evidence-photo{width:100%;height:175px;display:block;object-fit:cover;background:#020617;cursor:zoom-in}.elite-evidence-info{padding:10px}.elite-evidence-area{font-weight:900;color:#fff;font-size:12px}.elite-evidence-detail{color:#cbd5e1;font-size:11px;line-height:1.35;margin-top:3px;min-height:15px}.elite-evidence-meta{color:#64748b;font-size:9px;line-height:1.45;margin-top:7px}.elite-evidence-card-actions{display:grid;grid-template-columns:1fr auto auto;gap:6px;padding:0 10px 10px}.elite-evidence-card-actions a,.elite-evidence-card-actions button{border:0;border-radius:8px;padding:8px;color:#fff;text-decoration:none;text-align:center;font-size:10px;font-weight:900;cursor:pointer}.elite-evidence-open{background:#2563eb}.elite-evidence-edit{background:#d97706}.elite-evidence-delete{background:#7f1d1d}.elite-evidence-empty,.elite-evidence-loading,.elite-evidence-error{padding:35px 15px;text-align:center;border:1px dashed #475569;border-radius:14px;color:#94a3b8}.elite-evidence-error{color:#fca5a5;border-color:#7f1d1d}
 
@@ -6844,7 +6844,7 @@ var __spreadValues = (a, b) => {
   let escalaVisor = 1;
   let touchX = 0;
   let touchY = 0;
-  const tipoInfo = { before: { titulo: "Antes", icono: "🕐" }, evidence: { titulo: "Durante", icono: "🧽" }, after: { titulo: "Después", icono: "✅" } };
+  const tipoInfo = { arrival: { titulo: "Llegada / reconocimiento", icono: "📍" }, before: { titulo: "Antes", icono: "🕐" }, evidence: { titulo: "Durante", icono: "🧽" }, after: { titulo: "Después", icono: "✅" } };
   function esc(v) {
     return String(v != null ? v : "").replace(/[&<>'"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[c]);
   }
@@ -6925,17 +6925,17 @@ var __spreadValues = (a, b) => {
     }
   };
   function renderEvidenciaServicio() {
-    const counts = { before: 0, evidence: 0, after: 0 };
+    const counts = { arrival: 0, before: 0, evidence: 0, after: 0 };
     fotosEvidenciaActuales.forEach((f) => {
       if (counts[f.tipo] !== void 0) counts[f.tipo]++;
     });
-    const stats = [["all", "Total", fotosEvidenciaActuales.length], ["before", "Antes", counts.before], ["evidence", "Durante", counts.evidence], ["after", "Después", counts.after]];
+    const stats = [["all", "Total", fotosEvidenciaActuales.length], ["arrival", "Llegada", counts.arrival], ["before", "Antes", counts.before], ["evidence", "Durante", counts.evidence], ["after", "Después", counts.after]];
     document.getElementById("elite-evidence-summary").innerHTML = stats.map(([tipo, l, n]) => '<div class="elite-evidence-stat '.concat(filtroEvidenciaActual === tipo ? "active" : "", '" role="button" tabindex="0" onclick="filtrarEvidenciaServicio(\'').concat(tipo, "')\" onkeydown=\"if(event.key==='Enter'||event.key===' '){event.preventDefault();filtrarEvidenciaServicio('").concat(tipo, "')}\"><strong>").concat(n, "</strong><span>").concat(l, "</span></div>")).join("");
     if (!fotosEvidenciaActuales.length) {
       document.getElementById("elite-evidence-body").innerHTML = '<div class="elite-evidence-empty">Este trabajo todavía no tiene fotografías guardadas.<br><small>Si se tomaron fotos, verifica que Staff mostrara “subidas correctamente”.</small></div>';
       return;
     }
-    const tiposVisibles = filtroEvidenciaActual === "all" ? ["before", "evidence", "after"] : [filtroEvidenciaActual];
+    const tiposVisibles = filtroEvidenciaActual === "all" ? ["arrival", "before", "evidence", "after"] : [filtroEvidenciaActual];
     document.getElementById("elite-evidence-body").innerHTML = tiposVisibles.map((tipo) => {
       const arr = fotosEvidenciaActuales.filter((f) => f.tipo === tipo);
       if (!arr.length) return '<div class="elite-evidence-empty">No hay fotografías en '.concat(tipoInfo[tipo].titulo, ".</div>");
@@ -6967,7 +6967,7 @@ var __spreadValues = (a, b) => {
     document.getElementById("elite-lightbox-next").disabled = fotosVisor.length < 2;
   }
   window.filtrarEvidenciaServicio = function(tipo) {
-    if (!["all", "before", "evidence", "after"].includes(tipo)) tipo = "all";
+    if (!["all", "arrival", "before", "evidence", "after"].includes(tipo)) tipo = "all";
     filtroEvidenciaActual = tipo;
     renderEvidenciaServicio();
     const body = document.getElementById("elite-evidence-body");
