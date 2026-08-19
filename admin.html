@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0.5 Stable — Servicios + Calendario sincronizados | Runtime Loop Fix | Stable Save -->
+<!-- Elite Admin v9.0.6 Stable — Servicios + Calendario sincronizados | Real Work Time Fix -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.5 Stable — Servicios y calendario sincronizados</title>
+    <title>Elite Admin v9.0.6 Stable — Servicios, calendario y tiempo real corregido</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -2015,10 +2015,11 @@ async function descargarComprobante() {
 function calcularTiempoTrabajado(inicio, fin) {
   if (!inicio || !fin || inicio === "--:--" || fin === "--:--") return { texto: "En progreso...", minutos: 0 };
   const aMinutos = (horaStr) => {
-    let hLimpia = horaStr.toLowerCase().trim();
+    let hLimpia = String(horaStr).toLowerCase().trim();
     let meridiano = hLimpia.includes("p") ? "pm" : hLimpia.includes("a") ? "am" : null;
     let soloHora = hLimpia.replace(/[apm.\s]/g, "");
     let [hh, mm] = soloHora.split(":").map(Number);
+    if (!Number.isInteger(hh) || !Number.isInteger(mm) || mm < 0 || mm > 59 || hh < 0 || hh > (meridiano ? 12 : 23)) return null;
     if (meridiano === "pm" && hh < 12) hh += 12;
     if (meridiano === "am" && hh === 12) hh = 0;
     return hh * 60 + mm;
@@ -2026,11 +2027,12 @@ function calcularTiempoTrabajado(inicio, fin) {
   try {
     const minInicio = aMinutos(inicio);
     const minFin = aMinutos(fin);
+    if (minInicio === null || minFin === null) return { texto: "No disponible", minutos: 0, valido: false };
     let diferencia = minFin - minInicio;
     if (diferencia < 0) diferencia += 1440;
-    return { texto: "".concat(Math.floor(diferencia / 60), "h ").concat(diferencia % 60, "m"), minutos: diferencia };
+    return { texto: "".concat(Math.floor(diferencia / 60), "h ").concat(diferencia % 60, "m"), minutos: diferencia, valido: true };
   } catch (e) {
-    return { texto: "Err", minutos: 0 };
+    return { texto: "No disponible", minutos: 0, valido: false };
   }
 }
 db.collection("clientes").onSnapshot((snap) => {
@@ -5995,15 +5997,17 @@ function opsStaffTime(value) {
   return formatAMPM(value);
 }
 function opsWorkedTime(service) {
-  const direct = Number(service.tiempo_trabajado_minutos || 0);
-  if (direct > 0) {
-    return Math.floor(direct / 60) + "h " + direct % 60 + "m";
-  }
+  // Las horas visibles del propio servicio son la fuente principal.
+  // Evita mostrar acumulados antiguos/corruptos de tiempo_trabajado_minutos.
   const calculated = calcularTiempoTrabajado(service.hora_inicio, service.hora_fin);
   const pause = Number(service.pausa_total_minutos || 0);
-  const net = Math.max(0, Number(calculated.minutos || 0) - pause);
-  if (net > 0) return Math.floor(net / 60) + "h " + net % 60 + "m";
-  return calculated.texto;
+  if (calculated.valido) {
+    const net = Math.max(0, Number(calculated.minutos || 0) - Math.max(0, pause));
+    return Math.floor(net / 60) + "h " + net % 60 + "m";
+  }
+  const direct = Number(service.tiempo_trabajado_minutos || 0);
+  if (Number.isFinite(direct) && direct > 0) return Math.floor(direct / 60) + "h " + direct % 60 + "m";
+  return "No disponible";
 }
 function opsStaffTimeline(service) {
   const pauses = Number(service.pausa_total_minutos || 0);
@@ -13272,7 +13276,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 <script id="elite-admin-v900-stable-js">
 (function(){
   'use strict';
-  const VERSION='9.0.5';
+  const VERSION='9.0.6';
   const state={searchRefreshTimer:0,searchRefreshBusy:false,searchSeq:0};
   const byId=id=>document.getElementById(id);
   const text=v=>String(v==null?'':v);
@@ -13352,10 +13356,10 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 
   function health(){
     let box=byId('elite-v900-health');if(!box){box=document.createElement('div');box.id='elite-v900-health';document.body.appendChild(box)}
-    box.textContent='Admin v9.0.5 Stable · Servicios ↔ Calendario · Inicio protegido · Nómina $20/h · Firebase '+(typeof db!=='undefined'?'OK':'pendiente')+' · Buscar '+(byId('buscarTrabajo')?'OK':'pendiente');
+    box.textContent='Admin v9.0.6 Stable · Tiempo real corregido · Servicios ↔ Calendario · Inicio protegido · Nómina $20/h · Firebase '+(typeof db!=='undefined'?'OK':'pendiente')+' · Buscar '+(byId('buscarTrabajo')?'OK':'pendiente');
   }
 
-  function boot(){installSearch();guardServiceSave();health();console.info('[Elite Admin] v9.0.5 Stable activo · Servicios y Calendario sincronizados')}
+  function boot(){installSearch();guardServiceSave();health();console.info('[Elite Admin] v9.0.6 Stable activo · Tiempo real corregido · Servicios y Calendario sincronizados')}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,0));else setTimeout(boot,0);
   // Reinstala solo si un módulo reconstruye físicamente el buscador.
   new MutationObserver(()=>{const i=byId('buscarTrabajo');if(i&&i.dataset.eliteV900!=='1')installSearch();guardServiceSave()}).observe(document.documentElement,{childList:true,subtree:true});
