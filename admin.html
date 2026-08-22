@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0.7 Stable — Gastos + Inventario + Solicitudes sincronizados -->
+<!-- Elite Admin v9.0.8 Stable — Corrección de guardado de gastos -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.7 Stable — Gastos, inventario y solicitudes sincronizados</title>
+    <title>Elite Admin v9.0.8 Stable — Guardado de gastos corregido</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -9381,7 +9381,6 @@ var __spreadValues = (a, b) => {
         await db.collection("gastos_contabilidad").doc(id).update(datos);
       } else if (categoria === "Materiales / Inventario" && productos.length) {
         const expenseRef = db.collection("gastos_contabilidad").doc();
-        const batch = db.batch();
         // Consultar Firestore directamente. Así funciona aunque el módulo de
         // Inventario/Solicitudes todavía no se haya abierto en esta sesión.
         const [inventorySnapshot, requestsSnapshot] = await Promise.all([
@@ -9415,7 +9414,11 @@ var __spreadValues = (a, b) => {
             actualizado: firebase.firestore.FieldValue.serverTimestamp()
           };
           if (!existing) inventoryData.creado = firebase.firestore.FieldValue.serverTimestamp();
-          batch.set(inventoryRef, inventoryData, { merge: true });
+          // El inventario se sincroniza después de asegurar que el gasto exista.
+          // No se incluye en el mismo batch que solicitudes/historial porque una
+          // regla denegada en una colección secundaria cancelaba el gasto completo.
+          product.__inventoryRef = inventoryRef;
+          product.__inventoryData = inventoryData;
 
           const matchingRequests = requests.filter((request) =>
             ["pendiente_compra", "pendiente", "aprobada"].includes(request.estado) &&
@@ -9424,12 +9427,12 @@ var __spreadValues = (a, b) => {
           matchingRequests.forEach((request) => {
             if (!closedRequestIds.includes(request.id)) {
               closedRequestIds.push(request.id);
-              batch.delete(db.collection("solicitudes_inventario").doc(request.id));
+              // La solicitud se elimina después de guardar gasto e inventario.
             }
           });
 
-          const purchaseRef = db.collection("compras_inventario").doc(expenseRef.id + "_" + (product.catalogo_id || inventoryRef.id));
-          batch.set(purchaseRef, {
+          product.__purchaseRef = db.collection("compras_inventario").doc(expenseRef.id + "_" + (product.catalogo_id || inventoryRef.id));
+          product.__purchaseData = {
             gasto_id: expenseRef.id,
             solicitud_ids: matchingRequests.map((request) => request.id),
             catalogo_id: product.catalogo_id || "",
@@ -9442,16 +9445,67 @@ var __spreadValues = (a, b) => {
             comprado_por: (window.usuarioActual == null ? void 0 : window.usuarioActual.nombre) || (currentUser == null ? void 0 : currentUser.email) || "Admin",
             origen: "gasto_materiales_inventario",
             fecha: firebase.firestore.FieldValue.serverTimestamp()
-          });
+          };
         });
 
         datos.timestamp = firebase.firestore.FieldValue.serverTimestamp();
         datos.inventario_actualizado = true;
         datos.solicitudes_cerradas = closedRequestIds;
         datos.origen = "gasto_materiales_inventario";
-        batch.set(expenseRef, datos);
-        await batch.commit();
-        alert("Gasto registrado ✅\n\nEl inventario fue actualizado y las solicitudes correspondientes fueron eliminadas.");
+        // Guardar solamente datos serializables del producto en el gasto.
+        // Las referencias temporales usadas para sincronizar Firestore no deben
+        // terminar dentro del documento contable.
+        datos.productos = productos.map((product) => ({
+          catalogo_id: product.catalogo_id || "",
+          nombre: product.nombre || "Producto",
+          marca: product.marca || "",
+          tienda: product.tienda || "",
+          tipo: product.tipo || "",
+          tamano: product.tamano || "",
+          foto_url: product.foto_url || "",
+          cantidad: Math.max(1, Number(product.cantidad || 1)),
+          costo_unitario: Math.max(0, Number(product.costo_unitario || 0))
+        }));
+        // 1) Guardar primero el gasto. Una falla secundaria nunca debe impedir
+        // que Contabilidad registre una compra válida.
+        await expenseRef.set(datos);
+
+        // 2) Actualizar el inventario en un lote independiente.
+        const inventoryBatch = db.batch();
+        productos.forEach((product) => {
+          inventoryBatch.set(product.__inventoryRef, product.__inventoryData, { merge: true });
+        });
+        await inventoryBatch.commit();
+
+        // 3) Historial y solicitudes son complementarios. Se procesan por
+        // separado para identificar exactamente qué permiso pudiera fallar.
+        const syncWarnings = [];
+        for (const product of productos) {
+          try {
+            await product.__purchaseRef.set(product.__purchaseData);
+          } catch (historyError) {
+            console.error("Gasto guardado; no se pudo guardar historial de compra:", historyError);
+            syncWarnings.push("historial de compra");
+          }
+          delete product.__inventoryRef;
+          delete product.__inventoryData;
+          delete product.__purchaseRef;
+          delete product.__purchaseData;
+        }
+        for (const requestId of closedRequestIds) {
+          try {
+            await db.collection("solicitudes_inventario").doc(requestId).delete();
+          } catch (requestError) {
+            console.error("Gasto guardado; no se pudo eliminar solicitud:", requestError);
+            syncWarnings.push("solicitudes de inventario");
+          }
+        }
+
+        if (syncWarnings.length) {
+          alert("Gasto e inventario guardados ✅\n\nFirebase impidió completar: " + [...new Set(syncWarnings)].join(" y ") + ". El gasto no se perdió.");
+        } else {
+          alert("Gasto registrado ✅\n\nEl inventario fue actualizado y las solicitudes correspondientes fueron eliminadas.");
+        }
       } else {
         datos.timestamp = firebase.firestore.FieldValue.serverTimestamp();
         await db.collection("gastos_contabilidad").add(datos);
@@ -9459,7 +9513,9 @@ var __spreadValues = (a, b) => {
       cerrarAgregarGasto();
     } catch (error) {
       console.error("Error al guardar gasto:", error);
-      alert("No se pudo guardar el gasto. Revisa tu conexión e inténtalo nuevamente.");
+      const codigo = error && error.code ? String(error.code) : "error-desconocido";
+      const detalle = error && error.message ? String(error.message) : "Firebase rechazó la operación.";
+      alert("No se pudo guardar el gasto.\n\nCódigo: " + codigo + "\n" + detalle);
     } finally {
       boton.disabled = false;
       boton.textContent = id ? "Guardar cambios" : "Guardar";
