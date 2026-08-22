@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0.6 Stable — Servicios + Calendario sincronizados | Real Work Time Fix -->
+<!-- Elite Admin v9.0.7 Stable — Gastos + Inventario + Solicitudes sincronizados -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.6 Stable — Servicios, calendario y tiempo real corregido</title>
+    <title>Elite Admin v9.0.7 Stable — Gastos, inventario y solicitudes sincronizados</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -9382,8 +9382,14 @@ var __spreadValues = (a, b) => {
       } else if (categoria === "Materiales / Inventario" && productos.length) {
         const expenseRef = db.collection("gastos_contabilidad").doc();
         const batch = db.batch();
-        const inventory = typeof eliteV51Inventario !== "undefined" && Array.isArray(eliteV51Inventario) ? eliteV51Inventario : [];
-        const requests = typeof eliteV54Requests !== "undefined" && Array.isArray(eliteV54Requests) ? eliteV54Requests : [];
+        // Consultar Firestore directamente. Así funciona aunque el módulo de
+        // Inventario/Solicitudes todavía no se haya abierto en esta sesión.
+        const [inventorySnapshot, requestsSnapshot] = await Promise.all([
+          db.collection("inventario").get(),
+          db.collection("solicitudes_inventario").get()
+        ]);
+        const inventory = inventorySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const requests = requestsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         const normalized = (value) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
         const closedRequestIds = [];
 
