@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0.11 Stable — Mensaje de Invoice cálido y profesional -->
+<!-- Elite Admin v9.0.12 Stable — Inventario sin productos duplicados -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.11 Stable — Mensaje de Invoice mejorado</title>
+    <title>Elite Admin v9.0.12 Stable — Inventario sin duplicados</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -13525,10 +13525,10 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 
   function health(){
     let box=byId('elite-v900-health');if(!box){box=document.createElement('div');box.id='elite-v900-health';document.body.appendChild(box)}
-    box.textContent='Admin v9.0.11 Stable · Mensaje de Invoice mejorado · Invoice/PDF corregido · Servicios ↔ Calendario · Inicio protegido · Nómina $20/h · Firebase '+(typeof db!=='undefined'?'OK':'pendiente')+' · Buscar '+(byId('buscarTrabajo')?'OK':'pendiente');
+    box.textContent='Admin v9.0.12 Stable · Inventario sin duplicados · Mensaje de Invoice mejorado · Invoice/PDF corregido · Servicios ↔ Calendario · Inicio protegido · Nómina $20/h · Firebase '+(typeof db!=='undefined'?'OK':'pendiente')+' · Buscar '+(byId('buscarTrabajo')?'OK':'pendiente');
   }
 
-  function boot(){installSearch();guardServiceSave();health();console.info('[Elite Admin] v9.0.11 Stable activo · Mensaje de Invoice mejorado · Invoice/PDF corregido · Servicios y Calendario sincronizados')}
+  function boot(){installSearch();guardServiceSave();health();console.info('[Elite Admin] v9.0.12 Stable activo · Inventario sin duplicados · Mensaje de Invoice mejorado · Invoice/PDF corregido · Servicios y Calendario sincronizados')}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,0));else setTimeout(boot,0);
   // Reinstala solo si un módulo reconstruye físicamente el buscador.
   new MutationObserver(()=>{const i=byId('buscarTrabajo');if(i&&i.dataset.eliteV900!=='1')installSearch();guardServiceSave()}).observe(document.documentElement,{childList:true,subtree:true});
@@ -13632,6 +13632,89 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   };
   const originalSetOpsView=window.setOpsView;
   window.setOpsView=function(view){resetOperationalLayout(view);return originalSetOpsView(view)};
+})();
+</script>
+<script id="elite-inventory-dedup-v9012">
+(function(){
+  "use strict";
+  let cleaning=false, lastSignature="";
+  function normalize(value){
+    return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+  }
+  function productKey(item){
+    const catalog=String(item.catalogo_id||item.producto_id||"").trim();
+    const barcode=String(item.codigo_barras||"").replace(/\D/g,"");
+    return catalog ? "catalog:"+catalog : barcode ? "barcode:"+barcode : "name:"+normalize(item.nombre||item.producto_nombre||item.producto);
+  }
+  function millis(value){
+    try{
+      if(!value)return 0;
+      if(typeof value.toMillis==="function")return value.toMillis();
+      if(typeof value.toDate==="function")return value.toDate().getTime();
+      return new Date(value).getTime()||0;
+    }catch(_){return 0}
+  }
+  function chooseKeeper(rows){
+    return rows.slice().sort(function(a,b){
+      const bt=millis(b.actualizado||b.creado), at=millis(a.actualizado||a.creado);
+      if(bt!==at)return bt-at;
+      return Number(b.cantidad||0)-Number(a.cantidad||0);
+    })[0];
+  }
+  function mergedData(rows,keeper){
+    const byFreshness=rows.slice().sort((a,b)=>millis(b.actualizado||b.creado)-millis(a.actualizado||a.creado));
+    const pick=(field)=>{const hit=byFreshness.find(x=>String(x[field]??"").trim()!=="");return hit?hit[field]:""};
+    const hasReliableDates=rows.some(x=>millis(x.actualizado||x.creado)>0);
+    return {
+      nombre:pick("nombre")||keeper.nombre||"Producto",
+      tipo:pick("tipo")||"Materiales",
+      cantidad:hasReliableDates?Math.max(0,Number(keeper.cantidad||0)):Math.max(0,...rows.map(x=>Number(x.cantidad||0))),
+      minimo:Math.max(0,...rows.map(x=>Number(x.minimo||0))),
+      costo:Number(pick("costo")||0), ubicacion:pick("ubicacion"), tienda:pick("tienda")||pick("tienda_sugerida"),
+      catalogo_id:pick("catalogo_id")||pick("producto_id"), codigo_barras:pick("codigo_barras"),
+      foto_url:pick("foto_url")||pick("foto_producto_url"), clave_producto:productKey(keeper),
+      duplicados_consolidados:rows.map(x=>x.id).filter(id=>id!==keeper.id),
+      actualizado:firebase.firestore.FieldValue.serverTimestamp()
+    };
+  }
+  async function consolidateInventory(options){
+    if(cleaning||typeof db==="undefined")return 0;
+    cleaning=true;
+    try{
+      const snap=await db.collection("inventario").get();
+      const rows=snap.docs.map(d=>Object.assign({id:d.id},d.data()));
+      const groups={};
+      rows.forEach(row=>{const key=productKey(row);if(key!=="name:")(groups[key]||(groups[key]=[])).push(row)});
+      const duplicates=Object.values(groups).filter(group=>group.length>1);
+      const signature=duplicates.map(group=>group.map(x=>x.id).sort().join(",")).sort().join("|");
+      if(!duplicates.length||signature===lastSignature)return 0;
+      lastSignature=signature;
+      let fixed=0;
+      for(const group of duplicates){
+        const keeper=chooseKeeper(group), merged=mergedData(group,keeper), extras=group.filter(x=>x.id!==keeper.id);
+        const batch=db.batch();
+        batch.set(db.collection("inventario").doc(keeper.id),merged,{merge:true});
+        extras.forEach(old=>{
+          batch.set(db.collection("inventario_duplicados_archivo").doc(old.id),Object.assign({},old,{id_original:old.id,fusionado_en:keeper.id,archivado:firebase.firestore.FieldValue.serverTimestamp()}),{merge:true});
+          batch.delete(db.collection("inventario").doc(old.id));
+        });
+        await batch.commit(); fixed+=extras.length;
+      }
+      if(options&&options.notify&&fixed)alert(fixed+" producto"+(fixed===1?" repetido fue consolidado":"s repetidos fueron consolidados")+" correctamente. No se sumaron cantidades duplicadas.");
+      return fixed;
+    }catch(error){console.error("No se pudieron consolidar duplicados de inventario:",error);return 0}
+    finally{cleaning=false}
+  }
+  window.eliteV9012ConsolidateInventory=consolidateInventory;
+  const originalOpen=window.eliteV51OpenInventory;
+  if(typeof originalOpen==="function")window.eliteV51OpenInventory=function(){
+    const result=originalOpen.apply(this,arguments);
+    setTimeout(()=>consolidateInventory({notify:true}),250);
+    return result;
+  };
+  function boot(){setTimeout(()=>consolidateInventory({notify:false}),1400)}
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+  console.info("[Elite Admin] v9.0.12 · protección y consolidación de duplicados de inventario activas");
 })();
 </script>
 </body>
