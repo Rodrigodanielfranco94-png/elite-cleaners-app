@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Elite Staff v9.1 Stable | Real Job View + Consolidated Arrival, Workflow and Catalog Guards -->
+<!-- Elite Staff v9.5.1 Stable | GPS nativo + Real Job View + Consolidated Arrival, Workflow and Catalog Guards -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#000000">
-  <title>Elite Staff v9.5 Stable</title>
+  <title>Elite Staff v9.5.1 Stable</title>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -4426,17 +4426,37 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     }
   }
 
-  async function chooseMap(app){
+  function nativeMapUrl(app,address){
+    const destination=encodeURIComponent(address);
+    const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||
+      (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+    const isAndroid=/Android/i.test(navigator.userAgent);
+
+    if(app==='apple'){
+      // En iPhone, maps:// obliga a abrir Apple Maps como aplicación.
+      // Al omitir saddr, Apple Maps usa "Mi ubicación" automáticamente.
+      return isIOS
+        ?'maps://?daddr='+destination+'&dirflg=d'
+        :'https://maps.apple.com/?daddr='+destination+'&dirflg=d';
+    }
+
+    // El esquema nativo evita que Google Maps quede abierto como página web.
+    if(isIOS)return 'comgooglemaps://?daddr='+destination+'&directionsmode=driving';
+    if(isAndroid)return 'google.navigation:q='+destination+'&mode=d';
+    return 'https://www.google.com/maps/dir/?api=1&destination='+destination+'&travelmode=driving';
+  }
+
+  function chooseMap(app){
     if(!selection)return;
     const chosen={...selection};
     optionButtons.forEach(button=>button.disabled=true);
-    const destination=encodeURIComponent(chosen.address);
-    const url=app==='apple'
-      ?'https://maps.apple.com/?daddr='+destination+'&dirflg=d'
-      :'https://www.google.com/maps/dir/?api=1&destination='+destination+'&travelmode=driving';
-    await registerOnTheWay(chosen.serviceId,chosen.isToday);
+    const url=nativeMapUrl(app,chosen.address);
+
+    // Inicia el registro sin bloquear la apertura. Esperar a Firebase aquí
+    // hace que Safari pierda el toque del usuario y bloquee el enlace nativo.
+    void registerOnTheWay(chosen.serviceId,chosen.isToday);
     closePicker();
-    window.location.href=url;
+    window.location.assign(url);
   }
 
   // Captura el toque antes de los manejadores GPS antiguos para impedir dobles registros.
@@ -4453,8 +4473,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   picker.addEventListener('click',event=>{if(event.target===picker)closePicker()});
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&picker.classList.contains('open'))closePicker()});
 
-  window.EliteStaffV93=Object.freeze({version:VERSION});
-  console.info('[Elite Staff] v9.3 Stable · selector Apple Maps / Google Maps activo');
+  window.EliteStaffV93=Object.freeze({version:'9.5.1',nativeMapUrl});
+  console.info('[Elite Staff] v9.5.1 Stable · navegación nativa Apple Maps / Google Maps activa');
 })();
 </script>
 
@@ -4462,7 +4482,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script id="elite-staff-v940-workflow-isolation">
 (function(){
   'use strict';
-  const VERSION='9.5.0';
+  const VERSION='9.5.1';
   const previousWorkflow=typeof window.updateWorkflow==='function'?window.updateWorkflow:null;
   let transitionLock=null;
 
@@ -4556,7 +4576,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   window.updateWorkflow=guardedWorkflow;
   try{updateWorkflow=guardedWorkflow}catch(_){}
   window.EliteStaffV94=Object.freeze({version:VERSION,stageOf,hasArrivalProof});
-  console.info('[Elite Staff] v9.5 Stable · llegada iPhone directa y flujo obligatorio activo');
+  console.info('[Elite Staff] v9.5.1 Stable · GPS nativo, llegada iPhone directa y flujo obligatorio activo');
 })();
 </script>
 
