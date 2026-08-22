@@ -1315,6 +1315,12 @@ body.elite-v5-body{
         <input type="number" id="millas_servicio" placeholder="Millas ida y vuelta del servicio">
         <input type="tel" id="whatsapp" placeholder="Teléfono del Cliente">
         <input type="email" id="email_cliente" placeholder="Correo del Cliente">
+        <span class="label-text">Proceso del cliente</span>
+        <select id="proceso_cliente" style="width:100%;padding:14px;margin-bottom:10px;border-radius:12px;border:1px solid #2c2c2e;background:#2c2c2e;color:white;box-sizing:border-box;font-size:15px;">
+            <option value="nuevo" selected>Cliente nuevo — Acuerdo y depósito</option>
+            <option value="habitual">Cliente habitual — Sin acuerdo ni depósito</option>
+        </select>
+        <small style="display:block;color:#94a3b8;line-height:1.45;margin:-3px 2px 8px;">Al elegir un cliente guardado, la app seleccionará automáticamente “Cliente habitual”. Puedes cambiarlo manualmente antes de guardar.</small>
 
         </div>
     </div>
@@ -2126,6 +2132,9 @@ function filtrarClientes() {
       asignar("whatsapp", c.whatsapp || c.telefono || "");
       asignar("email_cliente", c.email || c.email_cliente || "");
       asignar("millas_servicio", c.millas_servicio || c.millas_total || "");
+      // Un cliente elegido desde la lista ya existe en la empresa; para este
+      // nuevo trabajo se trata como habitual, sin acuerdo ni depósito.
+      asignar("proceso_cliente", "habitual");
       asignar("pies_cuadrados", c.pies_cuadrados || c.pies2 || c.square_feet || "");
       asignar("habitaciones", c.habitaciones || "");
       asignar("espacios_independientes", c.espacios_independientes || "");
@@ -3062,11 +3071,12 @@ function renderHistorial() {
     }
     if (hayBusqueda || vistaActual === "todos" || vistaActual === "pendiente" && s.estado !== "completado" || vistaActual === "completado" && s.estado === "completado") {
       const infoTiempo = calcularTiempoTrabajado(s.hora_inicio, s.hora_fin);
-      const btnFirma = s.contrato_firmado ? '<button class="btn-action" style="background:#22c55e;" onclick="verFirma(\''.concat(s.id, "')\">✍️ Ver Firma</button>") : '<button class="btn-action btn-contract" onclick="enviarContrato(\''.concat(s.id, "', '").concat(s.whatsapp, "', '").concat(s.cliente, "')\">📄 Acuerdo</button>");
+      const clienteHabitual = s.proceso_cliente === "habitual" || s.cliente_habitual === true || s.deposito_requerido === false;
+      const btnFirma = clienteHabitual ? "" : s.contrato_firmado ? '<button class="btn-action" style="background:#22c55e;" onclick="verFirma(\''.concat(s.id, "')\">✍️ Ver Firma</button>") : '<button class="btn-action btn-contract" onclick="enviarContrato(\''.concat(s.id, "', '").concat(s.whatsapp, "', '").concat(s.cliente, "')\">📄 Acuerdo</button>");
       const depositoMonto = Number(s.deposito_monto || 0).toFixed(2);
       const pagoNormalizado = elitePaymentState(s);
-      const estadoDeposito = pagoNormalizado.deposito ? '<p style="color:#22c55e; font-weight:bold;">✅ Depósito confirmado: $'.concat(depositoMonto, "</p>") : '<p style="color:#f59e0b; font-weight:bold;">🔒 Depósito pendiente: $'.concat(depositoMonto, "</p>");
-      const btnDeposito = pagoNormalizado.deposito ? '<button class="btn-action" style="background:#92400e;" onclick="cancelarDeposito(\''.concat(s.id, "')\">Cancelar Depósito</button>") : '<button class="btn-action" style="background:#22c55e;" onclick="confirmarDeposito(\''.concat(s.id, "')\">Confirmar Depósito</button>");
+      const estadoDeposito = clienteHabitual ? '<p style="color:#60a5fa;font-weight:bold;">🤝 Cliente habitual · Sin acuerdo ni depósito</p>' : pagoNormalizado.deposito ? '<p style="color:#22c55e; font-weight:bold;">✅ Depósito confirmado: $'.concat(depositoMonto, "</p>") : '<p style="color:#f59e0b; font-weight:bold;">🔒 Depósito pendiente: $'.concat(depositoMonto, "</p>");
+      const btnDeposito = clienteHabitual ? "" : pagoNormalizado.deposito ? '<button class="btn-action" style="background:#92400e;" onclick="cancelarDeposito(\''.concat(s.id, "')\">Cancelar Depósito</button>") : '<button class="btn-action" style="background:#22c55e;" onclick="confirmarDeposito(\''.concat(s.id, "')\">Confirmar Depósito</button>");
       const btnBalance = pagoNormalizado.balance ? '<button class="btn-action" style="background:#92400e;" onclick="cancelarBalance(\''.concat(s.id, "')\">Cancelar Balance</button>") : '<button class="btn-action" style="background:#16a34a;" onclick="confirmarBalance(\''.concat(s.id, "')\">Confirmar Balance</button>");
       const card = document.createElement("div");
       card.className = "card-servicio";
@@ -3158,6 +3168,14 @@ function marcar(id, est) {
   });
 }
 async function cambiarEstadoTrabajo(id, estado) {
+  const refServicio = db.collection("servicios").doc(id);
+  let estadoAnterior = "";
+  try {
+    const snapAnterior = await refServicio.get();
+    estadoAnterior = snapAnterior.exists ? String((snapAnterior.data() || {}).estado || "") : "";
+  } catch (_) {
+    estadoAnterior = String((todosLosServicios.find((s) => s.id === id) || {}).estado || "");
+  }
   const ahora = /* @__PURE__ */ new Date();
   const horaActual = String(ahora.getHours()).padStart(2, "0") + ":" + String(ahora.getMinutes()).padStart(2, "0");
   const datos = {
@@ -3170,20 +3188,28 @@ async function cambiarEstadoTrabajo(id, estado) {
   if (estado === "completado") {
     datos.hora_fin = horaActual;
   }
-  await db.collection("servicios").doc(id).update(datos);
-  if (estado === "completado") {
-    const servicio = todosLosServicios.find((s) => s.id === id);
+  await refServicio.update(datos);
+  if (estado === "completado" && estadoAnterior !== "completado") {
+    let servicio = todosLosServicios.find((s) => s.id === id);
+    try {
+      const snapActual = await refServicio.get();
+      if (snapActual.exists) servicio = __spreadProps(__spreadValues({}, snapActual.data()), { id: snapActual.id, firestore_id: snapActual.id });
+    } catch (_) {
+    }
     if (!servicio) return;
     const total = Number(servicio.precio_total || 0);
-    const deposito = Number(servicio.deposito_monto || 0);
-    const balance = Number(servicio.balance_restante || total - deposito);
-    const venmoLink = "https://venmo.com/?txn=pay&recipients=Elite-Cleaners-Company&amount=".concat(balance.toFixed(2), "&note=Elite%20Cleaners%20Balance");
-    const mensaje = "Hello ".concat(servicio.cliente, ", your cleaning service has been completed. ✅\n\nRemaining balance: $").concat(balance.toFixed(2), "\n\nPay via Venmo:\n").concat(venmoLink, "\n\nOr pay through Zelle:\nrodrigodanielfranco94@gmail.com\n\nThank you for choosing Elite Cleaners Company.");
-    if (!servicio.whatsapp) {
-      alert("El cliente no tiene teléfono registrado.");
-      return;
+    const depositoCobrado = servicio.deposito_pagado === true ? Number(servicio.deposito_monto || 0) : 0;
+    const balance = servicio.balance_pagado === true ? 0 : Math.max(0, total - depositoCobrado);
+    await refServicio.set({
+      balance_restante: balance,
+      invoice_pendiente_envio: balance > 0,
+      fecha_trabajo_terminado: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    const abrir = confirm("✅ Trabajo terminado correctamente\n\nCliente: ".concat(servicio.cliente || "Cliente", "\nTotal del servicio: $").concat(total.toFixed(2), "\nPagado anteriormente: $").concat(depositoCobrado.toFixed(2), "\nBalance pendiente: $").concat(balance.toFixed(2), "\n\n¿Deseas revisar y enviar el Invoice ahora?"));
+    if (abrir) {
+      if (typeof window.eliteDocOpen === "function") await window.eliteDocOpen(id, "invoice");
+      else alert("El trabajo quedó terminado, pero el editor de Invoice todavía no está disponible. Ábrelo desde el botón Invoice del servicio.");
     }
-    abrirSMS(servicio.whatsapp, mensaje);
   }
 }
 function confirmarDeposito(id) {
@@ -3322,6 +3348,7 @@ function editar(id, s) {
   document.getElementById("direccion").value = s.direccion;
   document.getElementById("whatsapp").value = s.whatsapp || s.telefono || "";
   document.getElementById("email_cliente").value = s.email_cliente || "";
+  document.getElementById("proceso_cliente").value = s.proceso_cliente || (s.cliente_habitual === true || s.deposito_requerido === false ? "habitual" : "nuevo");
   document.getElementById("precio_total").value = s.precio_total || 0;
   document.getElementById("search-empleado").value = s.empleado_nombre;
   document.getElementById("email-empleado").value = s.empleado_email || "";
@@ -8033,7 +8060,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     const paymentState = elitePaymentState(s);
     $("edoc-status").value = state.type === "invoice" ? paymentState.completo ? "PAID" : paymentState.deposito ? "PARTIALLY PAID" : "DRAFT" : "DRAFT";
     $("edoc-issued").value = today;
-    $("edoc-due").value = plusDays(today, state.type === "invoice" ? 7 : 14);
+    $("edoc-due").value = state.type === "invoice" ? today : plusDays(today, 14);
     $("edoc-discount").value = 0;
     $("edoc-tax").value = 0;
     $("edoc-paid").value = state.type === "invoice" && paymentState.deposito ? num(s.deposito_monto || num(s.precio_total) * 0.5) : 0;
@@ -8303,7 +8330,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     $("edoc-status").dispatchEvent(new Event("change", { bubbles: true }));
     d = data();
     const subject = "".concat(label, " ").concat(d.number, " - Elite Cleaners Company");
-    const message = "Hello ".concat(d.customer, ",\n\nPlease find your ").concat(label.toLowerCase(), " ").concat(d.number, " from Elite Cleaners Company. The total is ").concat(money(d.totals.total), ".\n\nThank you for choosing Elite Cleaners Company.");
+    const message = state.type === "invoice" ? "Hello ".concat(d.customer, ",\n\nYour cleaning service has been completed. Please find your Invoice ").concat(d.number, " from Elite Cleaners Company.\n\nBalance due: ").concat(money(d.totals.balance), "\n\nThank you for continuing to trust Elite Cleaners Company!") : "Hello ".concat(d.customer, ",\n\nPlease find your estimate ").concat(d.number, " from Elite Cleaners Company. The total is ").concat(money(d.totals.total), ".\n\nThank you for choosing Elite Cleaners Company.");
     try {
       const out = pdfOutput("blob"), file = new File([out.blob], out.filename, { type: "application/pdf" });
       const appleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -12406,12 +12433,14 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   function collect(existing = {}, editing = false) {
     var _a, _b;
     const price = number("precio_total", 0), phone = String(value("whatsapp")).replace(/\D/g, "");
-    const data = { cliente: String(value("cliente")).trim(), direccion: String(value("direccion")).trim(), whatsapp: phone, telefono: phone, email_cliente: String(value("email_cliente")).trim(), precio_total: price, precio_inicial: number("precio_inicial", price), precio_recurrente: number("precio_recurrente", 0), millas_servicio: number("millas_servicio", 0), empleado_nombre: String(value("search-empleado")).trim(), empleado_email: String(value("email-empleado")).trim(), empleado_nombre_2: String(value("search-empleado-2")).trim(), empleado_email_2: String(value("email-empleado-2")).trim(), empleado_nombre_3: String(value("search-empleado-3")).trim(), empleado_email_3: String(value("email-empleado-3")).trim(), fecha: value("fecha"), hora: value("hora"), hora_final_estimada: value("hora_final_estimada"), repetir: value("repetir", "ninguno") || "ninguno", estado_calendario: value("estado_calendario", "pendiente") || "pendiente", estado: editing ? value("estado_trabajo", existing.estado || "no_iniciado") || "no_iniciado" : "no_iniciado", pies_cuadrados: value("pies_cuadrados"), habitaciones: value("habitaciones"), banos: value("banos"), medios_banos: value("medios_banos"), salas: value("salas"), cocinas: value("cocinas"), oficinas: value("oficinas"), espacios_independientes: value("espacios_independientes"), nombres_espacios_independientes: value("nombres_espacios_independientes"), horno: value("horno", "No") || "No", nevera: value("nevera", "No") || "No", gabinetes: value("gabinetes", "No") || "No", ventanas: value("ventanas", "No") || "No", baseboards: value("baseboards", "No") || "No", perros: value("perros", "No") || "No", lavanderia: value("lavanderia"), garaje: value("garaje"), comedor: value("comedor"), sala_juegos: value("sala_juegos"), alfombra_habitaciones: value("alfombra_habitaciones"), alfombra_pies_cuadrados: value("alfombra_pies_cuadrados"), alfombra_notas: value("alfombra_notas"), notas_internas: value("notas_internas"), tipo: (typeof tipoSeleccionado !== "undefined" ? tipoSeleccionado : "ESTÁNDAR") || existing.tipo || "ESTÁNDAR", pricing_version: "8.6.1-estimates-pricing-fix", actualizado_en: firebase.firestore.FieldValue.serverTimestamp() };
+    const process = value("proceso_cliente", existing.proceso_cliente || "nuevo") === "habitual" ? "habitual" : "nuevo";
+    const habitual = process === "habitual";
+    const data = { cliente: String(value("cliente")).trim(), direccion: String(value("direccion")).trim(), whatsapp: phone, telefono: phone, email_cliente: String(value("email_cliente")).trim(), proceso_cliente: process, cliente_habitual: habitual, acuerdo_requerido: !habitual, precio_total: price, precio_inicial: number("precio_inicial", price), precio_recurrente: number("precio_recurrente", 0), millas_servicio: number("millas_servicio", 0), empleado_nombre: String(value("search-empleado")).trim(), empleado_email: String(value("email-empleado")).trim(), empleado_nombre_2: String(value("search-empleado-2")).trim(), empleado_email_2: String(value("email-empleado-2")).trim(), empleado_nombre_3: String(value("search-empleado-3")).trim(), empleado_email_3: String(value("email-empleado-3")).trim(), fecha: value("fecha"), hora: value("hora"), hora_final_estimada: value("hora_final_estimada"), repetir: value("repetir", "ninguno") || "ninguno", estado_calendario: value("estado_calendario", "pendiente") || "pendiente", estado: editing ? value("estado_trabajo", existing.estado || "no_iniciado") || "no_iniciado" : "no_iniciado", pies_cuadrados: value("pies_cuadrados"), habitaciones: value("habitaciones"), banos: value("banos"), medios_banos: value("medios_banos"), salas: value("salas"), cocinas: value("cocinas"), oficinas: value("oficinas"), espacios_independientes: value("espacios_independientes"), nombres_espacios_independientes: value("nombres_espacios_independientes"), horno: value("horno", "No") || "No", nevera: value("nevera", "No") || "No", gabinetes: value("gabinetes", "No") || "No", ventanas: value("ventanas", "No") || "No", baseboards: value("baseboards", "No") || "No", perros: value("perros", "No") || "No", lavanderia: value("lavanderia"), garaje: value("garaje"), comedor: value("comedor"), sala_juegos: value("sala_juegos"), alfombra_habitaciones: value("alfombra_habitaciones"), alfombra_pies_cuadrados: value("alfombra_pies_cuadrados"), alfombra_notas: value("alfombra_notas"), notas_internas: value("notas_internas"), tipo: (typeof tipoSeleccionado !== "undefined" ? tipoSeleccionado : "ESTÁNDAR") || existing.tipo || "ESTÁNDAR", pricing_version: "9.0.9-client-workflow", actualizado_en: firebase.firestore.FieldValue.serverTimestamp() };
     if (editing) {
       data.hora_inicio = value("hora_inicio_real", existing.hora_inicio || "--:--") || existing.hora_inicio || "--:--";
       data.hora_fin = value("hora_fin_real", existing.hora_fin || "--:--") || existing.hora_fin || "--:--";
       data.millas_reales = value("millas_reales", existing.millas_reales || "");
-      data.deposito_requerido = existing.deposito_requerido !== false;
+      data.deposito_requerido = !habitual;
       data.deposito_pagado = existing.deposito_pagado === true;
       data.balance_pagado = existing.balance_pagado === true;
       // Recalcular los importes pendientes al editar el precio. Nunca se
@@ -12425,12 +12454,12 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
         : data.deposito_pagado
           ? Math.round(Math.max(0, price - data.deposito_monto) * 100) / 100
           : Math.round(Math.max(0, price - data.deposito_monto) * 100) / 100;
-    } else Object.assign(data, { timestamp: firebase.firestore.FieldValue.serverTimestamp(), hora_inicio: "--:--", hora_fin: "--:--", firma_cliente: false, deposito_requerido: true, deposito_pagado: false, deposito_monto: price * 0.5, balance_pagado: false, balance_restante: price * 0.5, metodo_pago_deposito: "", comprobante_deposito: "", fecha_pago_deposito: "" });
+    } else Object.assign(data, { timestamp: firebase.firestore.FieldValue.serverTimestamp(), hora_inicio: "--:--", hora_fin: "--:--", firma_cliente: false, deposito_requerido: !habitual, deposito_pagado: false, deposito_monto: habitual ? 0 : price * 0.5, balance_pagado: false, balance_restante: habitual ? price : price * 0.5, metodo_pago_deposito: "", comprobante_deposito: "", fecha_pago_deposito: "" });
     return data;
   }
   async function secondary(data, id) {
     try {
-      await db.collection("clientes").doc(data.cliente).set({ nombre: data.cliente, direccion: data.direccion, whatsapp: data.whatsapp, telefono: data.whatsapp, email: data.email_cliente, millas_servicio: data.millas_servicio || 0, repetir: data.repetir || "ninguno", pies_cuadrados: data.pies_cuadrados || "", habitaciones: data.habitaciones || "", banos: data.banos || "", medios_banos: data.medios_banos || "", salas: data.salas || "", cocinas: data.cocinas || "", oficinas: data.oficinas || "", horno: data.horno || "No", nevera: data.nevera || "No", gabinetes: data.gabinetes || "No", ventanas: data.ventanas || "No", baseboards: data.baseboards || "No", perros: data.perros || "No", lavanderia: data.lavanderia || "", garaje: data.garaje || "", comedor: data.comedor || "", sala_juegos: data.sala_juegos || "", alfombra_habitaciones: data.alfombra_habitaciones || "", alfombra_pies_cuadrados: data.alfombra_pies_cuadrados || "", alfombra_notas: data.alfombra_notas || "", notas_internas: data.notas_internas || "" }, { merge: true });
+      await db.collection("clientes").doc(data.cliente).set({ nombre: data.cliente, direccion: data.direccion, whatsapp: data.whatsapp, telefono: data.whatsapp, email: data.email_cliente, proceso_cliente: data.proceso_cliente, cliente_habitual: data.cliente_habitual, millas_servicio: data.millas_servicio || 0, repetir: data.repetir || "ninguno", pies_cuadrados: data.pies_cuadrados || "", habitaciones: data.habitaciones || "", banos: data.banos || "", medios_banos: data.medios_banos || "", salas: data.salas || "", cocinas: data.cocinas || "", oficinas: data.oficinas || "", horno: data.horno || "No", nevera: data.nevera || "No", gabinetes: data.gabinetes || "No", ventanas: data.ventanas || "No", baseboards: data.baseboards || "No", perros: data.perros || "No", lavanderia: data.lavanderia || "", garaje: data.garaje || "", comedor: data.comedor || "", sala_juegos: data.sala_juegos || "", alfombra_habitaciones: data.alfombra_habitaciones || "", alfombra_pies_cuadrados: data.alfombra_pies_cuadrados || "", alfombra_notas: data.alfombra_notas || "", notas_internas: data.notas_internas || "" }, { merge: true });
       await db.collection("clientes").doc(data.cliente).set({
         espacios_independientes: data.espacios_independientes || "",
         nombres_espacios_independientes: data.nombres_espacios_independientes || ""
