@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#000000">
-  <title>Elite Staff v9.2 Stable</title>
+  <title>Elite Staff v9.5 Stable</title>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -4029,7 +4029,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     back.addEventListener('click',closeJobView);
     const label=document.createElement('div');
     label.className='elite-work-view-label';
-    label.textContent='Trabajo abierto · Staff v9.2';
+    label.textContent='Trabajo abierto · Staff v9.5';
     toolbar.append(back,label);
     card.insertBefore(toolbar,card.firstChild);
     return toolbar;
@@ -4462,7 +4462,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script id="elite-staff-v940-workflow-isolation">
 (function(){
   'use strict';
-  const VERSION='9.4.0';
+  const VERSION='9.5.0';
   const previousWorkflow=typeof window.updateWorkflow==='function'?window.updateWorkflow:null;
   let transitionLock=null;
 
@@ -4536,6 +4536,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(typeof previousWorkflow!=='function')throw new Error('El flujo del servicio no está disponible.');
     transitionLock=lockKey;
     try{
+      /* La cámara del iPhone debe abrirse directamente durante el toque del usuario.
+         No hagas ninguna lectura async de Firestore antes de delegar la llegada:
+         Safari perdería el gesto, bloquearía el selector de cámara y el botón
+         permanecería visualmente en REGISTRANDO... esperando una foto imposible. */
+      if(next==='llego'){
+        return await previousWorkflow.call(this,id,next,inspectionConfirmed);
+      }
       const job=await freshJob(id);
       requireTransition(job,next);
       const result=await previousWorkflow.call(this,id,next,inspectionConfirmed);
@@ -4549,7 +4556,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   window.updateWorkflow=guardedWorkflow;
   try{updateWorkflow=guardedWorkflow}catch(_){}
   window.EliteStaffV94=Object.freeze({version:VERSION,stageOf,hasArrivalProof});
-  console.info('[Elite Staff] v9.4 Stable · servicios aislados y flujo obligatorio activo');
+  console.info('[Elite Staff] v9.5 Stable · llegada iPhone directa y flujo obligatorio activo');
 })();
 </script>
 
