@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0.10 Stable — Corrección de envío de Invoice/PDF -->
+<!-- Elite Admin v9.0.11 Stable — Mensaje de Invoice cálido y profesional -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.10 Stable — Invoice/PDF corregido</title>
+    <title>Elite Admin v9.0.11 Stable — Mensaje de Invoice mejorado</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -8390,7 +8390,25 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     $("edoc-status").dispatchEvent(new Event("change", { bubbles: true }));
     d = data();
     const subject = "".concat(label, " ").concat(d.number, " - Elite Cleaners Company");
-    const message = state.type === "invoice" ? "Hello ".concat(d.customer, ",\n\nYour cleaning service has been completed. Please find your Invoice ").concat(d.number, " from Elite Cleaners Company.\n\nBalance due: ").concat(money(d.totals.balance), "\n\nThank you for continuing to trust Elite Cleaners Company!") : "Hello ".concat(d.customer, ",\n\nPlease find your estimate ").concat(d.number, " from Elite Cleaners Company. The total is ").concat(money(d.totals.total), ".\n\nThank you for choosing Elite Cleaners Company.");
+    const firstName = String(d.customer || "").trim().split(/\s+/)[0] || "there";
+    const paymentConfig = window.eliteV51Config || window.configuracionEmpresa || {};
+    const venmoUser = String(paymentConfig.venmo || "Elite-Cleaners-Company").replace(/^@+/, "");
+    const zelleAccount = String(paymentConfig.zelle || "rodrigodanielfranco94@gmail.com").trim();
+    const message = state.type === "invoice" ? [
+      "Hi " + firstName + ",",
+      "",
+      "We hope you’re happy with today’s cleaning! ✨",
+      "",
+      "Your service is now complete, and your remaining balance is " + money(d.totals.balance) + ".",
+      "",
+      "For your convenience, you may send payment through:",
+      "• Venmo: @" + venmoUser,
+      "• Zelle: " + zelleAccount,
+      "",
+      "Your invoice is attached for your records.",
+      "",
+      "Thank you for trusting Elite Cleaners Company. We truly appreciate your business and look forward to serving you again! 💙"
+    ].join("\n") : "Hi ".concat(firstName, ",\n\nThank you for considering Elite Cleaners Company! Please find Estimate ").concat(d.number, " attached for your review.\n\nEstimated total: ").concat(money(d.totals.total), "\n\nPlease feel free to reach out if you have any questions. We would be happy to help! 💙");
     try {
       const out = await pdfOutput("blob"), file = new File([out.blob], out.filename, { type: "application/pdf" });
       const appleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -13427,7 +13445,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 <script id="elite-admin-v900-stable-js">
 (function(){
   'use strict';
-  const VERSION='9.0.10';
+  const VERSION='9.0.11';
   const state={searchRefreshTimer:0,searchRefreshBusy:false,searchSeq:0};
   const byId=id=>document.getElementById(id);
   const text=v=>String(v==null?'':v);
@@ -13507,10 +13525,10 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 
   function health(){
     let box=byId('elite-v900-health');if(!box){box=document.createElement('div');box.id='elite-v900-health';document.body.appendChild(box)}
-    box.textContent='Admin v9.0.10 Stable · Invoice/PDF corregido · Tiempo real corregido · Servicios ↔ Calendario · Inicio protegido · Nómina $20/h · Firebase '+(typeof db!=='undefined'?'OK':'pendiente')+' · Buscar '+(byId('buscarTrabajo')?'OK':'pendiente');
+    box.textContent='Admin v9.0.11 Stable · Mensaje de Invoice mejorado · Invoice/PDF corregido · Servicios ↔ Calendario · Inicio protegido · Nómina $20/h · Firebase '+(typeof db!=='undefined'?'OK':'pendiente')+' · Buscar '+(byId('buscarTrabajo')?'OK':'pendiente');
   }
 
-  function boot(){installSearch();guardServiceSave();health();console.info('[Elite Admin] v9.0.10 Stable activo · Invoice/PDF corregido · Tiempo real corregido · Servicios y Calendario sincronizados')}
+  function boot(){installSearch();guardServiceSave();health();console.info('[Elite Admin] v9.0.11 Stable activo · Mensaje de Invoice mejorado · Invoice/PDF corregido · Servicios y Calendario sincronizados')}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,0));else setTimeout(boot,0);
   // Reinstala solo si un módulo reconstruye físicamente el buscador.
   new MutationObserver(()=>{const i=byId('buscarTrabajo');if(i&&i.dataset.eliteV900!=='1')installSearch();guardServiceSave()}).observe(document.documentElement,{childList:true,subtree:true});
