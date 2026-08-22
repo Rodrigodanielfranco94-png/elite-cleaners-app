@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0.8 Stable — Corrección de guardado de gastos -->
+<!-- Elite Admin v9.0.10 Stable — Corrección de envío de Invoice/PDF -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.8 Stable — Guardado de gastos corregido</title>
+    <title>Elite Admin v9.0.10 Stable — Invoice/PDF corregido</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -13,7 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
 
     <style>body { background: #000; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; padding-bottom: 100px; }
@@ -8200,9 +8200,69 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     const c = window.eliteV51Config || window.configuracionEmpresa || {};
     return { name: c.nombre_empresa || "Elite Cleaners Company", address: "Pleasanton, CA 94566", phone: c.telefono_empresa || "(925) 336-2884", email: c.email_empresa || "elitecleanerscompany@gmail.com", web: c.web_empresa || "elitecleanerscompany.com" };
   }
-  function pdfOutput(kind = "blob") {
-    var _a, _b;
-    if (!((_a = window.jspdf) == null ? void 0 : _a.jsPDF)) throw new Error("El generador PDF todavía no está disponible.");
+  function eliteLoadExternalScript(src, test) {
+    if (test()) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      let finished = false;
+      const done = (error) => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timer);
+        if (test()) resolve();
+        else reject(error || new Error("No se pudo cargar " + src));
+      };
+      const timer = setTimeout(() => done(new Error("Tiempo de espera agotado al cargar " + src)), 12000);
+      script.addEventListener("load", () => done(), { once: true });
+      script.addEventListener("error", () => done(new Error("No se pudo cargar " + src)), { once: true });
+      script.src = src;
+      script.async = true;
+      document.head.appendChild(script);
+    });
+  }
+  async function eliteEnsurePdfLibraries() {
+    const jsPdfReady = () => !!(window.jspdf && window.jspdf.jsPDF);
+    const autoTableReady = () => jsPdfReady() && typeof window.jspdf.jsPDF.API.autoTable === "function";
+    if (!jsPdfReady()) {
+      const sources = [
+        "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
+        "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js",
+        "https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"
+      ];
+      let loaded = false;
+      for (const src of sources) {
+        try {
+          await eliteLoadExternalScript(src, jsPdfReady);
+          loaded = true;
+          break;
+        } catch (error) {
+          console.warn("No se pudo cargar jsPDF desde", src, error);
+        }
+      }
+      if (!loaded) throw new Error("No se pudo cargar el generador PDF. Verifica la conexión e inténtalo nuevamente.");
+    }
+    if (!autoTableReady()) {
+      const sources = [
+        "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js",
+        "https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js",
+        "https://unpkg.com/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"
+      ];
+      let loaded = false;
+      for (const src of sources) {
+        try {
+          await eliteLoadExternalScript(src, autoTableReady);
+          loaded = true;
+          break;
+        } catch (error) {
+          console.warn("No se pudo cargar AutoTable desde", src, error);
+        }
+      }
+      if (!loaded) throw new Error("No se pudo cargar el formato de tablas del PDF. Verifica la conexión e inténtalo nuevamente.");
+    }
+  }
+  async function pdfOutput(kind = "blob") {
+    var _b;
+    await eliteEnsurePdfLibraries();
     const d = data(), c = company(), doc = new window.jspdf.jsPDF({ unit: "pt", format: "letter" }), blue = [30, 64, 175], gray = [71, 85, 105];
     const logo = ((_b = document.getElementById("elite-shared-logo-master")) == null ? void 0 : _b.src) || "";
     if (/^data:image\//.test(logo)) {
@@ -8285,7 +8345,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   window.eliteDocDownload = async () => {
     try {
       await eliteDocSave(true);
-      pdfOutput("save");
+      await pdfOutput("save");
     } catch (e) {
       console.error(e);
       alert(e.message || "No se pudo generar el PDF.");
@@ -8332,7 +8392,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     const subject = "".concat(label, " ").concat(d.number, " - Elite Cleaners Company");
     const message = state.type === "invoice" ? "Hello ".concat(d.customer, ",\n\nYour cleaning service has been completed. Please find your Invoice ").concat(d.number, " from Elite Cleaners Company.\n\nBalance due: ").concat(money(d.totals.balance), "\n\nThank you for continuing to trust Elite Cleaners Company!") : "Hello ".concat(d.customer, ",\n\nPlease find your estimate ").concat(d.number, " from Elite Cleaners Company. The total is ").concat(money(d.totals.total), ".\n\nThank you for choosing Elite Cleaners Company.");
     try {
-      const out = pdfOutput("blob"), file = new File([out.blob], out.filename, { type: "application/pdf" });
+      const out = await pdfOutput("blob"), file = new File([out.blob], out.filename, { type: "application/pdf" });
       const appleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent);
       const android = /Android/i.test(navigator.userAgent);
       const mobile = appleMobile || android;
@@ -8358,7 +8418,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
       }
       await savePromise;
       await approveRelatedEstimates();
-      pdfOutput("save");
+      await pdfOutput("save");
       const attachmentNote = "\n\nThe PDF was downloaded. Please attach it before sending.";
       try {
         await ((_a = navigator.clipboard) == null ? void 0 : _a.writeText(message + attachmentNote));
@@ -13367,7 +13427,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 <script id="elite-admin-v900-stable-js">
 (function(){
   'use strict';
-  const VERSION='9.0.6';
+  const VERSION='9.0.10';
   const state={searchRefreshTimer:0,searchRefreshBusy:false,searchSeq:0};
   const byId=id=>document.getElementById(id);
   const text=v=>String(v==null?'':v);
@@ -13447,10 +13507,10 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 
   function health(){
     let box=byId('elite-v900-health');if(!box){box=document.createElement('div');box.id='elite-v900-health';document.body.appendChild(box)}
-    box.textContent='Admin v9.0.6 Stable · Tiempo real corregido · Servicios ↔ Calendario · Inicio protegido · Nómina $20/h · Firebase '+(typeof db!=='undefined'?'OK':'pendiente')+' · Buscar '+(byId('buscarTrabajo')?'OK':'pendiente');
+    box.textContent='Admin v9.0.10 Stable · Invoice/PDF corregido · Tiempo real corregido · Servicios ↔ Calendario · Inicio protegido · Nómina $20/h · Firebase '+(typeof db!=='undefined'?'OK':'pendiente')+' · Buscar '+(byId('buscarTrabajo')?'OK':'pendiente');
   }
 
-  function boot(){installSearch();guardServiceSave();health();console.info('[Elite Admin] v9.0.6 Stable activo · Tiempo real corregido · Servicios y Calendario sincronizados')}
+  function boot(){installSearch();guardServiceSave();health();console.info('[Elite Admin] v9.0.10 Stable activo · Invoice/PDF corregido · Tiempo real corregido · Servicios y Calendario sincronizados')}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,0));else setTimeout(boot,0);
   // Reinstala solo si un módulo reconstruye físicamente el buscador.
   new MutationObserver(()=>{const i=byId('buscarTrabajo');if(i&&i.dataset.eliteV900!=='1')installSearch();guardServiceSave()}).observe(document.documentElement,{childList:true,subtree:true});
