@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0.12 Stable — Inventario sin productos duplicados -->
+<!-- Elite Admin v9.0.13 Stable — Estimate, Servicios e Invoice sincronizados -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.12 Stable — Inventario sin duplicados</title>
+    <title>Elite Admin v9.0.13 Stable — Estimate y Servicios sincronizados</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -8131,6 +8131,46 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     state.items = Array.isArray(estimate.items) && estimate.items.length ? estimate.items.map((x) => ({ description: String(x.description || ""), quantity: num(x.quantity), unitPrice: num(x.unitPrice) })) : state.items;
     renderItems();
   }
+  async function syncServiceFromEstimate(serviceId, estimate) {
+    const serviceRef = db.collection("servicios").doc(String(serviceId));
+    const serviceSnap = await serviceRef.get();
+    if (!serviceSnap.exists) throw new Error("El servicio relacionado con el Estimate ya no existe.");
+    const service = serviceSnap.data() || {};
+    const total = Math.round(num(estimate && estimate.totals && estimate.totals.total) * 100) / 100;
+    const oldTotal = Math.round(num(service.precio_total) * 100) / 100;
+    const habitual = service.proceso_cliente === "habitual" || service.cliente_habitual === true || service.deposito_requerido === false;
+    const depositWasPaid = service.deposito_pagado === true || Boolean(service.fecha_pago_deposito);
+    const balanceWasPaid = service.balance_pagado === true || Boolean(service.fecha_pago_balance);
+    const paidInEstimate = Math.min(total, num(estimate.paid));
+    let confirmedPaid = paidInEstimate;
+    if (balanceWasPaid) confirmedPaid = Math.max(confirmedPaid, Math.min(total, oldTotal));
+    else if (depositWasPaid) confirmedPaid = Math.max(confirmedPaid, Math.min(total, num(service.deposito_monto)));
+    const plannedDeposit = habitual ? 0 : Math.round(total * 50) / 100;
+    const depositAmount = confirmedPaid > 0 ? confirmedPaid : plannedDeposit;
+    const remainingBalance = confirmedPaid > 0
+      ? Math.round(Math.max(0, total - confirmedPaid) * 100) / 100
+      : Math.round(Math.max(0, total - plannedDeposit) * 100) / 100;
+    const fullyPaid = remainingBalance <= 0 && confirmedPaid > 0;
+    const update = {
+      precio_total: total,
+      deposito_monto: depositAmount,
+      balance_restante: fullyPaid ? 0 : remainingBalance,
+      balance_pagado: fullyPaid,
+      estado_pago: fullyPaid ? "pagado_completo" : confirmedPaid > 0 ? "deposito_pagado" : "no_pagado",
+      estimate_total_sincronizado: total,
+      estimate_sincronizado_en: firebase.firestore.FieldValue.serverTimestamp(),
+      actualizado_en: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if (confirmedPaid > 0) update.deposito_pagado = true;
+    await serviceRef.set(update, { merge: true });
+    state.service = __spreadProps(__spreadValues({}, service), update);
+    const rows = typeof todosLosServicios !== "undefined" && Array.isArray(todosLosServicios) ? todosLosServicios : window.todosLosServicios || [];
+    const localIndex = rows.findIndex((x) => String(x.id || x.firestore_id) === String(serviceId));
+    if (localIndex >= 0) rows[localIndex] = __spreadProps(__spreadValues({}, rows[localIndex]), update);
+    if (typeof renderHistorial === "function") renderHistorial();
+    if (typeof eliteSyncServicesToCalendar === "function") eliteSyncServicesToCalendar();
+    return update;
+  }
   async function syncInvoicesFromEstimate(serviceId, estimate, estimateId) {
     const col = db.collection("servicios").doc(String(serviceId)).collection("documentos_cliente");
     const snap = await col.get();
@@ -8187,7 +8227,10 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
         const ref = await col.add(__spreadProps(__spreadValues({}, d), { creado_en: firebase.firestore.FieldValue.serverTimestamp(), actualizado_en: firebase.firestore.FieldValue.serverTimestamp() }));
         state.savedId = ref.id;
       }
-      if (state.type === "estimate") await syncInvoicesFromEstimate(state.service.id, d, state.savedId);
+      if (state.type === "estimate") {
+        await syncServiceFromEstimate(state.service.id, d);
+        await syncInvoicesFromEstimate(state.service.id, d, state.savedId);
+      }
       if (!silent) alert("".concat(state.type === "invoice" ? "Invoice" : "Estimate", " guardado correctamente."));
       return true;
     } catch (e) {
@@ -13525,10 +13568,10 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 
   function health(){
     let box=byId('elite-v900-health');if(!box){box=document.createElement('div');box.id='elite-v900-health';document.body.appendChild(box)}
-    box.textContent='Admin v9.0.12 Stable · Inventario sin duplicados · Mensaje de Invoice mejorado · Invoice/PDF corregido · Servicios ↔ Calendario · Inicio protegido · Nómina $20/h · Firebase '+(typeof db!=='undefined'?'OK':'pendiente')+' · Buscar '+(byId('buscarTrabajo')?'OK':'pendiente');
+    box.textContent='Admin v9.0.13 Stable · Estimate ↔ Servicios ↔ Invoice · Inventario sin duplicados · Invoice/PDF corregido · Servicios ↔ Calendario · Inicio protegido · Nómina $20/h · Firebase '+(typeof db!=='undefined'?'OK':'pendiente')+' · Buscar '+(byId('buscarTrabajo')?'OK':'pendiente');
   }
 
-  function boot(){installSearch();guardServiceSave();health();console.info('[Elite Admin] v9.0.12 Stable activo · Inventario sin duplicados · Mensaje de Invoice mejorado · Invoice/PDF corregido · Servicios y Calendario sincronizados')}
+  function boot(){installSearch();guardServiceSave();health();console.info('[Elite Admin] v9.0.13 Stable activo · Estimate, Servicios e Invoice sincronizados')}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,0));else setTimeout(boot,0);
   // Reinstala solo si un módulo reconstruye físicamente el buscador.
   new MutationObserver(()=>{const i=byId('buscarTrabajo');if(i&&i.dataset.eliteV900!=='1')installSearch();guardServiceSave()}).observe(document.documentElement,{childList:true,subtree:true});
@@ -13714,7 +13757,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   };
   function boot(){setTimeout(()=>consolidateInventory({notify:false}),1400)}
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
-  console.info("[Elite Admin] v9.0.12 · protección y consolidación de duplicados de inventario activas");
+  console.info("[Elite Admin] v9.0.13 · Estimate, Servicios e Invoice sincronizados · protección de inventario activa");
 })();
 </script>
 </body>
