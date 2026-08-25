@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0.13 Stable — Estimate, Servicios e Invoice sincronizados -->
+<!-- Elite Admin v9.0.14 Stable — Copiar trabajos entre fechas + Agenda/Servicios sincronizados -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.13 Stable — Estimate y Servicios sincronizados</title>
+    <title>Elite Admin v9.0.14 Stable — Copiar trabajos entre fechas</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -13758,6 +13758,130 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   function boot(){setTimeout(()=>consolidateInventory({notify:false}),1400)}
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
   console.info("[Elite Admin] v9.0.13 · Estimate, Servicios e Invoice sincronizados · protección de inventario activa");
+})();
+</script>
+<style id="elite-copy-job-v9014-css">
+.elite-copy-job-modal{display:none;position:fixed;inset:0;z-index:1000005;background:rgba(15,23,42,.78);padding:18px;overflow:auto;align-items:center;justify-content:center}
+.elite-copy-job-modal.open{display:flex}
+.elite-copy-job-card{width:min(520px,100%);background:#fff;color:#0f172a;border-radius:20px;box-shadow:0 24px 70px rgba(15,23,42,.35);padding:22px}
+.elite-copy-job-card h3{margin:0 0 5px;font-size:22px}.elite-copy-job-card p{color:#64748b;font-size:13px;line-height:1.5;margin:0 0 16px}
+.elite-copy-job-summary{background:#eff6ff;border:1px solid #bfdbfe;border-radius:13px;padding:12px;margin-bottom:15px;font-size:13px;line-height:1.55}
+.elite-copy-job-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.elite-copy-job-field label{display:block;font-size:12px;font-weight:900;margin-bottom:6px}
+.elite-copy-job-field input{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:11px;padding:12px;color:#0f172a;background:#fff;font-size:15px}
+.elite-copy-job-note{margin-top:13px;padding:10px;border-radius:11px;background:#f8fafc;color:#475569;font-size:12px;line-height:1.45}
+.elite-copy-job-actions{display:flex;gap:10px;margin-top:17px}.elite-copy-job-actions button{flex:1;border:0;border-radius:11px;padding:13px;font-weight:900;cursor:pointer}
+.elite-copy-job-cancel{background:#e2e8f0;color:#334155}.elite-copy-job-save{background:#7c3aed;color:#fff}.elite-copy-job-save:disabled{opacity:.65;cursor:wait}
+.ops-actions .elite-copy-action{background:#7c3aed!important;color:#fff!important}
+@media(max-width:560px){.elite-copy-job-grid{grid-template-columns:1fr}.elite-copy-job-card{padding:18px}.elite-copy-job-actions{flex-direction:column-reverse}}
+</style>
+
+<div id="elite-copy-job-modal" class="elite-copy-job-modal" role="dialog" aria-modal="true" aria-labelledby="elite-copy-job-title" onclick="if(event.target===this)eliteV9014CloseCopyJob()">
+  <div class="elite-copy-job-card">
+    <h3 id="elite-copy-job-title">Copiar trabajo</h3>
+    <p>Selecciona la fecha de la copia. El trabajo original no será modificado.</p>
+    <div id="elite-copy-job-summary" class="elite-copy-job-summary"></div>
+    <div class="elite-copy-job-grid">
+      <div class="elite-copy-job-field"><label for="elite-copy-job-date">Nueva fecha</label><input id="elite-copy-job-date" type="date"></div>
+      <div class="elite-copy-job-field"><label for="elite-copy-job-time">Hora</label><input id="elite-copy-job-time" type="time"></div>
+    </div>
+    <div class="elite-copy-job-note">Se copiarán cliente, dirección, servicio, precio, empleados y notas. La copia comenzará como trabajo nuevo: sin pagos, GPS, fotos, firma ni horas trabajadas.</div>
+    <div class="elite-copy-job-actions">
+      <button type="button" class="elite-copy-job-cancel" onclick="eliteV9014CloseCopyJob()">Cancelar</button>
+      <button type="button" id="elite-copy-job-save" class="elite-copy-job-save" onclick="eliteV9014SaveCopyJob()">Pegar trabajo en esta fecha</button>
+    </div>
+  </div>
+</div>
+
+<script id="elite-copy-job-v9014-js">
+(function(){
+  "use strict";
+  let sourceId="", saving=false;
+  const byId=id=>(window.todosLosServicios||[]).find(s=>String(s.id||s.firestore_id)===String(id));
+  const esc=value=>String(value||"").replace(/[&<>\"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;","'":"&#39;"}[ch]));
+  function tomorrowFrom(date){
+    const base=/^\d{4}-\d{2}-\d{2}$/.test(String(date||""))?new Date(date+"T12:00:00"):new Date();
+    base.setDate(base.getDate()+1);
+    return [base.getFullYear(),String(base.getMonth()+1).padStart(2,"0"),String(base.getDate()).padStart(2,"0")].join("-");
+  }
+  window.eliteV9014OpenCopyJob=function(id){
+    const s=byId(id);
+    if(!s)return alert("No se encontró el trabajo que deseas copiar.");
+    sourceId=String(s.id||s.firestore_id);
+    document.getElementById("elite-copy-job-summary").innerHTML="<b>"+esc(s.cliente||"Cliente")+"</b><br>"+esc(s.tipo||"Servicio")+" · $"+Number(s.precio_total||0).toFixed(2)+"<br>Original: "+esc(s.fecha||"")+" · "+esc(typeof formatAMPM==="function"?formatAMPM(s.hora||""):s.hora||"");
+    document.getElementById("elite-copy-job-date").value=tomorrowFrom(s.fecha);
+    document.getElementById("elite-copy-job-time").value=String(s.hora||"").match(/^\d{2}:\d{2}/)?.[0]||"";
+    document.getElementById("elite-copy-job-modal").classList.add("open");
+  };
+  window.eliteV9014CloseCopyJob=function(){
+    if(saving)return;
+    document.getElementById("elite-copy-job-modal").classList.remove("open");
+    sourceId="";
+  };
+  function buildCleanCopy(source,date,time){
+    const copy=Object.assign({},source);
+    [
+      "id","firestore_id","doc_id","timestamp","actualizado","actualizado_en","ultima_edicion_admin",
+      "fecha_completado","completado_en","cancelado_en","mes_contable","mes_cerrado","oculto_mensajes","oculto_resenas",
+      "firma_cliente","firma_imagen","firma_url","fecha_firma","cliente_firma","fecha_trabajo_firma","hora_trabajo_firma",
+      "contract_code","contrato_codigo","contrato_firmado","contrato_enviado","contrato_url","fecha_contrato",
+      "invoice_id","invoice_number","invoice_numero","invoice_url","invoice_status","factura_id","factura_numero","factura_url","factura_enviada",
+      "comprobante_deposito","fecha_pago_deposito","metodo_pago_deposito","fecha_pago_balance","metodo_pago_balance","comprobante_balance",
+      "hora_en_camino","hora_llegada","hora_inicio","hora_pausa","hora_inicio_pausa","hora_reanudacion","hora_regreso","hora_fin_pausa","hora_fin",
+      "pausa_total_minutos","tiempo_trabajado_minutos","millas_reales","gps_iniciado","gps_finalizado","ubicacion_llegada","ubicacion_inicio","ubicacion_fin",
+      "foto_propiedad","foto_propiedad_url","foto_llegada_url","fotos_count","fotos_antes_count","fotos_despues_count",
+      "repetir","frecuencia","serie_id","recurrence_id","fecha_serie_origen","editado_desde_calendario","edicion_solo_este_trabajo"
+    ].forEach(key=>delete copy[key]);
+    const habitual=source.cliente_habitual===true||source.deposito_requerido===false||String(source.proceso_cliente||"").toLowerCase()==="habitual";
+    const total=Math.max(0,Number(source.precio_total||0));
+    Object.assign(copy,{
+      fecha:date,hora:time||source.hora||"",estado:"no_iniciado",estado_calendario:"pendiente",
+      repetir:"ninguno",frecuencia:"ninguno",hora_inicio:"--:--",hora_fin:"--:--",hora_llegada:"--:--",
+      hora_pausa:"--:--",hora_regreso:"--:--",pausa_total_minutos:0,tiempo_trabajado_minutos:0,millas_reales:"",
+      firma_cliente:false,contrato_firmado:false,deposito_requerido:!habitual,deposito_pagado:false,
+      deposito_monto:habitual?0:Math.round(total*50)/100,balance_pagado:false,
+      balance_restante:habitual?total:Math.round(total*50)/100,metodo_pago_deposito:"",comprobante_deposito:"",fecha_pago_deposito:"",
+      copiado_desde_id:sourceId,copiado_desde_fecha:source.fecha||"",creado_desde:"agenda_copiar_pegar",
+      timestamp:firebase.firestore.FieldValue.serverTimestamp(),actualizado_en:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    return copy;
+  }
+  window.eliteV9014SaveCopyJob=async function(){
+    if(saving)return;
+    const source=byId(sourceId),date=document.getElementById("elite-copy-job-date").value,time=document.getElementById("elite-copy-job-time").value;
+    if(!source)return alert("El trabajo original ya no está disponible. Cierra esta ventana e inténtalo nuevamente.");
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return alert("Selecciona la nueva fecha del trabajo.");
+    const duplicate=(window.todosLosServicios||[]).find(s=>String(s.copiado_desde_id||"")===sourceId&&s.fecha===date&&String(s.hora||"")===String(time||source.hora||""));
+    if(duplicate&&!confirm("Ya existe una copia de este trabajo en la misma fecha y hora.\n\n¿Deseas crear otra copia de todas maneras?"))return;
+    const button=document.getElementById("elite-copy-job-save");
+    saving=true;button.disabled=true;button.textContent="COPIANDO...";
+    try{
+      const ref=await db.collection("servicios").add(buildCleanCopy(source,date,time));
+      const snap=await ref.get();
+      if(!snap.exists)throw new Error("Firebase no confirmó el nuevo trabajo.");
+      const saved=Object.assign({},snap.data(),{id:ref.id,firestore_id:ref.id});
+      if(Array.isArray(window.todosLosServicios)&&!window.todosLosServicios.some(s=>String(s.id||s.firestore_id)===ref.id))window.todosLosServicios.push(saved);
+      document.getElementById("elite-copy-job-modal").classList.remove("open");sourceId="";
+      if(typeof opsDateKey==="function"){
+        window.opsCalendarDate=new Date(date+"T12:00:00");window.opsSelectedJobId=ref.id;window.opsCalendarView="day";
+      }
+      if(typeof renderCentroOperacionesV601==="function")renderCentroOperacionesV601();
+      if(typeof renderHistorial==="function")renderHistorial();
+      alert("Trabajo copiado correctamente ✅\n\nLa copia ya aparece en Agenda y en Servicios el "+date+".");
+    }catch(error){
+      console.error("No se pudo copiar el trabajo:",error);
+      alert("No se pudo copiar el trabajo. No se creó ningún registro incompleto.\n\n"+String(error?.message||error||"Error desconocido"));
+    }finally{saving=false;button.disabled=false;button.textContent="Pegar trabajo en esta fecha";}
+  };
+  function addCopyButton(){
+    const actions=document.querySelector("#ops-job-detail .ops-actions");
+    if(!actions||actions.querySelector(".elite-copy-action")||!window.opsSelectedJobId)return;
+    const button=document.createElement("button");button.type="button";button.className="elite-copy-action";button.textContent="⧉ Copiar trabajo";
+    button.onclick=()=>window.eliteV9014OpenCopyJob(window.opsSelectedJobId);actions.insertBefore(button,actions.children[2]||null);
+  }
+  const originalRender=window.renderOpsJobDetail;
+  if(typeof originalRender==="function")window.renderOpsJobDetail=function(){const result=originalRender.apply(this,arguments);addCopyButton();return result;};
+  document.addEventListener("keydown",event=>{if(event.key==="Escape"&&!saving)window.eliteV9014CloseCopyJob();});
+  console.info("[Elite Admin] v9.0.14 · copiar trabajos entre fechas activo · Agenda y Servicios sincronizados");
 })();
 </script>
 </body>
