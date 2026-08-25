@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0.15 Stable — Botón Copiar visible en ficha y editor de Agenda -->
+<!-- Elite Admin v9.0.19 Stable — SMS bidireccional y recordatorios automáticos -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.15 Stable — Copiar trabajos visible en Agenda</title>
+    <title>Elite Admin v9.0.19 Stable — Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -13900,7 +13900,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",watch);else watch();
   document.addEventListener("keydown",event=>{if(event.key==="Escape"&&!saving)window.eliteV9014CloseCopyJob();});
-  console.info("[Elite Admin] v9.0.15 · botón Copiar visible en ficha y editor · Agenda y Servicios sincronizados");
+  console.info("[Elite Admin] módulo Agenda integrado en Elite Admin v9.0.19");
 })();
 </script>
 <!-- ===== ELITE ADMIN v9.0.16 — RECORDATORIOS SMS AUTOMÁTICOS 5:00 P. M. ===== -->
@@ -13937,17 +13937,24 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     const state=ready?"Automático activo":"Pendiente de conectar el servicio de SMS";
     return '<section class="elite-auto-sms-card" id="elite-auto-sms-card"><h3>📱 Recordatorio automático al cliente</h3><p>Se programa para las <b>5:00 p. m.</b>, hora de California, el día anterior al servicio.</p><p>Los trabajos cancelados o sin teléfono no se envían. Cada trabajo se marca para impedir duplicados.</p><span class="elite-auto-sms-state '+(ready?'ready':'')+'">'+state+'</span><div class="elite-auto-sms-log">El botón “Recordatorio” continúa disponible como respaldo manual.</div></section>';
   }
+  let injectingCard=false;
   async function injectCard(){
     const root=document.getElementById("elite-reminder-root");
-    if(!root||document.getElementById("elite-auto-sms-card"))return;
-    let config={};
-    try{const snap=await CONFIG_REF().get();config=snap.exists?(snap.data()||{}):{};}catch(_){}
-    root.insertAdjacentHTML("afterbegin",statusCard(config));
+    if(!root||document.getElementById("elite-auto-sms-card")||injectingCard)return;
+    injectingCard=true;
+    try{
+      let config={};
+      try{const snap=await CONFIG_REF().get();config=snap.exists?(snap.data()||{}):{};}catch(_){}
+      const currentRoot=document.getElementById("elite-reminder-root");
+      if(currentRoot&&!document.getElementById("elite-auto-sms-card"))currentRoot.insertAdjacentHTML("afterbegin",statusCard(config));
+      const cards=document.querySelectorAll("#elite-auto-sms-card");
+      cards.forEach((card,index)=>{if(index>0)card.remove();});
+    }finally{injectingCard=false;}
   }
   const observer=new MutationObserver(()=>{if(document.getElementById("elite-reminder-root"))injectCard();});
   function start(){observer.observe(document.body,{childList:true,subtree:true});injectCard();}
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
-  console.info("[Elite Admin] v9.0.16 · SMS automático preparado para 5:00 p. m. America/Los_Angeles");
+  console.info("[Elite Admin] v9.0.19 · SMS automático preparado para 5:00 p. m. America/Los_Angeles");
 })();
 </script>
 <!-- ===== ELITE ADMIN v9.0.17 — BANDEJA SMS BIDIRECCIONAL ===== -->
@@ -14027,7 +14034,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     observer.observe(document.body,{childList:true,subtree:true});
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
-  console.info("[Elite Admin] v9.0.18 · bandeja SMS sin ciclo de renderizado · sesión Supabase protegida");
+  console.info("[Elite Admin] v9.0.19 · bandeja SMS sin duplicados ni ciclos · sesión Supabase protegida");
 })();
 </script>
 </body>
