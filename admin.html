@@ -13903,5 +13903,52 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   console.info("[Elite Admin] v9.0.15 · botón Copiar visible en ficha y editor · Agenda y Servicios sincronizados");
 })();
 </script>
+<!-- ===== ELITE ADMIN v9.0.16 — RECORDATORIOS SMS AUTOMÁTICOS 5:00 P. M. ===== -->
+<style id="elite-v9016-auto-sms-css">
+.elite-auto-sms-card{margin:14px 0;padding:16px;border-radius:15px;background:#071a2d;border:1px solid #2563eb;color:#e2e8f0;font:13px/1.5 Arial,sans-serif}
+.elite-auto-sms-card h3{margin:0 0 7px;color:#fff}.elite-auto-sms-card p{margin:5px 0;color:#cbd5e1}
+.elite-auto-sms-state{display:inline-block;margin-top:7px;padding:5px 9px;border-radius:999px;background:#78350f;color:#fef3c7;font-weight:800;font-size:11px}
+.elite-auto-sms-state.ready{background:#14532d;color:#dcfce7}.elite-auto-sms-log{margin-top:9px;color:#93c5fd;font-size:11px}
+</style>
+<script id="elite-v9016-auto-sms-js">
+(function(){
+  "use strict";
+  const CONFIG_REF=()=>db.collection("configuracion").doc("app");
+  function firstName(name){return String(name||"there").trim().split(/\s+/)[0]||"there";}
+  function localDate(iso){
+    try{return new Date(String(iso)+"T12:00:00").toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});}
+    catch(_){return String(iso||"");}
+  }
+  function humanReminder(service){
+    return "Hi "+firstName(service.cliente)+"! This is Elite Cleaners Company. Just a quick reminder that we’re scheduled to clean your home tomorrow, "+localDate(service.fecha)+", at "+formatAMPM(service.hora)+". If there’s anything you’d like us to know before we arrive, feel free to reply to this message. We look forward to seeing you! — Rodrigo & Dayana";
+  }
+  window.eliteBuildHumanReminder=humanReminder;
+  window.enviarRecordatorio=function(id){
+    const s=(window.todosLosServicios||[]).find(x=>String(x.id||x.firestore_id)===String(id));
+    if(!s)return alert("No se encontró el trabajo.");
+    const phone=s.whatsapp||s.telefono||"";
+    if(!phone)return alert("El cliente no tiene un teléfono registrado.");
+    return abrirSMS(phone,humanReminder(s),{tipo:"recordatorio"});
+  };
+  function statusCard(config){
+    const connected=config.sms_provider_connected===true;
+    const enabled=config.auto_sms_reminders_enabled===true;
+    const ready=connected&&enabled;
+    const state=ready?"Automático activo":"Pendiente de conectar el servicio de SMS";
+    return '<section class="elite-auto-sms-card" id="elite-auto-sms-card"><h3>📱 Recordatorio automático al cliente</h3><p>Se programa para las <b>5:00 p. m.</b>, hora de California, el día anterior al servicio.</p><p>Los trabajos cancelados o sin teléfono no se envían. Cada trabajo se marca para impedir duplicados.</p><span class="elite-auto-sms-state '+(ready?'ready':'')+'">'+state+'</span><div class="elite-auto-sms-log">El botón “Recordatorio” continúa disponible como respaldo manual.</div></section>';
+  }
+  async function injectCard(){
+    const root=document.getElementById("elite-reminder-root");
+    if(!root||document.getElementById("elite-auto-sms-card"))return;
+    let config={};
+    try{const snap=await CONFIG_REF().get();config=snap.exists?(snap.data()||{}):{};}catch(_){}
+    root.insertAdjacentHTML("afterbegin",statusCard(config));
+  }
+  const observer=new MutationObserver(()=>{if(document.getElementById("elite-reminder-root"))injectCard();});
+  function start(){observer.observe(document.body,{childList:true,subtree:true});injectCard();}
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
+  console.info("[Elite Admin] v9.0.16 · SMS automático preparado para 5:00 p. m. America/Los_Angeles");
+})();
+</script>
 </body>
 </html>
