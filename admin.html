@@ -13920,7 +13920,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     catch(_){return String(iso||"");}
   }
   function humanReminder(service){
-    return "Hi "+firstName(service.cliente)+"! This is Elite Cleaners Company. Just a quick reminder that we’re scheduled to clean your home tomorrow, "+localDate(service.fecha)+", at "+formatAMPM(service.hora)+". If there’s anything you’d like us to know before we arrive, feel free to reply to this message. We look forward to seeing you! — Rodrigo & Dayana";
+    return "Hi "+firstName(service.cliente)+"! This is Elite Cleaners Company. Just a quick reminder that we’re scheduled to clean your home tomorrow, "+localDate(service.fecha)+", at "+formatAMPM(service.hora)+". If there’s anything you’d like us to know before we arrive, feel free to reply to this message. We look forward to seeing you! — Rodrigo & Dayana\n\nReply STOP to opt out.";
   }
   window.eliteBuildHumanReminder=humanReminder;
   window.enviarRecordatorio=function(id){
@@ -13948,6 +13948,86 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   function start(){observer.observe(document.body,{childList:true,subtree:true});injectCard();}
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
   console.info("[Elite Admin] v9.0.16 · SMS automático preparado para 5:00 p. m. America/Los_Angeles");
+})();
+</script>
+<!-- ===== ELITE ADMIN v9.0.17 — BANDEJA SMS BIDIRECCIONAL ===== -->
+<style id="elite-v9017-sms-inbox-css">
+.elite-sms-inbox{margin:14px 0;padding:15px;border-radius:16px;background:#07111f;border:1px solid #334155;color:#e2e8f0;font:13px/1.45 Arial,sans-serif}
+.elite-sms-inbox-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px}.elite-sms-inbox-head h3{margin:0;color:#fff}
+.elite-sms-pill{padding:5px 9px;border-radius:999px;background:#1d4ed8;color:#fff;font-weight:800;font-size:11px}.elite-sms-pill.zero{background:#334155}
+.elite-sms-conversation{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:12px;margin:8px 0;border:1px solid #263449;border-radius:13px;background:#0b1728;color:#fff;cursor:pointer}
+.elite-sms-conversation:hover{border-color:#3b82f6}.elite-sms-conversation.urgent{border-color:#f59e0b;background:#271805}.elite-sms-conversation b{display:block}.elite-sms-conversation small{display:block;color:#94a3b8;margin-top:3px}.elite-sms-unread{min-width:23px;height:23px;border-radius:50%;background:#ef4444;color:#fff;display:grid;place-items:center;font-weight:900;font-size:11px}
+.elite-sms-empty{padding:14px;text-align:center;color:#94a3b8}.elite-sms-modal{position:fixed;inset:0;z-index:5000000;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;padding:14px}.elite-sms-modal.open{display:flex}
+.elite-sms-thread-shell{width:min(620px,100%);max-height:90vh;display:flex;flex-direction:column;background:#07111f;border:1px solid #334155;border-radius:18px;overflow:hidden;color:#fff}.elite-sms-thread-head{padding:14px 16px;border-bottom:1px solid #263449;display:flex;justify-content:space-between;gap:10px}.elite-sms-thread-head button{background:#334155;color:#fff;border:0;border-radius:9px;padding:7px 10px}
+.elite-sms-thread{padding:15px;overflow:auto;min-height:220px}.elite-sms-bubble{max-width:82%;margin:8px 0;padding:10px 12px;border-radius:14px;background:#1e293b;color:#fff}.elite-sms-bubble.out{margin-left:auto;background:#1d4ed8}.elite-sms-bubble small{display:block;margin-top:5px;color:#cbd5e1;font-size:9px}.elite-sms-compose{padding:12px;border-top:1px solid #263449;display:flex;gap:8px}.elite-sms-compose textarea{flex:1;resize:none;min-height:56px;padding:10px;border-radius:11px;border:1px solid #475569;background:#0b1728;color:#fff}.elite-sms-compose button{border:0;border-radius:11px;padding:0 16px;background:#16a34a;color:#fff;font-weight:900}.elite-sms-compose button:disabled{opacity:.55}
+.elite-v9017-nav-badge{margin-left:5px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#ef4444;color:#fff;display:none;align-items:center;justify-content:center;font-size:10px;font-weight:900}
+@media(max-width:600px){.elite-sms-thread-shell{height:94vh;max-height:none}.elite-sms-compose{flex-direction:column}.elite-sms-compose button{padding:12px}.elite-sms-bubble{max-width:90%}}
+</style>
+<div id="elite-sms-thread-modal" class="elite-sms-modal" aria-hidden="true">
+  <div class="elite-sms-thread-shell">
+    <div class="elite-sms-thread-head"><div><b id="elite-sms-thread-name">Cliente</b><small id="elite-sms-thread-phone"></small></div><button onclick="eliteSmsCloseThread()">Cerrar</button></div>
+    <div id="elite-sms-thread" class="elite-sms-thread"></div>
+    <div class="elite-sms-compose"><textarea id="elite-sms-reply-text" maxlength="1500" placeholder="Escribe una respuesta profesional..."></textarea><button id="elite-sms-send-button" onclick="eliteSmsSendReply()">Enviar</button></div>
+  </div>
+</div>
+<script id="elite-v9017-sms-inbox-js">
+(function(){
+  "use strict";
+  const REPLY_URL="https://us-west1-elite-cleaners-app.cloudfunctions.net/sendAdminSmsReply";
+  let messages=[],activePhone="",unsubscribe=null,previousUnread=0;
+  const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const digits=value=>String(value||"").replace(/\D/g,"");
+  function formatPhone(value){const n=digits(value).replace(/^1(?=\d{10}$)/,"");return n.length===10?`(${n.slice(0,3)}) ${n.slice(3,6)}-${n.slice(6)}`:value;}
+  function timeOf(message){const t=message.creado_en;const date=t?.toDate?t.toDate():new Date(t||0);return isNaN(date)?"":date.toLocaleString("es-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});}
+  function groups(){
+    const map=new Map();
+    messages.forEach(m=>{const p=m.telefono_cliente||"desconocido";if(!map.has(p))map.set(p,[]);map.get(p).push(m);});
+    return [...map.entries()].map(([phone,list])=>({phone,list:list.sort((a,b)=>(b.creado_en?.seconds||0)-(a.creado_en?.seconds||0)),last:list[0],unread:list.filter(x=>x.direccion==="entrante"&&x.leido!==true).length,urgent:list.some(x=>x.direccion==="entrante"&&x.leido!==true&&x.urgente===true)})).sort((a,b)=>(b.last.creado_en?.seconds||0)-(a.last.creado_en?.seconds||0));
+  }
+  function unreadCount(){return messages.filter(m=>m.direccion==="entrante"&&m.leido!==true).length;}
+  function updateBadge(){
+    const count=unreadCount();document.querySelectorAll(".elite-v9017-nav-badge").forEach(b=>{const text=String(count),display=count?"inline-flex":"none";if(b.textContent!==text)b.textContent=text;if(b.style.display!==display)b.style.display=display;});
+    if(count>previousUnread&&previousUnread>=0&&"Notification" in window&&Notification.permission==="granted"){
+      const newest=messages.find(m=>m.direccion==="entrante"&&m.leido!==true);if(newest)new Notification("Nuevo mensaje de "+(newest.cliente||"cliente"),{body:newest.texto||"Abre Admin para leer la respuesta.",tag:"elite-sms-"+(newest.id||Date.now())});
+    }
+    previousUnread=count;
+  }
+  function ensureNavBadge(){
+    document.querySelectorAll('.elite-v5-nav-btn[data-module="mensajes"]').forEach(btn=>{if(!btn.querySelector(".elite-v9017-nav-badge")){const b=document.createElement("span");b.className="elite-v9017-nav-badge";btn.appendChild(b);}});updateBadge();
+  }
+  function renderInbox(){
+    const root=document.getElementById("elite-reminder-root");if(!root)return;
+    let box=document.getElementById("elite-sms-inbox");if(!box){box=document.createElement("section");box.id="elite-sms-inbox";box.className="elite-sms-inbox";const auto=document.getElementById("elite-auto-sms-card");(auto?.parentNode||root).insertBefore(box,auto?auto.nextSibling:root.firstChild);}
+    const count=unreadCount(),rows=groups();
+    box.innerHTML='<div class="elite-sms-inbox-head"><h3>💬 Mensajes de clientes</h3><span class="elite-sms-pill '+(count?'':'zero')+'">'+count+' sin leer</span></div>'+(rows.length?rows.map(g=>'<button class="elite-sms-conversation '+(g.urgent?'urgent':'')+'" onclick="eliteSmsOpenThread(\''+esc(g.phone)+'\')"><span><b>'+(g.urgent?'⚠️ ':'')+esc(g.last.cliente||"Número no identificado")+'</b><small>'+esc(formatPhone(g.phone))+' · '+esc(g.last.texto||"")+'</small></span>'+(g.unread?'<span class="elite-sms-unread">'+g.unread+'</span>':'')+'</button>').join(''):'<div class="elite-sms-empty">Todavía no hay respuestas de clientes.</div>');
+  }
+  function listen(){
+    if(unsubscribe||typeof db==="undefined")return;unsubscribe=db.collection("sms_mensajes").orderBy("creado_en","desc").limit(150).onSnapshot(s=>{messages=s.docs.map(d=>({id:d.id,...d.data()}));renderInbox();updateBadge();if(activePhone)renderThread();},e=>console.warn("[SMS Inbox]",e));
+  }
+  function renderThread(){
+    const list=messages.filter(m=>m.telefono_cliente===activePhone).sort((a,b)=>(a.creado_en?.seconds||0)-(b.creado_en?.seconds||0));const last=list[list.length-1]||{};
+    document.getElementById("elite-sms-thread-name").textContent=last.cliente||"Cliente";document.getElementById("elite-sms-thread-phone").textContent=formatPhone(activePhone);
+    const thread=document.getElementById("elite-sms-thread");thread.innerHTML=list.map(m=>'<div class="elite-sms-bubble '+(m.direccion==="saliente"?'out':'')+'">'+esc(m.texto||"")+'<small>'+esc(timeOf(m))+(m.direccion==="saliente"?' · Enviado por Admin':'')+'</small></div>').join('')||'<div class="elite-sms-empty">No hay mensajes.</div>';thread.scrollTop=thread.scrollHeight;
+  }
+  window.eliteSmsOpenThread=async phone=>{activePhone=phone;document.getElementById("elite-sms-thread-modal").classList.add("open");renderThread();const unread=messages.filter(m=>m.telefono_cliente===phone&&m.direccion==="entrante"&&m.leido!==true);if(unread.length){const batch=db.batch();unread.forEach(m=>batch.set(db.collection("sms_mensajes").doc(m.id),{leido:true,leido_en:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}));await batch.commit();}};
+  window.eliteSmsCloseThread=()=>{document.getElementById("elite-sms-thread-modal").classList.remove("open");activePhone="";document.getElementById("elite-sms-reply-text").value="";};
+  window.eliteSmsSendReply=async()=>{
+    const text=document.getElementById("elite-sms-reply-text").value.trim(),button=document.getElementById("elite-sms-send-button");if(!activePhone||!text)return alert("Escribe el mensaje que deseas enviar.");
+    button.disabled=true;button.textContent="Enviando...";
+    try{const {data}=await supabaseClient.auth.getSession();const token=data?.session?.access_token;if(!token)throw new Error("Tu sesión de Admin terminó. Inicia sesión nuevamente.");const last=messages.find(m=>m.telefono_cliente===activePhone);const response=await fetch(REPLY_URL,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({telefono:activePhone,texto:text,cliente:last?.cliente||"Cliente"})});const result=await response.json();if(!response.ok||!result.ok)throw new Error(result.error||"No se pudo enviar.");document.getElementById("elite-sms-reply-text").value="";}catch(error){alert("No se pudo enviar la respuesta.\n\n"+String(error.message||error));}finally{button.disabled=false;button.textContent="Enviar";}
+  };
+  function mountInboxOnce(){
+    ensureNavBadge();
+    if(document.getElementById("elite-reminder-root")&&!document.getElementById("elite-sms-inbox"))renderInbox();
+  }
+  function start(){
+    mountInboxOnce();
+    listen();
+    const observer=new MutationObserver(mountInboxOnce);
+    observer.observe(document.body,{childList:true,subtree:true});
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
+  console.info("[Elite Admin] v9.0.18 · bandeja SMS sin ciclo de renderizado · sesión Supabase protegida");
 })();
 </script>
 </body>
