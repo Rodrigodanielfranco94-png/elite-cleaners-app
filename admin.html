@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0.14 Stable — Copiar trabajos entre fechas + Agenda/Servicios sincronizados -->
+<!-- Elite Admin v9.0.15 Stable — Botón Copiar visible en ficha y editor de Agenda -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.14 Stable — Copiar trabajos entre fechas</title>
+    <title>Elite Admin v9.0.15 Stable — Copiar trabajos visible en Agenda</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -3646,6 +3646,15 @@ function enviarRecordatorio(id) {
         Guardar
     </button>
 </div>
+
+<button
+    type="button"
+    class="save-btn elite-copy-editor-action"
+    style="background:#7c3aed; margin-top:12px;"
+    onclick="eliteV9014OpenCopyJob(document.getElementById('edit-cal-id').value)"
+>
+    ⧉ COPIAR TRABAJO EN OTRA FECHA
+</button>
 
 <button
     class="save-btn"
@@ -13772,6 +13781,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 .elite-copy-job-actions{display:flex;gap:10px;margin-top:17px}.elite-copy-job-actions button{flex:1;border:0;border-radius:11px;padding:13px;font-weight:900;cursor:pointer}
 .elite-copy-job-cancel{background:#e2e8f0;color:#334155}.elite-copy-job-save{background:#7c3aed;color:#fff}.elite-copy-job-save:disabled{opacity:.65;cursor:wait}
 .ops-actions .elite-copy-action{background:#7c3aed!important;color:#fff!important}
+.elite-copy-editor-action{display:block!important;width:100%!important;color:#fff!important;font-weight:900!important}
 @media(max-width:560px){.elite-copy-job-grid{grid-template-columns:1fr}.elite-copy-job-card{padding:18px}.elite-copy-job-actions{flex-direction:column-reverse}}
 </style>
 
@@ -13880,8 +13890,17 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   }
   const originalRender=window.renderOpsJobDetail;
   if(typeof originalRender==="function")window.renderOpsJobDetail=function(){const result=originalRender.apply(this,arguments);addCopyButton();return result;};
+  const observer=new MutationObserver(function(){
+    if(document.querySelector("#ops-job-detail .ops-actions")&&!document.querySelector("#ops-job-detail .elite-copy-action"))addCopyButton();
+  });
+  function watch(){
+    const detail=document.getElementById("ops-job-detail");
+    if(detail)observer.observe(detail,{childList:true,subtree:true});
+    addCopyButton();
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",watch);else watch();
   document.addEventListener("keydown",event=>{if(event.key==="Escape"&&!saving)window.eliteV9014CloseCopyJob();});
-  console.info("[Elite Admin] v9.0.14 · copiar trabajos entre fechas activo · Agenda y Servicios sincronizados");
+  console.info("[Elite Admin] v9.0.15 · botón Copiar visible en ficha y editor · Agenda y Servicios sincronizados");
 })();
 </script>
 </body>
