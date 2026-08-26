@@ -14151,5 +14151,119 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   console.info("[Elite Admin] v9.0.20 · Mensajes y Pendientes separados · revisión verificable");
 })();
 </script>
+<style id="elite-v9021-nico-routes-css">
+#elite-nico-route-card{display:none;margin:12px 0 16px;padding:14px;border:1px solid #2563eb;border-radius:18px;background:linear-gradient(145deg,#071426,#0d1e36);color:#fff;box-shadow:0 14px 35px rgba(0,0,0,.28);font:13px/1.45 Arial,sans-serif}
+#elite-nico-route-card.open{display:grid;grid-template-columns:64px 1fr;gap:13px;animation:eliteNicoRouteIn .22s ease-out}
+.elite-nico-route-avatar{width:58px;height:58px;border-radius:50%;overflow:hidden;border:3px solid #3b82f6;background:#fff;box-shadow:0 7px 18px rgba(37,99,235,.3)}
+.elite-nico-route-avatar img{width:100%;height:100%;object-fit:cover;display:block}.elite-nico-route-copy h3{margin:0 0 4px;color:#93c5fd;font-size:16px}.elite-nico-route-copy p{margin:0;color:#dbeafe}
+.elite-nico-route-list{display:grid;gap:8px;margin-top:11px}.elite-nico-route-option{padding:10px;border:1px solid #2b4565;border-radius:12px;background:#09182b}.elite-nico-route-option b,.elite-nico-route-option small{display:block}.elite-nico-route-option small{margin-top:3px;color:#a9bdd5}
+.elite-nico-route-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.elite-nico-route-actions button,.elite-nico-route-actions a{border:0;border-radius:9px;padding:8px 10px;color:#fff;text-decoration:none;font-weight:800;cursor:pointer;background:#2563eb}.elite-nico-route-actions .use{background:#16a34a}.elite-nico-route-actions .later{background:#475569}.elite-nico-route-status{display:none;margin-top:8px;color:#93c5fd;font-size:11px}
+@keyframes eliteNicoRouteIn{from{opacity:0;transform:translateY(-7px)}}
+@media(max-width:620px){#elite-nico-route-card.open{grid-template-columns:50px 1fr}.elite-nico-route-avatar{width:46px;height:46px}.elite-nico-route-actions button,.elite-nico-route-actions a{flex:1;text-align:center}}
+</style>
+<script id="elite-admin-v9021-nico-smart-routes">
+(function(){
+  "use strict";
+  const VERSION="9.0.21";
+  const MAX_MILES=12;
+  const CACHE_KEY="elite_nico_geocode_us_v1";
+  const NICO_IMG="https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/saluda.png";
+  let timer=0, requestToken=0, suggestions=[], dismissedKey="";
+  const el=id=>document.getElementById(id);
+  const esc=v=>String(v??"").replace(/[&<>\"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+  const normalize=v=>String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
+  const addressOf=o=>String(o?.direccion||o?.address||"").trim();
+  const nameOf=o=>String(o?.cliente||o?.nombre||o?.nombre_cliente||o?.id||"Cliente").trim();
+  const idOf=o=>String(o?.id||o?.firestore_id||"");
+  const validDate=v=>/^\d{4}-\d{2}-\d{2}$/.test(String(v||""));
+  function cache(){try{return JSON.parse(localStorage.getItem(CACHE_KEY)||"{}")||{};}catch(_){return {};}}
+  function saveCache(c){try{localStorage.setItem(CACHE_KEY,JSON.stringify(c));}catch(_){}}
+  function coords(o){
+    const lat=Number(o?.latitud??o?.latitude??o?.ubicacion?.latitud??o?.ubicacion?.lat);
+    const lng=Number(o?.longitud??o?.longitude??o?.ubicacion?.longitud??o?.ubicacion?.lng);
+    return Number.isFinite(lat)&&Number.isFinite(lng)?{lat,lng}:null;
+  }
+  function miles(a,b){
+    const r=3958.8,toRad=x=>x*Math.PI/180,dLat=toRad(b.lat-a.lat),dLng=toRad(b.lng-a.lng);
+    const h=Math.sin(dLat/2)**2+Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLng/2)**2;
+    return 2*r*Math.asin(Math.sqrt(h));
+  }
+  function approximateMinutes(mi){return Math.max(3,Math.round(mi*2.25));}
+  function appleUrl(from,to){return "https://maps.apple.com/?saddr="+encodeURIComponent(from)+"&daddr="+encodeURIComponent(to)+"&dirflg=d";}
+  async function geocodeUS(address){
+    if(!address)return null;
+    const key=normalize(address),c=cache();
+    if(c[key]&&Date.now()-Number(c[key].saved||0)<15552000000)return c[key];
+    try{
+      const url="https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?benchmark=Public_AR_Current&format=json&address="+encodeURIComponent(address);
+      const response=await fetch(url,{headers:{Accept:"application/json"}});
+      if(!response.ok)return null;
+      const data=await response.json(),match=data?.result?.addressMatches?.[0],p=match?.coordinates;
+      if(!p||!Number.isFinite(Number(p.y))||!Number.isFinite(Number(p.x)))return null;
+      const result={lat:Number(p.y),lng:Number(p.x),matched:match.matchedAddress||address,saved:Date.now()};
+      c[key]=result;saveCache(c);return result;
+    }catch(error){console.warn("[Nico rutas] No se pudo verificar la dirección",error);return null;}
+  }
+  function ensureCard(){
+    if(el("elite-nico-route-card"))return el("elite-nico-route-card");
+    const card=document.createElement("section");card.id="elite-nico-route-card";card.setAttribute("aria-live","polite");
+    card.innerHTML='<div class="elite-nico-route-avatar"><img src="'+NICO_IMG+'" alt="Nico"></div><div class="elite-nico-route-copy"><h3>Nico encontró una oportunidad</h3><p id="elite-nico-route-message"></p><div id="elite-nico-route-list" class="elite-nico-route-list"></div><div id="elite-nico-route-status" class="elite-nico-route-status"></div></div>';
+    const address=el("direccion"),anchor=address?.parentElement||address;
+    if(anchor?.parentNode)anchor.parentNode.insertBefore(card,anchor.nextSibling);else document.body.appendChild(card);
+    return card;
+  }
+  function hide(){const card=el("elite-nico-route-card");if(card)card.classList.remove("open");suggestions=[];}
+  function candidateRows(){
+    const currentName=normalize(el("cliente")?.value),currentAddress=normalize(el("direccion")?.value),seen=new Set(),rows=[];
+    const add=o=>{const address=addressOf(o),name=nameOf(o),key=normalize(address);if(!address||!key||key===currentAddress||normalize(name)===currentName||seen.has(key))return;seen.add(key);rows.push(o);};
+    (Array.isArray(window.todosLosServicios)?window.todosLosServicios:[]).forEach(add);
+    (typeof todosLosClientes!=="undefined"&&Array.isArray(todosLosClientes)?todosLosClientes:[]).forEach(add);
+    return rows.slice(0,80);
+  }
+  function nearestJob(row){
+    const address=normalize(addressOf(row));
+    return (Array.isArray(window.todosLosServicios)?window.todosLosServicios:[]).filter(s=>normalize(addressOf(s))===address&&validDate(s.fecha)&&!["cancelado","cancelled"].includes(String(s.estado||s.estado_calendario||"").toLowerCase())).sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)))[0]||null;
+  }
+  async function analyze(){
+    const address=String(el("direccion")?.value||"").trim(),date=String(el("fecha")?.value||"");
+    const key=normalize(address)+"|"+date;if(address.length<8||key===dismissedKey)return hide();
+    const token=++requestToken,origin=await geocodeUS(address);if(token!==requestToken)return;if(!origin)return hide();
+    const rows=candidateRows(),found=[];
+    for(const row of rows){
+      if(token!==requestToken)return;
+      const point=coords(row)||await geocodeUS(addressOf(row));if(!point)continue;
+      const distance=miles(origin,point);if(distance<=MAX_MILES){const job=nearestJob(row);found.push({row,distance,job});}
+      if(found.length>=5)break;
+    }
+    if(token!==requestToken)return;
+    suggestions=found.sort((a,b)=>{
+      const aSame=a.job&&date&&a.job.fecha===date?0:1,bSame=b.job&&date&&b.job.fecha===date?0:1;
+      return aSame-bSame||a.distance-b.distance;
+    }).slice(0,3);
+    suggestions.length?render(address,date):hide();
+  }
+  function dateText(value){if(!validDate(value))return "sin fecha próxima";try{return new Date(value+"T12:00:00").toLocaleDateString("es-US",{weekday:"short",month:"short",day:"numeric"});}catch(_){return value;}}
+  function render(origin,date){
+    const card=ensureCard(),list=el("elite-nico-route-list");
+    el("elite-nico-route-message").textContent=suggestions.some(x=>x.job&&x.job.fecha===date)?"Rodrigo, encontré otro cliente cerca programado para el mismo día.":"Rodrigo, encontré clientes cercanos que podrías combinar para ahorrar viaje y combustible.";
+    list.innerHTML=suggestions.map((x,i)=>{
+      const target=addressOf(x.row),job=x.job,when=job?dateText(job.fecha):"sin cita próxima",time=job?.hora?" · "+job.hora:"";
+      return '<article class="elite-nico-route-option"><b>'+esc(nameOf(x.row))+' · '+x.distance.toFixed(1)+' millas en línea recta</b><small>🚗 Aproximadamente '+approximateMinutes(x.distance)+' min · '+esc(when+time)+'</small><div class="elite-nico-route-actions"><a target="_blank" rel="noopener" href="'+appleUrl(origin,target)+'"> Abrir en Apple Maps</a>'+(job&&validDate(job.fecha)?'<button type="button" class="use" onclick="eliteNicoUseRouteDate('+i+')">Usar '+esc(dateText(job.fecha))+'</button>':'')+'<button type="button" class="later" onclick="eliteNicoDismissRoute()">Ahora no</button></div></article>';
+    }).join("");
+    card.classList.add("open");
+  }
+  window.eliteNicoUseRouteDate=i=>{const s=suggestions[i],field=el("fecha");if(!s?.job?.fecha||!field)return;field.value=s.job.fecha;field.dispatchEvent(new Event("change",{bubbles:true}));const status=el("elite-nico-route-status");status.style.display="block";status.textContent="✓ Nico colocó la fecha sugerida. Revisa la hora y guarda cuando estés listo.";};
+  window.eliteNicoDismissRoute=()=>{dismissedKey=normalize(el("direccion")?.value)+"|"+String(el("fecha")?.value||"");hide();};
+  function schedule(){clearTimeout(timer);timer=setTimeout(analyze,700);}
+  function bind(){ensureCard();["direccion","fecha","cliente"].forEach(id=>{const field=el(id);if(field&&!field.dataset.nicoRoutes){field.dataset.nicoRoutes="1";field.addEventListener(id==="direccion"?"input":"change",schedule);field.addEventListener("blur",schedule);}});}
+  function start(){
+    bind();
+    new MutationObserver(bind).observe(document.body,{childList:true,subtree:true});
+    document.addEventListener("mouseup",event=>{if(event.target?.closest?.("#suggestions-clientes .suggestion-item"))setTimeout(schedule,80);});
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
+  console.info("[Elite Admin] v"+VERSION+" · Nico rutas inteligentes · Apple Maps principal");
+})();
+</script>
 </body>
 </html>
