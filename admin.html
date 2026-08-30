@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0.22 Stable — accesos directos exactos desde Requiere atención -->
+<!-- Elite Admin v9.0.23 Stable — conteo mensual exacto y automático -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.22 Stable — Elite Cleaners Company</title>
+    <title>Elite Admin v9.0.23 Stable — Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -6000,9 +6000,18 @@ function updateOpsMetrics(jobs) {
   }
   if (badgeDay) badgeDay.textContent = String(opsCalendarDate.getDate());
   if (jobsLabel) {
-    const selectedKey = opsDateKey(opsCalendarDate);
-    const todayKey = opsDateKey(/* @__PURE__ */ new Date());
-    jobsLabel.textContent = selectedKey === todayKey ? "Trabajos hoy" : "Trabajos del día";
+    if (opsCalendarView === "month") {
+      const monthName = opsCalendarDate.toLocaleDateString("es-US", { month: "long" });
+      jobsLabel.textContent = "Trabajos en " + monthName;
+    } else if (opsCalendarView === "week") {
+      jobsLabel.textContent = "Trabajos de la semana";
+    } else if (opsCalendarView === "agenda") {
+      jobsLabel.textContent = "Próximos trabajos";
+    } else {
+      const selectedKey = opsDateKey(opsCalendarDate);
+      const todayKey = opsDateKey(/* @__PURE__ */ new Date());
+      jobsLabel.textContent = selectedKey === todayKey ? "Trabajos hoy" : "Trabajos del día";
+    }
   }
   document.getElementById("ops-jobs-count").textContent = jobs.length;
   document.getElementById("ops-sold").textContent = opsMoney(sold);
@@ -6099,7 +6108,9 @@ function renderOpsMonth() {
     const d = new Date(start);
     d.setDate(start.getDate() + i);
     const key = opsDateKey(d), jobs = opsJobsForDate(key);
-    all.push(...jobs);
+    // Las casillas grises de los meses anterior y siguiente se muestran para
+    // completar la cuadrícula, pero nunca deben aumentar el total mensual.
+    if (d.getMonth() === m && d.getFullYear() === y) all.push(...jobs);
     html += '<div class="ops-month-day '.concat(d.getMonth() !== m ? "muted" : "", " ").concat(key === opsDateKey(/* @__PURE__ */ new Date()) ? "today" : "", '" onclick="opsCalendarDate=new Date(\'').concat(key, "T12:00:00');setOpsView('day')\"><div class=\"ops-month-num\">").concat(d.getDate(), "</div>").concat(jobs.slice(0, 3).map((s) => '<div class="ops-month-job '.concat(opsStateClass(s), '" onclick="event.stopPropagation();opsSelectedJobId=\'').concat(s.id, "';abrirEditorEvento('").concat(s.id, '\')" style="cursor:pointer" title="').concat(opsStateLabel(s), '">').concat(s.hora || "", " ").concat(s.cliente || "", "</div>")).join("")).concat(jobs.length > 3 ? "<small>+".concat(jobs.length - 3, " más</small>") : "", "</div>");
   }
   html += "</div>";
@@ -13732,7 +13743,10 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     const all=[];
     for(let i=0;i<42;i++){
       const d=new Date(start); d.setDate(start.getDate()+i);
-      const key=opsDateKey(d),jobs=opsJobsForDate(key); all.push(...jobs);
+      const key=opsDateKey(d),jobs=opsJobsForDate(key);
+      // El total pertenece únicamente al mes seleccionado. Los trabajos de
+      // las casillas grises adyacentes siguen visibles, pero no se suman.
+      if(d.getMonth()===m&&d.getFullYear()===y)all.push(...jobs);
       html+='<div class="ops-month-day '+(d.getMonth()!==m?'muted ':'')+(key===opsDateKey(new Date())?'today':'')+'" onclick="opsOpenCalendarDay(\''+key+'\')"><div class="ops-month-num">'+d.getDate()+'</div>'+
         jobs.slice(0,3).map(s=>'<button type="button" class="ops-month-job '+opsStateClass(s)+'" onclick="event.stopPropagation();opsOpenCalendarJob(\''+s.id+'\',\''+key+'\')" title="Abrir ficha completa · '+opsStateLabel(s)+'">'+(s.hora||'')+' '+(s.cliente||'')+'</button>').join('')+
         (jobs.length>3?'<small>+'+(jobs.length-3)+' más</small>':'')+'</div>';
@@ -14170,7 +14184,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 <script id="elite-admin-v9021-nico-smart-routes">
 (function(){
   "use strict";
-  const VERSION="9.0.22";
+  const VERSION="9.0.23";
   const MAX_MILES=12;
   const CACHE_KEY="elite_nico_geocode_us_v1";
   const NICO_IMG="https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/saluda.png";
