@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0.20 Stable — Mensajes, pendientes y atención verificable -->
+<!-- Elite Admin v9.0.22 Stable — accesos directos exactos desde Requiere atención -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.20 Stable — Elite Cleaners Company</title>
+    <title>Elite Admin v9.0.22 Stable — Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -5338,6 +5338,8 @@ function eliteV54SubscribeRequests() {
   });
 }
 window.eliteV51OpenInventory = function() {
+  const requestedTab = ["catalogo", "solicitudes", "general", "agregar"].includes(window.eliteInventoryInitialTab) ? window.eliteInventoryInitialTab : "catalogo";
+  window.eliteInventoryInitialTab = "";
   eliteV51SubscribeInventory();
   eliteV54SubscribeRequests();
   abrirEliteV5ModuleModal("Inventario", "Control general, solicitudes, compras, recibos y entregas.", '\n  <div class="elite-v54-tabs">\n   <button id="v54-tab-solicitudes" class="elite-v54-tab active" onclick="eliteV54SwitchTab(\'solicitudes\')">Solicitudes</button>\n   <button id="v54-tab-general" class="elite-v54-tab" onclick="eliteV54SwitchTab(\'general\')">Inventario general</button>\n   <button id="v54-tab-agregar" class="elite-v54-tab" onclick="eliteV54SwitchTab(\'agregar\')">Agregar artículo</button>\n  </div>\n  <div id="elite-v54-tab-content"></div>');
@@ -5477,7 +5479,7 @@ window.eliteV51OpenInventory = function() {
   eliteV54SubscribeRequests();
   eliteV55SubscribeCatalog();
   abrirEliteV5ModuleModal("Inventario", "Catálogo, existencias, solicitudes, compras, recibos y entregas.", '\n    <div class="elite-v54-tabs" style="grid-template-columns:repeat(4,1fr)">\n      <button id="v54-tab-catalogo" class="elite-v54-tab active" onclick="eliteV55SwitchTab(\'catalogo\')">Catálogo</button>\n      <button id="v54-tab-solicitudes" class="elite-v54-tab" onclick="eliteV55SwitchTab(\'solicitudes\')">Solicitudes</button>\n      <button id="v54-tab-general" class="elite-v54-tab" onclick="eliteV55SwitchTab(\'general\')">Inventario</button>\n      <button id="v54-tab-agregar" class="elite-v54-tab" onclick="eliteV55SwitchTab(\'agregar\')">Ajustar stock</button>\n    </div>\n    <div id="elite-v54-tab-content"></div>');
-  setTimeout(() => eliteV55SwitchTab("catalogo"), 80);
+  setTimeout(() => eliteV55SwitchTab(requestedTab), 80);
 };
 function eliteV55SwitchTab(tab) {
   ["catalogo", "solicitudes", "general", "agregar"].forEach((x) => {
@@ -12976,6 +12978,10 @@ var __spreadValues = (a, b) => {
     if (!r) return;
     eliteAttentionClose();
     if (r.kind === "request") {
+      // La alerta define el destino interno antes de abrir Inventario. Así la
+      // función del módulo no puede devolver al usuario a Catálogo.
+      window.eliteInventoryInitialTab = "solicitudes";
+      window.eliteSolicitudFocoId = String(r.id || "");
       (_a = document.querySelector('[data-module="inventario"]')) == null ? void 0 : _a.click();
       return;
     }
@@ -14164,7 +14170,7 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 <script id="elite-admin-v9021-nico-smart-routes">
 (function(){
   "use strict";
-  const VERSION="9.0.21";
+  const VERSION="9.0.22";
   const MAX_MILES=12;
   const CACHE_KEY="elite_nico_geocode_us_v1";
   const NICO_IMG="https://rodrigodanielfranco94-png.github.io/elite-cleaners-app/saluda.png";
