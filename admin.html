@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0.23 Stable — conteo mensual exacto y automático -->
+<!-- Elite Admin v9.0.24 Stable — vista previa de recordatorios en español -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.23 Stable — Elite Cleaners Company</title>
+    <title>Elite Admin v9.0.24 Stable — Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -13996,8 +13996,15 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     try{return new Date(String(iso)+"T12:00:00").toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});}
     catch(_){return String(iso||"");}
   }
+  function localDateSpanish(iso){
+    try{return new Date(String(iso)+"T12:00:00").toLocaleDateString("es-US",{weekday:"long",month:"long",day:"numeric"});}
+    catch(_){return String(iso||"");}
+  }
   function humanReminder(service){
-    return "Hi "+firstName(service.cliente)+"! This is Elite Cleaners Company. Just a quick reminder that we’re scheduled to clean your home tomorrow, "+localDate(service.fecha)+", at "+formatAMPM(service.hora)+". If there’s anything you’d like us to know before we arrive, feel free to reply to this message. We look forward to seeing you! — Rodrigo & Dayana\n\nReply STOP to opt out.";
+    return "Hi "+firstName(service.cliente)+"! This is Elite Cleaners Company. Just a quick reminder that your home cleaning is scheduled for "+localDate(service.fecha)+", at "+formatAMPM(service.hora)+". If there’s anything you’d like us to know before we arrive, feel free to reply to this message. We look forward to seeing you! — Rodrigo & Dayana";
+  }
+  function humanReminderSpanish(service){
+    return "¡Hola "+firstName(service.cliente)+"! Somos Elite Cleaners Company. Este es un breve recordatorio de que la limpieza de su hogar está programada para el "+localDateSpanish(service.fecha)+", a las "+formatAMPM(service.hora)+". Si hay algo que le gustaría informarnos antes de nuestra llegada, puede responder a este mensaje. ¡Esperamos verle pronto! — Rodrigo y Dayana";
   }
   window.eliteBuildHumanReminder=humanReminder;
   window.enviarRecordatorio=function(id){
@@ -14005,7 +14012,20 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     if(!s)return alert("No se encontró el trabajo.");
     const phone=s.whatsapp||s.telefono||"";
     if(!phone)return alert("El cliente no tiene un teléfono registrado.");
-    return abrirSMS(phone,humanReminder(s),{tipo:"recordatorio"});
+    const preview=humanReminderSpanish(s);
+    const confirmed=window.confirm(
+      "¿Abrir la aplicación Mensajes para preparar este recordatorio?\n\n"+
+      "Teléfono: "+phone+"\n\n"+
+      preview+"\n\n"+
+      "NOTA: Esta vista previa está en español, pero el cliente recibirá el mensaje en inglés.\n\n"+
+      "IMPORTANTE: La app Admin no lo enviará automáticamente. Después de abrir Mensajes, tú decides si presionas Enviar.\n\n"+
+      "Aceptar = Abrir Mensajes\nCancelar = No hacer nada"
+    );
+    if(!confirmed){
+      alert("Acción cancelada. No se abrió ningún SMS.");
+      return false;
+    }
+    return abrirSMS(phone,humanReminder(s),{tipo:"recordatorio",omitirConfirmacion:true});
   };
   function statusCard(config){
     const connected=config.sms_provider_connected===true;
