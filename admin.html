@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0.24 Stable — vista previa de recordatorios en español -->
+<!-- Elite Admin v9.0.25 Stable — recordatorios separados por párrafos -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.24 Stable — Elite Cleaners Company</title>
+    <title>Elite Admin v9.0.25 Stable — Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -14001,10 +14001,10 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     catch(_){return String(iso||"");}
   }
   function humanReminder(service){
-    return "Hi "+firstName(service.cliente)+"! This is Elite Cleaners Company. Just a quick reminder that your home cleaning is scheduled for "+localDate(service.fecha)+", at "+formatAMPM(service.hora)+". If there’s anything you’d like us to know before we arrive, feel free to reply to this message. We look forward to seeing you! — Rodrigo & Dayana";
+    return "Hi "+firstName(service.cliente)+"!\n\nThis is Elite Cleaners Company. Just a quick reminder that your home cleaning is scheduled for "+localDate(service.fecha)+", at "+formatAMPM(service.hora)+". If there’s anything you’d like us to know before we arrive, feel free to reply to this message. We look forward to seeing you!\n\n— Rodrigo & Dayana";
   }
   function humanReminderSpanish(service){
-    return "¡Hola "+firstName(service.cliente)+"! Somos Elite Cleaners Company. Este es un breve recordatorio de que la limpieza de su hogar está programada para el "+localDateSpanish(service.fecha)+", a las "+formatAMPM(service.hora)+". Si hay algo que le gustaría informarnos antes de nuestra llegada, puede responder a este mensaje. ¡Esperamos verle pronto! — Rodrigo y Dayana";
+    return "¡Hola "+firstName(service.cliente)+"!\n\nSomos Elite Cleaners Company. Este es un breve recordatorio de que la limpieza de su hogar está programada para el "+localDateSpanish(service.fecha)+", a las "+formatAMPM(service.hora)+". Si hay algo que le gustaría informarnos antes de nuestra llegada, puede responder a este mensaje. ¡Esperamos verle pronto!\n\n— Rodrigo y Dayana";
   }
   window.eliteBuildHumanReminder=humanReminder;
   window.enviarRecordatorio=function(id){
