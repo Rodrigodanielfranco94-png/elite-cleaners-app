@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0.26 Stable — recurrencias exactas sin duplicados -->
+<!-- Elite Admin v9.0.27 Stable — tarifa semanal de Terpene actualizada -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.26 Stable — Elite Cleaners Company</title>
+    <title>Elite Admin v9.0.27 Stable — Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -14455,6 +14455,72 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
     console.info("[Elite Admin] v9.0.26 · "+groups.size+" series verificadas con intervalos exactos.");
   };
   window.eliteV9026OccurrenceDate=(date,repeat,index)=>dateText(occurrence(parseDate(date),frequency(repeat),index));
+})();
+</script>
+<!-- ===== ELITE ADMIN v9.0.27 — TARIFA SEMANAL TERPENE BELT LLC ===== -->
+<script id="elite-admin-v9027-terpene-weekly-price">
+(function(){
+  "use strict";
+  const CLIENT="Terpene Belt LLC";
+  const START_DATE="2026-09-05";
+  const PRICE=420;
+  let running=false;
+  const normalize=value=>String(value||"").trim().toLowerCase();
+  const cleanTime=value=>{
+    const match=String(value||"").trim().match(/^(\d{1,2}):(\d{2})/);
+    return match?String(Number(match[1])).padStart(2,"0")+":"+match[2]:"";
+  };
+  const isSaturday=date=>{
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(date||"")))return false;
+    return new Date(String(date)+"T12:00:00").getDay()===6;
+  };
+  const isWeekly=value=>["semanal","weekly"].includes(normalize(value));
+  const isCompleted=service=>normalize(service.estado)==="completado"||normalize(service.estado_calendario)==="completado";
+  async function updateTerpeneWeeklyPricing(){
+    if(running||typeof db==="undefined"||typeof firebase==="undefined")return 0;
+    running=true;
+    try{
+      const snapshot=await db.collection("servicios").where("cliente","==",CLIENT).get();
+      const changes=[];
+      snapshot.forEach(doc=>{
+        const service=doc.data()||{};
+        const eligible=String(service.fecha||"")>=START_DATE&&isSaturday(service.fecha)&&cleanTime(service.hora)==="15:00"&&isWeekly(service.repetir||service.frecuencia)&&!isCompleted(service);
+        if(!eligible)return;
+        const currentPrice=Number(service.precio_total||0);
+        const currentRecurring=Number(service.precio_recurrente||0);
+        const currentBaths=Number(service.banos||0);
+        if(currentPrice===PRICE&&currentRecurring===PRICE&&currentBaths===4&&service.ajuste_tarifa!=="terpene-semanal-420-v1")return;
+        const data={precio_total:PRICE,precio_recurrente:PRICE,banos:"4",ajuste_tarifa:"terpene-semanal-420-v1",ajuste_tarifa_fecha:firebase.firestore.FieldValue.serverTimestamp(),actualizado_en:firebase.firestore.FieldValue.serverTimestamp()};
+        if(service.balance_pagado!==true){
+          const paidDeposit=service.deposito_pagado===true?Math.max(0,Number(service.deposito_monto||0)):0;
+          data.balance_restante=Math.max(0,PRICE-paidDeposit);
+        }
+        changes.push({ref:doc.ref,data});
+      });
+      for(let start=0;start<changes.length;start+=400){
+        const batch=db.batch();
+        changes.slice(start,start+400).forEach(change=>batch.set(change.ref,change.data,{merge:true}));
+        await batch.commit();
+      }
+      if(changes.length){
+        console.info("[Elite Admin] Terpene Belt LLC: "+changes.length+" limpiezas semanales actualizadas a $420 y 4 baños.");
+        if(typeof renderHistorial==="function")setTimeout(()=>renderHistorial(),150);
+        if(typeof renderCentroOperacionesV601==="function")setTimeout(()=>renderCentroOperacionesV601(),200);
+      }
+      return changes.length;
+    }catch(error){
+      console.error("No se pudo actualizar la tarifa semanal de Terpene Belt LLC:",error);
+      return 0;
+    }finally{
+      running=false;
+    }
+  }
+  window.eliteV9027UpdateTerpenePricing=updateTerpeneWeeklyPricing;
+  function start(){
+    setTimeout(updateTerpeneWeeklyPricing,4500);
+    setTimeout(updateTerpeneWeeklyPricing,12000);
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
 })();
 </script>
 </body>
