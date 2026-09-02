@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- Elite Admin v9.0.25 Stable — recordatorios separados por párrafos -->
+<!-- Elite Admin v9.0.26 Stable — recurrencias exactas sin duplicados -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.25 Stable — Elite Cleaners Company</title>
+    <title>Elite Admin v9.0.26 Stable — Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -14303,6 +14303,158 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
   console.info("[Elite Admin] v"+VERSION+" · Nico rutas inteligentes · Apple Maps principal");
+})();
+</script>
+<!-- ===== ELITE ADMIN v9.0.26 — RECURRENCIAS EXACTAS Y LIMPIEZA SEGURA ===== -->
+<script id="elite-admin-v9026-exact-recurrences">
+(function(){
+  "use strict";
+  const FUTURE_OCCURRENCES=12;
+  const running=new Map();
+  const norm=value=>String(value||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ");
+  function frequency(value){
+    const v=norm(value||"ninguno");
+    const aliases={weekly:"semanal",biweekly:"quincenal",triweekly:"cada_3_semanas","every 3 weeks":"cada_3_semanas","cada 3 semanas":"cada_3_semanas",monthly:"mensual",quarterly:"trimestral",none:"ninguno",once:"ninguno","una vez":"ninguno",unica:"ninguno"};
+    return aliases[v]||v;
+  }
+  function parseDate(value){
+    const p=String(value||"").split("-").map(Number);
+    return p.length===3&&p.every(Number.isFinite)?new Date(p[0],p[1]-1,p[2],12,0,0,0):null;
+  }
+  function dateText(date){
+    return [date.getFullYear(),String(date.getMonth()+1).padStart(2,"0"),String(date.getDate()).padStart(2,"0")].join("-");
+  }
+  function addClampedMonths(base,months){
+    const first=new Date(base.getFullYear(),base.getMonth()+months,1,12,0,0,0);
+    const lastDay=new Date(first.getFullYear(),first.getMonth()+1,0,12,0,0,0).getDate();
+    return new Date(first.getFullYear(),first.getMonth(),Math.min(base.getDate(),lastDay),12,0,0,0);
+  }
+  function occurrence(base,repeat,index){
+    if(repeat==="mensual")return addClampedMonths(base,index);
+    if(repeat==="trimestral")return addClampedMonths(base,index*3);
+    const days=repeat==="semanal"?7:repeat==="quincenal"?14:repeat==="cada_3_semanas"?21:0;
+    const next=new Date(base.getTime());
+    next.setDate(next.getDate()+days*index);
+    return next;
+  }
+  function familyKey(service,repeat){
+    const location=norm(service.direccion||service.address||service.whatsapp||service.telefono||"");
+    return [norm(service.cliente||service.nombre_cliente),location,repeat].join("|");
+  }
+  function idOf(service){return String(service.id||service.firestore_id||"");}
+  function isGenerated(service){return service.repeticion_generada===true;}
+  function isProtected(service){
+    return service.estado==="completado"||service.estado_calendario==="completado"||service.editado_desde_calendario===true||service.edicion_solo_este_trabajo===true;
+  }
+  function canonical(rows,fallback){
+    const sorted=rows.slice().sort((a,b)=>{
+      const ar=!isGenerated(a)?0:1,br=!isGenerated(b)?0:1;
+      const aRoot=idOf(a)&&[a.serie_id,a.serie_origen_id].map(String).includes(idOf(a))?0:1;
+      const bRoot=idOf(b)&&[b.serie_id,b.serie_origen_id].map(String).includes(idOf(b))?0:1;
+      return ar-br||aRoot-bRoot||String(a.fecha||"").localeCompare(String(b.fecha||""));
+    });
+    return sorted[0]||fallback;
+  }
+  function stableId(seriesId,date){
+    const text=String(seriesId)+"|"+String(date);let hash=2166136261;
+    for(let i=0;i<text.length;i++){hash^=text.charCodeAt(i);hash=Math.imul(hash,16777619);}
+    return "rec_"+String(date).replace(/\D/g,"")+"_"+(hash>>>0).toString(36);
+  }
+  function cleanTemplate(source){
+    const copy=Object.assign({},source);
+    ["id","firestore_id","doc_id","timestamp","actualizado","actualizado_en","fecha_completado","completado_en","cancelado_en","mes_contable","mes_cerrado","oculto_mensajes","oculto_resenas","firma_cliente","firma_imagen","firma_url","fecha_firma","cliente_firma","fecha_trabajo_firma","hora_trabajo_firma","contract_code","contrato_codigo","contrato_firmado","contrato_enviado","contrato_url","fecha_contrato","invoice_id","invoice_number","invoice_numero","invoice_url","invoice_status","factura_id","factura_numero","factura_url","factura_enviada","comprobante_deposito","fecha_pago_deposito","metodo_pago_deposito","fecha_pago_balance","metodo_pago_balance","comprobante_balance","hora_en_camino","hora_llegada","hora_inicio","hora_pausa","hora_inicio_pausa","hora_reanudacion","hora_regreso","hora_fin_pausa","hora_fin","pausa_total_minutos","tiempo_trabajado_minutos","millas_reales","gps_iniciado","gps_finalizado","ubicacion_llegada","ubicacion_inicio","ubicacion_fin","foto_propiedad","foto_propiedad_url","foto_llegada_url","fotos_count","fotos_antes_count","fotos_despues_count","editado_desde_calendario","edicion_solo_este_trabajo"].forEach(key=>delete copy[key]);
+    return copy;
+  }
+  async function commitOperations(operations){
+    for(let start=0;start<operations.length;start+=400){
+      const batch=db.batch();
+      operations.slice(start,start+400).forEach(op=>{
+        if(op.type==="delete")batch.delete(op.ref);
+        else batch.set(op.ref,op.data,{merge:op.merge!==false});
+      });
+      await batch.commit();
+    }
+  }
+  async function synchronize(data,repeatValue,originId){
+    const repeat=frequency(repeatValue);
+    if(!data||!data.fecha||repeat==="ninguno")return;
+    const key=familyKey(data,repeat);
+    if(running.has(key))return running.get(key);
+    const task=(async()=>{
+      const snapshot=await db.collection("servicios").get();
+      const all=[];
+      snapshot.forEach(doc=>all.push(Object.assign({},doc.data()||{},{id:doc.id,firestore_id:doc.id,_ref:doc.ref})));
+      const rows=all.filter(item=>item.fecha&&frequency(item.repetir||item.frecuencia)===repeat&&familyKey(item,repeat)===key);
+      const source=canonical(rows,Object.assign({},data,{id:originId,firestore_id:originId}));
+      const base=parseDate(source.fecha||data.fecha);
+      if(!base)return;
+      const seriesId=String(source.serie_id||source.serie_origen_id||idOf(source)||originId||"").trim();
+      if(!seriesId)return;
+      const canonicalTime=String(source.hora||data.hora||"");
+      const excluded=new Set(Array.isArray(source.fechas_excluidas)?source.fechas_excluidas.map(String):[]);
+      rows.forEach(item=>(Array.isArray(item.fechas_excluidas)?item.fechas_excluidas:[]).forEach(date=>excluded.add(String(date))));
+      if(typeof ELITE_FECHAS_SIN_TRABAJO!=="undefined")ELITE_FECHAS_SIN_TRABAJO.forEach(date=>excluded.add(String(date)));
+      const today=parseDate(dateText(new Date()))||new Date();
+      let first=1;
+      while(first<1000&&occurrence(base,repeat,first)<today)first++;
+      const desired=[];
+      for(let i=first;i<first+FUTURE_OCCURRENCES;i++){
+        const date=dateText(occurrence(base,repeat,i));
+        if(!excluded.has(date))desired.push(date);
+      }
+      const desiredSet=new Set(desired),byDate=new Map();
+      rows.forEach(item=>{
+        const date=String(item.fecha||"");
+        if(!byDate.has(date))byDate.set(date,[]);
+        byDate.get(date).push(item);
+      });
+      const operations=[];
+      const rootRef=source._ref||db.collection("servicios").doc(idOf(source)||originId);
+      operations.push({type:"set",ref:rootRef,data:{serie_id:seriesId,serie_origen_id:seriesId,repetir:repeat,frecuencia:repeat,actualizado_en:firebase.firestore.FieldValue.serverTimestamp()}});
+      for(const [date,items] of byDate){
+        const future=parseDate(date)>=today;
+        const ranked=items.slice().sort((a,b)=>Number(isGenerated(a))-Number(isGenerated(b))||Number(isProtected(b))-Number(isProtected(a))||idOf(a).localeCompare(idOf(b)));
+        const keeper=ranked[0];
+        if(future&&desiredSet.has(date)){
+          if(isGenerated(keeper)&&!isProtected(keeper))operations.push({type:"set",ref:keeper._ref,data:{hora:canonicalTime,repetir:repeat,frecuencia:repeat,serie_id:seriesId,serie_origen_id:seriesId,actualizado_en:firebase.firestore.FieldValue.serverTimestamp()}});
+          ranked.slice(1).forEach(item=>{if(isGenerated(item)&&!isProtected(item))operations.push({type:"delete",ref:item._ref});});
+        }else if(future){
+          items.forEach(item=>{if(isGenerated(item)&&!isProtected(item))operations.push({type:"delete",ref:item._ref});});
+        }
+      }
+      const template=cleanTemplate(source);
+      for(const date of desired){
+        const available=(byDate.get(date)||[]).some(item=>!isGenerated(item)||isProtected(item)||item===((byDate.get(date)||[])[0]));
+        if(available)continue;
+        const ref=db.collection("servicios").doc(stableId(seriesId,date));
+        operations.push({type:"set",ref,data:Object.assign({},template,{fecha:date,hora:canonicalTime,repetir:repeat,frecuencia:repeat,serie_id:seriesId,serie_origen_id:seriesId,estado:"no_iniciado",estado_calendario:"pendiente",hora_inicio:"--:--",hora_fin:"--:--",hora_llegada:"--:--",hora_pausa:"--:--",hora_regreso:"--:--",firma_cliente:false,contrato_firmado:false,deposito_pagado:false,balance_pagado:false,fecha_pago_deposito:"",metodo_pago_deposito:"",comprobante_deposito:"",repeticion_generada:true,timestamp:firebase.firestore.FieldValue.serverTimestamp(),actualizado_en:firebase.firestore.FieldValue.serverTimestamp()}),merge:false});
+      }
+      await commitOperations(operations);
+      console.info("[Elite Admin] Serie sincronizada sin duplicados:",source.cliente,repeat,canonicalTime);
+    })().finally(()=>running.delete(key));
+    running.set(key,task);
+    return task;
+  }
+  window.sincronizarRepeticionesServicio=synchronize;
+  window.crearRepeticiones=(data,repeat)=>synchronize(data,repeat,data&& (data.id||data.firestore_id));
+  window.eliteV82RepararSeriesRecurrentes=async function(){
+    if(typeof db==="undefined"||typeof firebase==="undefined")return;
+    const snapshot=await db.collection("servicios").get(),groups=new Map();
+    snapshot.forEach(doc=>{
+      const item=Object.assign({},doc.data()||{},{id:doc.id,firestore_id:doc.id});
+      const repeat=frequency(item.repetir||item.frecuencia);
+      if(!item.fecha||repeat==="ninguno")return;
+      const key=familyKey(item,repeat);
+      if(!groups.has(key))groups.set(key,[]);
+      groups.get(key).push(item);
+    });
+    for(const rows of groups.values()){
+      const source=canonical(rows,rows[0]);
+      await synchronize(source,source.repetir||source.frecuencia,idOf(source));
+    }
+    console.info("[Elite Admin] v9.0.26 · "+groups.size+" series verificadas con intervalos exactos.");
+  };
+  window.eliteV9026OccurrenceDate=(date,repeat,index)=>dateText(occurrence(parseDate(date),frequency(repeat),index));
 })();
 </script>
 </body>
