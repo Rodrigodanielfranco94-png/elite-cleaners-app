@@ -14523,5 +14523,90 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
 })();
 </script>
+
+<!-- ===== FIX: CONTABILIDAD -> SERVICIO (EDITAR TRABAJO) ===== -->
+<style>
+#accounting-table-body td.elite-open-service-edit{
+  cursor:pointer!important;color:#2563eb!important;font-weight:800!important;
+  text-decoration:underline!important;text-underline-offset:2px!important;
+}
+#accounting-table-body td.elite-open-service-edit:hover{background:#eff6ff!important;color:#1d4ed8!important}
+</style>
+<script>
+(function(){
+  "use strict";
+  function serviceId(s){return String((s&&(s.id||s.firestore_id))||"").trim();}
+
+  window.eliteAbrirServicioParaEditarDesdeContabilidad=function(id){
+    id=String(id||"").trim();
+    const s=(window.todosLosServicios||[]).find(x=>serviceId(x)===id);
+    if(!s)return alert("No se encontró este trabajo en Servicios.");
+
+    // Cierra SOLO las pantallas superpuestas; NO abre Centro de Operaciones.
+    const acc=document.getElementById("elite-accounting-modal");
+    const gasto=document.getElementById("modal-gasto-contabilidad");
+    const ops=document.getElementById("ops-center-modal-v601");
+    const general=document.getElementById("elite-v5-module-modal");
+    if(acc)acc.style.display="none";
+    if(gasto)gasto.style.display="none";
+    if(ops)ops.style.display="none";
+    if(general)general.style.display="none";
+    document.body.classList.remove("elite-v607-accounting-active","elite-v603-accounting-open","elite-v607-module-active");
+    document.body.style.overflow="";
+
+    // Muestra la pantalla real SERVICIOS (la del formulario azul/oscuro).
+    if(typeof eliteV51SetLayout==="function") eliteV51SetLayout("servicios");
+    const servicesButton=document.querySelector('.elite-v5-nav-btn[data-module="servicios"]');
+    if(typeof eliteV5SetActive==="function") eliteV5SetActive("servicios",servicesButton||null);
+    if(typeof cerrarEliteV5Menu==="function") cerrarEliteV5Menu();
+
+    // Carga ESTE trabajo en el formulario de Servicio para poder editarlo.
+    window.eliteServicioFocoId=id;
+    window.eliteServicioFocoTipo="service";
+    if(typeof editar==="function") editar(id,s);
+
+    // Deja visible el formulario de Servicios y llévalo arriba.
+    const form=document.getElementById("main-form");
+    if(form){
+      form.classList.remove("elite-v51-hidden");
+      form.style.display="";
+    }
+    setTimeout(function(){
+      const target=document.getElementById("main-form")||document.getElementById("cliente")||document.getElementById("historial");
+      if(target)target.scrollIntoView({behavior:"smooth",block:"start"});
+    },80);
+  };
+
+  const originalRender=window.renderTablaContabilidad;
+  if(typeof originalRender==="function"){
+    window.renderTablaContabilidad=function(d){
+      const result=originalRender.apply(this,arguments);
+      const body=document.getElementById("accounting-table-body");
+      if(!body||!d||!Array.isArray(d.filas))return result;
+      const rows=d.filas.slice().sort((a,b)=>String(a.fecha||"").localeCompare(String(b.fecha||"")));
+      Array.from(body.querySelectorAll("tr")).forEach(function(tr,i){
+        const f=rows[i];
+        if(!f||!f.id)return;
+        tr.dataset.serviceId=String(f.id);
+        [tr.cells[0],tr.cells[1]].forEach(function(td){
+          if(!td)return;
+          td.classList.add("elite-open-service-edit");
+          td.title="Abrir este trabajo en Servicios para editar";
+          td.onclick=function(ev){
+            ev.preventDefault();
+            ev.stopPropagation();
+            if(ev.stopImmediatePropagation)ev.stopImmediatePropagation();
+            window.eliteAbrirServicioParaEditarDesdeContabilidad(tr.dataset.serviceId);
+            return false;
+          };
+        });
+      });
+      return result;
+    };
+  }
+})();
+</script>
+<!-- ===== FIN FIX ===== -->
+
 </body>
 </html>
