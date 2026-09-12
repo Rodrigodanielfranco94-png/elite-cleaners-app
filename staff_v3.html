@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Elite Staff v9.5.1 Stable | GPS nativo + Real Job View + Consolidated Arrival, Workflow and Catalog Guards -->
+<!-- Elite Staff v9.5.2 Stable | Mobile Work View Layout Fix + GPS nativo + Real Job View -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#000000">
-  <title>Elite Staff v9.5.1 Stable</title>
+  <title>Elite Staff v9.5.2 Stable</title>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -4577,6 +4577,255 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   try{updateWorkflow=guardedWorkflow}catch(_){}
   window.EliteStaffV94=Object.freeze({version:VERSION,stageOf,hasArrivalProof});
   console.info('[Elite Staff] v9.5.1 Stable · GPS nativo, llegada iPhone directa y flujo obligatorio activo');
+})();
+</script>
+
+
+
+
+
+
+<!-- ===== ELITE STAFF v9.5.3 — STABLE OPERATIONAL LAYOUT ===== -->
+<style id="elite-staff-v953-operational-layout">
+  /*
+    Single source of truth for expanded/operational service cards.
+    Older versions use .future-card as a compact CSS grid. When a card later
+    contains the real work modules, that compact grid must be disabled.
+  */
+  .card.elite-operational-layout,
+  .card.future-card.expanded.elite-operational-layout {
+    display: block !important;
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
+    grid-auto-columns: auto !important;
+    grid-auto-rows: auto !important;
+    align-items: initial !important;
+    gap: 0 !important;
+  }
+
+  /* Keep the full-screen job view from v9.1 intact while normalizing its flow. */
+  .card.elite-work-view.elite-operational-layout {
+    display: block !important;
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
+    grid-auto-columns: auto !important;
+    grid-auto-rows: auto !important;
+    align-items: initial !important;
+    gap: 0 !important;
+  }
+
+  .card.elite-operational-layout > :where(
+    .elite-work-view-toolbar,
+    .header-card,
+    .operation-unlocked,
+    .info-row,
+    .notas-box,
+    .instructions-highlight,
+    .operational-alerts,
+    .btn-gps,
+    .journey-box,
+    .service-briefing,
+    .assistant-box,
+    .checklist-box,
+    .photos-box,
+    .service-report-box,
+    .workflow-box,
+    .future-details,
+    .future-briefing-note,
+    .service-update-banner
+  ) {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    grid-column: 1 / -1 !important;
+    position: relative;
+    left: auto !important;
+    right: auto !important;
+    top: auto;
+    bottom: auto;
+  }
+
+  /* Never allow work text to collapse to one character per line. */
+  .card.elite-operational-layout :where(
+    .instructions-highlight,
+    .instruction-body,
+    .assistant-box,
+    .assistant-title,
+    .assistant-text,
+    .checklist-box,
+    .checklist-title,
+    .checklist-item,
+    .checklist-item label,
+    .photos-box,
+    .service-report-box,
+    .service-report-title,
+    .service-report-help,
+    .service-report-button,
+    .service-report-textarea,
+    .workflow-box,
+    .workflow-status,
+    .workflow-time,
+    .break-summary,
+    .break-history,
+    .break-history-item,
+    .break-history-empty
+  ) {
+    writing-mode: horizontal-tb !important;
+    text-orientation: mixed !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    white-space: normal;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .card.elite-operational-layout .instruction-body,
+  .card.elite-operational-layout .notas-box {
+    white-space: pre-wrap !important;
+  }
+
+  /* Compact future-card header rules must not control an expanded work card. */
+  .card.future-card.expanded.elite-operational-layout > .header-card,
+  .card.future-card.elite-work-view.elite-operational-layout > .header-card {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+  }
+
+  .card.future-card.expanded.elite-operational-layout .client-info,
+  .card.future-card.elite-work-view.elite-operational-layout .client-info {
+    display: block !important;
+    width: auto !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .card.future-card.expanded.elite-operational-layout .date-time-box,
+  .card.future-card.elite-work-view.elite-operational-layout .date-time-box {
+    display: flex !important;
+    flex: 0 0 auto !important;
+  }
+
+  .card.future-card.expanded.elite-operational-layout .future-details {
+    display: block !important;
+  }
+
+  /* Operational modules are always stacked. No side rails / narrow columns. */
+  .card.elite-operational-layout > .operation-unlocked,
+  .card.elite-operational-layout > .notas-box,
+  .card.elite-operational-layout > .instructions-highlight,
+  .card.elite-operational-layout > .assistant-box,
+  .card.elite-operational-layout > .checklist-box,
+  .card.elite-operational-layout > .photos-box,
+  .card.elite-operational-layout > .service-report-box,
+  .card.elite-operational-layout > .workflow-box {
+    float: none !important;
+    clear: both !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .card.elite-operational-layout select,
+  .card.elite-operational-layout textarea,
+  .card.elite-operational-layout button,
+  .card.elite-operational-layout input:not([type="checkbox"]):not([type="radio"]) {
+    max-width: 100% !important;
+    min-width: 0;
+  }
+
+  @media (max-width: 560px) {
+    .card.elite-operational-layout > .header-card,
+    .card.future-card.expanded.elite-operational-layout > .header-card,
+    .card.future-card.elite-work-view.elite-operational-layout > .header-card {
+      flex-direction: column !important;
+      align-items: stretch !important;
+    }
+
+    .card.elite-operational-layout .date-time-box {
+      width: 100% !important;
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+    }
+
+    .card.elite-operational-layout .photo-controls {
+      grid-template-columns: minmax(0,1fr) minmax(0,1fr) !important;
+    }
+
+    .card.elite-operational-layout .photo-plan-grid,
+    .card.elite-operational-layout .photo-summary {
+      grid-template-columns: repeat(3,minmax(0,1fr)) !important;
+    }
+
+    .card.elite-operational-layout .workflow-time {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .card.elite-operational-layout .photo-controls {
+      grid-template-columns: 1fr !important;
+    }
+  }
+</style>
+
+<script id="elite-staff-v953-operational-layout-js">
+(function(){
+  'use strict';
+  const VERSION='9.5.3';
+
+  function isOperationalCard(card){
+    if(!card || !card.classList || !card.classList.contains('card')) return false;
+    return Boolean(card.querySelector(':scope > .operation-unlocked, :scope > .assistant-box, :scope > .checklist-box, :scope > .photos-box, :scope > .service-report-box, :scope > .workflow-box'));
+  }
+
+  function normalizeCard(card){
+    if(!isOperationalCard(card)) return;
+    card.classList.add('elite-operational-layout');
+
+    // A work card must never keep the compact list grid once its modules exist.
+    if(card.classList.contains('future-card')) card.classList.add('expanded');
+  }
+
+  function normalizeAll(root=document){
+    if(root && root.matches && root.matches('.card')) normalizeCard(root);
+    const cards=root && root.querySelectorAll ? root.querySelectorAll('.card') : [];
+    cards.forEach(normalizeCard);
+  }
+
+  // Initial pass after every already-loaded script has built the interface.
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',()=>normalizeAll(document),{once:true});
+  }else{
+    normalizeAll(document);
+  }
+
+  // Firestore and workflow changes rebuild cards dynamically; repair them at source.
+  const observer=new MutationObserver(mutations=>{
+    for(const mutation of mutations){
+      for(const node of mutation.addedNodes){
+        if(node && node.nodeType===1) normalizeAll(node);
+      }
+      if(mutation.target && mutation.target.nodeType===1){
+        const card=mutation.target.closest?.('.card');
+        if(card) normalizeCard(card);
+      }
+    }
+  });
+
+  const startObserver=()=>{
+    const app=document.getElementById('main-app')||document.body;
+    if(app) observer.observe(app,{childList:true,subtree:true});
+  };
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',startObserver,{once:true});
+  else startObserver();
+
+  // Public helper for debugging / manual refresh without touching business logic.
+  window.eliteNormalizeStaffLayout=()=>normalizeAll(document);
+  window.EliteStaffV953=Object.freeze({version:VERSION,normalize:window.eliteNormalizeStaffLayout});
+  console.info('[Elite Staff] v9.5.3 Stable · operational layout normalized');
 })();
 </script>
 
