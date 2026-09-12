@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <!-- Elite Admin v9.0.27 Stable — tarifa semanal de Terpene actualizada -->
 <html lang="es">
@@ -14524,89 +14525,369 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 })();
 </script>
 
-<!-- ===== FIX: CONTABILIDAD -> SERVICIO (EDITAR TRABAJO) ===== -->
-<style>
-#accounting-table-body td.elite-open-service-edit{
-  cursor:pointer!important;color:#2563eb!important;font-weight:800!important;
-  text-decoration:underline!important;text-underline-offset:2px!important;
+<!-- ===== FIX v9.0.28: CONTABILIDAD — PAGO EDITABLE + ABRIR TRABAJO EN SERVICIOS ===== -->
+<style id="elite-accounting-service-payment-fix-css">
+#accounting-table-body td.elite-open-service-card{
+  cursor:pointer!important;
+  color:#2563eb!important;
+  font-weight:800!important;
+  text-decoration:underline!important;
+  text-underline-offset:2px!important;
 }
-#accounting-table-body td.elite-open-service-edit:hover{background:#eff6ff!important;color:#1d4ed8!important}
+#accounting-table-body td.elite-open-service-card:hover{
+  background:#eff6ff!important;
+  color:#1d4ed8!important;
+}
+#accounting-table-body .acc-status.elite-payment-editable{
+  cursor:pointer!important;
+  user-select:none;
+  border:1px solid transparent;
+  transition:.15s ease;
+}
+#accounting-table-body .acc-status.elite-payment-editable:hover{
+  transform:translateY(-1px);
+  box-shadow:0 3px 10px rgba(15,23,42,.14);
+  border-color:#60a5fa;
+}
+#accounting-table-body .acc-status.elite-payment-editable::after{
+  content:" ✎";
+  font-size:9px;
+  opacity:.75;
+}
+.card-servicio.elite-accounting-focus{
+  box-shadow:0 0 0 3px #3b82f6,0 0 32px rgba(59,130,246,.55)!important;
+  animation:eliteAccountingFocus 1.6s ease;
+}
+@keyframes eliteAccountingFocus{
+  0%,100%{transform:scale(1)}
+  35%{transform:scale(1.01)}
+}
 </style>
-<script>
+
+<script id="elite-accounting-service-payment-fix-js">
 (function(){
   "use strict";
-  function serviceId(s){return String((s&&(s.id||s.firestore_id))||"").trim();}
 
-  window.eliteAbrirServicioParaEditarDesdeContabilidad=function(id){
-    id=String(id||"").trim();
-    const s=(window.todosLosServicios||[]).find(x=>serviceId(x)===id);
-    if(!s)return alert("No se encontró este trabajo en Servicios.");
+  function serviceId(s){
+    return String((s && (s.id || s.firestore_id)) || "").trim();
+  }
 
-    // Cierra SOLO las pantallas superpuestas; NO abre Centro de Operaciones.
-    const acc=document.getElementById("elite-accounting-modal");
-    const gasto=document.getElementById("modal-gasto-contabilidad");
-    const ops=document.getElementById("ops-center-modal-v601");
-    const general=document.getElementById("elite-v5-module-modal");
-    if(acc)acc.style.display="none";
-    if(gasto)gasto.style.display="none";
-    if(ops)ops.style.display="none";
-    if(general)general.style.display="none";
-    document.body.classList.remove("elite-v607-accounting-active","elite-v603-accounting-open","elite-v607-module-active");
-    document.body.style.overflow="";
+  function getLocalService(id){
+    id = String(id || "").trim();
+    return (window.todosLosServicios || []).find(function(x){
+      return serviceId(x) === id;
+    });
+  }
 
-    // Muestra la pantalla real SERVICIOS (la del formulario azul/oscuro).
-    if(typeof eliteV51SetLayout==="function") eliteV51SetLayout("servicios");
-    const servicesButton=document.querySelector('.elite-v5-nav-btn[data-module="servicios"]');
-    if(typeof eliteV5SetActive==="function") eliteV5SetActive("servicios",servicesButton||null);
-    if(typeof cerrarEliteV5Menu==="function") cerrarEliteV5Menu();
+  function closeAccountingOverlays(){
+    var acc = document.getElementById("elite-accounting-modal");
+    var gasto = document.getElementById("modal-gasto-contabilidad");
+    var ops = document.getElementById("ops-center-modal-v601");
+    var general = document.getElementById("elite-v5-module-modal");
 
-    // Carga ESTE trabajo en el formulario de Servicio para poder editarlo.
-    window.eliteServicioFocoId=id;
-    window.eliteServicioFocoTipo="service";
-    if(typeof editar==="function") editar(id,s);
+    if(acc) acc.style.display = "none";
+    if(gasto) gasto.style.display = "none";
+    if(ops) ops.style.display = "none";
+    if(general) general.style.display = "none";
 
-    // Deja visible el formulario de Servicios y llévalo arriba.
-    const form=document.getElementById("main-form");
-    if(form){
-      form.classList.remove("elite-v51-hidden");
-      form.style.display="";
+    document.body.classList.remove(
+      "elite-v607-accounting-active",
+      "elite-v603-accounting-open",
+      "elite-v607-module-active"
+    );
+    document.body.style.overflow = "";
+  }
+
+  /*
+    CAMBIO 2:
+    Al tocar el nombre del cliente en Contabilidad NO abre "Información del cliente".
+    Abre la pantalla Servicios y muestra la tarjeta exacta de ESE trabajo.
+  */
+  window.eliteAbrirServicioDesdeContabilidad = function(id){
+    id = String(id || "").trim();
+    var s = getLocalService(id);
+
+    if(!s){
+      alert("No se encontró este trabajo en Servicios.");
+      return;
     }
+
+    closeAccountingOverlays();
+
+    if(typeof window.eliteV51SetLayout === "function"){
+      window.eliteV51SetLayout("servicios");
+    }else if(typeof eliteV51SetLayout === "function"){
+      eliteV51SetLayout("servicios");
+    }
+
+    var servicesButton = document.querySelector('.elite-v5-nav-btn[data-module="servicios"]');
+    if(typeof window.eliteV5SetActive === "function"){
+      window.eliteV5SetActive("servicios", servicesButton || null);
+    }else if(typeof eliteV5SetActive === "function"){
+      eliteV5SetActive("servicios", servicesButton || null);
+    }
+
+    if(typeof window.cerrarEliteV5Menu === "function"){
+      window.cerrarEliteV5Menu();
+    }else if(typeof cerrarEliteV5Menu === "function"){
+      cerrarEliteV5Menu();
+    }
+
+    // Filtra por el ID único para que aparezca exactamente el trabajo seleccionado.
+    window.eliteServicioFocoId = id;
+    window.eliteServicioFocoTipo = "service";
+
+    // Dejamos el nombre en el buscador como referencia visual,
+    // pero NO llamamos eliteRunServiceSearch porque esa función borra eliteServicioFocoId.
+    var q = document.getElementById("buscarTrabajo");
+    if(q){
+      q.value = String(s.cliente || "");
+      var clear = document.getElementById("elite-service-search-clear");
+      if(clear) clear.style.display = q.value ? "inline-flex" : "none";
+    }
+
+    // IMPORTANTE: no llamamos editar(id,s).
+    // editar() era lo que abría la sección "1. Información del cliente".
+    if(typeof window.renderHistorial === "function"){
+      window.renderHistorial();
+    }else if(typeof renderHistorial === "function"){
+      renderHistorial();
+    }
+
     setTimeout(function(){
-      const target=document.getElementById("main-form")||document.getElementById("cliente")||document.getElementById("historial");
-      if(target)target.scrollIntoView({behavior:"smooth",block:"start"});
-    },80);
+      var editButton = document.getElementById("edit-btn-" + id);
+      var card = editButton && editButton.closest(".card-servicio");
+
+      if(card){
+        card.classList.add("elite-accounting-focus");
+        card.scrollIntoView({behavior:"smooth", block:"center"});
+        setTimeout(function(){
+          if(card) card.classList.remove("elite-accounting-focus");
+        }, 2200);
+      }else{
+        var historial = document.getElementById("historial");
+        if(historial) historial.scrollIntoView({behavior:"smooth", block:"start"});
+      }
+    }, 120);
   };
 
-  const originalRender=window.renderTablaContabilidad;
-  if(typeof originalRender==="function"){
-    window.renderTablaContabilidad=function(d){
-      const result=originalRender.apply(this,arguments);
-      const body=document.getElementById("accounting-table-body");
-      if(!body||!d||!Array.isArray(d.filas))return result;
-      const rows=d.filas.slice().sort((a,b)=>String(a.fecha||"").localeCompare(String(b.fecha||"")));
-      Array.from(body.querySelectorAll("tr")).forEach(function(tr,i){
-        const f=rows[i];
-        if(!f||!f.id)return;
-        tr.dataset.serviceId=String(f.id);
-        [tr.cells[0],tr.cells[1]].forEach(function(td){
-          if(!td)return;
-          td.classList.add("elite-open-service-edit");
-          td.title="Abrir este trabajo en Servicios para editar";
-          td.onclick=function(ev){
+  // Alias por compatibilidad con el fix anterior.
+  window.eliteAbrirServicioParaEditarDesdeContabilidad =
+    window.eliteAbrirServicioDesdeContabilidad;
+
+  async function refreshPaymentUI(id){
+    try{
+      var ref = db.collection("servicios").doc(String(id));
+      var snap = await ref.get();
+
+      if(snap.exists){
+        var fresh = Object.assign({id:snap.id, firestore_id:snap.id}, snap.data() || {});
+        var local = getLocalService(id);
+        if(local) Object.assign(local, fresh);
+
+        if(typeof window.eliteSyncDocumentStatuses === "function"){
+          try{ await window.eliteSyncDocumentStatuses(String(id), fresh); }catch(_e){}
+        }
+      }
+
+      if(typeof window.renderContabilidadElite === "function"){
+        window.renderContabilidadElite();
+      }else if(typeof renderContabilidadElite === "function"){
+        renderContabilidadElite();
+      }
+
+      if(typeof window.renderHistorial === "function"){
+        window.renderHistorial();
+      }else if(typeof renderHistorial === "function"){
+        renderHistorial();
+      }
+    }catch(e){
+      console.error("No se pudo refrescar el estado de pago:", e);
+    }
+  }
+
+  /*
+    CAMBIO 1:
+    Al tocar Pagado / Depósito / No pagado en Contabilidad permite cambiarlo.
+    1 = Pagado completo
+    2 = Solo depósito
+    3 = No pagado
+  */
+  window.eliteCambiarEstadoPagoDesdeContabilidad = async function(id, estadoActual){
+    id = String(id || "").trim();
+    var s = getLocalService(id);
+
+    if(!s){
+      alert("No se encontró este trabajo.");
+      return;
+    }
+
+    var opcion = prompt(
+      "CAMBIAR ESTADO DE PAGO\n\n" +
+      "Cliente: " + (s.cliente || "") + "\n" +
+      "Fecha: " + (s.fecha || "") + "\n" +
+      "Estado actual: " + (estadoActual || "No pagado") + "\n\n" +
+      "Escribe una opción:\n" +
+      "1 = Pagado completo\n" +
+      "2 = Solo depósito pagado\n" +
+      "3 = No pagado\n\n" +
+      "Cancelar = no hacer cambios"
+    );
+
+    if(opcion === null) return;
+    opcion = String(opcion).trim();
+
+    if(!["1","2","3"].includes(opcion)){
+      alert("Opción no válida. Escribe 1, 2 o 3.");
+      return;
+    }
+
+    var total = Math.max(0, Number(s.precio_total || 0));
+    var deposito = Math.max(0, Number(s.deposito_monto || total * 0.5));
+    var balanceBase = Math.max(0, total - Math.min(deposito, total));
+    var ahora = new Date().toISOString();
+    var data = {};
+
+    if(opcion === "1"){
+      if(!confirm("¿Marcar este servicio como PAGADO COMPLETO?")) return;
+
+      data = {
+        deposito_pagado: true,
+        balance_pagado: true,
+        pago_completo: true,
+        notificacion_deposito: false,
+        notificacion_balance: false,
+        fecha_pago_deposito: s.fecha_pago_deposito || ahora,
+        fecha_pago_balance: s.fecha_pago_balance || ahora,
+        metodo_pago_deposito: s.metodo_pago_deposito || "Actualizado desde Contabilidad",
+        metodo_pago_balance: "Actualizado desde Contabilidad",
+        estado_pago: "pagado_completo",
+        balance_restante: 0
+      };
+    }
+
+    if(opcion === "2"){
+      if(!confirm("¿Marcar SOLO EL DEPÓSITO como pagado?")) return;
+
+      data = {
+        deposito_pagado: true,
+        balance_pagado: false,
+        pago_completo: false,
+        notificacion_deposito: false,
+        notificacion_balance: false,
+        fecha_pago_deposito: s.fecha_pago_deposito || ahora,
+        fecha_pago_balance: "",
+        metodo_pago_deposito: s.metodo_pago_deposito || "Actualizado desde Contabilidad",
+        metodo_pago_balance: "",
+        estado_pago: "deposito_pagado",
+        balance_restante: balanceBase
+      };
+    }
+
+    if(opcion === "3"){
+      if(!confirm("¿Marcar este servicio como NO PAGADO?")) return;
+
+      data = {
+        deposito_pagado: false,
+        balance_pagado: false,
+        pago_completo: false,
+        notificacion_deposito: false,
+        notificacion_balance: false,
+        fecha_pago_deposito: "",
+        fecha_pago_balance: "",
+        metodo_pago_deposito: "",
+        metodo_pago_balance: "",
+        estado_pago: "no_pagado",
+        balance_restante: balanceBase
+      };
+    }
+
+    try{
+      await db.collection("servicios").doc(id).update(data);
+      var local = getLocalService(id);
+      if(local) Object.assign(local, data);
+
+      await refreshPaymentUI(id);
+    }catch(error){
+      console.error("Error cambiando estado de pago:", error);
+      alert("No se pudo cambiar el estado de pago. Revisa la conexión o los permisos.");
+    }
+  };
+
+  /*
+    Extiende la tabla contable existente sin tocar sus cálculos.
+    - Nombre del cliente: abre la tarjeta exacta en Servicios.
+    - Estado Pago: se vuelve clicable.
+  */
+  var originalRender = window.renderTablaContabilidad;
+
+  if(typeof originalRender === "function"){
+    window.renderTablaContabilidad = function(d){
+      var result = originalRender.apply(this, arguments);
+      var body = document.getElementById("accounting-table-body");
+
+      if(!body || !d || !Array.isArray(d.filas)) return result;
+
+      var rows = d.filas.slice().sort(function(a,b){
+        return String(a.fecha || "").localeCompare(String(b.fecha || ""));
+      });
+
+      Array.from(body.querySelectorAll("tr")).forEach(function(tr, i){
+        var f = rows[i];
+        if(!f || !f.id) return;
+
+        tr.dataset.serviceId = String(f.id);
+
+        // SOLO el nombre del cliente abre Servicios.
+        var clientCell = tr.cells[1];
+        if(clientCell){
+          clientCell.classList.add("elite-open-service-card");
+          clientCell.title = "Abrir este trabajo exacto en Servicios";
+          clientCell.onclick = function(ev){
             ev.preventDefault();
             ev.stopPropagation();
-            if(ev.stopImmediatePropagation)ev.stopImmediatePropagation();
-            window.eliteAbrirServicioParaEditarDesdeContabilidad(tr.dataset.serviceId);
+            if(ev.stopImmediatePropagation) ev.stopImmediatePropagation();
+            window.eliteAbrirServicioDesdeContabilidad(tr.dataset.serviceId);
             return false;
           };
-        });
+        }
+
+        // Estado de pago editable.
+        var paymentCell = tr.cells[12];
+        var badge = paymentCell && paymentCell.querySelector(".acc-status");
+        if(badge){
+          badge.classList.add("elite-payment-editable");
+          badge.title = "Toca para cambiar el estado de pago";
+          badge.setAttribute("role","button");
+          badge.setAttribute("tabindex","0");
+
+          var openPaymentEditor = function(ev){
+            if(ev){
+              ev.preventDefault();
+              ev.stopPropagation();
+            }
+            window.eliteCambiarEstadoPagoDesdeContabilidad(
+              tr.dataset.serviceId,
+              String(f.estadoPago || badge.textContent || "")
+            );
+          };
+
+          badge.onclick = openPaymentEditor;
+          badge.onkeydown = function(ev){
+            if(ev.key === "Enter" || ev.key === " "){
+              ev.preventDefault();
+              openPaymentEditor(ev);
+            }
+          };
+        }
       });
+
       return result;
     };
   }
 })();
 </script>
-<!-- ===== FIN FIX ===== -->
+<!-- ===== FIN FIX v9.0.28 ===== -->
 
 </body>
 </html>
