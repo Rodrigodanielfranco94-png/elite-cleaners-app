@@ -2041,25 +2041,38 @@
   }
   function makeBriefingContent(container,job,isToday,stage){
     compactBriefing(container,job);
-    if(job.direccion){const m=document.createElement('a');m.className='btn-gps';m.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(job.direccion);m.target='_blank';m.rel='noopener noreferrer';m.textContent='📍 ABRIR GPS';if(isToday)m.addEventListener('click',()=>beginNavigation(job.id,stage));container.appendChild(m)}
+    if(job.direccion&&isToday){const m=document.createElement('a');m.className='btn-gps';m.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(job.direccion);m.target='_blank';m.rel='noopener noreferrer';m.textContent='📍 ABRIR GPS';m.addEventListener('click',()=>beginNavigation(job.id,stage));container.appendChild(m)}
+    if(!isToday){const lock=document.createElement('div');lock.className='future-control-note';lock.textContent='La navegación y los controles de trabajo se habilitarán el día del servicio.';container.appendChild(lock);return}
     journeyCompact(container,job,isToday);
   }
   createJobCard=function(job,isToday=false){
     const card=document.createElement('article');card.className='card'+(!isToday?' future-card':'');
-    const stage=getWorkflowStage(job),oper=['llego','limpiando','pausado','completado'].includes(stage);
+    const stage=getWorkflowStage(job);
     const head=document.createElement('div');head.className='header-card';
     const ci=document.createElement('div');ci.className='client-info';const h=document.createElement('h3');h.textContent=safeText(job.cliente,'Servicio asignado');const badge=document.createElement('div');badge.className='badge-tipo';badge.textContent=safeText(job.tipo,'ESTÁNDAR');ci.append(h,badge);
     const dbx=document.createElement('div');dbx.className='date-time-box';const dt=document.createElement('span');dt.className='date-text';dt.textContent=safeText(job.fecha,'SIN FECHA');const tm=document.createElement('span');tm.className='time-text';tm.textContent=safeText(job.hora,'SIN HORA');dbx.append(dt,tm);head.append(ci,dbx);card.appendChild(head);
-    if(!oper){
-      if(!isToday){
-        const loc=document.createElement('div');loc.className='future-quick-location';loc.textContent=job.direccion?'📍 GPS listo':'📍 GPS no disponible';card.appendChild(loc);
-        const toggle=document.createElement('button');toggle.className='future-summary-toggle';toggle.textContent='VER RESUMEN';
-        const details=document.createElement('div');details.className='future-details';makeBriefingContent(details,job,false,stage);
-        toggle.onclick=()=>{card.classList.toggle('expanded');toggle.textContent=card.classList.contains('expanded')?'OCULTAR RESUMEN':'VER RESUMEN'};
-        card.append(toggle,details);return card;
-      }
-      makeBriefingContent(card,job,true,stage);return card;
+
+    /* Future services are always briefing-only. Never expose work modules early,
+       even if an old/recurrent document still contains a stale workflow stage. */
+    if(!isToday){
+      const loc=document.createElement('div');loc.className='future-quick-location';loc.textContent=job.direccion?'📍 GPS listo':'📍 GPS no disponible';card.appendChild(loc);
+      const toggle=document.createElement('button');toggle.className='future-summary-toggle';toggle.textContent='VER RESUMEN';
+      const details=document.createElement('div');details.className='future-details';makeBriefingContent(details,job,false,'asignado');
+      toggle.onclick=()=>{card.classList.toggle('expanded');toggle.textContent=card.classList.contains('expanded')?'OCULTAR RESUMEN':'VER RESUMEN'};
+      card.append(toggle,details);return card;
     }
+
+    /* Before cleaning starts, show only the route/arrival/start sequence.
+       Checklist, work photos, reports and breaks unlock after INICIAR LIMPIEZA. */
+    if(!['limpiando','pausado','completado'].includes(stage)){
+      makeBriefingContent(card,job,true,stage);
+      if(stage==='llego'){
+        appendWorkAssistant(card,job,true);
+        appendWorkflowControls(card,job,true);
+      }
+      return card;
+    }
+
     const ok=document.createElement('div');ok.className='operation-unlocked';ok.textContent='✓ Modo operación habilitado';card.appendChild(ok);
     const notes=document.createElement('div');notes.className='notas-box instructions-highlight';const nt=document.createElement('b');nt.textContent='⚠️ INSTRUCCIONES IMPORTANTES';const body=document.createElement('div');body.className='instruction-body';const op=[safeText(job.notas_internas),job.alfombra_notas?'🧹 Alfombra: '+safeText(job.alfombra_notas):''].filter(Boolean).join('\n\n');body.textContent=op||'Sin instrucciones especiales.';notes.append(nt,body);card.appendChild(notes);
     appendWorkAssistant(card,job,isToday);appendChecklist(card,job,isToday);appendPhotoModule(card,job,isToday);appendServiceReport(card,job,isToday);appendWorkflowControls(card,job,isToday);return card;
@@ -3008,6 +3021,8 @@ if (currentUser) {
     card.dataset.serviceId=String(job.id);
     card.dataset.jobDate=safeText(job.fecha);
     card.dataset.jobTime=safeText(job.hora);
+    card.dataset.jobStage=safeText(getWorkflowStage(job),'asignado');
+    if(isToday)card.classList.add('elite-today-card');
 
     const header=card.querySelector('.header-card');
     if(header){
@@ -4042,6 +4057,14 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       if(!options.silent && typeof setMessage==='function')setMessage('El trabajo todavía se está cargando. Intenta nuevamente en un momento.','info');
       return false;
     }
+    if(card.classList.contains('future-card')){
+      if(!options.silent && typeof setMessage==='function')setMessage('Este servicio todavía es futuro. Puedes revisar el resumen, pero el modo de trabajo se habilitará el día del servicio.','info');
+      return false;
+    }
+    if(card.dataset.accessAllowed==='false'){
+      if(!options.silent && typeof setMessage==='function')setMessage(card.dataset.accessMessage||'Este trabajo todavía no está disponible.','info');
+      return false;
+    }
     if(!activeServiceId)savedScrollY=window.scrollY||0;
     activeServiceId=id;
     document.querySelectorAll('.card.elite-work-view').forEach(other=>{if(other!==card)other.classList.remove('elite-work-view')});
@@ -4101,6 +4124,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(!header||header.closest('.elite-work-view'))return;
     const card=header.closest('.card[data-service-id]');
     if(!card)return;
+    /* Future cards stay inline and use VER RESUMEN. Do not turn them into
+       the fixed full-screen work view. */
+    if(card.classList.contains('future-card'))return;
     event.preventDefault();
     event.stopImmediatePropagation();
     showJobView(card.dataset.serviceId);
@@ -4585,36 +4611,113 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 
 
-<!-- ===== ELITE STAFF v9.5.3 — STABLE OPERATIONAL LAYOUT ===== -->
-<style id="elite-staff-v953-operational-layout">
+
+<!-- ===== ELITE STAFF v9.5.4 — SEQUENTIAL ACCESS + COMPACT SCHEDULE ===== -->
+<style id="elite-staff-v954-sequential-access-css">
   /*
-    Single source of truth for expanded/operational service cards.
-    Older versions use .future-card as a compact CSS grid. When a card later
-    contains the real work modules, that compact grid must be disabled.
+    Schedule/list rules:
+    - Today's services remain compact in the list until opened.
+    - Future services remain compact and can only show an inline summary.
+    - The full work UI is stacked vertically only after the service is opened.
   */
-  .card.elite-operational-layout,
-  .card.future-card.expanded.elite-operational-layout {
-    display: block !important;
-    grid-template-columns: none !important;
-    grid-template-rows: none !important;
-    grid-auto-columns: auto !important;
-    grid-auto-rows: auto !important;
-    align-items: initial !important;
-    gap: 0 !important;
+  .card.elite-today-card:not(.elite-work-view) {
+    display:block !important;
+    padding:18px !important;
   }
 
-  /* Keep the full-screen job view from v9.1 intact while normalizing its flow. */
-  .card.elite-work-view.elite-operational-layout {
-    display: block !important;
-    grid-template-columns: none !important;
-    grid-template-rows: none !important;
-    grid-auto-columns: auto !important;
-    grid-auto-rows: auto !important;
-    align-items: initial !important;
-    gap: 0 !important;
+  .card.elite-today-card:not(.elite-work-view) > :not(.header-card):not(.elite-access-job-btn):not(.service-update-banner) {
+    display:none !important;
   }
 
-  .card.elite-operational-layout > :where(
+  .card.elite-today-card:not(.elite-work-view) > .header-card {
+    display:flex !important;
+    flex-direction:row !important;
+    justify-content:space-between !important;
+    align-items:center !important;
+    gap:12px !important;
+    margin:0 !important;
+  }
+
+  .card.elite-today-card:not(.elite-work-view) .client-info {
+    display:flex !important;
+    align-items:center !important;
+    gap:9px !important;
+    min-width:0 !important;
+    flex:1 1 auto !important;
+  }
+
+  .card.elite-today-card:not(.elite-work-view) h3 {
+    font-size:16px !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  .card.elite-today-card:not(.elite-work-view) .badge-tipo {
+    margin:0 !important;
+    flex:0 0 auto !important;
+    font-size:8px !important;
+    padding:5px 8px !important;
+  }
+
+  .card.elite-today-card:not(.elite-work-view) .date-time-box {
+    display:flex !important;
+    align-items:center !important;
+    gap:8px !important;
+    min-width:auto !important;
+    padding:0 !important;
+    border:0 !important;
+    background:transparent !important;
+    flex:0 0 auto !important;
+  }
+
+  .card.elite-today-card:not(.elite-work-view) .date-text {
+    display:none !important;
+  }
+
+  .card.elite-today-card:not(.elite-work-view) .time-text {
+    display:inline !important;
+    margin:0 !important;
+    padding:0 !important;
+    border:0 !important;
+    color:#dbeafe !important;
+    font-size:13px !important;
+  }
+
+  .card.elite-today-card:not(.elite-work-view) > .elite-access-job-btn {
+    display:block !important;
+    margin:13px 0 0 !important;
+    width:100% !important;
+  }
+
+  .card.elite-today-card:not(.elite-work-view) > .elite-access-job-btn:disabled {
+    background:#273244 !important;
+    border:1px solid #475569 !important;
+    color:#94a3b8 !important;
+    box-shadow:none !important;
+  }
+
+  /* Future cards never become a work screen. */
+  .card.future-card.elite-work-view {
+    position:relative !important;
+    inset:auto !important;
+    z-index:auto !important;
+    width:auto !important;
+    max-width:none !important;
+    height:auto !important;
+    overflow:visible !important;
+    margin-bottom:18px !important;
+  }
+
+  /* Full/open job view: one clean vertical flow. */
+  .card.elite-work-view {
+    display:block !important;
+    grid-template-columns:none !important;
+    grid-template-rows:none !important;
+    gap:0 !important;
+  }
+
+  .card.elite-work-view > :where(
     .elite-work-view-toolbar,
     .header-card,
     .operation-unlocked,
@@ -4630,30 +4733,24 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     .photos-box,
     .service-report-box,
     .workflow-box,
-    .future-details,
     .future-briefing-note,
     .service-update-banner
   ) {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    grid-column: 1 / -1 !important;
-    position: relative;
-    left: auto !important;
-    right: auto !important;
-    top: auto;
-    bottom: auto;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    grid-column:1 / -1 !important;
+    float:none !important;
+    clear:both !important;
   }
 
-  /* Never allow work text to collapse to one character per line. */
-  .card.elite-operational-layout :where(
+  .card.elite-work-view :where(
     .instructions-highlight,
     .instruction-body,
     .assistant-box,
     .assistant-title,
     .assistant-text,
     .checklist-box,
-    .checklist-title,
     .checklist-item,
     .checklist-item label,
     .photos-box,
@@ -4661,7 +4758,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     .service-report-title,
     .service-report-help,
     .service-report-button,
-    .service-report-textarea,
     .workflow-box,
     .workflow-status,
     .workflow-time,
@@ -4670,162 +4766,190 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     .break-history-item,
     .break-history-empty
   ) {
-    writing-mode: horizontal-tb !important;
-    text-orientation: mixed !important;
-    word-break: normal !important;
-    overflow-wrap: break-word !important;
-    white-space: normal;
-    min-width: 0 !important;
-    max-width: 100% !important;
+    writing-mode:horizontal-tb !important;
+    text-orientation:mixed !important;
+    word-break:normal !important;
+    overflow-wrap:break-word !important;
+    min-width:0 !important;
+    max-width:100% !important;
   }
 
-  .card.elite-operational-layout .instruction-body,
-  .card.elite-operational-layout .notas-box {
-    white-space: pre-wrap !important;
+  .card.elite-work-view .notas-box,
+  .card.elite-work-view .instruction-body {
+    white-space:pre-wrap !important;
   }
 
-  /* Compact future-card header rules must not control an expanded work card. */
-  .card.future-card.expanded.elite-operational-layout > .header-card,
-  .card.future-card.elite-work-view.elite-operational-layout > .header-card {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: space-between !important;
-    align-items: flex-start !important;
-    gap: 14px !important;
-  }
-
-  .card.future-card.expanded.elite-operational-layout .client-info,
-  .card.future-card.elite-work-view.elite-operational-layout .client-info {
-    display: block !important;
-    width: auto !important;
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-  }
-
-  .card.future-card.expanded.elite-operational-layout .date-time-box,
-  .card.future-card.elite-work-view.elite-operational-layout .date-time-box {
-    display: flex !important;
-    flex: 0 0 auto !important;
-  }
-
-  .card.future-card.expanded.elite-operational-layout .future-details {
-    display: block !important;
-  }
-
-  /* Operational modules are always stacked. No side rails / narrow columns. */
-  .card.elite-operational-layout > .operation-unlocked,
-  .card.elite-operational-layout > .notas-box,
-  .card.elite-operational-layout > .instructions-highlight,
-  .card.elite-operational-layout > .assistant-box,
-  .card.elite-operational-layout > .checklist-box,
-  .card.elite-operational-layout > .photos-box,
-  .card.elite-operational-layout > .service-report-box,
-  .card.elite-operational-layout > .workflow-box {
-    float: none !important;
-    clear: both !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-  }
-
-  .card.elite-operational-layout select,
-  .card.elite-operational-layout textarea,
-  .card.elite-operational-layout button,
-  .card.elite-operational-layout input:not([type="checkbox"]):not([type="radio"]) {
-    max-width: 100% !important;
-    min-width: 0;
-  }
-
-  @media (max-width: 560px) {
-    .card.elite-operational-layout > .header-card,
-    .card.future-card.expanded.elite-operational-layout > .header-card,
-    .card.future-card.elite-work-view.elite-operational-layout > .header-card {
-      flex-direction: column !important;
-      align-items: stretch !important;
+  @media(max-width:560px){
+    .card.elite-today-card:not(.elite-work-view) > .header-card{
+      align-items:flex-start !important;
     }
-
-    .card.elite-operational-layout .date-time-box {
-      width: 100% !important;
-      display: flex !important;
-      justify-content: space-between !important;
-      align-items: center !important;
+    .card.elite-today-card:not(.elite-work-view) .client-info{
+      flex-wrap:wrap !important;
     }
-
-    .card.elite-operational-layout .photo-controls {
-      grid-template-columns: minmax(0,1fr) minmax(0,1fr) !important;
+    .card.elite-work-view .photo-controls{
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
     }
-
-    .card.elite-operational-layout .photo-plan-grid,
-    .card.elite-operational-layout .photo-summary {
-      grid-template-columns: repeat(3,minmax(0,1fr)) !important;
+    .card.elite-work-view .photo-plan-grid,
+    .card.elite-work-view .photo-summary{
+      grid-template-columns:repeat(3,minmax(0,1fr)) !important;
     }
-
-    .card.elite-operational-layout .workflow-time {
-      grid-template-columns: 1fr !important;
+    .card.elite-work-view .workflow-time{
+      grid-template-columns:1fr !important;
     }
   }
 
-  @media (max-width: 380px) {
-    .card.elite-operational-layout .photo-controls {
-      grid-template-columns: 1fr !important;
+  @media(max-width:380px){
+    .card.elite-work-view .photo-controls{
+      grid-template-columns:1fr !important;
     }
   }
 </style>
 
-<script id="elite-staff-v953-operational-layout-js">
+<script id="elite-staff-v954-sequential-access-js">
 (function(){
   'use strict';
-  const VERSION='9.5.3';
+  const VERSION='9.5.4';
+  const EARLY_ACCESS_MINUTES=30;
 
-  function isOperationalCard(card){
-    if(!card || !card.classList || !card.classList.contains('card')) return false;
-    return Boolean(card.querySelector(':scope > .operation-unlocked, :scope > .assistant-box, :scope > .checklist-box, :scope > .photos-box, :scope > .service-report-box, :scope > .workflow-box'));
+  function clean(value){
+    return String(value==null?'':value).trim().toLowerCase();
   }
 
-  function normalizeCard(card){
-    if(!isOperationalCard(card)) return;
-    card.classList.add('elite-operational-layout');
+  function parseClock(value){
+    const raw=String(value||'').trim();
+    if(!raw)return null;
 
-    // A work card must never keep the compact list grid once its modules exist.
-    if(card.classList.contains('future-card')) card.classList.add('expanded');
+    let match=raw.match(/^(\d{1,2}):(\d{2})$/);
+    if(match){
+      const h=Number(match[1]),m=Number(match[2]);
+      if(h>=0&&h<24&&m>=0&&m<60)return {h,m};
+    }
+
+    match=raw.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/i);
+    if(match){
+      let h=Number(match[1]);
+      const m=Number(match[2]||0);
+      const ap=match[3].toLowerCase();
+      if(h<1||h>12||m<0||m>59)return null;
+      if(ap==='am'&&h===12)h=0;
+      if(ap==='pm'&&h!==12)h+=12;
+      return {h,m};
+    }
+    return null;
   }
 
-  function normalizeAll(root=document){
-    if(root && root.matches && root.matches('.card')) normalizeCard(root);
-    const cards=root && root.querySelectorAll ? root.querySelectorAll('.card') : [];
-    cards.forEach(normalizeCard);
+  function parseLocalDate(dateText,timeText){
+    const dm=String(dateText||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const clock=parseClock(timeText);
+    if(!dm||!clock)return null;
+    return new Date(Number(dm[1]),Number(dm[2])-1,Number(dm[3]),clock.h,clock.m,0,0);
   }
 
-  // Initial pass after every already-loaded script has built the interface.
+  function formatUnlock(date){
+    try{
+      return new Intl.DateTimeFormat('es-US',{hour:'numeric',minute:'2-digit'}).format(date);
+    }catch(_){
+      return date.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    }
+  }
+
+  function stageIsStarted(stage){
+    return ['en_camino','llego','limpiando','pausado','completado'].includes(clean(stage));
+  }
+
+  function updateAccess(card){
+    if(!card||!card.classList?.contains('elite-today-card'))return;
+
+    const button=card.querySelector(':scope > .elite-access-job-btn');
+    if(!button)return;
+
+    const stage=clean(card.dataset.jobStage||'asignado');
+    let allowed=stageIsStarted(stage);
+    let message='';
+
+    if(!allowed){
+      const serviceAt=parseLocalDate(card.dataset.jobDate,card.dataset.jobTime);
+      if(!serviceAt){
+        // If Admin did not provide a usable hour, do not strand the employee.
+        allowed=true;
+      }else{
+        const unlockAt=new Date(serviceAt.getTime()-EARLY_ACCESS_MINUTES*60*1000);
+        allowed=Date.now()>=unlockAt.getTime();
+        if(!allowed){
+          message='Disponible desde '+formatUnlock(unlockAt)+' ('+EARLY_ACCESS_MINUTES+' min antes del servicio).';
+        }
+      }
+    }
+
+    card.dataset.accessAllowed=allowed?'true':'false';
+    card.dataset.accessMessage=message;
+
+    button.disabled=!allowed;
+    if(stage==='completado'){
+      button.disabled=false;
+      button.textContent='VER TRABAJO COMPLETADO';
+    }else if(allowed){
+      button.textContent=stage==='asignado'?'ABRIR ESTE TRABAJO':'CONTINUAR ESTE TRABAJO';
+    }else{
+      button.textContent='🔒 '+message.toUpperCase();
+    }
+  }
+
+  function repairFutureCard(card){
+    if(!card||!card.classList?.contains('future-card'))return;
+    // A future service must never retain full-screen state.
+    card.classList.remove('elite-work-view','elite-operational-layout');
+    const toolbar=card.querySelector(':scope > .elite-work-view-toolbar');
+    if(toolbar)toolbar.remove();
+    if(document.querySelector('.card.elite-work-view')===null){
+      document.body.classList.remove('elite-work-view-open');
+    }
+  }
+
+  function normalize(root=document){
+    const cards=[];
+    if(root?.matches?.('.card'))cards.push(root);
+    root?.querySelectorAll?.('.card').forEach(card=>cards.push(card));
+    cards.forEach(card=>{
+      repairFutureCard(card);
+      updateAccess(card);
+    });
+  }
+
   if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',()=>normalizeAll(document),{once:true});
+    document.addEventListener('DOMContentLoaded',()=>normalize(document),{once:true});
   }else{
-    normalizeAll(document);
+    normalize(document);
   }
 
-  // Firestore and workflow changes rebuild cards dynamically; repair them at source.
   const observer=new MutationObserver(mutations=>{
     for(const mutation of mutations){
-      for(const node of mutation.addedNodes){
-        if(node && node.nodeType===1) normalizeAll(node);
-      }
-      if(mutation.target && mutation.target.nodeType===1){
-        const card=mutation.target.closest?.('.card');
-        if(card) normalizeCard(card);
-      }
+      mutation.addedNodes.forEach(node=>{
+        if(node?.nodeType===1)normalize(node);
+      });
+      const card=mutation.target?.closest?.('.card');
+      if(card)updateAccess(card);
     }
   });
 
-  const startObserver=()=>{
+  const begin=()=>{
     const app=document.getElementById('main-app')||document.body;
-    if(app) observer.observe(app,{childList:true,subtree:true});
+    observer.observe(app,{childList:true,subtree:true});
+    normalize(document);
   };
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',startObserver,{once:true});
-  else startObserver();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',begin,{once:true});
+  else begin();
 
-  // Public helper for debugging / manual refresh without touching business logic.
-  window.eliteNormalizeStaffLayout=()=>normalizeAll(document);
-  window.EliteStaffV953=Object.freeze({version:VERSION,normalize:window.eliteNormalizeStaffLayout});
-  console.info('[Elite Staff] v9.5.3 Stable · operational layout normalized');
+  // Unlock a job automatically when its 30-minute window arrives.
+  setInterval(()=>document.querySelectorAll('.card.elite-today-card').forEach(updateAccess),30000);
+
+  window.eliteRefreshStaffAccess=()=>normalize(document);
+  window.EliteStaffV954=Object.freeze({
+    version:VERSION,
+    earlyAccessMinutes:EARLY_ACCESS_MINUTES,
+    refresh:window.eliteRefreshStaffAccess
+  });
+  console.info('[Elite Staff] v9.5.4 · acceso secuencial y agenda compacta activos');
 })();
 </script>
 
