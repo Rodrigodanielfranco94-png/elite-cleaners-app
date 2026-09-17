@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.27 Stable — Elite Cleaners Company</title>
+    <title>Elite Admin v9.0.29 — Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -14887,6 +14887,153 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 })();
 </script>
 <!-- ===== FIN FIX v9.0.28 ===== -->
+
+
+
+<!-- ===== ELITE ADMIN v9.0.29 — ENVIAR SOLICITUDES POR WHATSAPP ===== -->
+<style id="elite-v9029-whatsapp-requests-css">
+.elite-v9029-whatsapp-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:0 0 14px;
+  padding:12px;
+  border:1px solid #22c55e;
+  border-radius:14px;
+  background:linear-gradient(145deg,#052e16,#071a2c);
+}
+.elite-v9029-whatsapp-copy{min-width:0}
+.elite-v9029-whatsapp-copy b{display:block;color:#bbf7d0;font-size:13px;margin-bottom:3px}
+.elite-v9029-whatsapp-copy span{display:block;color:#cbd5e1;font-size:10px;line-height:1.35}
+.elite-v9029-whatsapp-btn{
+  flex:0 0 auto;
+  min-height:44px;
+  border:0;
+  border-radius:11px;
+  padding:10px 15px;
+  background:#16a34a;
+  color:#fff;
+  font-size:12px;
+  font-weight:900;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.elite-v9029-whatsapp-btn:active{transform:scale(.98)}
+@media(max-width:620px){
+  .elite-v9029-whatsapp-bar{display:grid;grid-template-columns:1fr}
+  .elite-v9029-whatsapp-btn{width:100%;font-size:13px;min-height:48px}
+}
+</style>
+<script id="elite-v9029-whatsapp-requests-js">
+(function(){
+  const ACTIVE_STATES = new Set(["pendiente","pendiente_compra","aprobada","solicitada","por_comprar"]);
+
+  function requests(){
+    try { return window.eliteV54Requests || eliteV54Requests || []; }
+    catch(_){ return []; }
+  }
+
+  function dateValue(v){
+    try{
+      if(!v) return 0;
+      if(typeof v.toMillis === "function") return v.toMillis();
+      if(typeof v.toDate === "function") return v.toDate().getTime();
+      return new Date(v).getTime() || 0;
+    }catch(_){ return 0; }
+  }
+
+  function formatDate(v){
+    try{
+      if(!v) return "Sin fecha";
+      const d = typeof v.toDate === "function" ? v.toDate() : new Date(v);
+      if(Number.isNaN(d.getTime())) return "Sin fecha";
+      return d.toLocaleString("es-US",{
+        month:"2-digit",day:"2-digit",year:"numeric",
+        hour:"numeric",minute:"2-digit"
+      });
+    }catch(_){ return "Sin fecha"; }
+  }
+
+  function pendingRequests(){
+    return requests()
+      .filter(r => ACTIVE_STATES.has(String(r.estado || "pendiente").toLowerCase()))
+      .sort((a,b)=>dateValue(a.creado || a.fecha)-dateValue(b.creado || b.fecha));
+  }
+
+  function buildMessage(rows){
+    const lines = [
+      "*ELITE CLEANERS COMPANY*",
+      "*LISTA DE SOLICITUDES DE MERCADERÍAS*",
+      ""
+    ];
+
+    rows.forEach((r,i)=>{
+      const name = String(r.producto_nombre || r.producto || "Producto").trim();
+      const qty = Number(r.cantidad_solicitada || r.cantidad || 1) || 1;
+      const urgency = String(r.urgencia || "normal").replaceAll("_"," ");
+      const employee = String(r.empleado_nombre || r.solicitado_por || "Administración").trim();
+      lines.push(`${i+1}. *${name}*`);
+      lines.push(`   Cantidad: ${qty}`);
+      lines.push(`   Urgencia: ${urgency}`);
+      lines.push(`   Solicitado por: ${employee}`);
+      if(r.tienda_sugerida || r.tienda) lines.push(`   Tienda sugerida: ${r.tienda_sugerida || r.tienda}`);
+      if(r.nota) lines.push(`   Nota: ${String(r.nota).trim()}`);
+      lines.push(`   Fecha: ${formatDate(r.creado || r.fecha)}`);
+      lines.push("");
+    });
+
+    lines.push(`Total de solicitudes pendientes: ${rows.length}`);
+    return lines.join("\n");
+  }
+
+  window.eliteV9029SendRequestsWhatsApp = function(){
+    const rows = pendingRequests();
+    if(!rows.length){
+      alert("No hay solicitudes pendientes para enviar por WhatsApp.");
+      return;
+    }
+    const message = buildMessage(rows);
+    const url = "https://wa.me/?text=" + encodeURIComponent(message);
+    const win = window.open(url,"_blank","noopener,noreferrer");
+    if(!win){ window.location.href = url; }
+  };
+
+  function injectButton(){
+    const box = document.getElementById("elite-v54-request-list");
+    if(!box || document.getElementById("elite-v9029-whatsapp-bar")) return;
+    const rows = pendingRequests();
+    const bar = document.createElement("div");
+    bar.id = "elite-v9029-whatsapp-bar";
+    bar.className = "elite-v9029-whatsapp-bar";
+    bar.innerHTML = `
+      <div class="elite-v9029-whatsapp-copy">
+        <b>📲 Enviar lista por WhatsApp</b>
+        <span>${rows.length} solicitud${rows.length===1?"":"es"} pendiente${rows.length===1?"":"s"}. Solo se enviarán las que todavía requieren compra.</span>
+      </div>
+      <button type="button" class="elite-v9029-whatsapp-btn" onclick="eliteV9029SendRequestsWhatsApp()">WhatsApp</button>`;
+    box.prepend(bar);
+  }
+
+  const previousRender = window.eliteV54RenderRequests;
+  if(typeof previousRender === "function"){
+    window.eliteV54RenderRequests = eliteV54RenderRequests = function(){
+      const result = previousRender.apply(this,arguments);
+      try{ injectButton(); }catch(e){ console.error("WhatsApp solicitudes:",e); }
+      return result;
+    };
+  }
+
+  const observer = new MutationObserver(()=>{
+    if(document.getElementById("elite-v54-request-list")) injectButton();
+  });
+  document.addEventListener("DOMContentLoaded",()=>{
+    observer.observe(document.body,{childList:true,subtree:true});
+    injectButton();
+  });
+})();
+</script>
+<!-- ===== FIN v9.0.29 ===== -->
 
 </body>
 </html>
