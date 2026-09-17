@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Elite Staff v9.5.2 Stable | Mobile Work View Layout Fix + GPS nativo + Real Job View -->
+<!-- Elite Staff v9.6 FIXED | Daily Sequential Workflow + 3 Staff Slots + Top Start Button -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#000000">
-  <title>Elite Staff v9.5.2 Stable</title>
+  <title>Elite Staff v9.6 FIXED</title>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -269,7 +269,8 @@
 
       const possibleFields = [
         "empleado_email",
-        "empleado_email_2"
+        "empleado_email_2",
+        "empleado_email_3"
       ];
 
       let completedInitialLoads = 0;
@@ -4612,13 +4613,14 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 
 
-<!-- ===== ELITE STAFF v9.5.4 — SEQUENTIAL ACCESS + COMPACT SCHEDULE ===== -->
-<style id="elite-staff-v954-sequential-access-css">
+<!-- ===== ELITE STAFF v9.6 — DAILY SEQUENTIAL FLOW + COMPACT SCHEDULE ===== -->
+<style id="elite-staff-v960-sequential-access-css">
   /*
-    Schedule/list rules:
-    - Today's services remain compact in the list until opened.
-    - Future services remain compact and can only show an inline summary.
-    - The full work UI is stacked vertically only after the service is opened.
+    Elite Staff v9.6
+    - Todos los trabajos de HOY aparecen desde el comienzo del día.
+    - Solo el trabajo que corresponde en la secuencia puede abrirse.
+    - No existe bloqueo por "30 minutos antes".
+    - Los trabajos futuros siguen siendo solo de consulta.
   */
   .card.elite-today-card:not(.elite-work-view) {
     display:block !important;
@@ -4636,24 +4638,36 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     align-items:center !important;
     gap:12px !important;
     margin:0 !important;
+    width:100% !important;
   }
 
   .card.elite-today-card:not(.elite-work-view) .client-info {
     display:flex !important;
+    visibility:visible !important;
+    opacity:1 !important;
     align-items:center !important;
     gap:9px !important;
     min-width:0 !important;
+    width:auto !important;
     flex:1 1 auto !important;
   }
 
   .card.elite-today-card:not(.elite-work-view) h3 {
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    color:#60a5fa !important;
     font-size:16px !important;
+    line-height:1.25 !important;
     white-space:nowrap !important;
     overflow:hidden !important;
     text-overflow:ellipsis !important;
+    min-width:80px !important;
+    flex:1 1 auto !important;
   }
 
   .card.elite-today-card:not(.elite-work-view) .badge-tipo {
+    display:inline-block !important;
     margin:0 !important;
     flex:0 0 auto !important;
     font-size:8px !important;
@@ -4682,6 +4696,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     border:0 !important;
     color:#dbeafe !important;
     font-size:13px !important;
+    white-space:nowrap !important;
   }
 
   .card.elite-today-card:not(.elite-work-view) > .elite-access-job-btn {
@@ -4693,8 +4708,20 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .card.elite-today-card:not(.elite-work-view) > .elite-access-job-btn:disabled {
     background:#273244 !important;
     border:1px solid #475569 !important;
-    color:#94a3b8 !important;
+    color:#cbd5e1 !important;
     box-shadow:none !important;
+  }
+
+  .elite-sequence-note {
+    margin-top:9px;
+    padding:9px 11px;
+    border-radius:11px;
+    background:#111827;
+    border:1px solid #334155;
+    color:#94a3b8;
+    font-size:10px;
+    font-weight:800;
+    text-align:center;
   }
 
   /* Future cards never become a work screen. */
@@ -4742,6 +4769,20 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     grid-column:1 / -1 !important;
     float:none !important;
     clear:both !important;
+  }
+
+  /* El botón de INICIAR TRABAJO debe quedar arriba cuando el empleado ya llegó. */
+  .card.elite-work-view[data-job-stage="llego"] > .workflow-box {
+    margin:10px 0 16px !important;
+    border-color:#22c55e !important;
+    box-shadow:0 10px 28px rgba(34,197,94,.12) !important;
+  }
+
+  .card.elite-work-view[data-job-stage="llego"] > .workflow-box .btn-clean {
+    min-height:64px !important;
+    font-size:15px !important;
+    background:linear-gradient(135deg,#15803d,#22c55e) !important;
+    box-shadow:0 10px 26px rgba(34,197,94,.24) !important;
   }
 
   .card.elite-work-view :where(
@@ -4805,99 +4846,88 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
 </style>
 
-<script id="elite-staff-v954-sequential-access-js">
+<script id="elite-staff-v960-sequential-access-js">
 (function(){
   'use strict';
-  const VERSION='9.5.4';
-  const EARLY_ACCESS_MINUTES=30;
+  const VERSION='9.6.0';
 
   function clean(value){
     return String(value==null?'':value).trim().toLowerCase();
   }
 
-  function parseClock(value){
-    const raw=String(value||'').trim();
-    if(!raw)return null;
-
-    let match=raw.match(/^(\d{1,2}):(\d{2})$/);
-    if(match){
-      const h=Number(match[1]),m=Number(match[2]);
-      if(h>=0&&h<24&&m>=0&&m<60)return {h,m};
-    }
-
-    match=raw.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/i);
-    if(match){
-      let h=Number(match[1]);
-      const m=Number(match[2]||0);
-      const ap=match[3].toLowerCase();
-      if(h<1||h>12||m<0||m>59)return null;
-      if(ap==='am'&&h===12)h=0;
-      if(ap==='pm'&&h!==12)h+=12;
-      return {h,m};
-    }
-    return null;
-  }
-
-  function parseLocalDate(dateText,timeText){
-    const dm=String(dateText||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    const clock=parseClock(timeText);
-    if(!dm||!clock)return null;
-    return new Date(Number(dm[1]),Number(dm[2])-1,Number(dm[3]),clock.h,clock.m,0,0);
-  }
-
-  function formatUnlock(date){
-    try{
-      return new Intl.DateTimeFormat('es-US',{hour:'numeric',minute:'2-digit'}).format(date);
-    }catch(_){
-      return date.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-    }
-  }
-
   function stageIsStarted(stage){
-    return ['en_camino','llego','limpiando','pausado','completado'].includes(clean(stage));
+    return ['en_camino','llego','limpiando','pausado'].includes(clean(stage));
   }
 
-  function updateAccess(card){
-    if(!card||!card.classList?.contains('elite-today-card'))return;
+  function todayCards(){
+    return Array.from(document.querySelectorAll('.card.elite-today-card'))
+      .filter(card=>!card.classList.contains('future-card'));
+  }
 
-    const button=card.querySelector(':scope > .elite-access-job-btn');
-    if(!button)return;
+  function cardClient(card){
+    return card?.querySelector('h3')?.textContent?.trim() || 'el trabajo anterior';
+  }
 
+  function moveStartButtonToTop(card){
+    if(!card)return;
     const stage=clean(card.dataset.jobStage||'asignado');
-    let allowed=stageIsStarted(stage);
-    let message='';
+    if(stage!=='llego')return;
 
-    if(!allowed){
-      const serviceAt=parseLocalDate(card.dataset.jobDate,card.dataset.jobTime);
-      if(!serviceAt){
-        // If Admin did not provide a usable hour, do not strand the employee.
-        allowed=true;
+    const workflow=card.querySelector(':scope > .workflow-box');
+    if(!workflow)return;
+
+    const startButton=workflow.querySelector('.btn-clean');
+    if(startButton)startButton.textContent='▶ INICIAR TRABAJO';
+
+    const header=card.querySelector(':scope > .header-card');
+    if(header && workflow.previousElementSibling!==header){
+      header.insertAdjacentElement('afterend',workflow);
+    }
+  }
+
+  function applySequentialAccess(){
+    const cards=todayCards();
+    if(!cards.length)return;
+
+    // Si un trabajo ya fue iniciado (en camino, llegó, limpiando o pausado),
+    // ese es el único trabajo operativo hasta que se complete.
+    let activeIndex=cards.findIndex(card=>stageIsStarted(card.dataset.jobStage));
+
+    // Si ninguno comenzó todavía, el primero de la agenda es el disponible.
+    if(activeIndex<0)activeIndex=0;
+
+    cards.forEach((card,index)=>{
+      const button=card.querySelector(':scope > .elite-access-job-btn');
+      if(!button)return;
+
+      const stage=clean(card.dataset.jobStage||'asignado');
+      const allowed=index===activeIndex || stage==='completado';
+
+      card.dataset.accessAllowed=allowed?'true':'false';
+
+      if(stage==='completado'){
+        card.dataset.accessMessage='';
+        button.disabled=false;
+        button.textContent='VER TRABAJO COMPLETADO';
+      }else if(allowed){
+        card.dataset.accessMessage='';
+        button.disabled=false;
+        button.textContent=stage==='asignado'?'ABRIR ESTE TRABAJO':'CONTINUAR ESTE TRABAJO';
       }else{
-        const unlockAt=new Date(serviceAt.getTime()-EARLY_ACCESS_MINUTES*60*1000);
-        allowed=Date.now()>=unlockAt.getTime();
-        if(!allowed){
-          message='Disponible desde '+formatUnlock(unlockAt)+' ('+EARLY_ACCESS_MINUTES+' min antes del servicio).';
-        }
+        const blocker=cards[activeIndex];
+        const blockerName=cardClient(blocker);
+        const message='Primero completa '+blockerName+'.';
+        card.dataset.accessMessage=message;
+        button.disabled=true;
+        button.textContent='🔒 '+message.toUpperCase();
       }
-    }
 
-    card.dataset.accessAllowed=allowed?'true':'false';
-    card.dataset.accessMessage=message;
-
-    button.disabled=!allowed;
-    if(stage==='completado'){
-      button.disabled=false;
-      button.textContent='VER TRABAJO COMPLETADO';
-    }else if(allowed){
-      button.textContent=stage==='asignado'?'ABRIR ESTE TRABAJO':'CONTINUAR ESTE TRABAJO';
-    }else{
-      button.textContent='🔒 '+message.toUpperCase();
-    }
+      moveStartButtonToTop(card);
+    });
   }
 
   function repairFutureCard(card){
     if(!card||!card.classList?.contains('future-card'))return;
-    // A future service must never retain full-screen state.
     card.classList.remove('elite-work-view','elite-operational-layout');
     const toolbar=card.querySelector(':scope > .elite-work-view-toolbar');
     if(toolbar)toolbar.remove();
@@ -4910,10 +4940,23 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const cards=[];
     if(root?.matches?.('.card'))cards.push(root);
     root?.querySelectorAll?.('.card').forEach(card=>cards.push(card));
+
     cards.forEach(card=>{
       repairFutureCard(card);
-      updateAccess(card);
+      moveStartButtonToTop(card);
     });
+
+    applySequentialAccess();
+  }
+
+  // Reaplica la secuencia cada vez que Firestore reconstruya las tarjetas.
+  const previousRender=typeof renderMergedJobs==='function'?renderMergedJobs:null;
+  if(previousRender){
+    renderMergedJobs=function(){
+      const result=previousRender.apply(this,arguments);
+      requestAnimationFrame(()=>normalize(document));
+      return result;
+    };
   }
 
   if(document.readyState==='loading'){
@@ -4923,13 +4966,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
 
   const observer=new MutationObserver(mutations=>{
+    let shouldRefresh=false;
     for(const mutation of mutations){
       mutation.addedNodes.forEach(node=>{
-        if(node?.nodeType===1)normalize(node);
+        if(node?.nodeType===1){
+          normalize(node);
+          shouldRefresh=true;
+        }
       });
-      const card=mutation.target?.closest?.('.card');
-      if(card)updateAccess(card);
+      if(mutation.target?.closest?.('.card'))shouldRefresh=true;
     }
+    if(shouldRefresh)requestAnimationFrame(applySequentialAccess);
   });
 
   const begin=()=>{
@@ -4937,21 +4984,24 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     observer.observe(app,{childList:true,subtree:true});
     normalize(document);
   };
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',begin,{once:true});
-  else begin();
 
-  // Unlock a job automatically when its 30-minute window arrives.
-  setInterval(()=>document.querySelectorAll('.card.elite-today-card').forEach(updateAccess),30000);
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',begin,{once:true});
+  }else{
+    begin();
+  }
 
   window.eliteRefreshStaffAccess=()=>normalize(document);
-  window.EliteStaffV954=Object.freeze({
+  window.EliteStaffV960=Object.freeze({
     version:VERSION,
-    earlyAccessMinutes:EARLY_ACCESS_MINUTES,
+    mode:'daily-sequential',
     refresh:window.eliteRefreshStaffAccess
   });
-  console.info('[Elite Staff] v9.5.4 · acceso secuencial y agenda compacta activos');
+
+  console.info('[Elite Staff] v9.6 · trabajos del día visibles + acceso secuencial activo');
 })();
 </script>
+
 
 </body>
 </html>
