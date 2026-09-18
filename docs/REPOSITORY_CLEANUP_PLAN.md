@@ -1,52 +1,50 @@
 # Plan de limpieza de elite-cleaners-app
 
-## Objetivo
+## Estado
 
-Dejar este repositorio enfocado en las aplicaciones operativas existentes:
+**Migración de software v1 completada.**
+
+Este repositorio queda enfocado en:
 
 - Elite Admin
 - Elite Staff
-- firma / páginas auxiliares
+- Login
+- Firma / páginas auxiliares
 
-El código experimental de NICO será migrado a `elite-command` antes de eliminarse de aquí.
+La arquitectura nueva de NICO vive en `elite-command`.
 
-## No hacer todavía
+## Verificaciones realizadas
 
-- No borrar archivos de NICO en `main`.
-- No mover Admin ni Staff.
-- No dividir `admin.html` o `staff_v3.html` durante la migración de NICO.
-- No cambiar rutas públicas hasta validar Elite Command.
+Antes de retirar el legado:
 
-## Archivos que eventualmente saldrán de este repositorio
+- se inspeccionó `admin.html`;
+- se inspeccionó `staff_v3.html`;
+- se inspeccionó `firmar.html`;
+- no se encontraron referencias a los archivos `nico-*.js`, `nico.html`, `nico-assets/` ni `nico-avatar.png.PNG`;
+- la capacidad de documentos Estimate/Invoice fue migrada a Elite Command;
+- Elite Command v1 pasó sus pruebas automáticas y CI.
 
-- nico.html
-- nico-admin.js
-- nico-chat.js
-- nico-config.js
-- nico-email.js
-- nico-estimates.js
-- nico-jobs.js
-- nico-memory.js
-- nico-pdf.js
-- nico-utils.js
-- nico-voice.js
-- nico-avatar.png.PNG
-- nico-assets/
-- assets/3d/ si se confirma que pertenece exclusivamente a NICO
-- assets/Walking.fbx si se confirma que pertenece exclusivamente a NICO
+## Limpieza realizada
 
-## Archivos que permanecen
+- retirada la integración inline antigua de NICO del login;
+- retirada una credencial de voz que estaba embebida en el navegador;
+- corregido el destino del login de empleados a `staff_v3.html`;
+- alineada la configuración Firebase del login con Staff;
+- retirados los archivos experimentales legacy de NICO.
 
-- admin.html
-- staff_v3.html
-- firmar.html
-- index.html
-- assets compartidos necesarios para Admin/Staff
+## Archivos operativos preservados
 
-## Proceso
+- `admin.html`
+- `staff_v3.html`
+- `firmar.html`
+- `index.html`
+- `assets/`
+- documentación
 
-1. Migrar capacidad por capacidad a Elite Command.
-2. Probar contra Firebase real en modo lectura.
-3. Probar comandos de escritura con permisos.
-4. Verificar que Admin y Staff no dependan de los archivos de NICO.
-5. Solo entonces crear PR de limpieza para eliminar legacy de este repositorio.
+## Recuperación
+
+Los archivos eliminados siguen disponibles en Git history. El punto anterior a la limpieza está documentado en `docs/NICO_LEGACY_ARCHIVE.md`.
+
+## Importante
+
+La credencial de voz que estuvo expuesta en código cliente debe considerarse comprometida y debe rotarse en el proveedor. Eliminarla del branch actual no la elimina del historial Git ni invalida la credencial original.

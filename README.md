@@ -2,32 +2,38 @@
 
 Repositorio operativo de **Elite Cleaners Company**.
 
-## Producción
+## Aplicaciones principales
 
-- **Elite Admin** → `admin.html` — master actual v9.0.29
-- **Elite Staff** → `staff_v3.html` — master actual v9.6 FIXED
-- **Firma** → `firmar.html`
-- **Entrada existente** → `index.html`
+- **Elite Admin** — `admin.html`
+  - Elite Admin v9.0.29
+  - Administración, clientes, servicios, pagos, contabilidad, inventario, informes y operaciones.
 
-Admin y Staff permanecen separados de Elite Command y comparten datos mediante Firebase / Firestore.
+- **Elite Staff** — `staff_v3.html`
+  - Elite Staff v9.6 FIXED
+  - Flujo operativo de empleados, GPS, fotos, checklist, pausas e informes.
 
-## Elite Command y NICO
+- **Firma** — `firmar.html`
+  - Flujo auxiliar de firma.
 
-Todo desarrollo nuevo de NICO vive en:
+- **Login** — `index.html`
+  - Autenticación Firebase y enrutamiento a Admin o Staff.
+  - Sin código experimental de NICO ni credenciales de servicios de voz.
+
+## Elite Command / NICO
+
+La nueva arquitectura de NICO y el centro de operaciones viven en el repositorio privado:
 
 `Rodrigodanielfranco94-png/elite-command`
 
-Los archivos `nico-*` que todavía existen en este repositorio se consideran **legacy congelado**. No deben recibir nuevas funciones.
+El código experimental histórico de NICO fue retirado de este repositorio después de comprobar que Admin, Staff y Firma no lo cargaban.
 
-No se eliminan todavía porque este repositorio contiene archivos HTML de producción muy grandes y primero se debe confirmar por prueba de runtime que Admin/Staff no dependan de referencias dinámicas legacy.
+El historial permanece recuperable mediante Git. Consulta:
 
-## Documentación
+- `docs/NICO_LEGACY_ARCHIVE.md`
+- `docs/REPOSITORY_CLEANUP_PLAN.md`
 
-- `docs/MASTERS.md` — masters oficiales actuales.
-- `docs/REPOSITORY_MAP.md` — separación entre repositorios.
-- `docs/LEGACY_NICO_FREEZE.md` — política del NICO antiguo.
-- `docs/REPOSITORY_CLEANUP_PLAN.md` — plan histórico de migración.
+## Regla de arquitectura
 
-## Regla principal
+Elite Admin y Elite Staff continúan siendo aplicaciones independientes.
 
-**Admin y Staff se mantienen estables aquí. Elite Command y NICO se desarrollan en su propio repositorio.**
+Elite Command consume el mismo modelo de datos y agrega la capa de operaciones central, Live Activity y NICO sin obligar a fusionar las apps.
