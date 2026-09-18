@@ -1,45 +1,52 @@
-# Nico Assistant - Elite Cleaners Company
+# Elite Cleaners App
 
-Nico será el asistente virtual de voz de Elite Cleaners Company.
+Repositorio operativo de **Elite Cleaners Company**.
 
-## Objetivo
+## Aplicaciones principales
 
-Crear un asistente en español, carismático, gracioso, cariñoso y positivo, que ayude a Rodrigo dentro de la app de Elite Cleaners Company.
+- **Elite Admin** — `admin.html`
+  - Título actual: Elite Admin v9.0.29
+  - Administración, clientes, servicios, pagos, contabilidad, inventario, informes y operaciones.
 
-Nico hablará como hermano latino, con confianza total.
+- **Elite Staff** — `staff_v3.html`
+  - Versión actual: Elite Staff v9.6 FIXED
+  - Flujo operativo de empleados, GPS, fotos, checklist, pausas e informes.
 
-## Fases del proyecto
+- **Firma** — `firmar.html`
+  - Flujo auxiliar de firma.
 
-### Fase 1 - Prototipo separado
-Crear una sección independiente para probar a Nico sin tocar admin.html.
+## NICO legacy
 
-Archivos planeados:
+Este repositorio todavía contiene el prototipo histórico de NICO:
 
-- nico.html
-- nico.css
-- nico.js
+- `nico.html`
+- `nico-admin.js`
+- `nico-chat.js`
+- `nico-config.js`
+- `nico-email.js`
+- `nico-estimates.js`
+- `nico-jobs.js`
+- `nico-memory.js`
+- `nico-pdf.js`
+- `nico-utils.js`
+- `nico-voice.js`
+- `nico-assets/`
 
-### Fase 2 - Avatar visual
-Usar las imágenes dentro de la carpeta nico-assets para mostrar estados de Nico:
+Ese código se mantiene temporalmente por compatibilidad y referencia.
 
-- Reposo
-- Pensando
-- Alegre
-- Caminando
-- Saludando
+La nueva arquitectura de NICO vive en el repositorio privado:
 
-### Fase 3 - Voz
-Conectar Nico con voz usando ElevenLabs.
+`Rodrigodanielfranco94-png/elite-command`
 
-### Fase 4 - Inteligencia
-Conectar Nico con OpenAI para responder preguntas en español.
+## Regla de migración
 
-### Fase 5 - Memoria
-Guardar conversaciones y recuerdos importantes en Firebase.
+Admin y Staff continúan funcionando desde este repositorio mientras Elite Command se construye de forma independiente.
 
-### Fase 6 - Integración final
-Cuando todo funcione bien, integrar Nico dentro de admin.html sin dañar la app actual.
+No se eliminará ningún archivo legacy de NICO hasta que:
 
-## Regla principal
+1. su reemplazo exista en Elite Command;
+2. haya sido probado con Firebase;
+3. Admin y Staff no dependan de él;
+4. el cambio haya pasado por revisión.
 
-No modificar admin.html hasta que Nico funcione bien en una prueba separada.
+Consulta `docs/REPOSITORY_CLEANUP_PLAN.md` para el plan completo.
