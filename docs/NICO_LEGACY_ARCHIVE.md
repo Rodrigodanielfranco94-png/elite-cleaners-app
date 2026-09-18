@@ -4,9 +4,9 @@ Este documento registra el código experimental de NICO retirado de `elite-clean
 
 ## Punto de recuperación
 
-El historial anterior a la limpieza permanece en Git. Un punto estable anterior a la retirada del legado es el commit:
+El historial anterior a la limpieza permanece en Git. El snapshot más reciente inmediatamente anterior a retirar el legado es el commit:
 
-`0824d6d0e13934a65925e978828509d4175a55ff`
+`52b8499bbd5c90150bf11760b8eeb5559bd09932`
 
 ## Archivos retirados
 
@@ -54,3 +54,8 @@ Las imágenes y modelos 3D legacy se retiraron del repositorio operativo para ev
 ## Seguridad
 
 El login antiguo contenía una credencial de un proveedor de voz dentro del código cliente. Fue retirada de la versión actual. Debido a que estuvo almacenada en Git history, debe rotarse en el proveedor antes de volver a usar ese servicio.
+
+
+## Acción de seguridad pendiente
+
+La rotación/revocación de la antigua credencial de voz se sigue en GitHub Issue #5. Esta acción debe realizarse en el proveedor; no puede completarse eliminando archivos del repositorio.
