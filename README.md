@@ -2,51 +2,32 @@
 
 Repositorio operativo de **Elite Cleaners Company**.
 
-## Aplicaciones principales
+## Producción
 
-- **Elite Admin** — `admin.html`
-  - Título actual: Elite Admin v9.0.29
-  - Administración, clientes, servicios, pagos, contabilidad, inventario, informes y operaciones.
+- **Elite Admin** → `admin.html` — master actual v9.0.29
+- **Elite Staff** → `staff_v3.html` — master actual v9.6 FIXED
+- **Firma** → `firmar.html`
+- **Entrada existente** → `index.html`
 
-- **Elite Staff** — `staff_v3.html`
-  - Versión actual: Elite Staff v9.6 FIXED
-  - Flujo operativo de empleados, GPS, fotos, checklist, pausas e informes.
+Admin y Staff permanecen separados de Elite Command y comparten datos mediante Firebase / Firestore.
 
-- **Firma** — `firmar.html`
-  - Flujo auxiliar de firma.
+## Elite Command y NICO
 
-## NICO legacy
-
-Este repositorio todavía contiene el prototipo histórico de NICO:
-
-- `nico.html`
-- `nico-admin.js`
-- `nico-chat.js`
-- `nico-config.js`
-- `nico-email.js`
-- `nico-estimates.js`
-- `nico-jobs.js`
-- `nico-memory.js`
-- `nico-pdf.js`
-- `nico-utils.js`
-- `nico-voice.js`
-- `nico-assets/`
-
-Ese código se mantiene temporalmente por compatibilidad y referencia.
-
-La nueva arquitectura de NICO vive en el repositorio privado:
+Todo desarrollo nuevo de NICO vive en:
 
 `Rodrigodanielfranco94-png/elite-command`
 
-## Regla de migración
+Los archivos `nico-*` que todavía existen en este repositorio se consideran **legacy congelado**. No deben recibir nuevas funciones.
 
-Admin y Staff continúan funcionando desde este repositorio mientras Elite Command se construye de forma independiente.
+No se eliminan todavía porque este repositorio contiene archivos HTML de producción muy grandes y primero se debe confirmar por prueba de runtime que Admin/Staff no dependan de referencias dinámicas legacy.
 
-No se eliminará ningún archivo legacy de NICO hasta que:
+## Documentación
 
-1. su reemplazo exista en Elite Command;
-2. haya sido probado con Firebase;
-3. Admin y Staff no dependan de él;
-4. el cambio haya pasado por revisión.
+- `docs/MASTERS.md` — masters oficiales actuales.
+- `docs/REPOSITORY_MAP.md` — separación entre repositorios.
+- `docs/LEGACY_NICO_FREEZE.md` — política del NICO antiguo.
+- `docs/REPOSITORY_CLEANUP_PLAN.md` — plan histórico de migración.
 
-Consulta `docs/REPOSITORY_CLEANUP_PLAN.md` para el plan completo.
+## Regla principal
+
+**Admin y Staff se mantienen estables aquí. Elite Command y NICO se desarrollan en su propio repositorio.**
