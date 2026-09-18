@@ -32,6 +32,8 @@ El historial anterior a la limpieza permanece en Git. Un punto estable anterior 
 - `nico-assets/reposo.png`
 - `nico-assets/rie.png`
 - `nico-assets/saluda.png`
+- `assets/Walking.fbx`
+- `assets/3d/Meshy_AI_Thumbs_Up_Teen_0520063851_texture.glb`
 
 ## Reemplazos en Elite Command
 
@@ -47,7 +49,7 @@ El historial anterior a la limpieza permanece en Git. Un punto estable anterior 
 
 ## Assets visuales
 
-Las imágenes legacy se retiraron del repositorio operativo para evitar mantener dos fuentes visuales de NICO. Si alguna se necesita como referencia para el avatar definitivo, puede recuperarse desde el commit histórico indicado arriba.
+Las imágenes y modelos 3D legacy se retiraron del repositorio operativo para evitar mantener dos fuentes visuales de NICO. Si alguna se necesita como referencia para el avatar definitivo, puede recuperarse desde el commit histórico indicado arriba.
 
 ## Seguridad
 
