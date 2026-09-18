@@ -1,0 +1,47 @@
+name: Elite Cleaners Repository Integrity
+
+on:
+  push:
+    branches:
+      - main
+      - "chore/**"
+      - "feat/**"
+      - "fix/**"
+  pull_request:
+
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify operational files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f admin.html
+          test -f staff_v3.html
+          test -f index.html
+          test -f firmar.html
+          test -f assets/Logo.png
+
+      - name: Reject legacy NICO runtime files
+        shell: bash
+        run: |
+          set -euo pipefail
+          if find . -maxdepth 2 -type f \( -name 'nico.html' -o -name 'nico-*.js' -o -name 'nico-avatar*' \) | grep -q .; then
+            echo "Legacy NICO runtime file found."
+            find . -maxdepth 2 -type f \( -name 'nico.html' -o -name 'nico-*.js' -o -name 'nico-avatar*' \)
+            exit 1
+          fi
+
+      - name: Reject browser voice/OpenAI secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(admin.html staff_v3.html index.html firmar.html)
+          if grep -Ein 'xi-api-key|sk-(proj-)?[A-Za-z0-9_-]{20,}' "${files[@]}"; then
+            echo "Potential browser-side provider secret found."
+            exit 1
+          fi
