@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- Elite Staff v9.6 FIXED | Daily Sequential Workflow + 3 Staff Slots + Top Start Button -->
+<!-- Elite Staff v9.6.1 | Daily Sequential Workflow + 3 Staff Slots + Top Start Button + Today Card Layout Fix -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#000000">
-  <title>Elite Staff v9.6 FIXED</title>
+  <title>Elite Staff v9.6.1 Layout Fixed</title>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -5002,6 +5002,113 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
+
+
+<!-- ===== ELITE STAFF v9.6.1 — TODAY CARD LAYOUT FIX ===== -->
+<style id="elite-staff-v961-today-card-layout-fix">
+  /*
+    Corrección visual final para la tarjeta compacta de HOY.
+    Evita que el nombre del cliente y la hora se monten uno encima del otro.
+  */
+  .card.elite-today-card:not(.elite-work-view) > .header-card {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    align-items:start !important;
+    column-gap:14px !important;
+    row-gap:0 !important;
+    width:100% !important;
+    margin:0 !important;
+    padding:0 !important;
+    position:static !important;
+  }
+
+  .card.elite-today-card:not(.elite-work-view) > .header-card > .client-info {
+    display:block !important;
+    position:static !important;
+    min-width:0 !important;
+    width:100% !important;
+    margin:0 !important;
+    padding:0 !important;
+    overflow:visible !important;
+  }
+
+  .card.elite-today-card:not(.elite-work-view) > .header-card > .client-info > h3 {
+    display:block !important;
+    position:static !important;
+    width:100% !important;
+    margin:0 0 9px 0 !important;
+    padding:0 !important;
+    color:#60a5fa !important;
+    font-size:18px !important;
+    font-weight:900 !important;
+    line-height:1.2 !important;
+    white-space:normal !important;
+    overflow:visible !important;
+    text-overflow:clip !important;
+    transform:none !important;
+  }
+
+  .card.elite-today-card:not(.elite-work-view) > .header-card > .client-info > .badge-tipo {
+    display:inline-flex !important;
+    position:static !important;
+    width:auto !important;
+    margin:0 !important;
+    transform:none !important;
+  }
+
+  .card.elite-today-card:not(.elite-work-view) > .header-card > .date-time-box {
+    display:block !important;
+    position:static !important;
+    min-width:78px !important;
+    width:auto !important;
+    margin:0 !important;
+    padding:2px 0 0 10px !important;
+    border:0 !important;
+    background:transparent !important;
+    text-align:right !important;
+    transform:none !important;
+    align-self:start !important;
+  }
+
+  .card.elite-today-card:not(.elite-work-view) > .header-card > .date-time-box .date-text {
+    display:none !important;
+  }
+
+  .card.elite-today-card:not(.elite-work-view) > .header-card > .date-time-box .time-text {
+    display:block !important;
+    position:static !important;
+    margin:0 !important;
+    padding:0 !important;
+    color:#dbeafe !important;
+    font-size:16px !important;
+    font-weight:900 !important;
+    line-height:1.2 !important;
+    white-space:nowrap !important;
+    transform:none !important;
+  }
+
+  .card.elite-today-card:not(.elite-work-view) > .elite-access-job-btn {
+    margin-top:18px !important;
+  }
+
+  @media(max-width:420px){
+    .card.elite-today-card:not(.elite-work-view) > .header-card {
+      column-gap:10px !important;
+    }
+
+    .card.elite-today-card:not(.elite-work-view) > .header-card > .client-info > h3 {
+      font-size:17px !important;
+    }
+
+    .card.elite-today-card:not(.elite-work-view) > .header-card > .date-time-box {
+      min-width:68px !important;
+    }
+
+    .card.elite-today-card:not(.elite-work-view) > .header-card > .date-time-box .time-text {
+      font-size:14px !important;
+    }
+  }
+</style>
 
 </body>
 </html>
