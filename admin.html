@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Admin v9.0.29 — Elite Cleaners Company</title>
+    <title>Elite Admin v9.0.33 — Elite Cleaners Company</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -9391,6 +9391,28 @@ var __spreadValues = (a, b) => {
     if (Array.isArray(window.eliteV55Catalog)) return window.eliteV55Catalog;
     return [];
   }
+  // Firestore limita cada documento a ~1 MiB. Las fotos del catálogo pueden
+  // estar guardadas como data:image/... (base64), y al copiar muchas dentro
+  // de un solo gasto el documento supera ese límite. En Contabilidad solo
+  // guardamos una referencia ligera al producto; la foto se obtiene del
+  // catálogo cuando se muestra el detalle.
+  function eliteExpenseSafePhoto(value) {
+    const v = String(value || "").trim();
+    return /^data:/i.test(v) ? "" : v;
+  }
+  function eliteExpenseCompactProducts(items) {
+    return (Array.isArray(items) ? items : []).map((product) => ({
+      catalogo_id: product.catalogo_id || "",
+      nombre: product.nombre || "Producto",
+      marca: product.marca || "",
+      tienda: product.tienda || "",
+      tipo: product.tipo || "",
+      tamano: product.tamano || "",
+      foto_url: eliteExpenseSafePhoto(product.foto_url || product.foto_producto_url || ""),
+      cantidad: Math.max(1, Number(product.cantidad || 1)),
+      costo_unitario: Math.max(0, Number(product.costo_unitario || 0))
+    }));
+  }
   function syncAmount() {
     const total = [...selected.values()].reduce((sum, x) => sum + (Number(x.cantidad) || 0) * (Number(x.costo_unitario) || 0), 0);
     const amount = document.getElementById("gasto-monto");
@@ -9502,7 +9524,9 @@ var __spreadValues = (a, b) => {
     const products = Array.isArray(g.productos) ? g.productos : [];
     const productHtml = products.length ? '<h3 style="margin:18px 0 8px;color:#93c5fd">Productos comprados</h3>\n         <div class="elite-expense-detail-products">\n           '.concat(products.map((p) => {
       const total = (Number(p.cantidad) || 0) * (Number(p.costo_unitario) || 0);
-      return '<div class="elite-expense-detail-product">\n               '.concat(p.foto_url ? '<img src="'.concat(esc(p.foto_url), '" alt="">') : '<div class="elite-expense-detail-photo">📦</div>', "\n               <div>\n                 <b>").concat(esc(p.nombre || "Producto"), "</b>\n                 <small>").concat(esc(p.marca || "")).concat(p.tienda ? " · ".concat(esc(p.tienda)) : "").concat(p.tipo ? " · ".concat(esc(p.tipo)) : "", "</small>\n                 <small>Cantidad: ").concat(Number(p.cantidad) || 0, " · Unitario: $").concat(Number(p.costo_unitario || 0).toFixed(2), '</small>\n               </div>\n               <div class="elite-expense-detail-total">$').concat(total.toFixed(2), "</div>\n             </div>");
+      const catalogProduct = catalog().find((x) => x.id === p.catalogo_id) || {};
+      const detailPhoto = p.foto_url || catalogProduct.foto_url || catalogProduct.foto_producto_url || "";
+      return '<div class="elite-expense-detail-product">\n               '.concat(detailPhoto ? '<img src="'.concat(esc(detailPhoto), '" alt="">') : '<div class="elite-expense-detail-photo">📦</div>', "\n               <div>\n                 <b>").concat(esc(p.nombre || "Producto"), "</b>\n                 <small>").concat(esc(p.marca || "")).concat(p.tienda ? " · ".concat(esc(p.tienda)) : "").concat(p.tipo ? " · ".concat(esc(p.tipo)) : "", "</small>\n                 <small>Cantidad: ").concat(Number(p.cantidad) || 0, " · Unitario: $").concat(Number(p.costo_unitario || 0).toFixed(2), '</small>\n               </div>\n               <div class="elite-expense-detail-total">$').concat(total.toFixed(2), "</div>\n             </div>");
     }).join(""), "\n         </div>") : '<div class="elite-expense-detail-note" style="margin-top:16px">Este gasto no tiene productos del catálogo vinculados.</div>';
     document.getElementById("elite-expense-detail-title").textContent = g.categoria || "Gasto";
     document.getElementById("elite-expense-detail-content").innerHTML = '\n      <div class="elite-expense-detail-grid">\n        <div class="elite-expense-detail-card"><span>Fecha</span><b>'.concat(esc(g.fecha || "Sin fecha"), '</b></div>\n        <div class="elite-expense-detail-card"><span>Monto total</span><b style="color:#22c55e">').concat(typeof dinero === "function" ? dinero(g.monto) : "$" + Number(g.monto || 0).toFixed(2), '</b></div>\n        <div class="elite-expense-detail-card"><span>Categoría</span><b>').concat(esc(g.categoria || "Otros"), '</b></div>\n        <div class="elite-expense-detail-card"><span>Productos vinculados</span><b>').concat(products.length, '</b></div>\n      </div>\n      <div class="elite-expense-detail-note"><b style="color:#93c5fd">Descripción</b><br>').concat(esc(g.nota || "Sin descripción"), "</div>\n      ").concat(productHtml, "\n    ");
@@ -9544,7 +9568,7 @@ var __spreadValues = (a, b) => {
         categoria,
         monto: Math.round(monto * 100) / 100,
         nota,
-        productos,
+        productos: eliteExpenseCompactProducts(productos),
         actualizado_en: firebase.firestore.FieldValue.serverTimestamp()
       };
       if (id) {
@@ -9626,17 +9650,7 @@ var __spreadValues = (a, b) => {
         // Guardar solamente datos serializables del producto en el gasto.
         // Las referencias temporales usadas para sincronizar Firestore no deben
         // terminar dentro del documento contable.
-        datos.productos = productos.map((product) => ({
-          catalogo_id: product.catalogo_id || "",
-          nombre: product.nombre || "Producto",
-          marca: product.marca || "",
-          tienda: product.tienda || "",
-          tipo: product.tipo || "",
-          tamano: product.tamano || "",
-          foto_url: product.foto_url || "",
-          cantidad: Math.max(1, Number(product.cantidad || 1)),
-          costo_unitario: Math.max(0, Number(product.costo_unitario || 0))
-        }));
+        datos.productos = eliteExpenseCompactProducts(productos);
         // 1) Guardar primero el gasto. Una falla secundaria nunca debe impedir
         // que Contabilidad registre una compra válida.
         await expenseRef.set(datos);
@@ -15035,5 +15049,282 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 </script>
 <!-- ===== FIN v9.0.29 ===== -->
 
+<!-- ===== ELITE ADMIN v9.0.33 — OCTUBRE ESPEJO LIMPIO DESDE NOVIEMBRE ===== -->
+<script id="elite-admin-v9033-october-clean-mirror">
+(function(){
+  "use strict";
+
+  const VERSION="9.0.33";
+  const OCT_START="2026-10-01";
+  const OCT_END="2026-10-31";
+  const CUTOFF="2026-11-01";
+  const HORIZON_END="2027-10-31";
+  const ACTIVE=new Set(["semanal","quincenal","cada_3_semanas","mensual"]);
+  const ORIGINAL_SYNC=typeof window.sincronizarRepeticionesServicio==="function" ? window.sincronizarRepeticionesServicio : null;
+  let repairPromise=null;
+  let lastRepairAt=0;
+
+  const norm=v=>String(v||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ");
+  function frequency(v){
+    const x=norm(v||"ninguno");
+    const a={weekly:"semanal",biweekly:"quincenal",triweekly:"cada_3_semanas","every 3 weeks":"cada_3_semanas","cada 3 semanas":"cada_3_semanas",monthly:"mensual",none:"ninguno",once:"ninguno","una vez":"ninguno",unica:"ninguno"};
+    return a[x]||x;
+  }
+  function parseDate(v){
+    const p=String(v||"").slice(0,10).split("-").map(Number);
+    return p.length===3&&p.every(Number.isFinite)?new Date(p[0],p[1]-1,p[2],12,0,0,0):null;
+  }
+  function dateText(d){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");}
+  function idOf(s){return String((s&& (s.id||s.firestore_id||s.doc_id))||"");}
+  function seriesKey(s,repeat){
+    const who=norm(s.cliente||s.nombre_cliente||"");
+    const where=norm(s.direccion||s.address||s.whatsapp||s.telefono||"");
+    return [who,where,repeat].join("|");
+  }
+  function completed(s){return ["completado","terminado"].includes(norm(s.estado))||norm(s.estado_calendario)==="completado";}
+  function financiallyLocked(s){
+    return s.deposito_pagado===true||s.balance_pagado===true||Boolean(s.invoice_id||s.invoice_number||s.factura_id||s.factura_numero);
+  }
+  function stableId(key,date){
+    const t="oct-master-v9033|"+key+"|"+date; let h=2166136261;
+    for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619);}
+    return "oct33_"+date.replace(/\D/g,"")+"_"+(h>>>0).toString(36);
+  }
+  function mode(values){
+    const m=new Map();
+    values.filter(v=>v!==null&&v!==undefined&&String(v)!=="").forEach(v=>m.set(String(v),(m.get(String(v))||0)+1));
+    if(!m.size)return "";
+    return [...m.entries()].sort((a,b)=>b[1]-a[1]||String(a[0]).localeCompare(String(b[0])))[0][0];
+  }
+  function cleanTemplate(source){
+    const c=Object.assign({},source||{});
+    ["id","firestore_id","doc_id","_ref","timestamp","actualizado","actualizado_en","fecha_completado","completado_en","cancelado_en","mes_contable","mes_cerrado","oculto_mensajes","oculto_resenas","firma_cliente","firma_imagen","firma_url","fecha_firma","cliente_firma","fecha_trabajo_firma","hora_trabajo_firma","contract_code","contrato_codigo","contrato_firmado","contrato_enviado","contrato_url","fecha_contrato","invoice_id","invoice_number","invoice_numero","invoice_url","invoice_status","factura_id","factura_numero","factura_url","factura_enviada","comprobante_deposito","fecha_pago_deposito","metodo_pago_deposito","fecha_pago_balance","metodo_pago_balance","comprobante_balance","hora_en_camino","hora_llegada","hora_inicio","hora_pausa","hora_inicio_pausa","hora_reanudacion","hora_regreso","hora_fin_pausa","hora_fin","pausa_total_minutos","tiempo_trabajado_minutos","millas_reales","gps_iniciado","gps_finalizado","ubicacion_llegada","ubicacion_inicio","ubicacion_fin","foto_propiedad","foto_propiedad_url","foto_llegada_url","fotos_count","fotos_antes_count","fotos_despues_count","editado_desde_calendario","edicion_solo_este_trabajo"].forEach(k=>delete c[k]);
+    return c;
+  }
+  function nthWeekday(year,month,weekday,ordinal,isLast){
+    if(isLast){
+      const d=new Date(year,month+1,0,12,0,0,0);
+      d.setDate(d.getDate()-((d.getDay()-weekday+7)%7));
+      return d;
+    }
+    const first=new Date(year,month,1,12,0,0,0);
+    let day=1+((weekday-first.getDay()+7)%7)+(ordinal-1)*7;
+    const last=new Date(year,month+1,0,12,0,0,0).getDate();
+    if(day>last)day-=7;
+    return new Date(year,month,day,12,0,0,0);
+  }
+  function octoberMaster(rows,repeat){
+    const oct=rows.filter(r=>String(r.fecha||"")>=OCT_START&&String(r.fecha||"")<=OCT_END);
+    if(!oct.length)return null;
+    const weekday=Number(mode(oct.map(r=>{const d=parseDate(r.fecha);return d?d.getDay():null;})));
+    const onDay=oct.filter(r=>{const d=parseDate(r.fecha);return d&&d.getDay()===weekday;}).sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
+    const usable=onDay.length?onDay:oct.slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
+    const anchor=usable[usable.length-1];
+    const anchorDate=parseDate(anchor.fecha);
+    if(!anchorDate)return null;
+    const canonicalTime=mode(usable.map(r=>String(r.hora||"")))||String(anchor.hora||"");
+    const ordinal=Math.floor((anchorDate.getDate()-1)/7)+1;
+    const plus7=new Date(anchorDate.getFullYear(),anchorDate.getMonth(),anchorDate.getDate()+7,12,0,0,0);
+    return {oct,usable,anchor,anchorDate,weekday,canonicalTime,ordinal,isLast:plus7.getMonth()!==anchorDate.getMonth(),repeat};
+  }
+  function desiredDates(master,excluded){
+    const out=[];
+    if(master.repeat==="mensual"){
+      for(let y=2026,m=10; dateText(new Date(y,m,1,12,0,0,0))<=HORIZON_END; ){
+        const d=nthWeekday(y,m,master.weekday,master.ordinal,master.isLast);
+        const s=dateText(d);
+        if(s>=CUTOFF&&s<=HORIZON_END&&!excluded.has(s))out.push(s);
+        m++; if(m>11){m=0;y++;}
+      }
+      return out;
+    }
+    const step=master.repeat==="semanal"?7:master.repeat==="quincenal"?14:21;
+    const d=new Date(master.anchorDate.getTime());
+    let guard=0;
+    while(guard++<500){
+      d.setDate(d.getDate()+step);
+      const s=dateText(d);
+      if(s>HORIZON_END)break;
+      if(s>=CUTOFF&&!excluded.has(s))out.push(s);
+    }
+    return out;
+  }
+  async function commit(ops){
+    for(let i=0;i<ops.length;i+=350){
+      const batch=db.batch();
+      ops.slice(i,i+350).forEach(op=>op.type==="delete"?batch.delete(op.ref):batch.set(op.ref,op.data,{merge:op.merge!==false}));
+      await batch.commit();
+    }
+  }
+  function migrationLocalKey(){return "elite.v9033.october-master.migrated";}
+  async function migrationDone(){
+    try{
+      const ref=db.collection("configuracion").doc("recurrencia_octubre_maestro_v9033");
+      const snap=await ref.get();
+      if(snap.exists&&snap.data()&&snap.data().completado===true)return true;
+    }catch(_){ }
+    try{return localStorage.getItem(migrationLocalKey())==="1";}catch(_){return false;}
+  }
+  async function markMigrationDone(stats){
+    try{
+      await db.collection("configuracion").doc("recurrencia_octubre_maestro_v9033").set({completado:true,version:VERSION,fecha:firebase.firestore.FieldValue.serverTimestamp(),estadisticas:stats},{merge:true});
+    }catch(_){ }
+    try{localStorage.setItem(migrationLocalKey(),"1");}catch(_){ }
+  }
+  function refresh(){
+    try{if(typeof renderHistorial==="function")renderHistorial();}catch(_){ }
+    try{if(typeof renderCentroOperacionesV601==="function")renderCentroOperacionesV601();}catch(_){ }
+    try{if(typeof window.cargarServicios==="function")window.cargarServicios();}catch(_){ }
+  }
+
+  async function repair(forceCleanup){
+    if(typeof db==="undefined"||typeof firebase==="undefined")return {ok:false,reason:"db-unavailable"};
+    if(repairPromise)return repairPromise;
+    if(!forceCleanup&&Date.now()-lastRepairAt<5000)return {ok:true,skipped:true};
+    repairPromise=(async()=>{
+      const snap=await db.collection("servicios").get();
+      const all=[]; snap.forEach(doc=>all.push(Object.assign({},doc.data()||{},{id:doc.id,firestore_id:doc.id,_ref:doc.ref})));
+
+      const groups=new Map();
+      for(const s of all){
+        const rep=frequency(s.repetir||s.frecuencia||s.repeticion);
+        if(!ACTIVE.has(rep)||!s.fecha)continue;
+        const k=seriesKey(s,rep);
+        if(!groups.has(k))groups.set(k,{key:k,repeat:rep,rows:[]});
+        groups.get(k).rows.push(s);
+      }
+
+      const masters=new Map();
+      for(const g of groups.values()){
+        const master=octoberMaster(g.rows,g.repeat);
+        if(master)masters.set(g.key,Object.assign({key:g.key,rows:g.rows},master));
+      }
+
+      const firstMigration=forceCleanup || !(await migrationDone());
+      const ops=[];
+      let deletedOld=0,created=0,updated=0,protectedSkipped=0;
+
+      // Primera migración: NOVIEMBRE EN ADELANTE queda limpio. Sólo sobreviven
+      // servicios recurrentes que tienen un patrón real en octubre. Octubre jamás se toca.
+      if(firstMigration){
+        for(const s of all){
+          const date=String(s.fecha||"");
+          if(date<CUTOFF||date>HORIZON_END)continue;
+          if(completed(s)||financiallyLocked(s)){protectedSkipped++;continue;}
+          const rep=frequency(s.repetir||s.frecuencia||s.repeticion);
+          if(!ACTIVE.has(rep))continue; // no borra trabajos únicos creados manualmente.
+          // Se borran TODAS las repeticiones antiguas, incluso las que parecían manuales.
+          // Después se reconstruyen exclusivamente desde octubre.
+          ops.push({type:"delete",ref:s._ref}); deletedOld++;
+        }
+      }else{
+        // Reparaciones posteriores: sólo retira duplicados/fechas incorrectas de series maestras.
+        for(const s of all){
+          const date=String(s.fecha||"");
+          if(date<CUTOFF||date>HORIZON_END||completed(s)||financiallyLocked(s))continue;
+          const rep=frequency(s.repetir||s.frecuencia||s.repeticion);
+          const k=seriesKey(s,rep);
+          if(!masters.has(k))continue;
+          if(s.regla_recurrencia!=="octubre_maestro_v9033"){
+            ops.push({type:"delete",ref:s._ref}); deletedOld++;
+          }
+        }
+      }
+
+      // Reconstrucción: exactamente las series recurrentes presentes en octubre,
+      // respetando el mismo día de la semana y la misma fase semanal/quincenal/3 semanas.
+      for(const master of masters.values()){
+        const excluded=new Set();
+        master.rows.forEach(r=>(Array.isArray(r.fechas_excluidas)?r.fechas_excluidas:[]).forEach(x=>excluded.add(String(x))));
+        if(typeof ELITE_FECHAS_SIN_TRABAJO!=="undefined")ELITE_FECHAS_SIN_TRABAJO.forEach(x=>excluded.add(String(x)));
+        const dates=desiredDates(master,excluded);
+        const template=cleanTemplate(master.anchor);
+        const seriesId=String(master.anchor.serie_id||master.anchor.serie_origen_id||idOf(master.anchor)||master.key);
+        for(const date of dates){
+          const ref=db.collection("servicios").doc(stableId(master.key,date));
+          const data=Object.assign({},template,{
+            fecha:date,
+            hora:master.canonicalTime,
+            repetir:master.repeat,
+            frecuencia:master.repeat,
+            serie_id:seriesId,
+            serie_origen_id:seriesId,
+            repeticion_generada:true,
+            regla_recurrencia:"octubre_maestro_v9033",
+            patron_maestro_mes:"2026-10",
+            patron_maestro_fecha:String(master.anchor.fecha||""),
+            patron_maestro_dia_semana:master.weekday,
+            patron_maestro_hora:master.canonicalTime,
+            recurrencia_vigente_desde:CUTOFF,
+            estado:"no_iniciado",
+            estado_calendario:"pendiente",
+            hora_inicio:"--:--",hora_fin:"--:--",hora_llegada:"--:--",hora_pausa:"--:--",hora_regreso:"--:--",
+            firma_cliente:false,contrato_firmado:false,deposito_pagado:false,balance_pagado:false,
+            fecha_pago_deposito:"",metodo_pago_deposito:"",comprobante_deposito:"",
+            timestamp:firebase.firestore.FieldValue.serverTimestamp(),
+            actualizado_en:firebase.firestore.FieldValue.serverTimestamp()
+          });
+          ops.push({type:"set",ref,data,merge:false}); created++;
+        }
+      }
+
+      if(ops.length)await commit(ops);
+      const stats={masters:masters.size,deletedOld,created,updated,protectedSkipped};
+      if(firstMigration)await markMigrationDone(stats);
+      lastRepairAt=Date.now();
+      refresh();
+      console.info("[Elite Admin] v"+VERSION+" · Octubre intacto. Futuro reconstruido desde octubre.",stats);
+      return {ok:true,...stats};
+    })().catch(e=>{
+      console.error("[Elite Admin] v"+VERSION+" · Error al reconstruir calendario:",e);
+      return {ok:false,error:String(e&&e.message||e)};
+    }).finally(()=>repairPromise=null);
+    return repairPromise;
+  }
+
+  async function syncFromOctober(data,repeatValue,originId){
+    const rep=frequency(repeatValue);
+    if(!ACTIVE.has(rep)||!data||!data.fecha){
+      return ORIGINAL_SYNC ? ORIGINAL_SYNC(data,repeatValue,originId) : undefined;
+    }
+    // Si la serie ya existía en octubre, octubre manda. Si es un cliente nuevo creado
+    // después de octubre, conserva el comportamiento normal para no impedir altas nuevas.
+    try{
+      const snap=await db.collection("servicios").get();
+      const rows=[]; snap.forEach(doc=>{const s=Object.assign({},doc.data()||{},{id:doc.id,firestore_id:doc.id,_ref:doc.ref}); if(frequency(s.repetir||s.frecuencia||s.repeticion)===rep&&seriesKey(s,rep)===seriesKey(data,rep))rows.push(s);});
+      if(octoberMaster(rows,rep))return repair(false);
+    }catch(e){console.warn("Elite v9.0.33: no se pudo verificar octubre; se usa recurrencia normal.",e);}
+    return ORIGINAL_SYNC ? ORIGINAL_SYNC(data,repeatValue,originId) : undefined;
+  }
+
+  window.sincronizarRepeticionesServicio=syncFromOctober;
+  try{sincronizarRepeticionesServicio=syncFromOctober;}catch(_){ }
+  window.crearRepeticiones=(data,repeat)=>syncFromOctober(data,repeat,data&&(data.id||data.firestore_id));
+  try{crearRepeticiones=window.crearRepeticiones;}catch(_){ }
+  window.eliteV82RepararSeriesRecurrentes=()=>repair(false);
+  try{eliteV82RepararSeriesRecurrentes=window.eliteV82RepararSeriesRecurrentes;}catch(_){ }
+  window.eliteV9033ReconstruirDesdeOctubre=()=>repair(true);
+
+  function schedule(){
+    // Primer intento después del login/carga. En una instalación ya migrada sólo verifica faltantes.
+    [1800,5000,10000].forEach(ms=>setTimeout(()=>repair(false),ms));
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",schedule,{once:true});else schedule();
+
+  const oldOpen=window.abrirCentroOperacionesV601;
+  if(typeof oldOpen==="function"){
+    window.abrirCentroOperacionesV601=function(){
+      const args=arguments,self=this;
+      return repair(false).finally(()=>oldOpen.apply(self,args));
+    };
+  }
+
+  console.info("[Elite Admin] v"+VERSION+" cargado · OCTUBRE 2026 protegido como calendario maestro.");
+})();
+</script>
+<!-- ===== FIN v9.0.33 ===== -->
+
+
+<!-- ===== ELITE ADMIN v9.0.34 — GASTOS LIGEROS / FIRESTORE 1 MiB FIX ===== -->
 </body>
 </html>
