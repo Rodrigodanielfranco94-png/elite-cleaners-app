@@ -15302,3 +15302,218 @@ console.info("[Elite Admin] v9.0.36 · Zachary quincenal recuperado desde 10-oct
 <!-- ===== FIN v9.0.36 ===== -->
 </body>
 </html>
+
+<!-- ===== ELITE ADMIN v9.0.37 — FIX DEFINITIVO ESTADOS DE PAGO ===== -->
+<script id="elite-admin-v9037-payment-state-fix">
+(function(){
+  "use strict";
+
+  function localService(id){
+    var rows = Array.isArray(window.todosLosServicios) ? window.todosLosServicios : [];
+    return rows.find(function(s){ return String(s.id || s.firestore_id || "") === String(id); }) || null;
+  }
+
+  function patchLocal(id, data){
+    var s = localService(id);
+    if (s) Object.assign(s, data);
+  }
+
+  function totalAndDeposit(s){
+    var total = Math.max(0, Number((s && s.precio_total) || 0));
+    var deposit = Math.max(0, Number((s && s.deposito_monto) || total * 0.5));
+    if (deposit > total) deposit = total;
+    return { total: total, deposit: deposit };
+  }
+
+  async function syncInvoiceExplicit(id, service){
+    try{
+      var ref = db.collection("servicios").doc(String(id));
+      var docs = await ref.collection("documentos_cliente").get();
+      if (docs.empty) return;
+      var td = totalAndDeposit(service);
+      var deposito = service.deposito_pagado === true;
+      var balance = service.balance_pagado === true;
+      var completo = balance || service.pago_completo === true || String(service.estado_pago || "").toLowerCase() === "pagado_completo";
+      var paid = completo ? td.total : deposito ? td.deposit : 0;
+      var remaining = Math.max(0, td.total - paid);
+      var batch = db.batch();
+      docs.docs.forEach(function(docSnap){
+        var doc = docSnap.data() || {};
+        if (doc.tipo !== "invoice" || String(doc.status || "").toUpperCase() === "VOID") return;
+        var status = completo ? "PAID" : deposito ? "PARTIALLY PAID" : "UNPAID";
+        batch.set(docSnap.ref, {
+          status: status,
+          paid: paid,
+          totals: Object.assign({}, doc.totals || {}, { total: td.total, paid: paid, balance: remaining }),
+          actualizado_en: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+      });
+      await batch.commit();
+    }catch(e){
+      console.warn("No se pudo sincronizar el Invoice después del cambio de pago:", e);
+    }
+  }
+
+  async function refreshServiceUI(id){
+    try{
+      var ref = db.collection("servicios").doc(String(id));
+      var snap = await ref.get();
+      if (snap.exists){
+        var fresh = Object.assign({id:snap.id, firestore_id:snap.id}, snap.data() || {});
+        patchLocal(id, fresh);
+        await syncInvoiceExplicit(id, fresh);
+      }
+    }catch(e){
+      console.warn("No se pudo recargar el servicio:", e);
+    }
+    try{ if (typeof renderHistorial === "function") renderHistorial(); }catch(_){ }
+    try{ if (typeof renderContabilidadElite === "function") renderContabilidadElite(); }catch(_){ }
+    try{ if (typeof eliteSyncServicesToCalendar === "function") eliteSyncServicesToCalendar(); }catch(_){ }
+  }
+
+  window.cancelarDeposito = async function(id){
+    if (!confirm("¿Quieres marcar este depósito como NO pagado?\n\nTambién se quitará cualquier estado de pago completo incompatible y el Invoice quedará actualizado.")) return;
+    try{
+      var ref = db.collection("servicios").doc(String(id));
+      var snap = await ref.get();
+      if (!snap.exists) throw new Error("Trabajo no encontrado");
+      var s = snap.data() || {};
+      var td = totalAndDeposit(s);
+      var data = {
+        deposito_pagado: false,
+        balance_pagado: false,
+        pago_completo: false,
+        fecha_pago_deposito: "",
+        fecha_pago_balance: "",
+        metodo_pago_deposito: "",
+        metodo_pago_balance: "",
+        estado_pago: "no_pagado",
+        balance_restante: td.total,
+        notificacion_deposito: true,
+        notificacion_balance: false,
+        actualizado_en: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      await ref.set(data, {merge:true});
+      patchLocal(id, data);
+      await refreshServiceUI(id);
+      alert("Depósito y estado de pago fueron cancelados correctamente.\n\nEl trabajo ahora figura como NO PAGADO y el Invoice fue actualizado.");
+    }catch(error){
+      console.error(error);
+      alert("No se pudo cancelar el depósito. Revisa la conexión o los permisos e inténtalo nuevamente.");
+    }
+  };
+
+  window.cancelarBalance = async function(id){
+    if (!confirm("¿Deseas cancelar la confirmación del balance final?\n\nSi el depósito sigue confirmado, el trabajo quedará como pago parcial.")) return;
+    try{
+      var ref = db.collection("servicios").doc(String(id));
+      var snap = await ref.get();
+      if (!snap.exists) throw new Error("Trabajo no encontrado");
+      var s = snap.data() || {};
+      var td = totalAndDeposit(s);
+      var depositPaid = s.deposito_pagado === true && Boolean(s.fecha_pago_deposito || s.deposito_pagado);
+      var data = {
+        balance_pagado: false,
+        pago_completo: false,
+        fecha_pago_balance: "",
+        metodo_pago_balance: "",
+        estado_pago: depositPaid ? "deposito_pagado" : "no_pagado",
+        balance_restante: depositPaid ? Math.max(0, td.total - td.deposit) : td.total,
+        notificacion_balance: true,
+        actualizado_en: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      if (!depositPaid){
+        data.deposito_pagado = false;
+        data.fecha_pago_deposito = "";
+        data.metodo_pago_deposito = "";
+      }
+      await ref.set(data, {merge:true});
+      patchLocal(id, data);
+      await refreshServiceUI(id);
+      alert(depositPaid
+        ? "Balance cancelado. El trabajo quedó con SOLO EL DEPÓSITO PAGADO y el Invoice fue actualizado."
+        : "Balance cancelado. El trabajo quedó como NO PAGADO y el Invoice fue actualizado.");
+    }catch(error){
+      console.error(error);
+      alert("No se pudo cancelar el balance. Revisa la conexión o los permisos e inténtalo nuevamente.");
+    }
+  };
+
+  window.confirmarDeposito = async function(id){
+    if (!confirm("¿Confirmas que el cliente ya pagó el depósito?")) return;
+    try{
+      var ref = db.collection("servicios").doc(String(id));
+      var snap = await ref.get();
+      if (!snap.exists) throw new Error("Trabajo no encontrado");
+      var s = snap.data() || {};
+      var td = totalAndDeposit(s);
+      var now = new Date().toISOString();
+      var data = {
+        deposito_pagado:true,
+        balance_pagado:false,
+        pago_completo:false,
+        fecha_pago_deposito:now,
+        metodo_pago_deposito:"Confirmado manualmente por Administración",
+        fecha_pago_balance:"",
+        metodo_pago_balance:"",
+        estado_pago:"deposito_pagado",
+        balance_restante:Math.max(0,td.total-td.deposit),
+        notificacion_deposito:false,
+        actualizado_en:firebase.firestore.FieldValue.serverTimestamp()
+      };
+      await ref.set(data,{merge:true});
+      patchLocal(id,data);
+      await refreshServiceUI(id);
+      alert("Depósito confirmado. El Invoice fue actualizado a PARTIALLY PAID.");
+    }catch(error){
+      console.error(error);
+      alert("No se pudo confirmar el depósito.");
+    }
+  };
+
+  window.confirmarBalance = async function(id){
+    if (!confirm("¿Confirmas que el cliente ya pagó el balance restante?")) return;
+    try{
+      var ref = db.collection("servicios").doc(String(id));
+      var snap = await ref.get();
+      if (!snap.exists) throw new Error("Trabajo no encontrado");
+      var s = snap.data() || {};
+      var now = new Date().toISOString();
+      var data = {
+        deposito_pagado:true,
+        balance_pagado:true,
+        pago_completo:true,
+        fecha_pago_deposito:s.fecha_pago_deposito || now,
+        metodo_pago_deposito:s.metodo_pago_deposito || "Confirmado manualmente por Administración",
+        fecha_pago_balance:now,
+        metodo_pago_balance:"Confirmado manualmente por Administración",
+        estado_pago:"pagado_completo",
+        balance_restante:0,
+        notificacion_deposito:false,
+        notificacion_balance:false,
+        actualizado_en:firebase.firestore.FieldValue.serverTimestamp()
+      };
+      await ref.set(data,{merge:true});
+      patchLocal(id,data);
+      await refreshServiceUI(id);
+      alert("Balance confirmado. El trabajo quedó PAGADO COMPLETO y el Invoice fue actualizado.");
+    }catch(error){
+      console.error(error);
+      alert("No se pudo confirmar el balance.");
+    }
+  };
+
+  // La UI debe creer en los booleanos actuales. Fechas antiguas por sí solas no
+  // vuelven a marcar un pago como confirmado después de una cancelación manual.
+  window.elitePaymentState = function(s){
+    s = s || {};
+    var estado = String(s.estado_pago || "").trim().toLowerCase();
+    var completo = s.pago_completo === true || s.balance_pagado === true || estado === "pagado_completo" || estado === "pagado" || estado === "paid";
+    var deposito = completo || s.deposito_pagado === true;
+    var balance = completo || s.balance_pagado === true;
+    return {deposito:deposito,balance:balance,completo:completo};
+  };
+
+  console.info("[Elite Admin] v9.0.37 · estados de pago e Invoice sincronizados correctamente");
+})();
+</script>
