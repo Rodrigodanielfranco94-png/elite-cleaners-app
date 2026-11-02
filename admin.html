@@ -15300,6 +15300,225 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 console.info("[Elite Admin] v9.0.36 · Zachary quincenal recuperado desde 10-oct (fecha excluida) + No seguro en rojo.");
 </script>
 <!-- ===== FIN v9.0.36 ===== -->
+
+
+<!-- ===== ELITE ADMIN v9.0.38 — PAGOS MANUALES PERSISTENTES + CROSSFIT HABITUAL ===== -->
+<script id="elite-admin-v9038-payment-client-authority">
+(function(){
+  "use strict";
+
+  const VERSION="9.0.38";
+  const norm=v=>String(v||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ");
+  const habitualNames=new Set(["crossfit","crossfit y fisioterapeuta"]);
+  const isNamedHabitual=s=>habitualNames.has(norm(s&& (s.cliente||s.nombre||s.nombre_cliente)));
+  const isCompleted=s=>["completado","terminado"].includes(norm(s&&s.estado))||norm(s&&s.estado_calendario)==="completado";
+  const localToday=()=>{
+    const d=new Date();
+    return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
+  };
+  const isFutureUnworked=s=>!isCompleted(s)&&String((s&&s.fecha)||"")>=localToday();
+  const totalOf=s=>Math.max(0,Number((s&&s.precio_total)||0));
+  const idOf=s=>String((s&& (s.id||s.firestore_id))||"");
+
+  function unpaidData(s, manual){
+    const total=totalOf(s);
+    const habitual=isNamedHabitual(s)||s?.proceso_cliente==="habitual"||s?.cliente_habitual===true||s?.deposito_requerido===false;
+    return {
+      deposito_pagado:false,
+      balance_pagado:false,
+      pago_completo:false,
+      estado_pago:"no_pagado",
+      fecha_pago_deposito:"",
+      fecha_pago_balance:"",
+      metodo_pago_deposito:"",
+      metodo_pago_balance:"",
+      comprobante_deposito:"",
+      comprobante_balance:"",
+      deposito_monto:habitual?0:Math.round(total*50)/100,
+      balance_restante:total,
+      pago_confirmado_manual:manual===true,
+      pago_estado_manual:manual===true?"no_pagado":"",
+      actualizado_en:firebase.firestore.FieldValue.serverTimestamp()
+    };
+  }
+
+  function patchLocal(id,data){
+    const rows=Array.isArray(window.todosLosServicios)?window.todosLosServicios:[];
+    const row=rows.find(x=>idOf(x)===String(id));
+    if(row) Object.assign(row,data);
+  }
+
+  async function syncDocs(id,service){
+    try{
+      if(typeof window.eliteSyncDocumentStatuses==="function") await window.eliteSyncDocumentStatuses(String(id),service);
+    }catch(e){ console.warn("No se pudo sincronizar Invoice después del cambio de pago",e); }
+  }
+
+  async function refreshUI(id){
+    try{
+      const ref=db.collection("servicios").doc(String(id));
+      const snap=await ref.get();
+      const service=snap.exists?Object.assign({id:snap.id,firestore_id:snap.id},snap.data()||{}):null;
+      if(service){patchLocal(id,service);await syncDocs(id,service);}
+    }catch(e){console.warn(e);}
+    if(typeof window.renderHistorial==="function") window.renderHistorial();
+    if(typeof window.renderContabilidadElite==="function"&&document.getElementById("elite-accounting-modal")?.style.display==="block") window.renderContabilidadElite();
+    if(typeof window.eliteSyncServicesToCalendar==="function") window.eliteSyncServicesToCalendar();
+  }
+
+  // El estado de pago visible depende de los booleanos actuales, no de fechas viejas.
+  window.elitePaymentState=function(s){
+    s=s||{};
+    const estado=norm(s.estado_pago);
+    const complete=s.pago_completo===true||s.balance_pagado===true||["pagado_completo","pagado","paid"].includes(estado);
+    const deposit=complete||s.deposito_pagado===true;
+    return {deposito:deposit,balance:complete||s.balance_pagado===true,completo:complete};
+  };
+
+  window.cancelarDeposito=async function(id){
+    if(!confirm("¿Quieres marcar este trabajo como NO PAGADO?\n\nEl cambio quedará guardado y NO volverá a marcarse como pagado al actualizar."))return;
+    try{
+      const ref=db.collection("servicios").doc(String(id));
+      const snap=await ref.get();
+      if(!snap.exists)throw new Error("Trabajo no encontrado");
+      const s=Object.assign({id:snap.id},snap.data()||{});
+      const data=unpaidData(s,true);
+      await ref.set(data,{merge:true});
+      patchLocal(id,data);
+      await refreshUI(id);
+      alert("Trabajo marcado como NO PAGADO ✅\n\nEste estado quedará fijo hasta que tú confirmes un pago manualmente.");
+    }catch(e){console.error(e);alert("No se pudo cambiar el trabajo a No pagado.");}
+  };
+
+  window.cancelarBalance=async function(id){
+    if(!confirm("¿Deseas cancelar la confirmación del balance?"))return;
+    try{
+      const ref=db.collection("servicios").doc(String(id));
+      const snap=await ref.get();
+      if(!snap.exists)throw new Error("Trabajo no encontrado");
+      const s=Object.assign({id:snap.id},snap.data()||{});
+      const total=totalOf(s);
+      const depPaid=s.deposito_pagado===true;
+      const dep=depPaid?Math.min(total,Math.max(0,Number(s.deposito_monto||total*.5))):0;
+      const data={
+        balance_pagado:false,pago_completo:false,fecha_pago_balance:"",metodo_pago_balance:"",comprobante_balance:"",
+        estado_pago:depPaid?"deposito_pagado":"no_pagado",balance_restante:Math.max(0,total-dep),
+        pago_confirmado_manual:true,pago_estado_manual:depPaid?"deposito_pagado":"no_pagado",
+        actualizado_en:firebase.firestore.FieldValue.serverTimestamp()
+      };
+      await ref.set(data,{merge:true});patchLocal(id,data);await refreshUI(id);
+      alert(depPaid?"Balance cancelado. Se conserva únicamente el depósito confirmado ✅":"Trabajo marcado como NO PAGADO ✅");
+    }catch(e){console.error(e);alert("No se pudo cancelar el balance.");}
+  };
+
+  window.confirmarDeposito=async function(id){
+    if(!confirm("¿Confirmas que el cliente ya pagó el depósito?"))return;
+    try{
+      const ref=db.collection("servicios").doc(String(id));const snap=await ref.get();
+      if(!snap.exists)throw new Error("Trabajo no encontrado");
+      const s=snap.data()||{},total=totalOf(s),deposit=Math.min(total,Math.max(0,Number(s.deposito_monto||total*.5))),now=new Date().toISOString();
+      const data={deposito_pagado:true,balance_pagado:false,pago_completo:false,fecha_pago_deposito:now,metodo_pago_deposito:"Confirmado manualmente por Administración",fecha_pago_balance:"",metodo_pago_balance:"",estado_pago:"deposito_pagado",balance_restante:Math.max(0,total-deposit),notificacion_deposito:false,pago_confirmado_manual:true,pago_estado_manual:"deposito_pagado",actualizado_en:firebase.firestore.FieldValue.serverTimestamp()};
+      await ref.set(data,{merge:true});patchLocal(id,data);await refreshUI(id);alert("Depósito confirmado ✅");
+    }catch(e){console.error(e);alert("No se pudo confirmar el depósito.");}
+  };
+
+  window.confirmarBalance=async function(id){
+    if(!confirm("¿Confirmas que el cliente ya pagó el balance restante?"))return;
+    try{
+      const ref=db.collection("servicios").doc(String(id));const snap=await ref.get();
+      if(!snap.exists)throw new Error("Trabajo no encontrado");
+      const s=snap.data()||{},now=new Date().toISOString();
+      const data={deposito_pagado:true,balance_pagado:true,pago_completo:true,fecha_pago_deposito:s.fecha_pago_deposito||now,metodo_pago_deposito:s.metodo_pago_deposito||"Confirmado manualmente por Administración",fecha_pago_balance:now,metodo_pago_balance:"Confirmado manualmente por Administración",estado_pago:"pagado_completo",balance_restante:0,notificacion_deposito:false,notificacion_balance:false,pago_confirmado_manual:true,pago_estado_manual:"pagado_completo",actualizado_en:firebase.firestore.FieldValue.serverTimestamp()};
+      await ref.set(data,{merge:true});patchLocal(id,data);await refreshUI(id);alert("Pago completo confirmado ✅");
+    }catch(e){console.error(e);alert("No se pudo confirmar el balance.");}
+  };
+
+  async function repairCrossFitHabitual(){
+    if(typeof db==="undefined"||typeof firebase==="undefined")return;
+    try{
+      const [servicesSnap,clientsSnap]=await Promise.all([db.collection("servicios").get(),db.collection("clientes").get()]);
+      const ops=[];
+      servicesSnap.forEach(doc=>{
+        const s=Object.assign({id:doc.id},doc.data()||{});
+        if(!isNamedHabitual(s))return;
+        const data={proceso_cliente:"habitual",cliente_habitual:true,deposito_requerido:false,acuerdo_requerido:false,actualizado_en:firebase.firestore.FieldValue.serverTimestamp()};
+        // En trabajos aún no realizados, CrossFit no debe heredar pagos de otra fecha.
+        if(isFutureUnworked(s)&&s.pago_confirmado_manual!==true) Object.assign(data,unpaidData(Object.assign({},s,{proceso_cliente:"habitual",cliente_habitual:true,deposito_requerido:false}),false));
+        ops.push({ref:doc.ref,data});
+      });
+      clientsSnap.forEach(doc=>{
+        const c=Object.assign({id:doc.id},doc.data()||{});
+        if(!isNamedHabitual(c))return;
+        ops.push({ref:doc.ref,data:{proceso_cliente:"habitual",cliente_habitual:true,deposito_requerido:false,acuerdo_requerido:false,actualizado_en:firebase.firestore.FieldValue.serverTimestamp()}});
+      });
+      // Asegura también los documentos por nombre si son las llaves usadas por la colección clientes.
+      for(const name of ["CrossFit","CrossFit y Fisioterapeuta"]){
+        ops.push({ref:db.collection("clientes").doc(name),data:{nombre:name,proceso_cliente:"habitual",cliente_habitual:true,deposito_requerido:false,acuerdo_requerido:false,actualizado_en:firebase.firestore.FieldValue.serverTimestamp()}});
+      }
+      for(let i=0;i<ops.length;i+=400){const batch=db.batch();ops.slice(i,i+400).forEach(op=>batch.set(op.ref,op.data,{merge:true}));await batch.commit();}
+      if(ops.length) console.info("[Elite Admin] CrossFit y CrossFit y Fisioterapeuta fijados como clientes habituales.");
+    }catch(e){console.error("No se pudo reparar clientes habituales CrossFit",e);}
+  }
+
+  async function resetInheritedRecurringPayments(){
+    if(typeof db==="undefined"||typeof firebase==="undefined")return;
+    try{
+      const snap=await db.collection("servicios").get(),ops=[];
+      snap.forEach(doc=>{
+        const s=Object.assign({id:doc.id},doc.data()||{});
+        if(!isFutureUnworked(s))return;
+        const generated=s.repeticion_generada===true;
+        const recurring=!["","ninguno","none","una vez","unica","única"].includes(norm(s.repetir||s.frecuencia));
+        if(!generated&&!recurring)return;
+        // Si el usuario confirmó/canceló el pago manualmente, respetarlo siempre.
+        if(s.pago_confirmado_manual===true)return;
+        // Solo limpia estados que parecen heredados de otra repetición.
+        const looksInherited=s.deposito_pagado===true||s.balance_pagado===true||s.pago_completo===true||["pagado_completo","pagado","paid","deposito_pagado"].includes(norm(s.estado_pago))||Boolean(s.fecha_pago_deposito)||Boolean(s.fecha_pago_balance);
+        if(!looksInherited)return;
+        ops.push({ref:doc.ref,data:unpaidData(s,false)});
+      });
+      for(let i=0;i<ops.length;i+=400){const batch=db.batch();ops.slice(i,i+400).forEach(op=>batch.set(op.ref,op.data,{merge:true}));await batch.commit();}
+      if(ops.length) console.info("[Elite Admin] "+ops.length+" pagos heredados en citas futuras fueron limpiados.");
+    }catch(e){console.error("No se pudieron limpiar pagos heredados",e);}
+  }
+
+  // Si se abre un trabajo de estos clientes antes de que termine la reparación,
+  // el selector ya debe mostrar "Cliente habitual".
+  const oldEditar=window.editar;
+  if(typeof oldEditar==="function"){
+    window.editar=function(id,s){
+      const result=oldEditar.apply(this,arguments);
+      if(isNamedHabitual(s)){
+        const select=document.getElementById("proceso_cliente");
+        if(select)select.value="habitual";
+      }
+      return result;
+    };
+    try{editar=window.editar;}catch(_){ }
+  }
+
+  // Después de cada sincronización recurrente, limpia cualquier pago que una
+  // plantilla vieja hubiera copiado a la nueva fecha.
+  const oldSync=window.sincronizarRepeticionesServicio;
+  if(typeof oldSync==="function"){
+    const wrapped=async function(){const result=await oldSync.apply(this,arguments);await resetInheritedRecurringPayments();await repairCrossFitHabitual();return result;};
+    window.sincronizarRepeticionesServicio=wrapped;
+    try{sincronizarRepeticionesServicio=wrapped;}catch(_){ }
+  }
+
+  let booted=false;
+  async function boot(){
+    if(booted)return;booted=true;
+    await repairCrossFitHabitual();
+    await resetInheritedRecurringPayments();
+    if(typeof window.renderHistorial==="function")window.renderHistorial();
+  }
+  function schedule(){setTimeout(boot,2200);setTimeout(async()=>{await repairCrossFitHabitual();await resetInheritedRecurringPayments();},7000);}
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",schedule);else schedule();
+
+  console.info("[Elite Admin] v"+VERSION+" · pagos manuales persistentes + clientes habituales protegidos");
+})();
+</script>
 </body>
 </html>
 
