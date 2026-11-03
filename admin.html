@@ -7956,7 +7956,63 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   function scopeForType(t) {
     const type = cleanType(t).toLowerCase();
     const standard = "KITCHEN\n• Sweep and mop floors\n• Clean countertops, backsplash and sink\n• Clean appliance exteriors\n• Wipe cabinet exteriors\n• Clean and disinfect high-touch surfaces\n• Empty trash bins\n\nBATHROOMS\n• Clean and disinfect toilets, sinks, tubs and showers\n• Clean mirrors, fixtures and cabinet exteriors\n• Sweep and mop floors\n• Empty trash bins\n\nLIVING, DINING AND BEDROOMS\n• Dust reachable surfaces, furniture and fixtures\n• Vacuum carpets and mop hard floors\n• Clean doors, handles and light switches\n• Empty trash bins";
-    const deep = "".concat(standard, "\n\nDEEP-CLEANING DETAIL\n• Detailed baseboard and edge cleaning\n• Extra attention to buildup and reachable corners\n• Detailed cleaning of doors, frames and fixtures");
+    const deep = `KITCHEN
+• Sweeping and mopping all floors with detailed baseboard
+• Vacuuming where necessary
+• Wall-to-wall cleaning of the countertop, and everything on it
+• Dusting everything down
+• Cleaning the sink
+•Deep cleaning of the range hood and filters
+• Cleaning the microwave (Inside and Outside)
+•Refrigerator ( Outside)
+• Cleaning the Oven ( Outside)
+• Cleaning the dishwasher, and other kitchen appliances
+• Wiping, degreasing, and polishing cabinet exteriors
+• Cleaning and disinfecting doors and light switches
+• Cleaning light fixtures, and ceiling fans
+• Empty garbage bins
+
+BATHROOMS
+• Sweeping and mopping all floors with detailed baseboard cleaning
+• Dusting everything down
+• Wipe-down the mirrors
+• Washing toilet bowls ( in, out and around)
+• Cleaning and disinfecting doors and light switches
+• Wash the sinks, tubs, showers, and grouts, baseboards, and
+• Wiping down cabinets outside
+•Cleaning light fixtures, cleaning ceiling fans
+•Empty garbage bins
+
+BEDROOMS
+• Sweeping and mopping all floors, including detailed baseboard cleaning
+• Vacuuming where necessary, dusting everything down
+• Cleaning light fixtures, and cleaning ceiling fans
+• Cleaning and disinfecting doors and light switches
+• Cleaning underneath the bed
+• Changing the sheets and making the beds
+• Cleaning behind nightstands.
+• Clean 10-inches in all around the rugs
+• Empty garbage bins
+
+LIVING ROOM & DINING ROOM
+•Sweeping and deep floor treatment using steam cleaning, followed by detailed mopping for a sanitized and refreshed finish
+•Baseboard cleaning throughout all areas
+•Dusting of all surfaces, including hard-to-reach and overlooked areas
+•Cleaning light fixtures and ceiling fans
+•Vacuuming inside couch cushions and upholstered surfaces
+•Cleaning and disinfecting doors, door frames, and light switches
+•Moving furniture (as accessible) to clean behind and underneath
+•Detailed cleaning of corners, edges, and high-touch areas
+•Emptying trash bins and replacing liners
+
+LAUNDRY ROOM
+• Sweeping and mopping floors
+• Vacuuming where necessary
+• Dusting everything down, cleaning the sink, laundry machine, and dryer
+• Wiping the cabinets outside
+• Cleaning and disinfecting doors and light switches
+• Cleaning light fixtures
+• Empty garbage bins`;
     if (type.includes("post-construction")) return "POST-CONSTRUCTION CLEANING\n• Remove fine construction dust from reachable surfaces\n• Vacuum and mop floors in detail\n• Clean cabinets, counters, fixtures and baseboards\n• Clean interior glass and remove light labels or residue when safe\n• Final detail cleaning of kitchens, bathrooms and living areas";
     if (type.includes("move")) return "MOVE-IN / MOVE-OUT CLEANING\n".concat(deep, "\n• Clean inside empty cabinets and drawers\n• Detail empty closets and storage areas\n• Prepare the property for turnover");
     if (type.includes("deep") || type.includes("first-time") || type.includes("profunda") || type.includes("primera")) return deep;
