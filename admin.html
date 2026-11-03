@@ -15052,3 +15052,52 @@ var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",start); else start();
 })();
 </script>
+
+<!-- ===== ELITE ADMIN v9.0.40 — ÚNICO CAMBIO: NO SEGURO EN ROJO ===== -->
+<style id="elite-v9040-no-seguro-rojo-only">
+/* ÚNICAMENTE presentación visual de trabajos "No seguro" en Agenda. */
+.ops-month-job.no-seguro{
+  background:#fee2e2!important;
+  color:#991b1b!important;
+  border:1px solid #ef4444!important;
+  font-weight:800!important;
+}
+.ops-event-box.no-seguro{
+  border-left-color:#ef4444!important;
+  border-color:#fca5a5!important;
+  background:#fef2f2!important;
+}
+.ops-event-box.no-seguro h4,
+.ops-event-box.no-seguro p{
+  color:#991b1b!important;
+}
+</style>
+<script id="elite-v9040-no-seguro-rojo-only-js">
+(function(){
+  "use strict";
+  /*
+    Este parche NO escribe en Firebase, NO crea ni elimina trabajos,
+    NO cambia fechas, recurrencias, pagos, clientes ni Estimates.
+    Solo cambia la clase visual devuelta por la Agenda.
+  */
+  window.opsStateClass = function(s){
+    if (String((s && s.estado_calendario) || "").trim().toLowerCase() === "no_seguro") {
+      return "no-seguro";
+    }
+    const fecha = String((s && s.fecha) || "");
+    const autoTerminado = fecha >= "2026-01-01" && fecha <= "2026-07-31";
+    const done = autoTerminado || (s && (s.estado === "completado" || s.estado_calendario === "completado" || s.estado === "terminado"));
+    return done ? "completed" : (s && s.estado === "en_progreso") ? "progress" : "pending";
+  };
+
+  window.opsStateLabel = function(s){
+    if (String((s && s.estado_calendario) || "").trim().toLowerCase() === "no_seguro") {
+      return "No seguro";
+    }
+    const fecha = String((s && s.fecha) || "");
+    const autoTerminado = fecha >= "2026-01-01" && fecha <= "2026-07-31";
+    const done = autoTerminado || (s && (s.estado === "completado" || s.estado_calendario === "completado" || s.estado === "terminado"));
+    return done ? "Terminado" : (s && s.estado === "en_progreso") ? "En progreso" : "No iniciado";
+  };
+})();
+</script>
